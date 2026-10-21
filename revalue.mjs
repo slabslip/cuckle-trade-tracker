@@ -1,15 +1,23 @@
 #!/usr/bin/env node
 /** Rebuild meters. Incomplete ≠ zero. No silent Mid. Readable pick lines. */
-import { pickTier, readJson, roundName, writeJson, writeUi } from "./lib.mjs";
+import {
+  addDays, CUCKLE_LEAGUE_ID, detectLeagueFormat, LEAGUE_ID, pickTier, readJson, roundName, seasonAsOfs, setLeagueId, writeJson, writeUi, weekAsOfs,
+} from "./lib.mjs";
 import { applyToSide } from "./value-adjust.mjs";
 import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
 
-const TEAMS = 10;
+setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const _leagueMeta = readJson("leagues.json", []);
+const TEAMS = Number((_leagueMeta[0] && _leagueMeta[0].total_rosters) || readJson("members.json", []).length || 10);
 const FLAT_SCALE = 10000;
 // ponytail: blend fitted to 12 KTC names (2026-08-28). Top stays near raw DP; bottom lifts. Hill will stay high vs KTC — DP ranks him 285, KTC 1069.
 const FLAT_EXP = 0.3;
 const FLAT_TOP_MIX = 0.5;
 // ponytail: pinned calibration tape. Swap IDs here, not a CMS.
+/** Recent trades: t0 player legs use mean flatten over weekly snaps in the next 30 days. */
+const T0_LOOKBACK_DAYS = 30;
+const RECENT_TRADE_DAYS = 180;
+
 const REVIEW_IDS = [
   "460470201385742336",
   "471856282999975936",
@@ -229,6 +237,16 @@ function windowAsOfs(t0, today, years) {
   return yearEnds(t0, end);
 }
 
+/** y1/y2/y3 are NFL-season spans; all is weekly from accept through today. */
+function lensAsOfs(key, t0, today) {
+  if (key === "t0") return [t0];
+  if (key === "y1") return seasonAsOfs(t0, today, 1);
+  if (key === "y2") return seasonAsOfs(t0, today, 2);
+  if (key === "y3") return seasonAsOfs(t0, today, 3);
+  if (key === "all") return weekAsOfs(t0, today);
+  return windowAsOfs(t0, today, null);
+}
+
 function indexVmax(curve) {
   const by = new Map();
   for (const r of curve) {
@@ -260,7 +278,7 @@ function flattenLegs(legs, top) {
   return (legs || []).map((l) => ({ ...l, value: flatten(l.value, top) }));
 }
 
-// ponytail: year-end (+ today if inside the window) only, not monthly. Monthly if a mid-year crash must count.
+// ponytail: weekly flatten snaps averaged per leg; each snap uses realized pricing at that date.
 function y3Snaps(leg, dates, ctx) {
   const snaps = [];
   for (const d of dates) {
@@ -278,19 +296,95 @@ function y3Score(leg, dates, today, ctx) {
   const snaps = y3Snaps(leg, dates, ctx);
   const display = priceLeg(leg, today, "realized", ctx);
   if (!snaps.length) return { ...display, value: null, flag: "unpriced" };
-  const value = snaps.reduce((a, s) => a + s.even, 0) / snaps.length;
+  const value = Math.round(snaps.reduce((a, s) => a + s.even, 0) / snaps.length);
   return { ...display, value };
 }
 
-function bagAtEven(legs, uid, asOf, ctx, which) {
-  const raw = bagFor(legs, uid, asOf, "pick", ctx, which);
-  const top = vmaxAt(ctx.vmaxIdx, asOf);
-  const graded = flattenLegs(raw.legs, top);
-  return {
-    points: graded.reduce((a, l) => a + (l.value || 0), 0),
-    unpriced: raw.unpriced,
-    legs: graded,
-  };
+function daysBetween(a, b) {
+  return Math.floor((Date.parse(b) - Date.parse(a)) / 86400000);
+}
+
+function isRecentTrade(t0, today) {
+  const d = daysBetween(t0, today);
+  return d >= 0 && d <= RECENT_TRADE_DAYS;
+}
+
+/** Weekly anchors from accept through min(accept + 30d, today) — catches fast DP moves post-trade. */
+function t0LookbackDates(t0, today) {
+  const end = addDays(t0, T0_LOOKBACK_DAYS);
+  const cap = end < today ? end : today;
+  if (cap < t0) return [t0];
+  return weekAsOfs(t0, cap);
+}
+
+function legT0LookbackFlatten(leg, t0, today, ctx, opts) {
+  const dates = t0LookbackDates(t0, today);
+  const ktcAugment = !!(opts && opts.ktcAugment);
+  const snaps = [];
+  for (const d of dates) {
+    const priced = priceLeg(leg, d, "pick", ctx);
+    if (priced.value == null) continue;
+    const flat = flatten(priced.value, vmaxAt(ctx.vmaxIdx, d));
+    if (ktcAugment && leg.kind === "player" && ctx.todayPrice?.hasKtc) {
+      const blended = priceTodayValue(flat, { ...leg, value: flat, value_flat: flat }, ctx.todayPrice);
+      if (blended != null) snaps.push(blended);
+    } else {
+      snaps.push(flat);
+    }
+  }
+  if (!snaps.length) return null;
+  const avg = Math.round(snaps.reduce((a, b) => a + b, 0) / snaps.length);
+  if (ktcAugment && leg.kind === "player" && ctx.todayPrice?.hasKtc) {
+    const todayDp = playerValue(ctx.curveIdx, leg.asset_key, ctx.today);
+    if (todayDp?.value != null) {
+      const todayFlat = flatten(todayDp.value, vmaxAt(ctx.vmaxIdx, ctx.today));
+      const todayBlend = priceTodayValue(
+        todayFlat,
+        { ...leg, value: todayFlat, value_flat: todayFlat },
+        ctx.todayPrice,
+      );
+      if (todayBlend != null && Number.isFinite(todayBlend)) return Math.max(avg, todayBlend);
+    }
+  }
+  return Number.isFinite(avg) ? avg : null;
+}
+
+function bagAtEven(legs, uid, asOf, ctx, which, opts) {
+  const mine = which === "in"
+    ? legs.filter((l) => l.direction !== "out" && l.to_user_id === uid)
+    : legs.filter((l) => l.direction === "out" && l.from_user_id === uid);
+  const useLookback = !!(opts && opts.t0Lookback) && isRecentTrade(asOf, ctx.today);
+  const ktcAugment = useLookback && !!(opts && opts.ktcAugment);
+  let points = 0;
+  let unpriced = 0;
+  const rows = [];
+  for (const leg of mine) {
+    const priced = priceLeg(leg, asOf, "pick", ctx);
+    let value = priced.value;
+    let flag = priced.flag;
+    if (useLookback && leg.kind === "player") {
+      const lb = legT0LookbackFlatten(leg, asOf, ctx.today, ctx, { ktcAugment });
+      if (lb != null && Number.isFinite(lb)) {
+        value = lb;
+        flag = "t0_lookback";
+      }
+    }
+    if (value == null) {
+      unpriced += 1;
+      rows.push(compactLeg({ ...leg, ...priced, value: null, flag }));
+      continue;
+    }
+    if (flag === "t0_lookback") {
+      rows.push(compactLeg({ ...leg, ...priced, value, flag }));
+      points += value;
+      continue;
+    }
+    const top = vmaxAt(ctx.vmaxIdx, asOf);
+    const flat = flatten(value, top);
+    rows.push(compactLeg({ ...leg, ...priced, value: flat, flag }));
+    points += flat;
+  }
+  return { points, unpriced, legs: rows };
 }
 
 function bagY3(legs, uid, dates, today, ctx, which) {
@@ -383,7 +477,9 @@ async function main() {
   const allTrades = readJson("trades.json", []);
   const allLegs = readJson("trade_legs.json", []).filter((l) => l.kind !== "faab");
   const members = readJson("members.json", []);
-  const fullCurve = readJson("value_curve.json", []);
+  const leagueFormat = detectLeagueFormat(readJson("leagues.json", []));
+  const curveName = leagueFormat.format_key === "1qb" ? "value_curve_1qb.json" : "value_curve.json";
+  const fullCurve = readJson(curveName, null) || readJson("value_curve.json", []);
   const resolutions = readJson("asset_resolutions.json", []);
   const draftPicks = readJson("draft_picks.json", []);
   const seats = readJson("seats.json", []);
@@ -439,15 +535,21 @@ async function main() {
   });
   const tossed = withAssets.length - trades.length;
 
-  check("has trades", trades.length > 0);
-  check("has curve", curve.length > 0);
+  if (!trades.length) {
+    if (leagueFormat.kind === "redraft") {
+      console.warn("revalue: no two-way trades on this redraft tape — empty meter");
+    } else {
+      check("has trades", false);
+    }
+  }
+  check("has curve", curve.length > 0 || leagueFormat.kind === "redraft");
 
   const curveIdx = indexCurve(curve);
   const vmaxIdx = indexVmax(curve);
   const resIdx = resIndex(resolutions);
   const today = latestAsOf(fullCurve.length ? fullCurve : curve);
-  const todayPrice = makeTodayPrice(today);
-  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, todayPrice };
+  const todayPrice = makeTodayPrice(today, { flattenOnly: leagueFormat.format_key === "1qb" });
+  const ctx = { curveIdx, resIdx, nameById, originOf, vmaxIdx, todayPrice, today };
   const tradeById = new Map(allTrades.map((t) => [t.transaction_id, t]));
 
   function buildPicks() {
@@ -514,6 +616,41 @@ async function main() {
         hops,
       };
     }
+    // Trade legs omit native picks that never moved — seed still-held origin slots for future years.
+    const stillYears = new Set();
+    for (const key of Object.keys(out)) {
+      if (out[key].still_pick) stillYears.add(key.split(":")[1]);
+    }
+    const todayYear = Number(String(today).slice(0, 4));
+    for (const year of stillYears) {
+      if (Number(year) <= todayYear) continue;
+      for (let round = 1; round <= 4; round++) {
+        for (let roster = 1; roster <= TEAMS; roster++) {
+          const key = `pick:${year}:${round}:${roster}`;
+          if (out[key]) continue;
+          if (latestRes(resIdx, key, today, "player")) continue;
+          const uid = seatOwner.get(`${latestSeason}:${roster}`);
+          const origin = uid ? (nameById[uid] || uid) : null;
+          if (!origin) continue;
+          out[key] = {
+            label: pickDisplay(year, String(round), origin, null, null),
+            became: null,
+            used_by: null,
+            still_pick: true,
+            hops: [{
+              date: today,
+              from: origin,
+              to: origin,
+              t0: null,
+              out: null,
+              out_date: today,
+              exit: "held",
+              transaction_id: null,
+            }],
+          };
+        }
+      }
+    }
     return out;
   }
 
@@ -541,6 +678,7 @@ async function main() {
       names: uids.map((id) => nameById[id] || id),
       lenses: {},
     };
+    const t0Lookback = isRecentTrade(t0, today);
 
     for (const lens of ["realized", "pick"]) {
       const sides = {};
@@ -549,8 +687,12 @@ async function main() {
         bags[uid] = {
           got: bagFor(legs, uid, today, lens, ctx, "in"),
           sent: bagFor(legs, uid, today, lens, ctx, "out"),
-          got0: bagFor(legs, uid, t0, lens, ctx, "in"),
-          sent0: bagFor(legs, uid, t0, lens, ctx, "out"),
+          got0: lens === "realized" && t0Lookback
+            ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true })
+            : bagFor(legs, uid, t0, lens, ctx, "in"),
+          sent0: lens === "realized" && t0Lookback
+            ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true })
+            : bagFor(legs, uid, t0, lens, ctx, "out"),
         };
       }
       const incomplete = uids.some((uid) => bags[uid].got.unpriced + bags[uid].sent.unpriced > 0);
@@ -611,47 +753,41 @@ async function main() {
       });
       entry.lenses[lens] = { sides, year_ends: points, t0_priced: t0Priced, incomplete };
     }
-    const y3Dates = windowAsOfs(t0, today, 3);
-    const y3Sides = {};
-    for (const uid of uids) {
-      const got = bagY3(legs, uid, y3Dates, today, ctx, "in");
-      const sent = bagY3(legs, uid, y3Dates, today, ctx, "out");
-      const incomplete = !y3Dates.length || got.unpriced + sent.unpriced > 0;
-      y3Sides[uid] = {
-        name: nameById[uid] || uid,
-        today: got.points,
-        sent_today: sent.points,
-        today_delta: incomplete ? null : got.points - sent.points,
-        unpriced: got.unpriced,
-        sent_unpriced: sent.unpriced,
-        incomplete,
-        legs: got.legs,
-        sent: sent.legs,
-      };
-    }
-    entry.lenses.y3 = {
-      sides: y3Sides,
-      incomplete: uids.some((uid) => y3Sides[uid].incomplete),
-    };
     const topToday = vmaxAt(vmaxIdx, today);
     const top0 = vmaxAt(vmaxIdx, t0);
     const evenSides = {};
     for (const uid of uids) {
       const s = entry.lenses.realized.sides[uid];
       const todayEvenLegs = (legs) => (legs || []).map((l) => {
-        const flat = flatten(l.value, topToday);
-        const priced = { ...l, raw: l.value, value: flat };
-        return { ...l, value: priceTodayValue(flat, priced, todayPrice) };
+        // realized legs are raw DP. Flatten once, store value_flat, then blend.
+        const raw = l.raw != null ? l.raw : l.value;
+        const flat = flatten(raw, topToday);
+        if (flat == null || !Number.isFinite(flat)) return { ...l, value: flat, value_flat: flat };
+        const priced = { ...l, raw, value: flat, value_flat: flat };
+        return { ...l, value_flat: flat, value: priceTodayValue(flat, priced, todayPrice) };
       });
       const gotLegs = todayEvenLegs(s.legs);
       const sentLegs = todayEvenLegs(s.sent);
       const gotP = gotLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sentP = sentLegs.reduce((a, l) => a + (l.value || 0), 0);
       const sent0Raw = bagFor(legs, uid, t0, "realized", ctx, "out");
-      const got0Legs = flattenLegs(s.t0_legs, top0);
-      const sent0Legs = flattenLegs(sent0Raw.legs, top0);
-      const t0Got = got0Legs.reduce((a, l) => a + (l.value || 0), 0);
-      const t0Sent = sent0Legs.reduce((a, l) => a + (l.value || 0), 0);
+      let got0Legs;
+      let sent0Legs;
+      let t0Got;
+      let t0Sent;
+      if (t0Lookback) {
+        const got0Bag = bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: true });
+        const sent0Bag = bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: true });
+        got0Legs = got0Bag.legs;
+        sent0Legs = sent0Bag.legs;
+        t0Got = got0Bag.points;
+        t0Sent = sent0Bag.points;
+      } else {
+        got0Legs = flattenLegs(s.t0_legs, top0);
+        sent0Legs = flattenLegs(sent0Raw.legs, top0);
+        t0Got = got0Legs.reduce((a, l) => a + (l.value || 0), 0);
+        t0Sent = sent0Legs.reduce((a, l) => a + (l.value || 0), 0);
+      }
       const t0Priced = s.t0 != null;
       const todayDelta = s.incomplete ? null : gotP - sentP;
       const t0Delta = s.incomplete || !t0Priced ? null : t0Got - t0Sent;
@@ -699,19 +835,21 @@ async function main() {
       year_ends: evenYearEnds,
       incomplete: entry.lenses.realized.incomplete,
     };
-    const winKeys = [["t0", 0], ["y1", 1], ["y2", 2], ["y3", 3], ["all", null]];
+    const winKeys = (leagueFormat.windows && leagueFormat.windows.length)
+      ? leagueFormat.windows.slice()
+      : ["t0", "y1", "y2", "y3", "all"];
     entry.lenses.windows = {};
-    for (const [key, n] of winKeys) {
-      const dates = n === 0 ? [t0] : windowAsOfs(t0, today, n);
+    for (const key of winKeys) {
+      const dates = lensAsOfs(key, t0, today);
       const sides = {};
       for (const uid of uids) {
-        const got = n === 0
-          ? bagAtEven(legs, uid, t0, ctx, "in")
+        const got = key === "t0"
+          ? bagAtEven(legs, uid, t0, ctx, "in", { t0Lookback: t0Lookback })
           : bagY3(legs, uid, dates, today, ctx, "in");
-        const sent = n === 0
-          ? bagAtEven(legs, uid, t0, ctx, "out")
+        const sent = key === "t0"
+          ? bagAtEven(legs, uid, t0, ctx, "out", { t0Lookback: t0Lookback })
           : bagY3(legs, uid, dates, today, ctx, "out");
-        const incomplete = got.unpriced + sent.unpriced > 0 || (n !== 0 && !dates.length);
+        const incomplete = got.unpriced + sent.unpriced > 0 || (key !== "t0" && !dates.length);
         sides[uid] = applyToSide({
           name: nameById[uid] || uid,
           today: got.points,
@@ -974,7 +1112,7 @@ async function main() {
         value: nowVal(key),
         rostered: rosterOwner.has(key),
         drafted: !!d,
-        forever: !!(d && d.season === "2019" && !leftHome && sitsWith === d.drafted_by_user_id && rosterOwner.has(key)),
+        forever: !!(d && d.season === foreverSeason && !leftHome && sitsWith === d.drafted_by_user_id && rosterOwner.has(key)),
       });
     }
     const slim = (r) => ({
@@ -996,17 +1134,50 @@ async function main() {
     return { most_traded, least_traded, forever, homesteaders };
   }
 
+  const draftSeasons = [...new Set((draftPicks || []).map((p) => String(p.season || "")).filter(Boolean))].sort();
+  const foreverSeason = leagueFormat.kind === "redraft"
+    ? (draftSeasons[draftSeasons.length - 1] || String(today).slice(0, 4))
+    : "2019";
   const player_lists = playerLists();
-  check("has current rosters", readJson("rosters_now.json", []).length === 10);
-  check("most traded is 5", player_lists.most_traded.length === 5);
-  check("least traded is 5", player_lists.least_traded.length === 5);
-  check("homesteaders is 5", player_lists.homesteaders.length === 5);
-  check("most ranked by trades", player_lists.most_traded[0].trades >= player_lists.most_traded[4].trades);
-  check("least ranked by trades", player_lists.least_traded[0].trades <= player_lists.least_traded[4].trades);
+  const rostersNow = readJson("rosters_now.json", []);
+  const nowOwner = new Map();
+  for (const r of rostersNow) {
+    const uid = r.owner_id || r.user_id;
+    for (const pid of (r.players || [])) nowOwner.set(String(pid), uid);
+  }
+  const firstsHeld = leagueFormat.kind === "redraft"
+    ? (draftPicks || []).filter((p) => String(p.season) === foreverSeason && Number(p.round) === 1)
+      .map((p) => {
+        const sits = nowOwner.get(String(p.player_id));
+        return {
+          season: String(p.season),
+          round: 1,
+          pick_no: Number(p.pick_no) || 0,
+          player: p.label || p.player_id,
+          owner_id: sits || p.drafted_by_user_id || "",
+          owner: nameById[sits || p.drafted_by_user_id] || "",
+          drafted_by: nameById[p.drafted_by_user_id] || "",
+          held: !!(sits && sits === p.drafted_by_user_id),
+        };
+      })
+    : [];
+  check("has current rosters", rostersNow.length === TEAMS || rostersNow.length >= 2);
+  if (player_lists.most_traded.length >= 2) {
+    check("most ranked by trades", player_lists.most_traded[0].trades >= player_lists.most_traded[player_lists.most_traded.length - 1].trades);
+  }
+  if (player_lists.least_traded.length >= 2) {
+    check("least ranked by trades", player_lists.least_traded[0].trades <= player_lists.least_traded[player_lists.least_traded.length - 1].trades);
+  }
   check("forever never moved", player_lists.forever.every((r) => r.trades === 0));
-  check("forever still rostered", player_lists.forever.length > 0);
-  check("homestead not forever", player_lists.homesteaders.every((r) => !player_lists.forever.some((f) => f.name === r.name)));
-  check("homestead days ranked", player_lists.homesteaders[0].days >= player_lists.homesteaders[4].days);
+  const isCuckle = String(LEAGUE_ID) === CUCKLE_LEAGUE_ID;
+  if (isCuckle) {
+    check("most traded is 5", player_lists.most_traded.length === 5);
+    check("least traded is 5", player_lists.least_traded.length === 5);
+    check("homesteaders is 5", player_lists.homesteaders.length === 5);
+    check("forever still rostered", player_lists.forever.length > 0);
+    check("homestead not forever", player_lists.homesteaders.every((r) => !player_lists.forever.some((f) => f.name === r.name)));
+    check("homestead days ranked", player_lists.homesteaders[0].days >= player_lists.homesteaders[4].days);
+  }
 
   function reviewTape() {
     return REVIEW_IDS.map((id) => {
@@ -1021,13 +1192,13 @@ async function main() {
       row.loser = nameById[loserId] || loserId;
       row.winner_id = winnerId;
       row.steep_delta = t.lenses.realized.sides[winnerId]?.today_delta ?? null;
-      row.y3_delta = t.lenses.y3?.sides[winnerId]?.today_delta ?? null;
+      row.y3_delta = t.lenses.windows?.y3?.sides[winnerId]?.today_delta ?? null;
       return row;
     }).filter(Boolean);
   }
 
   const review_trades = reviewTape();
-  check("review tape is 10", review_trades.length === 10);
+  if (isCuckle) check("review tape is 10", review_trades.length === 10);
 
   writeJson("trade_meter.json", meters);
   writeJson("leaderboard.json", leaderboard);
@@ -1038,7 +1209,15 @@ async function main() {
   });
 
   const pickIndex = buildPicks();
+  // title-path.mjs runs next in build.mjs and adds `place` to each of these -- last season's
+  // finish, which is the order the seat picker lists them in. It derives that from the season
+  // walk it already does, so do not try to compute it here.
   writeUi("members.json", members.map((m) => ({ user_id: m.user_id, name: m.canonical_name })));
+  const bridge = readJson("provider_bridge.json", {}) || {};
+  const provFile = readJson("providers.json", {}) || {};
+  const extraIds = Array.isArray(provFile.sleeper_extra_ids)
+    ? provFile.sleeper_extra_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : [];
   writeUi("league.json", {
     traders: leaderboard,
     drafters_rookie: draftersRookie,
@@ -1046,6 +1225,18 @@ async function main() {
     review_trades,
     player_lists,
     today,
+    format: leagueFormat,
+    firsts_held: firstsHeld,
+    providers: {
+      sleeper_seasons: bridge.sleeper_seasons || [],
+      espn_seasons: bridge.espn_seasons || [],
+      espn_authorized: !!bridge.espn_authorized,
+      espn_reason: bridge.espn_reason || null,
+      sleeper_league_id: String(provFile.sleeper_league_id || LEAGUE_ID || ""),
+      sleeper_extra_ids: extraIds.filter((x) => x !== String(provFile.sleeper_league_id || LEAGUE_ID || "")),
+      espn_league_id: provFile.espn_league_id || null,
+      mapped: bridge.mapped || 0,
+    },
   });
   writeUi("picks.json", pickIndex);
 
@@ -1079,7 +1270,13 @@ async function main() {
   }
 
   check("no faab", !allLegs.some((l) => l.kind === "faab"));
-  check("has sent legs", allLegs.some((l) => l.direction === "out"));
+  if (!allLegs.some((l) => l.direction === "out")) {
+    if (leagueFormat.kind === "redraft") {
+      console.warn("revalue: no sent legs on this redraft tape");
+    } else {
+      check("has sent legs", false);
+    }
+  }
   check("no one-way on meter", meters.every((t) =>
     t.user_ids.every((uid) => (t.lenses.realized.sides[uid]?.legs.length || 0) > 0),
   ));
@@ -1105,6 +1302,7 @@ async function main() {
     }
   }
   check("partner pairs invert", pairBreaks.length === 0);
+  if (isCuckle) {
   const wilson = pickIndex["pick:2022:1:7"];
   check("wilson hops", wilson?.hops.length === 5);
   const wilsonToday = wilson.hops.find((h) => h.exit === "drafted")?.out;
@@ -1126,7 +1324,7 @@ async function main() {
   const chiefArae = meters.find((t) => t.transaction_id === "460470201385742336");
   const chiefId = members.find((m) => m.canonical_name === "ChiefGumby")?.user_id;
   const zekeToday = chiefArae?.lenses.realized.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
-  const zekeY3 = chiefArae?.lenses.y3.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
+  const zekeY3 = chiefArae?.lenses.windows?.y3?.sides[chiefId]?.legs.find((l) => l.became === "Ezekiel Elliott");
   check("zeke on chief-arae", !!(zekeToday && zekeY3));
   check("zeke 3y not leftover 3", zekeY3.value != null && zekeY3.value !== 3);
   let ghostZero = 0;
@@ -1176,11 +1374,15 @@ async function main() {
       const r = t.lenses.realized.sides[uid];
       const e = t.lenses.even.sides[uid];
       const gotToday = (r.legs || []).reduce((a, l) => {
-        const flat = flatten(l.value, topToday);
-        return a + (priceTodayValue(flat, { ...l, raw: l.value, value: flat }, todayPrice) || 0);
+        const raw = l.raw != null ? l.raw : l.value;
+        const flat = flatten(raw, topToday);
+        return a + (priceTodayValue(flat, { ...l, raw, value: flat, value_flat: flat }, todayPrice) || 0);
       }, 0);
       if (Math.abs((e.today || 0) - (e.value_adjust || 0) - gotToday) >= 1) todayDrift += 1;
     }
+  }
+  if (todayDrift) {
+    console.warn("revalue: even-today drift on " + todayDrift + " sides (meter already written)");
   }
   check("even today is retired/ktc blend", todayDrift === 0);
   const ceedeeTx = meters.find((t) => t.date === "2025-09-04" && t.names.includes("TrumanCooper"));
@@ -1191,7 +1393,8 @@ async function main() {
   const zekeEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Ezekiel Elliott"));
   const hillEvenToday = (chiefAraeEven?.legs || []).find((l) => (l.became || l.label || "").includes("Tyreek Hill"));
   check("zeke today retired 0", zekeEvenToday != null && zekeEvenToday.value === 0);
-  check("hill today blended", hillEvenToday != null && hillEvenToday.value >= 1600 && hillEvenToday.value <= 2000);
+  check("hill flatten is DP not the blend", hillEvenToday != null && hillEvenToday.value_flat >= 2500 && hillEvenToday.value_flat <= 3200);
+  check("hill today blended 1.4-1.9k", hillEvenToday != null && hillEvenToday.value >= 1400 && hillEvenToday.value <= 1900);
   const bakerHits = meters.flatMap((t) => t.user_ids.flatMap((uid) => {
     const s = t.lenses.even.sides[uid];
     return [...(s?.legs || []), ...(s?.sent || [])].filter((l) => (l.label || "") === "Baker Mayfield");
@@ -1199,6 +1402,17 @@ async function main() {
   check("baker still mid-4k", bakerHits.length && bakerHits.every((l) => l.value >= 4200 && l.value <= 5200));
   const winKeys = ["t0", "y1", "y2", "y3", "all"];
   check("every trade has windows", meters.every((t) => winKeys.every((k) => t.lenses.windows?.[k])));
+  // Season clocks: an in-season October deal's 1-season window ends that Jan 31 and must
+  // carry more than a couple of year-end snaps once enough history has elapsed.
+  {
+    const sample = meters.find((t) => t.date && t.date >= "2023-10-01" && t.date <= "2023-10-31");
+    if (sample) {
+      const y1 = sample.lenses.windows.y1;
+      check("oct trade y1 uses season snaps", (y1?.snaps || 0) >= 8);
+      const y2 = sample.lenses.windows.y2;
+      check("oct trade y2 spans further", (y2?.snaps || 0) >= (y1?.snaps || 0));
+    }
+  }
   const winZero = meters.filter((t) => {
     if (t.user_ids.length !== 2) return false;
     return winKeys.some((k) => {
@@ -1213,6 +1427,13 @@ async function main() {
   check("chief-arae t0 scored", !chiefArae?.lenses.windows.t0.incomplete
     && chiefArae?.lenses.windows.t0.sides[chiefId]?.today_delta != null);
   check("chief-arae all scored", chiefArae?.lenses.windows.all.sides[chiefId]?.today_delta != null);
+  {
+    const old = meters.find((t) => t.date && t.date <= "2020-12-31");
+    if (old) {
+      const allSnaps = old.lenses.windows.all?.snaps || 0;
+      check("all lens weekly not year-end sparse", allSnaps >= 50);
+    }
+  }
   let unpricedPickT0 = 0;
   for (const t of meters) {
     for (const uid of t.user_ids) {
@@ -1223,6 +1444,16 @@ async function main() {
     }
   }
   check("all t0 picks priced", unpricedPickT0 === 0);
+  {
+    const tipsUpId = members.find((m) => m.canonical_name === "TipsUp")?.user_id;
+    const tipsTed = meters.find((t) => t.transaction_id === "1361916549199306752");
+    const w = tipsTed?.lenses?.windows?.t0?.sides?.[tipsUpId];
+    const douglas = (w?.legs || []).find((l) => (l.label || "").includes("Douglas"));
+    const johnson = (w?.legs || []).find((l) => (l.label || "").includes("Johnson"));
+    check("caleb douglas t0 lookback revised up", douglas?.flag === "t0_lookback"
+      && douglas?.value != null && douglas.value > 856);
+  }
+  }
 
   console.log(JSON.stringify({
     trades: meters.length,

@@ -244,34 +244,166 @@ Add (when touching y3), do not replace:
 
 ---
 
-## 11. Keep Trade Cut (PARKED — not on the dashboard)
+## 11. Today book (HAVE) — four daily sources
 
-Dashboard book is **even-flatten only**. Window chips (day of trade / 1y / 2y / 3y / all time) average those flatten year-ends. Do not mix KTC into the score. Snapshot script and `data/ktc/` stay for later if we want a crowd check.
+Five Score-as windows stay **flatten-only**. Today / `even` is a sixth price built from
+committed daily snapshots. The phone never fetches these APIs.
 
-**Not a second book on historical clocks.** We start snapping KTC Superflex ourselves. First file = the day we ran `node ktc-snapshot.mjs`. There is no honest 2019–2025 KTC in this repo. Do not scrape “old” ranking pages — they do not exist as dated archives.
+**Not a market book on historical clocks.** There is no honest 2019–2025 KTC / FantasyCalc /
+DynastyDealer archive in this repo. Do not paste a 2026 snap onto older year-ends.
 
-### Weekly snapshot
+### Daily snapshot
 
-- Script: `ktc-snapshot.mjs`. Superflex only (`format=2`). ~10 pages, sequential, ~600ms delay, identifying User-Agent.
-- Writes `data/ktc/YYYY-MM-DD.json` and copies it to `data/ktc/latest.json`.
-- How to run: see `data/ktc/README.md`. Git-committing those JSON files **is** the history. Prefer local/cron over CI so we do not hammer KTC.
-- ToS posture: personal weekly snapshot for this league’s offline formula. **Not** a live scrape from the phone page.
-- Names → Sleeper id via DynastyProcess `db_playerids` (`ktc_id`, then merge_name). Unmatched names are logged on the snapshot (`unmatched`). A few misses do not fail the build. Picks join only when the name parses to `pickval:Y:R:Early|Mid|Late`.
+`snapshot-values.mjs` + `.github/workflows/values-daily.yml` (UTC morning). One dead API
+reuses yesterday’s file. Need DynastyProcess plus at least one other source.
+
+| Source | Script | Files | Notes |
+| --- | --- | --- | --- |
+| DynastyProcess Superflex | `value-snapshot.mjs --latest-only` | `data/dp/latest/`, `value_curve.json` | Flatten input |
+| KeepTradeCut Superflex | `ktc-snapshot.mjs` | `data/ktc/YYYY-MM-DD.json` | Crowd ~10k; polite scrape |
+| FantasyCalc Superflex dynasty | `fantasycalc-snapshot.mjs` | `data/fc/` | Trade-implied; native Sleeper ids |
+| DynastyDealer `base_value` | `dynastydealer-snapshot.mjs` | `data/dd/` | Real Sleeper trades |
+| Sleeper FFPG (signal) | `stats-snapshot.mjs` | `data/ui/pe.json` | **Never** enters today |
 
 ### Blend
 
-KTC is already crowd-flat (~10k scale). Do **not** run the even-flatten curve on KTC.
+KTC / FantasyCalc / DynastyDealer are already crowd-flat (~10k). Do **not** run `flatten()` on them.
+If a board max sits outside 8000–12000, `scale_i(v) = round(10000 * v / vmax_i)`.
 
 ```text
-w = 0.60                         // KTC_TODAY_WEIGHT — KTC owns, even-DP assists
-dp_even = flatten(DP value_2qb)  // even curve, that day's board max
-custom = (1 - w) * dp_even + w * ktc_sf   // only if a KTC file has as_of <= that day
+retired → 0
+else today = sum(w_i * scale_i(source_i)) / sum(w_i of sources that hit)
+
+w_flat = 0.25   // DynastyProcess flatten
+w_ktc  = 0.30   // KeepTradeCut Superflex
+w_fc   = 0.25   // FantasyCalc Superflex dynasty
+w_dd   = 0.20   // DynastyDealer base_value
 ```
 
-- No KTC file on or before the query date → flatten-only.
-- Player with both even-DP and a mapped KTC SF value → blend.
-- DP only → DP only. KTC only → skip (do not invent a DP row).
-- Pick → blend only on a clean `pickval` join; else even-DP pick price.
-- Do **not** paste the 2026-08-28 KTC book onto 2019–2025 year-ends. Those stay flatten-only until we have a snap for that week.
+- Missing source → drop that weight and renormalize.
+- A quote `<= 0` is a miss (DynastyDealer ships placeholder zeros).
+- Every market source misses → flatten-only (or null if there is no flatten either).
+- Missing flatten drops its weight. Camp UDFAs often have FantasyCalc / DynastyDealer before DynastyProcess lists them — today still prices from the markets that hit. Do not invent a fake DP flatten for windows.
+- Pick → blend on a clean `pickval` join; if Early/Late misses, try that year/round’s Mid.
+- Retirement is still “off KTC **and** off an NFL roster,” plus `RETIRED_SLEEPER_IDS`. Missing FC/DD does not retire anyone. An empty `players.nfl.json` does not infer retirement.
+- The today book uses each market’s **latest committed** snap. Do not drop FC/DD because the DP curve `as_of` is older than those files.
+- `revalue` flattens raw DP once, writes `value_flat`, then blends. apply reprices from `value_flat` only — a missing `value_flat` is left alone (do not treat a today number as flatten). t0 lookback stays flatten-only (no KTC/FC/DD on windows).
+- Production / P/E never moves the needle. P/E needs FFPG `>= 4` before Desk may chip buy/fair/sell.
+- `values-daily` rebuilds with `build.mjs --skip-snapshot --skip-page --allow-revalue-fail` so it does not re-clone DP history after the latest-only pull, does not run `generate-page.mjs`, and still commits new Sleeper trades if a today-book self-check fails.
 
-Dashboard hops use the same even-flatten book as trade bags. Raw DP is not shown.
+`build.mjs` / `league-sync` use the latest **committed** snaps. They do not scrape.
+
+**Nightly tape:** [`.github/workflows/league-nightly.yml`](../.github/workflows/league-nightly.yml) pulls Sleeper transactions + rosters + injury for every booked league at 08:10 and 22:20 UTC. Force-refresh `/players/nfl` so IR / Out is same-day. Do not let `revalue` self-checks (`even today is retired/ktc blend` and kin) skip that commit. Plan: [`plans/sleeper_daily_sweep.md`](./plans/sleeper_daily_sweep.md).
+
+**Live pick holders:** calculator trade options use Sleeper `/traded_picks` (`traded_picks.json`), not the last hop on the tape. A missed later flip left TrumanCooper offering Bubba’s 2028 3rd after that pick was already back with Bubba.
+
+---
+
+## 12. Calculator book (HAVE)
+
+**HAVE.** `?view=calc` prices a hypothetical 2-side swap on the **today / `even` book**
+(flatten + KTC + FantasyCalc + DynastyDealer) plus Value Adjustment via `applyVa` on the
+hypothetical bags. Card footers are pile + the VA painted on that card + Handcuff when it fires (one add, one
+round). The compare bar and Favors use `calcReceiveTotals` (flipped receive bags + VA +
+Handcuff), so
+a stud-for-quantity package bumps the side that receives the star. Cards are send piles,
+so that bump is a gold **Value Adjustment** line on the **star package** (the send card
+with fewer pieces) and under the compare receive that includes it — not on the extras
+send card. A second gold **Handcuff** line fires when that seat receives the listed NFL
+cuff and still holds the starter after the swap (`cuff-formula.mjs`; WR off). It is not
+extras VA and does not write tape. The gold meter starts at the center tick and grows left or right toward the
+side that is ahead by the receive **gap** (`gap / 3000` of that half; empty under 25;
+full at 3,000 reaches that end), not by pile share. Tape bags already do this via
+`value_adjust` (got star) and `value_adjust_sent` (sent star). Even-up chips re-run that helper after
+adding a candidate. Team Ideas even talks use the same totals so a Home card cannot
+flip Favors when it opens the calculator. Fill / Move 2-for-1 talks still score
+closeness on raw send piles. Recorded tape rows prefer the pipeline’s stored
+`today` / `sent_today` when both are present (`sideOf`); `applyVa` stays in the browser for
+calc clones. The catalog is `data/ui/calculator.json` from `build-calculator.mjs`: rostered
+players and still-held picks only, each with `roster_ord` in Sleeper team-page order
+(starters, bench, IR, taxi; picks after).
+A team on a side is optional: the same book can price a research bag (type any player or pick)
+or a seat bag (that roster plus its remaining draft capital). Roster meta and selected player
+rows may chip buy / fair / sell from `pe.json` (signal only). Pick rows expose a **tape**
+toggle: collapsed copy is became / still a pick; hop values stay inside the open tape.
+**Share.** A priced 2-side deal can be exported as one PNG (`calcShareDraw`) for the
+phone share sheet / Messages. Numbers on the card are the same receive totals and
+pile VA as the calculator. Votes do not appear on a hypothetical and do not change the number. This is the first reachable
+screen that **renders** `even`. The five Score-as windows stay flatten-only.
+
+**League leftover (HAVE).** After both sides hold priced legs, the compare block shows each
+seat’s **percent of league capital** after the swap (from → to) and that the other seats stay
+at the remainder. Percents only — no bag totals on Home, no 10-row leftover table.
+
+**Vote-nudge (HAVE).** When both calc seats are set, a tape deal exists between those display
+names, and `readVotes` has no `choice`, a button opens that trade’s existing vote sheet
+(`data-board-open` + `data-id` + `data-trade-solo="1"`). Copy: the room has not voted; opinion
+only; votes never enter the book. The nudge never writes a vote by itself.
+
+---
+
+## 13. Handcuff moves (2024–2025 study)
+
+**HAVE (research).** `scripts/cuff-history.py` walks nflverse Out/Doubtful + snap counts
+for 2024 and 2025, finds the snap-lead starter who missed 2+ games, prices the backup
+who inherited the snaps on the **DynastyProcess Superflex monthly** curve, and writes
+`data/research/cuff-history.json`. Clock is flatten-only history. Do not paste 2026
+KTC/FC/DD onto those dates. Do not use today’s `cuffs.json` as 2024 identity.
+
+**What moved.** Priced backups only (cuff ≥ 20 on the board). Early = first missed
+week 1–8. Late = 9–18. Peak = highest monthly snap during the absence.
+
+| Cell | n | Peak Δ median | % of cuff (med) | % of starter (med) |
+| --- | --- | --- | --- | --- |
+| RB early | 6 | +95 | 152% | **2.4%** |
+| RB late | 2 | +106 | 46% | 2.5% |
+| RB all | 8 | +98 | 110% | **2.4%** |
+| QB | 1 (Flacco) | +107 | 54% | 1.2% |
+| TE | 2 | −5 | — | ~0 |
+| WR | off | — | — | — |
+
+Poster cases: Mason +629 when CMC went down week 1 (10% of CMC); Hunt +75 on
+Pacheco (2%); White +216 on Bucky (5%); Vidal +115 on Hampton (3%); Charbonnet
++25 on a 2-week Walker sit, +130 on a late 2-week sit. Sermon −24 on a 3-week
+Taylor sit (not every cuff pops). Mayer / Strange / Musgrave did not reprice.
+
+**% of cuff is the wrong average** for cheap darts (Mason 1284%, Hunt 341%).
+**% of starter is the stable move** (~2.4% RB median; Mason’s season-ending IR
+is the high outlier at 10%). Late-season **share of starter is similar**; the
+damp is remaining games (~9/17), not a smaller % pop. QB backups barely live
+on the DP board; TE cuffs did not reprice. WR2 pops (Shaheed, Dotson, Deebo)
+are real and are **not** fantasy handcuffs — `cuffs.json` WR rows are WR2s.
+
+**Locked formula** (`cuff-formula.mjs`). Not extras VA. **HAVE on calc** as a gold
+**Handcuff** line (`calcCuffBump` → `calcReceiveTotals`). Pairing is **same NFL
+team + position** (`cuffTeammateAdds`): the seat must still hold the **league-lead**
+at that team/pos (highest today in the catalog), and the received player must be
+under half that lead. Two backups do not pair. Committees (Chuba / Brooks) stay 0.
+Team codes are normalized (`GB`/`GBP`, `TB`/`TBB`, `JAX`/`JAC`) so Kraft / Jonnu
+and Jacobs / Strong still match. Not fantasy slot-1 rows in `cuffs.json`.
+Javonte / Malik fires when Bubba already has Javonte and takes Malik. Not written
+to tape.
+
+```text
+pos_w:    RB 1.00 · QB 0.50 · TE 0.25 · WR 0
+season_w: early 1.00 · late 0.60
+weeks_w:  1–3w 0.40 · 4–7w 0.75 · 8+w 1.00
+
+cheap  = cuff / starter < 0.05
+raw    = cheap ? 0.05 * starter
+         : min(0.03 * starter, 0.50 * cuff)
+move   = min(650, round(raw * pos_w * season_w * weeks_w))
+
+healthy pairing (insurance):
+  cuff_va = min(350, round(move_early_long * p_out[pos] * hold_w))
+  p_out: RB 0.32 · QB 0.18 · TE 0.16 · WR 0
+  hold_w: already had starter 1.00 · got both in the deal 0.50
+```
+
+Worked: Mason 49 / CMC 6002 → +300 (actual +629). White 142 / Bucky 4340 → +217
+(actual +216). Charbonnet 458 / Walker 2987, 2 weeks → +36 (actual +25).
+Bijan 9505 / B-Rob 2029 healthy → insurance +91. Javonte 4405 / Malik 1517
+healthy → insurance +42. Hampton out 8+ early → Vidal-class cheap add +5% of
+Hampton.
+
+Re-run: `python3 scripts/cuff-history.py --write` then `node cuff-formula.mjs`.

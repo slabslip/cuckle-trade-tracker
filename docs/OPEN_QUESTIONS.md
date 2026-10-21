@@ -116,8 +116,111 @@ Truman answers these. Each item: what we assumed, why it matters, recommended de
 
 ## 12. Off-board Today: last-known (Zeke = 3) or 0?
 
-**Assumed (HAVE):** Last-known carry-forward. `off_board` code never fires.
+**Assumed (HAVE, 2026-09):** Today is **0** when the player is off the KTC Superflex board
+**and** off an NFL roster, plus the explicit `RETIRED_SLEEPER_IDS` set (Zeke, Mixon, Chubb).
+Hill stays live (rostered). A missing FantasyCalc or DynastyDealer quote does not retire anyone.
+Empty NFL dict does not infer retirement.
 
-**Why it matters:** Today −1940 is partly “Saquon still 2226, Zeke stuck at 3.” Forcing 0 on first missed monthly file would also zero a one-month scrape miss.
+**Why it matters:** Last-known carry-forward left Zeke at 3 against Saquon at 2226 and lied
+about dead capital. Zeroing on a one-month scrape miss would also be a lie — that is why the
+rule is “off KTC Superflex **and** off an NFL roster,” not “one source missed.”
 
-**Recommended:** Leave Today as last-known. Use the 3y floor for dead years. If we later zero Today, require N consecutive missing months, not one gap.
+**Recommended:** Keep the shipped retire-to-0 rule. Do not go back to last-known. Do not
+invent a DP flatten for a window when the today blend already has a market quote.
+
+---
+
+## 13. Calc residual and a vote-nudge — when?
+
+**Shipped.** League leftover is its own figure under the compare bar: each seat’s percent of
+league capital after the swap, plus the remainder for everyone else. No bag totals on Home.
+Vote-nudge opens the existing vote sheet on the last tape deal between those two names when
+the room has no `choice` yet. Opinion only. Votes never enter the book. See
+[`VALUE_SDD.md`](VALUE_SDD.md) §12 and [`VOTES_SDD.md`](VOTES_SDD.md).
+
+---
+
+## 14. Where do equipped titles and emblems paint?
+
+**Assumed (this pass):** Team home calling card (banner + emblem under the seat name, all four
+tabs) for every manager via `seat_cosmetics`. **Teams list** shows the same card for every
+seat, plus the equipped title/emblem names, blank until they equip. Barracks + Profile plate.
+Equipped **emblem** also paints next to your own seat name via `seatLabel`, and on that
+seat's Teams row after a shared load. Header / news / trade / ledger / smack bylines still
+do not paint other seats' titles. See [`COSMETICS_SDD.md`](COSMETICS_SDD.md).
+
+**Why it matters:** Painting titles on every inline name will lock a chrome decision we have
+not looked at on 390.
+
+**Recommended:** Keep the plate on the seat page and emblem-on-your-name. Do not add title
+tokens to every `seatLabel` yet.
+
+---
+
+## 15. Whose Data tile layout is this?
+
+**Assumed:** The Data board is a **private per-seat workspace**. It follows the claimed seat
+across devices via `seat_data_dash` (authenticated read/write for that membership only). Other
+managers do not see your tiles. Unsigned / no seat sees the starting 12 and cannot Edit.
+
+**Why it matters:** Cosmetics are public so team home can paint. A dashboard is a workspace, not
+a show-off plate. Anon-read would leak which reports a manager watches.
+
+**Recommended:** Keep the table private. Do not paint another seat's board on Data.
+
+The **trade block** is the opposite: `seat_trade_block` is league-readable so managers can see
+what is actually for sale. Only the owner writes their row. That is a listing, not a workspace.
+
+---
+
+## 16. Do we mint the expanded award list now?
+
+**Assumed:** 124-id catalog (62 matched pairs, including locked `four_time` / `five_time`, two- and
+three-time finalist emblems, and the week-score ladder). Championship rungs stay the highest prestige. Tier 1–4 grind
+still waits on weekly / waiver / lineup tape beyond scored team-weeks. See
+[`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
+
+**Why it matters:** Unlocking “set lineup 4 straight weeks” or “reject 10 trades” from
+championship + trade JSON alone is a lie. Matched title↔emblem pairs are intentional; equip
+still allows only one of each slot.
+
+**Recommended:** Adopt the championship hierarchy as law. Sort barracks that way. Next
+matched pairs + creative 15 are live. Remaining weekly Fresh 15 still wait on weekly tape.
+Comeback Dynasty (last → chip within 3 years) still needs multi-year place history.
+
+---
+
+## 17. How do we share a memory receipt?
+
+**Assumed:** Plain text first (English verdict + one number + URL). Picture
+optional later and must print the URL. Calc’s hypothetical PNG stays a
+*proposal*, not the proof card. See [`MEMORY_SDD.md`](MEMORY_SDD.md).
+
+**Why it matters:** The group text is where “that’s not how I remember it” dies.
+A chip nobody can send is a private notebook. A PNG that uses the today blend
+on a flatten clock is a new lie. An unsigned link that hits Sign in first
+kills the outsider loop.
+
+**Recommended:** Ship `shareProofNow` + `?r=trade&t=` (aliases `?tx=`,
+`?view=trade&t=`) on the open trade and hop tape. Public receipts skip the
+gate (`appScreen = "receipt"`), show real numbers, then Create a league.
+Do not merge hop P&L into the needle.
+
+---
+
+## 18. Do we scrape Sleeper chat for debates?
+
+**Assumed:** No. The fight list is the hop tape
+([`DEBATE_CATALOG.md`](DEBATE_CATALOG.md)). Sleeper REST has no messages
+route. APP_SDD §11 parks a silent scrape.
+
+**Why it matters:** Seven seasons of private banter on a public Pages repo
+is a leak. A fake “room said” line on a receipt is opinion wearing a
+number. Skipping the catalog leaves tile faces on whichever deal sorts
+first.
+
+**Recommended:** Keep scrape **No**. Rank doors from clocks, hops, titles,
+and partner volume. Later, if anyone wants a thread on a chip: member
+export or Shortcut paste into a private table (News / Ledger pattern),
+linked to an existing `transaction_id` or pick key — never a 17th kind,
+never raw quotes on `?r=` receipts.

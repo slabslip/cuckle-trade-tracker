@@ -1,0 +1,346 @@
+[
+  {
+    "date": "2025-09-11",
+    "season": "2025",
+    "week": 2,
+    "transaction_id": "1271954165261692928",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Calvin Ridley"
+        ],
+        "out": [
+          "Keon Coleman"
+        ]
+      },
+      "Aballers": {
+        "in": [
+          "Keon Coleman"
+        ],
+        "out": [
+          "Calvin Ridley"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-22",
+    "season": "2025",
+    "week": 3,
+    "transaction_id": "1275994024758509568",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Jonnu Smith",
+          "Daniel Jones"
+        ],
+        "out": [
+          "Kyle Pitts",
+          "Calvin Austin"
+        ]
+      },
+      "collinmccaskill": {
+        "in": [
+          "Kyle Pitts",
+          "Calvin Austin"
+        ],
+        "out": [
+          "Jonnu Smith",
+          "Daniel Jones"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-22",
+    "season": "2025",
+    "week": 3,
+    "transaction_id": "1275983247628595200",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Michael Pittman",
+          "Tyler Warren"
+        ],
+        "out": [
+          "DJ Moore",
+          "Dalton Kincaid"
+        ]
+      },
+      "TaylorJohnson16": {
+        "in": [
+          "DJ Moore",
+          "Dalton Kincaid"
+        ],
+        "out": [
+          "Michael Pittman",
+          "Tyler Warren"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-22",
+    "season": "2025",
+    "week": 3,
+    "transaction_id": "1275965278907269120",
+    "sides": {
+      "kotula69": {
+        "in": [
+          "CeeDee Lamb",
+          "Jalen Hurts"
+        ],
+        "out": [
+          "Nico Collins",
+          "George Pickens"
+        ]
+      },
+      "fatassmexican": {
+        "in": [
+          "Nico Collins",
+          "George Pickens"
+        ],
+        "out": [
+          "CeeDee Lamb",
+          "Jalen Hurts"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-09-30",
+    "season": "2025",
+    "week": 4,
+    "transaction_id": "1278857113552044032",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Tyler Allgeier"
+        ],
+        "out": [
+          "DeVonta Smith"
+        ]
+      },
+      "sbzy11": {
+        "in": [
+          "DeVonta Smith"
+        ],
+        "out": [
+          "Tyler Allgeier"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-11-05",
+    "season": "2025",
+    "week": 10,
+    "transaction_id": "1291857537913606144",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Tyrone Tracy",
+          "Tetairoa McMillan"
+        ],
+        "out": [
+          "Michael Pittman",
+          "Zach Charbonnet"
+        ]
+      },
+      "Aballers": {
+        "in": [
+          "Michael Pittman",
+          "Zach Charbonnet"
+        ],
+        "out": [
+          "Tyrone Tracy",
+          "Tetairoa McMillan"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2025-11-11",
+    "season": "2025",
+    "week": 10,
+    "transaction_id": "1294075214996475904",
+    "sides": {
+      "Tbow00": {
+        "in": [],
+        "out": []
+      },
+      "fatassmexican": {
+        "in": [],
+        "out": []
+      }
+    }
+  },
+  {
+    "date": "2026-09-29",
+    "season": "2026",
+    "week": 3,
+    "transaction_id": "1410775725224603648",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "DeVonta Smith",
+          "Jacory Croskey-Merritt"
+        ],
+        "out": [
+          "A.J. Brown",
+          "Cam Skattebo"
+        ]
+      },
+      "kotula69": {
+        "in": [
+          "A.J. Brown",
+          "Cam Skattebo"
+        ],
+        "out": [
+          "DeVonta Smith",
+          "Jacory Croskey-Merritt"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-09-30",
+    "season": "2026",
+    "week": 3,
+    "transaction_id": "1410848003199188992",
+    "sides": {
+      "TaylorJohnson16": {
+        "in": [
+          "Emeka Egbuka"
+        ],
+        "out": [
+          "Quinshon Judkins"
+        ]
+      },
+      "sbzy11": {
+        "in": [
+          "Quinshon Judkins"
+        ],
+        "out": [
+          "Emeka Egbuka"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-06",
+    "season": "2026",
+    "week": 4,
+    "transaction_id": "1413203445120278528",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Terry McLaurin",
+          "Bhayshul Tuten"
+        ],
+        "out": [
+          "Saquon Barkley",
+          "Ladd McConkey"
+        ]
+      },
+      "collinmccaskill": {
+        "in": [
+          "Saquon Barkley",
+          "Ladd McConkey"
+        ],
+        "out": [
+          "Terry McLaurin",
+          "Bhayshul Tuten"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1415780413250506752",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Wan'Dale Robinson",
+          "Woody Marks",
+          "Ollie Gordon"
+        ],
+        "out": [
+          "Aaron Jones",
+          "Jacory Croskey-Merritt",
+          "Denzel Boston"
+        ]
+      },
+      "fatassmexican": {
+        "in": [
+          "Aaron Jones",
+          "Jacory Croskey-Merritt",
+          "Denzel Boston"
+        ],
+        "out": [
+          "Wan'Dale Robinson",
+          "Woody Marks",
+          "Ollie Gordon"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1415766310914170880",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Makai Lemon"
+        ],
+        "out": [
+          "Khalil Shakir"
+        ]
+      },
+      "TaylorJohnson16": {
+        "in": [
+          "Khalil Shakir"
+        ],
+        "out": [
+          "Makai Lemon"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-13",
+    "season": "2026",
+    "week": 5,
+    "transaction_id": "1415552518649356288",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "Trevor Lawrence",
+          "Nico Collins",
+          "Rhamondre Stevenson"
+        ],
+        "out": [
+          "Chase Brown",
+          "Michael Wilson",
+          "Drake Maye"
+        ]
+      },
+      "kotula69": {
+        "in": [
+          "Chase Brown",
+          "Michael Wilson",
+          "Drake Maye"
+        ],
+        "out": [
+          "Trevor Lawrence",
+          "Nico Collins",
+          "Rhamondre Stevenson"
+        ]
+      }
+    }
+  }
+]

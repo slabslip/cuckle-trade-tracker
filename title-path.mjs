@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 /** Champions path. Official Sleeper GETs. Does not touch the trade needle. */
 import fs from "node:fs";
-import { DATA, readJson, sleeperGet, writeUi, ymd, roundName } from "./lib.mjs";
+import { CUCKLE_LEAGUE_ID, DATA, NFL_KICKOFF, detectLeagueFormat, readJson, readUi, setLeagueId, sleeperGet, writeJson, writeUi, ymd, roundName } from "./lib.mjs";
+import { fptsOf, pptsOf, placesFromBracket, recordRowsFor, standingsFor, standingsForRedraft } from "./lib/standings.mjs";
+import { remapEspnStanding } from "./lib/finishes.mjs";
+import { enrichTitleHistory } from "./lib/title-history.mjs";
+import { applyRedraftSeasons, champBySeasonFromTitles, decorateRedraftRows, seasonPointBuckets } from "./lib/redraft-season.mjs";
 
-const LEAGUE_ID = process.argv[2] || "1315431339301806080";
-const KICKOFF = {
-  2019: "2019-09-05",
-  2020: "2020-09-10",
-  2021: "2021-09-09",
-  2022: "2022-09-08",
-  2023: "2023-09-07",
-  2024: "2024-09-05",
-  2025: "2025-09-04",
-  2026: "2026-09-10",
-};
+const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
+const KICKOFF = NFL_KICKOFF;
+
+function seasonPlaceFn(league) {
+  return detectLeagueFormat(league).kind === "redraft" ? standingsForRedraft : standingsFor;
+}
+
+function placeRowsFor(s, nameByUser) {
+  const rows = seasonPlaceFn(s.league)(s, nameByUser);
+  if (detectLeagueFormat(s.league).kind !== "redraft") return rows;
+  const tape = readJson("weekly_scores.json", { scores: [] }) || {};
+  return decorateRedraftRows(rows, seasonPointBuckets(tape.scores || [], s.season));
+}
 
 async function walkLeagues(startId) {
   const leagues = [];
@@ -65,27 +71,76 @@ function pickLabel(p) {
   return `${p.season} ${roundName(p.round)}`;
 }
 
-function fptsOf(settings) {
-  const s = settings || {};
-  return (s.fpts || 0) + (s.fpts_decimal || 0) / 100;
-}
+/**
+ * The championship game itself: who the champion beat, the final score, and the
+ * champion's top scorer in that game. The bracket row with p === 1 is the title match;
+ * its round maps onto a week via playoff_week_start, and that week's matchup carries
+ * points and players_points. Returns { ok: false, reason } when a season cannot supply it
+ * rather than guessing.
+ */
+function championshipFinal(s, rid, players, nameByUser) {
+  const row = (s.wb || []).find((r) => r.p === 1);
+  if (!row || row.w == null) return { ok: false, reason: "no_final_in_bracket" };
+  if (row.w !== rid) return { ok: false, reason: "final_winner_is_not_champion" };
+  if (row.l == null) return { ok: false, reason: "final_has_no_recorded_loser" };
+  const round = Number(row.r);
+  if (!round) return { ok: false, reason: "final_has_no_round" };
+  if (!s.pws) return { ok: false, reason: "no_playoff_week_start" };
+  const week = s.pws + (round - 1);
+  const mus = s.weeks[week];
+  if (!mus || !mus.length) return { ok: false, reason: `no_matchups_for_week_${week}` };
+  const mine = mus.find((m) => m.roster_id === rid);
+  const theirs = mus.find((m) => m.roster_id === row.l);
+  if (!mine || !theirs) return { ok: false, reason: `roster_absent_from_week_${week}` };
+  if (mine.points == null || theirs.points == null) return { ok: false, reason: "week_has_no_points" };
 
-function pptsOf(settings) {
-  const s = settings || {};
-  return (s.ppts || 0) + (s.ppts_decimal || 0) / 100;
-}
-
-function placesFromBracket(wb) {
-  const place = {};
-  for (const row of wb || []) {
-    if (row.p && row.w) {
-      place[row.w] = row.p;
-      if (row.p === 1 && row.l) place[row.l] = 2;
-      else if (row.p === 3 && row.l) place[row.l] = 4;
-      else if (row.p === 5 && row.l) place[row.l] = 6;
+  const pp = mine.players_points || {};
+  const starters = (mine.starters || []).filter((id) => id && id !== "0");
+  let top = null;
+  for (const pid of starters) {
+    const pts = pp[pid];
+    if (pts == null) continue;
+    if (!top || pts > top.points) {
+      top = { player_id: String(pid), player: playerName(players, pid), points: money(pts) };
     }
   }
-  return place;
+  let topBench = null;
+  const started = new Set(starters.map(String));
+  for (const [pid, pts] of Object.entries(pp)) {
+    if (started.has(String(pid)) || pts == null) continue;
+    if (!topBench || pts > topBench.points) {
+      topBench = { player_id: String(pid), player: playerName(players, pid), points: money(pts) };
+    }
+  }
+  if (topBench && top && topBench.points <= top.points) topBench = null;
+
+  const uid = s.owner[row.l];
+  const champPoints = money(mine.points);
+  const oppPoints = money(theirs.points);
+  // The runner-up's regular-season record, off the same rows the standings are built from.
+  // The card puts it opposite the champion's own record, so the two have to be the same
+  // quantity from the same place -- a second read of `settings` here is how they drift.
+  const oppRow = recordRowsFor(s, nameByUser).find((r) => r.roster_id === row.l) || null;
+  return {
+    ok: true,
+    week,
+    round,
+    paired: mine.matchup_id != null && mine.matchup_id === theirs.matchup_id,
+    opponent: nameByUser[uid] || s.names[uid] || `roster ${row.l}`,
+    opponent_user_id: uid || null,
+    opponent_roster_id: row.l,
+    opponent_record: oppRow ? { wins: oppRow.wins, losses: oppRow.losses, ties: oppRow.ties } : null,
+    champ_points: champPoints,
+    opponent_points: oppPoints,
+    margin: money(champPoints - oppPoints),
+    tie: champPoints === oppPoints,
+    top,
+    top_bench: topBench,
+  };
+}
+
+function money(n) {
+  return Math.round(Number(n) * 100) / 100;
 }
 
 function overlap(now, then) {
@@ -599,6 +654,7 @@ async function main() {
     };
 
     const coreNow = new Set(openingStarters);
+    const finalGame = championshipFinal(s, rid, players, nameByUser);
     const row = {
       season: s.season,
       user_id: uid,
@@ -617,6 +673,8 @@ async function main() {
         league_mean_trades: s.leagueMeanTrades,
       },
       place: 1,
+      final: finalGame.ok ? finalGame : null,
+      final_missing: finalGame.ok ? null : finalGame.reason,
       prior,
       repeat,
       draft: { used, startup },
@@ -640,8 +698,36 @@ async function main() {
     titles.push(row);
   }
 
+  const espnTitles = readJson("espn_titles.json", []) || [];
+  const haveSeasons = new Set(titles.map((t) => String(t.season)));
+  for (const row of espnTitles) {
+    if (!row || haveSeasons.has(String(row.season))) continue;
+    titles.push(row);
+    haveSeasons.add(String(row.season));
+  }
+
   titles.sort((a, b) => String(b.season).localeCompare(String(a.season)));
 
+  const bridgeDoc = readJson("provider_bridge.json", {}) || {};
+  const espnStandings = (readJson("espn_standings.json", []) || [])
+    .map((r) => remapEspnStanding(r, bridgeDoc.bridge || {}, bridgeDoc.franchise || {}))
+    .filter(Boolean);
+  const sleeperPlaceRows = [];
+  for (const year of years) {
+    const s = seasons[String(year)];
+    if (!s || s.league.status !== "complete") continue;
+    for (const r of placeRowsFor(s, nameByUser)) {
+      sleeperPlaceRows.push({ ...r, season: String(year) });
+    }
+  }
+  const tape = readJson("weekly_scores.json", { scores: [] }) || {};
+  const espnPlaces = detectLeagueFormat(readJson("leagues.json", []) || []).kind === "redraft"
+    ? applyRedraftSeasons(espnStandings, tape.scores || [], champBySeasonFromTitles(titles))
+    : espnStandings;
+  enrichTitleHistory(titles, [...sleeperPlaceRows, ...espnPlaces]);
+
+  const isCuckle = String(LEAGUE_ID) === CUCKLE_LEAGUE_ID;
+  if (isCuckle) {
   const expected = {
     2025: "SF69erss",
     2024: "SF69erss",
@@ -663,6 +749,153 @@ async function main() {
     throw new Error("self-check: from_opening overflow");
   }
   if (titles.length !== 7) throw new Error(`self-check: expected 7 titles, got ${titles.length}`);
+  }
+
+  for (const t of titles) {
+    const f = t.final;
+    if (!f) continue;
+    if (f.champ_points < f.opponent_points) {
+      throw new Error(`self-check: ${t.season} champion lost the final ${f.champ_points}-${f.opponent_points}`);
+    }
+    if (!f.paired) throw new Error(`self-check: ${t.season} final pair has no shared matchup_id`);
+    if (f.opponent_user_id === t.user_id) throw new Error(`self-check: ${t.season} beat themselves`);
+    if (f.top && f.top.points > f.champ_points) {
+      throw new Error(`self-check: ${t.season} top starter outscored the team total`);
+    }
+    // The card prints this beside the champion's own record, so an absent or nonsense one
+    // would render as a blank half of a row rather than fail here.
+    const orec = f.opponent_record;
+    if (!orec) throw new Error(`self-check: ${t.season} final has no opponent_record`);
+    if (orec.wins + orec.losses + orec.ties !== t.record.wins + t.record.losses + t.record.ties) {
+      throw new Error(`self-check: ${t.season} runner-up played ${orec.wins}-${orec.losses}-${orec.ties},`
+        + ` a different number of games than the champion's ${t.record.wins}-${t.record.losses}-${t.record.ties}`);
+    }
+  }
+  if (isCuckle) {
+  const f25 = titles.find((t) => t.season === "2025").final;
+  if (!f25 || f25.opponent !== "TipsUp" || f25.champ_points !== 189.98 || f25.opponent_points !== 162.82) {
+    throw new Error(`self-check: 2025 final ${JSON.stringify(f25)}`);
+  }
+  if (f25.opponent_record.wins !== 11 || f25.opponent_record.losses !== 3 || f25.opponent_record.ties !== 0) {
+    throw new Error(`self-check: 2025 TipsUp record ${JSON.stringify(f25.opponent_record)}, expected 11-3-0`);
+  }
+  if (f25.top.player !== "Derrick Henry" || f25.top.points !== 45.6) {
+    throw new Error(`self-check: 2025 top starter ${JSON.stringify(f25.top)}`);
+  }
+  }
+
+  const seasonStandings = [];
+  for (const year of years) {
+    const s = seasons[String(year)];
+    if (!s || s.league.status !== "complete") continue;
+    seasonStandings.push({
+      season: String(year),
+      league_id: String(s.league.league_id),
+      status: "complete",
+      rows: placeRowsFor(s, nameByUser).map((r) => ({
+        roster_id: r.roster_id,
+        user_id: r.user_id || null,
+        name: r.name,
+        place: r.place,
+        from: r.from || null,
+        wins: r.wins,
+        losses: r.losses,
+        ties: r.ties,
+        fpts: r.fpts,
+      })),
+    });
+  }
+  writeJson("sleeper_season_standings.json", seasonStandings);
+
+  if (!titles.length) {
+    writeUi("titles.json", { as_of: ymd(Date.now()), league_id: LEAGUE_ID, titles: [] });
+    console.log(JSON.stringify({ titles: [], note: "no completed seasons" }, null, 2));
+    return;
+  }
+
+  // The seat picker lists managers in last season's finishing order, so that order has to be
+  // derived here: this is the only script that walks previous_league_id, and re-walking it
+  // somewhere else would be a second traversal that could disagree with this one. `titles` is
+  // sorted newest first and only holds completed seasons, so titles[0] is the season to use —
+  // 2026 slots in on its own the first time it completes, with no code change.
+  const lastSeason = titles[0].season;
+  if (!seasons[lastSeason]) {
+    writeUi("titles.json", { as_of: ymd(Date.now()), league_id: LEAGUE_ID, titles });
+    console.log(JSON.stringify({
+      titles: titles.map((t) => ({ season: t.season, name: t.name, provider: t.provider || "sleeper" })),
+      note: "newest title is not a Sleeper season on this walk",
+    }, null, 2));
+    return;
+  }
+  const standings = placeRowsFor(seasons[lastSeason], nameByUser);
+  const places = standings.map((r) => r.place);
+  if (new Set(places).size !== places.length) throw new Error(`standings ${lastSeason}: duplicate place`);
+  if (places.some((p, i) => p !== i + 1)) throw new Error(`standings ${lastSeason}: places are not 1..n`);
+  if (isCuckle && standings[0].user_id !== titles[0].user_id) {
+    throw new Error(`self-check: ${lastSeason} first place ${standings[0].name} is not the champion ${titles[0].name}`);
+  }
+  if (isCuckle && standings[0].from !== "bracket") {
+    throw new Error(`self-check: ${lastSeason} first place came from ${standings[0].from}, not the bracket`);
+  }
+  // The runner-up's record reaches the card through final.opponent_record. Assert it is the
+  // same row this table's second place is built from, so the card and the standings cannot
+  // print two different records for one team.
+  const runnerUp = standings[1];
+  const lastFinal = titles[0].final;
+  if (lastFinal && runnerUp) {
+    if (runnerUp.roster_id !== lastFinal.opponent_roster_id) {
+      throw new Error(`self-check: ${lastSeason} second place is roster ${runnerUp.roster_id},`
+        + ` but the final was lost by roster ${lastFinal.opponent_roster_id}`);
+    }
+    const o = lastFinal.opponent_record;
+    if (o.wins !== runnerUp.wins || o.losses !== runnerUp.losses || o.ties !== runnerUp.ties) {
+      throw new Error(`self-check: ${lastSeason} opponent_record ${o.wins}-${o.losses}-${o.ties}`
+        + ` disagrees with standings ${runnerUp.wins}-${runnerUp.losses}-${runnerUp.ties}`);
+    }
+  }
+
+  // revalue.mjs owns members.json; build.mjs runs it before this script, so the places land on
+  // the list it just wrote and a full rebuild always produces both halves. The picker reads the
+  // array in order, so write it in order too. Only `place` and `place_season` go on the wire:
+  // the record each place was derived from is printed below and documented in UI_SDD §2, not
+  // shipped to a browser that has no screen for it.
+  const members = readUi("members.json", null);
+  if (!Array.isArray(members) || !members.length) {
+    throw new Error("members.json is missing or empty -- run revalue.mjs before title-path.mjs");
+  }
+  const personBridge = (bridgeDoc && bridgeDoc.bridge) || {};
+  const rawMembers = readJson("members.json", []) || [];
+  const rawById = Object.fromEntries(rawMembers.map((m) => [String(m.user_id), m]));
+  const pruned = members.filter((m) => {
+    const uid = String(m.user_id || "");
+    if (!uid.startsWith("espn:")) return true;
+    const mapped = personBridge[uid];
+    return !mapped || mapped === uid;
+  });
+  for (const raw of rawMembers) {
+    const uid = String(raw.user_id || "");
+    if (!uid.startsWith("espn:")) continue;
+    if (personBridge[uid] && personBridge[uid] !== uid) continue;
+    if (pruned.some((m) => String(m.user_id) === uid)) continue;
+    pruned.push({ user_id: uid, name: raw.canonical_name });
+  }
+  const standByUser = Object.fromEntries(standings.filter((r) => r.user_id).map((r) => [r.user_id, r]));
+  const absent = [];
+  const seated = pruned.map((m) => {
+    const raw = rawById[String(m.user_id)];
+    const named = raw && raw.canonical_name ? { ...m, name: raw.canonical_name } : m;
+    const row = standByUser[named.user_id];
+    if (row) return { ...named, place: row.place, place_season: lastSeason };
+    absent.push(named.name);
+    return { ...named, place: null, place_season: lastSeason };
+  });
+  // A manager who joined after last season has no finish. Park them after everyone who does,
+  // by name, rather than guessing a place for them.
+  const missing = seated.filter((m) => m.place == null).sort((a, b) => a.name.localeCompare(b.name));
+  missing.forEach((m, i) => { m.place = standings.length + i + 1; });
+  seated.sort((a, b) => a.place - b.place);
+  if (absent.length) console.error(`note: no ${lastSeason} roster for ${absent.join(", ")} -- parked at the end`);
+  writeUi("members.json", seated);
 
   const payload = {
     as_of: ymd(Date.now()),
@@ -671,12 +904,24 @@ async function main() {
   };
   writeUi("titles.json", payload);
   console.log(JSON.stringify({
+    standings: {
+      season: lastSeason,
+      rule: "winners-bracket placement games, then wins*2+ties, then points for, then roster_id",
+      order: standings.map((r) => `${r.place}. ${r.name} (${r.from}) ${r.wins}-${r.losses}-${r.ties} ${r.fpts.toFixed(2)}`),
+      out: "data/ui/members.json",
+    },
     titles: titles.map((t) => ({
       season: t.season,
       name: t.name,
       record: `${t.record.wins}-${t.record.losses}`,
       fpts_rank: t.record.fpts_rank,
       used: t.draft.used.length,
+      final: t.final
+        ? `wk${t.final.week} beat ${t.final.opponent}`
+          + ` (${t.final.opponent_record.wins}-${t.final.opponent_record.losses}-${t.final.opponent_record.ties})`
+          + ` ${t.final.champ_points}-${t.final.opponent_points}`
+          + ` · top ${t.final.top ? t.final.top.player + " " + t.final.top.points : "—"}`
+        : `none (${t.final_missing})`,
       thesis: t.thesis,
     })),
     out: "data/ui/titles.json",

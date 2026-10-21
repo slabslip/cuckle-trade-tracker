@@ -1,0 +1,569 @@
+[
+  {
+    "user_id": "1132149096636141568",
+    "canonical_name": "Aballers",
+    "aliases": [
+      {
+        "name": "Aballers",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "The Aballers",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "AB2official",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Bowling",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin Bowling",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "1132146625205567488",
+    "canonical_name": "Adizzl3",
+    "aliases": [
+      {
+        "name": "Adizzl3",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Saarch Manning",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "MyBallZachErtz (2017 5th)",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "ESPNFAN1357922193",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Durham",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Austin Durham",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "1132355027018035200",
+    "canonical_name": "Biff34",
+    "aliases": [
+      {
+        "name": "Biff34",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Here Comes The Goo",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "QUEEF SUCKER",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "Brandon",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Turner",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Brandon Turner",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jones",
+        "kind": "espn_display",
+        "first_seen_season": "2020"
+      },
+      {
+        "name": "Brandon Jones",
+        "kind": "espn_display",
+        "first_seen_season": "2020"
+      }
+    ]
+  },
+  {
+    "user_id": "1132552110328983552",
+    "canonical_name": "collinmccaskill",
+    "aliases": [
+      {
+        "name": "collinmccaskill",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Hairy Slots",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Team12",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "Collin",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "McCaskill",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Collin McCaskill",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "741001884449525760",
+    "canonical_name": "fatassmexican",
+    "aliases": [
+      {
+        "name": "fatassmexican",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Nigger (underage panties)",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "B2B Champion (trans)",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "modano913",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Spencer",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Tully",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Spencer Tully",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{9A0F2471-67CF-43B9-8F24-7167CF73B917}",
+    "canonical_name": "hudmorse",
+    "aliases": [
+      {
+        "name": "hudmorse",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "hud",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "morse",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "hud morse",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{18812E00-2C7B-4818-812E-002C7BA81891}",
+    "canonical_name": "JaredMcFadden",
+    "aliases": [
+      {
+        "name": "JaredMcFadden",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jared",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "McFadden",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jared McFadden",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "1259573343355404288",
+    "canonical_name": "JnastyGBE300",
+    "aliases": [
+      {
+        "name": "JnastyGBE300",
+        "kind": "display_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "We not Jeantle.",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "SkrongMeat_Jnast_88",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jason ",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Gillespie",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Jason  Gillespie",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "740721014035660800",
+    "canonical_name": "kotula69",
+    "aliases": [
+      {
+        "name": "kotula69",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Troy_Stallsworth",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "kotulac27",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "chris",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "kotula",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "chris kotula",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{B0EF2A82-4834-4464-A821-849374CA853B}",
+    "canonical_name": "Ricky Swink",
+    "aliases": [
+      {
+        "name": "ESPNfan7396258614",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "Ricky",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "Swink",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      },
+      {
+        "name": "Ricky Swink",
+        "kind": "espn_display",
+        "first_seen_season": "2022"
+      }
+    ]
+  },
+  {
+    "user_id": "1131056110791880704",
+    "canonical_name": "sbzy11",
+    "aliases": [
+      {
+        "name": "sbzy11",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Dallas Redskins",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "W 6th Lessee",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "ShaneBrandes11",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Shane",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Brandes",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Shane Brandes",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "1338979666412716032",
+    "canonical_name": "SethHenry12",
+    "aliases": [
+      {
+        "name": "SethHenry12",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Ass Interference",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      }
+    ]
+  },
+  {
+    "user_id": "espn:{6F1F2750-982C-44B0-9F27-50982CE4B0DD}",
+    "canonical_name": "Stank93",
+    "aliases": [
+      {
+        "name": "Stank93",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Steven",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Shrout",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      },
+      {
+        "name": "Steven Shrout",
+        "kind": "espn_display",
+        "first_seen_season": "2023"
+      }
+    ]
+  },
+  {
+    "user_id": "719995760556478464",
+    "canonical_name": "TaylorJohnson16",
+    "aliases": [
+      {
+        "name": "TaylorJohnson16",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "9Wings",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Taylor_DJohnson",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Taylor",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Johnson",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Taylor Johnson",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "1132151393051095040",
+    "canonical_name": "Tbow00",
+    "aliases": [
+      {
+        "name": "Tbow00",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Tbow(22Champ/24MP/26MA)",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "Tbow (2022 Champ/2024 MP)",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      },
+      {
+        "name": "espnfan0776830917",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Thatcher",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Bowers",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Thatcher Bowers",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  },
+  {
+    "user_id": "458342725222133760",
+    "canonical_name": "TrumanCooper",
+    "aliases": [
+      {
+        "name": "TrumanCooper",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "PRONOUNS-SHE/DEUR",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "I IDENTIFY AS SHEDEUR",
+        "kind": "team_name",
+        "first_seen_season": "2025"
+      }
+    ]
+  },
+  {
+    "user_id": "1132151320410140672",
+    "canonical_name": "ztrain123",
+    "aliases": [
+      {
+        "name": "ztrain123",
+        "kind": "display_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "the best commissioner",
+        "kind": "team_name",
+        "first_seen_season": "2026"
+      },
+      {
+        "name": "ztrain12",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Zach",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Alavi",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      },
+      {
+        "name": "Zach Alavi",
+        "kind": "espn_display",
+        "first_seen_season": "2024"
+      }
+    ]
+  }
+]

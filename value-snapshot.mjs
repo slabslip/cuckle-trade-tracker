@@ -2,7 +2,19 @@
 /** DynastyProcess Superflex values. Latest always; monthly git history when asked. */
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import { DATA, parseCsv, pickTier, writeJson } from "./lib.mjs";
+import { pathToFileURL } from "node:url";
+import { DATA, parseCsv, pickTier, readJson, writeJson } from "./lib.mjs";
+
+/** --latest-only must replace today's rows, not smash the historical flatten book. */
+export function mergeLatestCurve(existing, latestRows, asOf) {
+  const prior = Array.isArray(existing) ? existing.filter((r) => r && r.as_of !== asOf) : [];
+  return prior.concat(Array.isArray(latestRows) ? latestRows : []);
+}
+
+export function mergeLatestSnapshots(existing, latestSnap, asOf) {
+  const prior = Array.isArray(existing) ? existing.filter((s) => s && s.as_of !== asOf) : [];
+  return [latestSnap, ...prior];
+}
 
 const DP_VALUES = "https://raw.githubusercontent.com/dynastyprocess/data/master/files/values.csv";
 const DP_IDS = "https://raw.githubusercontent.com/dynastyprocess/data/master/files/db_playerids.csv";
@@ -43,10 +55,11 @@ function sleeperId(row, ids) {
   return ids.byName.get(name) || null;
 }
 
-function curveFromValues(asOf, valuesText, ids) {
+function curveFromValues(asOf, valuesText, ids, formatKey = "2qb") {
+  const col = formatKey === "1qb" ? "value_1qb" : "value_2qb";
   const rows = [];
   for (const r of parseCsv(valuesText)) {
-    const value = num(r.value_2qb);
+    const value = num(r[col] != null && r[col] !== "" ? r[col] : r.value_2qb);
     if (value == null) continue;
     const pos = String(r.pos || "").toUpperCase();
     const name = String(r.player || "").trim();
@@ -55,7 +68,7 @@ function curveFromValues(asOf, valuesText, ids) {
       if (!parsed) continue;
       rows.push({
         provider: "dynastyprocess",
-        format_key: "2qb",
+        format_key: formatKey,
         as_of: asOf,
         asset_key: parsed.key,
         value,
@@ -67,7 +80,7 @@ function curveFromValues(asOf, valuesText, ids) {
     if (!sid) continue;
     rows.push({
       provider: "dynastyprocess",
-      format_key: "2qb",
+      format_key: formatKey,
       as_of: asOf,
       asset_key: `player:${sid}`,
       value,
@@ -170,7 +183,8 @@ async function main() {
   const ids = idMap(idsText);
 
   let curve = curveFromValues(asOf, valuesText, ids);
-  const snapshots = [{ as_of: asOf, source: "latest", players: curve.filter((r) => r.asset_key.startsWith("player:")).length, picks: curve.filter((r) => r.asset_key.startsWith("pickval:")).length }];
+  const latestSnap = { as_of: asOf, source: "latest", players: curve.filter((r) => r.asset_key.startsWith("player:")).length, picks: curve.filter((r) => r.asset_key.startsWith("pickval:")).length };
+  let snapshots = [latestSnap];
 
   if (WANT_HISTORY) {
     ensureRepo();
@@ -188,9 +202,13 @@ async function main() {
         picks: rows.filter((r) => r.asset_key.startsWith("pickval:")).length,
       });
     }
+  } else {
+    curve = mergeLatestCurve(readJson("value_curve.json", []), curve, asOf);
+    snapshots = mergeLatestSnapshots(readJson("value_snapshots.json", []), latestSnap, asOf);
   }
 
   writeJson("value_curve.json", curve);
+  writeJson("value_curve_1qb.json", curveFromValues(asOf, valuesText, ids, "1qb"));
   writeJson("value_snapshots.json", snapshots);
   console.log(
     JSON.stringify(
@@ -206,7 +224,9 @@ async function main() {
   );
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

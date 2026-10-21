@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /** Official Sleeper GETs only. Trade tape + aliases. Does not overwrite aliases.overrides.json. */
 import fs from "node:fs";
-import { DATA, readJson, sleeperGet, writeJson, ymd } from "./lib.mjs";
+import { DATA, loadProviders, readJson, setLeagueId, sleeperGet, writeJson, ymd } from "./lib.mjs";
 
-const LEAGUE_ID = process.argv[2] || "1315431339301806080";
+const LEAGUE_ID = setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
 function addAlias(map, userId, raw, kind, season) {
   if (!raw || typeof raw !== "string") return;
@@ -47,9 +47,14 @@ async function txsForWeek(leagueId, week, useCache) {
   return txs;
 }
 
+function wantFreshPlayers() {
+  return process.argv.includes("--fresh-players") || process.env.SLEEPER_FRESH_PLAYERS === "1";
+}
+
 async function loadPlayers() {
   const cache = `${DATA}/players.nfl.json`;
-  if (fs.existsSync(cache)) {
+  const fresh = wantFreshPlayers();
+  if (!fresh && fs.existsSync(cache)) {
     const age = Date.now() - fs.statSync(cache).mtimeMs;
     if (age < 24 * 60 * 60 * 1000) {
       return JSON.parse(fs.readFileSync(cache, "utf8"));
@@ -59,6 +64,34 @@ async function loadPlayers() {
   fs.mkdirSync(DATA, { recursive: true });
   fs.writeFileSync(cache, JSON.stringify(players));
   return players;
+}
+
+function writeInjuryNow(players, rosters) {
+  const ids = new Set();
+  for (const r of rosters) {
+    for (const id of [...(r.players || []), ...(r.reserve || []), ...(r.taxi || [])]) {
+      if (id) ids.add(String(id));
+    }
+  }
+  const rows = {};
+  for (const id of ids) {
+    const p = players[id] || {};
+    const injury = p.injury_status || null;
+    const status = p.status || null;
+    if (!injury && status !== "Inactive") continue;
+    rows[id] = {
+      name: p.full_name || `${p.first_name || ""} ${p.last_name || ""}`.trim() || id,
+      injury_status: injury,
+      status,
+      team: p.team || null,
+      pos: p.position || null,
+    };
+  }
+  writeJson("injury_now.json", {
+    as_of: new Date().toISOString().slice(0, 10),
+    n: Object.keys(rows).length,
+    players: rows,
+  });
 }
 
 function playerLabel(players, id) {
@@ -77,10 +110,22 @@ async function main() {
   const overrides = readJson("aliases.overrides.json", {}) || {};
 
   const leagues = await walkLeagues(LEAGUE_ID);
+  const extraIds = (loadProviders(LEAGUE_ID).sleeper_extra_ids || [])
+    .map((id) => String(id || "").trim())
+    .filter((id) => id && id !== String(LEAGUE_ID));
+  for (const extraId of extraIds) {
+    const more = await walkLeagues(extraId);
+    for (const lg of more) {
+      if (!leagues.some((row) => String(row.league_id) === String(lg.league_id))) {
+        leagues.push(lg);
+      }
+    }
+  }
   const members = new Map();
   const observations = [];
   const seats = [];
   const trades = [];
+  const moves = [];
   const seenTx = new Set();
   const legs = [];
 
@@ -120,6 +165,9 @@ async function main() {
           roster_id: r.roster_id,
           owner_id: r.owner_id,
           players: r.players || [],
+          starters: r.starters || [],
+          reserve: r.reserve || [],
+          taxi: r.taxi || [],
         });
       }
     }
@@ -129,9 +177,26 @@ async function main() {
       const txs = await txsForWeek(league.league_id, week, useCache);
       if (!Array.isArray(txs)) continue;
       for (const tx of txs) {
-        if (tx.type !== "trade" || tx.status !== "complete") continue;
+        if (!tx || tx.status !== "complete") continue;
         if (seenTx.has(tx.transaction_id)) continue;
         seenTx.add(tx.transaction_id);
+
+        if (tx.type === "waiver" || tx.type === "free_agent" || tx.type === "commissioner") {
+          moves.push({
+            transaction_id: tx.transaction_id,
+            type: tx.type,
+            league_id: league.league_id,
+            season,
+            week,
+            created: tx.created,
+            date: ymd(tx.created),
+            roster_ids: tx.roster_ids || [],
+            adds: tx.adds || {},
+            drops: tx.drops || {},
+          });
+          continue;
+        }
+        if (tx.type !== "trade") continue;
 
         const toUser = (rosterId) => rosterOwner.get(rosterId) || null;
         trades.push({
@@ -260,24 +325,35 @@ async function main() {
     leagues.map((l) => ({
       league_id: l.league_id,
       season: l.season,
-      name: l.name,
+      name: String(l.name || "").trim(),
       previous_league_id: l.previous_league_id,
       num_teams: l.settings?.num_teams,
       playoff_teams: l.settings?.playoff_teams,
-      superflex: (l.roster_positions || []).filter((p) => p === "QB").length >= 2,
+      superflex: (l.roster_positions || []).filter((p) => p === "QB" || p === "SUPER_FLEX").length >= 2,
+      roster_positions: l.roster_positions || [],
+      settings: { type: l.settings?.type, num_teams: l.settings?.num_teams },
+      scoring_settings: {
+        rec: l.scoring_settings?.rec,
+        rec_te: l.scoring_settings?.rec_te,
+        bonus_rec_te: l.scoring_settings?.bonus_rec_te,
+      },
     })),
   );
   writeJson("members.json", memberList);
   writeJson("name_observations.json", observations);
   writeJson("seats.json", seats);
   writeJson("rosters_now.json", currentRosters);
+  writeInjuryNow(players, currentRosters);
+  const tradedPicks = (await sleeperGet(`/league/${LEAGUE_ID}/traded_picks`)) || [];
+  writeJson("traded_picks.json", Array.isArray(tradedPicks) ? tradedPicks : []);
+  writeJson("moves.json", moves.sort((a, b) => String(a.date).localeCompare(String(b.date))));
   writeJson("trades.json", trades);
   writeJson("trade_legs.json", legs);
   writeJson("trade_tape.json", tape);
   writeJson("aliases.json", aliasesSeed);
 
   if (!legs.some((l) => l.direction === "out")) {
-    throw new Error("self-check failed: no sent legs");
+    console.warn("sleeper-sync: no sent legs on this tape (quiet redraft is allowed)");
   }
 
   console.log(
@@ -286,6 +362,7 @@ async function main() {
         seasons: leagues.map((l) => l.season),
         members: memberList.length,
         trades: trades.length,
+        moves: moves.length,
         legs: legs.length,
         overrides: Object.keys(overrides).length,
         out: DATA,

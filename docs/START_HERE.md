@@ -1,0 +1,145 @@
+# Start here — Chuckle Fantasy (Cuckle tracker session repo)
+
+**This repo is the product and the Cursor Cloud Agent session workspace.** Everything for
+Chuckle Fantasy / CuckleChunckle lives in **https://github.com/slabslip/cuckle-trade-tracker**
+— not SlabSlip, not another folder name. When docs say “session repo” or “Cuckle trade repo,”
+they mean this repository.
+
+| What | Where |
+| --- | --- |
+| **Repo** | `slabslip/cuckle-trade-tracker` |
+| **Branch** | **`main`** (canonical — ignore old `cursor/*-878c` draft PRs unless you are reviving one) |
+| **Live site** | https://slabslip.github.io/cuckle-trade-tracker/ |
+| **Supabase** | https://gtqyvnkkjiksmmtmzubw.supabase.co |
+| **Cuckle Sleeper league** | `1315431339301806080` |
+| **Truman Cooper seat** | username `TrumanCooper`, Sleeper `458342725222133760` |
+
+---
+
+## Where is the code on your machine?
+
+| Environment | Repo root | Do **not** use |
+| --- | --- | --- |
+| **Cursor Cloud Agent** | `/workspace` | `~/Documents/...`, `/path/to/...` |
+| **Mac / PC clone** | wherever you cloned, e.g. `~/Documents/cuckle-trade-tracker` | literal `/path/to/cuckle-trade-tracker` |
+
+```bash
+# Always start in the repo root (folder that contains supabase/, db/, generate-page.mjs)
+git checkout main
+git pull origin main
+```
+
+---
+
+## Go-live checklist (do in order)
+
+Full click-by-click detail: [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
+
+### 1. Supabase SQL (in order)
+
+Supabase dashboard → **SQL Editor** → paste each file from `db/` and **Run**:
+
+1. `db/phase1-seat-auth.sql`
+2. `db/multi-league-app.sql`
+3. `db/commissioner-invites.sql`
+4. `db/wave1-invite-hardening.sql`
+5. `db/wave2-vote-identity.sql`
+6. `db/wave2b-vote-unique.sql`
+7. `db/wave5-invite-plain.sql`
+8. `db/wave6-one-seat-redeem.sql`
+9. `db/wave8-vote-tally-members.sql` — tallies count **current claimed seats only**; view must use `security_invoker = false` so every device can read counts
+10. `db/wave9-vote-write-fix.sql` — fix vote INSERT RLS / membership sync so home casts save
+11. `db/wave12-ledger.sql` — bet Ledger tables + RLS + expire RPC
+12. `db/wave13-ledger-visibility.sql` — `visibility` (public/private) + party-or-public SELECT RLS
+13. `db/wave15-ledger-notes.sql` — leftover Shortcut drafts (`side_b` nullable, filer-only).
+14. `db/wave16-ledger-wager.sql` — **New wager** handshake: `house_odds`, `offer_rev`, `ledger_settle_votes`. Run after merging the wager PR.
+15. `db/wave17-ledger-clock.sql` — NFL clocks (`clock_kind` / `clock_meta`), win hints, seat style. Run after wave16.
+16. `db/wave18-seat-cosmetics.sql` — equipped titles / emblems (if not already applied)
+17. `db/wave21-news-league.sql` — optional `sleeper_league_id` on news shares
+18. `db/wave22-seat-reset.sql` — recovery email + Reset login prior username on invites
+
+**Ledger:** after wave12 + wave13 + wave16 + wave17, deploy Edge Function `ledger-ingest` (`LEDGER_INGEST_SECRET`).  
+Product rules: [`LEDGER_SDD.md`](LEDGER_SDD.md). **Step-by-step go-live:** [`LEDGER_BUILD_SDD.md`](LEDGER_BUILD_SDD.md).  
+**Shortcut note (later):** [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md).  
+Planning archive: [`plans/home_digest.md`](plans/home_digest.md) (Home + calc + barracks, shipped);
+[`plans/ledger_and_league_tab.md`](plans/ledger_and_league_tab.md), [`plans/ledger_privacy_views.md`](plans/ledger_privacy_views.md) (shipped); [`plans/ledger_join_exposure.md`](plans/ledger_join_exposure.md) (v1.1); [`plans/ledger_compose_and_alerts.md`](plans/ledger_compose_and_alerts.md) (locked).
+
+**Vote clean slate (Ducks + Truman + any seat):** run `scripts/wipe-trade-votes.sql` (`truncate public.trade_votes`), then re-run `db/wave8-vote-tally-members.sql` (or at least `db/wave8b-tally-view-fix.sql`). Deploy the page with `VOTE_KEY = cuckle.votes.v4`, then hard-refresh every phone so localStorage cannot re-upload old ballots. Everyone votes again from zero.
+
+If home voting says **Vote didn’t save**, run `db/wave9-vote-write-fix.sql`, hard-refresh, and retry (sign out/in if it still says sign in again).
+
+### 2. Supabase Auth settings
+
+Authentication → Providers → Email → **Confirm email OFF**
+
+Authentication → URL Configuration:
+
+- **Site URL:** `https://slabslip.github.io/cuckle-trade-tracker`
+- **Redirect URLs:** `https://slabslip.github.io/cuckle-trade-tracker/**`
+
+### 3. Deploy Edge Function `join-league`
+
+From repo root:
+
+```bash
+# Cloud Agent (Linux) — no brew, no cd to Documents
+cd /workspace
+export SUPABASE_ACCESS_TOKEN='sbp_...'   # from https://supabase.com/dashboard/account/tokens
+npx supabase login --token "$SUPABASE_ACCESS_TOKEN"
+./scripts/deploy-join-league.sh
+```
+
+Mac (if you cloned locally):
+
+```bash
+cd ~/Documents/cuckle-trade-tracker   # your clone path
+brew install supabase/tap/supabase    # one-time
+supabase login
+./scripts/deploy-join-league.sh
+```
+
+Confirm: Supabase → **Edge Functions** → **`join-league`**.
+
+### 4. Dogfood
+
+1. **Commissioner:** live URL → Create account → Create league `1315431339301806080` → copy **TrumanCooper** invite link
+2. **Member (incognito / phone):** open `?invite=CF-…` → suggested username from team name → Create account → dashboard → Add to Home Screen
+
+---
+
+## Build / regenerate site (optional)
+
+```bash
+node generate-page.mjs && node verify-strategy.mjs
+```
+
+Full meter pipeline: see [`README.md`](../README.md).
+
+---
+
+## Specs (read when you need depth)
+
+| Doc | Purpose |
+| --- | --- |
+| [`APP_SDD.md`](APP_SDD.md) | Accounts, invites, league home |
+| [`SUPABASE_SETUP.md`](SUPABASE_SETUP.md) | Votes, news queue, RLS |
+| [`PRODUCT.md`](PRODUCT.md) | Meter canon |
+| [`CUSTOM_DOMAIN.md`](CUSTOM_DOMAIN.md) | Own domain later |
+| [`LEDGER_NOTE_SDD.md`](LEDGER_NOTE_SDD.md) | v1.2 / v1.3 Note → Finish → Send + push to Pages |
+| [`STORE_LAW.md`](STORE_LAW.md) / [`STORE_OPS.md`](STORE_OPS.md) | App Store / TestFlight wrapper + human Apple / DNS / SQL |
+| [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md) | 1QB / Superflex / TEP / redraft / first-year empty states |
+| [`REDRAFT_TWO_PROVIDER.md`](REDRAFT_TWO_PROVIDER.md) | Gm 2026 LLJ — ESPN history + Sleeper redraft book |
+| [`MEMORY_SDD.md`](MEMORY_SDD.md) | “That’s not how I remember it” — Your board, L0–L3 copy, public share → Create a league |
+
+---
+
+## Troubleshooting
+
+| Symptom | Fix |
+| --- | --- |
+| `cd: ... No such file` | Use `/workspace` (Cloud Agent) or your real clone path |
+| `supabase: command not found` | `npx supabase` or `./scripts/deploy-join-league.sh` |
+| `brew: command not found` | You are on Linux — skip brew, use `npx` |
+| Signup “invalid email” | Fixed on `main` (`.invalid` domain); hard-refresh |
+| Invite link missing team name | Redeploy `join-league` (includes `invite_preview`) |
+| Old meter-only UI | Wrong URL or cache — use live Pages URL above |

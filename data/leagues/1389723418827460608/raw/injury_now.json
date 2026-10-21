@@ -1,0 +1,251 @@
+{
+  "as_of": "2026-10-21",
+  "n": 35,
+  "players": {
+    "2133": {
+      "name": "Davante Adams",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "LAR",
+      "pos": "WR"
+    },
+    "2216": {
+      "name": "Mike Evans",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "SF",
+      "pos": "WR"
+    },
+    "4035": {
+      "name": "Alvin Kamara",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NO",
+      "pos": "RB"
+    },
+    "4199": {
+      "name": "Aaron Jones",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIN",
+      "pos": "RB"
+    },
+    "4866": {
+      "name": "Saquon Barkley",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "RB"
+    },
+    "4881": {
+      "name": "Lamar Jackson",
+      "injury_status": "Out",
+      "status": "Inactive",
+      "team": "BAL",
+      "pos": "QB"
+    },
+    "4983": {
+      "name": "DJ Moore",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "BUF",
+      "pos": "WR"
+    },
+    "5844": {
+      "name": "T.J. Hockenson",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "MIN",
+      "pos": "TE"
+    },
+    "5850": {
+      "name": "Josh Jacobs",
+      "injury_status": "NA",
+      "status": "Active",
+      "team": "GB",
+      "pos": "RB"
+    },
+    "5859": {
+      "name": "A.J. Brown",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NE",
+      "pos": "WR"
+    },
+    "5872": {
+      "name": "Deebo Samuel",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "SF",
+      "pos": "WR"
+    },
+    "5892": {
+      "name": "David Montgomery",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "HOU",
+      "pos": "RB"
+    },
+    "5927": {
+      "name": "Terry McLaurin",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "WAS",
+      "pos": "WR"
+    },
+    "7526": {
+      "name": "Jaylen Waddle",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DEN",
+      "pos": "WR"
+    },
+    "7543": {
+      "name": "Travis Etienne",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "NO",
+      "pos": "RB"
+    },
+    "8121": {
+      "name": "Romeo Doubs",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "NE",
+      "pos": "WR"
+    },
+    "8142": {
+      "name": "Alec Pierce",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "IND",
+      "pos": "WR"
+    },
+    "8155": {
+      "name": "Breece Hall",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "NYJ",
+      "pos": "RB"
+    },
+    "8408": {
+      "name": "Jordan Mason",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "MIN",
+      "pos": "RB"
+    },
+    "9753": {
+      "name": "Zach Charbonnet",
+      "injury_status": "PUP",
+      "status": "Inactive",
+      "team": "SEA",
+      "pos": "RB"
+    },
+    "9756": {
+      "name": "Jordan Addison",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "MIN",
+      "pos": "WR"
+    },
+    "10229": {
+      "name": "Rashee Rice",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "KC",
+      "pos": "WR"
+    },
+    "10236": {
+      "name": "Dalton Kincaid",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "BUF",
+      "pos": "TE"
+    },
+    "11577": {
+      "name": "Will Shipley",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "PHI",
+      "pos": "RB"
+    },
+    "11625": {
+      "name": "Adonai Mitchell",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "NYJ",
+      "pos": "WR"
+    },
+    "11635": {
+      "name": "Ladd McConkey",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "LAC",
+      "pos": "WR"
+    },
+    "12469": {
+      "name": "Dylan Sampson",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "CLE",
+      "pos": "RB"
+    },
+    "12495": {
+      "name": "Ollie Gordon",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIA",
+      "pos": "RB"
+    },
+    "12512": {
+      "name": "Quinshon Judkins",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "CLE",
+      "pos": "RB"
+    },
+    "12518": {
+      "name": "Tyler Warren",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "IND",
+      "pos": "TE"
+    },
+    "12533": {
+      "name": "Jacory Croskey-Merritt",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "WAS",
+      "pos": "RB"
+    },
+    "12534": {
+      "name": "Kyle Monangai",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "CHI",
+      "pos": "RB"
+    },
+    "13281": {
+      "name": "Jordyn Tyson",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "NO",
+      "pos": "WR"
+    },
+    "13286": {
+      "name": "Jadarian Price",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "SEA",
+      "pos": "RB"
+    },
+    "13287": {
+      "name": "Jeremiyah Love",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "ARI",
+      "pos": "RB"
+    }
+  }
+}

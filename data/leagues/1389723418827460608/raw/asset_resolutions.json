@@ -1,0 +1,7202 @@
+[
+  {
+    "pick_key": "pick:2026:1:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 1,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9221",
+    "label": "Jahmyr Gibbs",
+    "pick_no": 1,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 2,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9509",
+    "label": "Bijan Robinson",
+    "pick_no": 2,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 3,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7564",
+    "label": "Ja'Marr Chase",
+    "pick_no": 3,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 4,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9493",
+    "label": "Puka Nacua",
+    "pick_no": 4,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 5,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6813",
+    "label": "Jonathan Taylor",
+    "pick_no": 5,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 6,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8138",
+    "label": "James Cook",
+    "pick_no": 6,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 7,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4034",
+    "label": "Christian McCaffrey",
+    "pick_no": 7,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 8,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7547",
+    "label": "Amon-Ra St. Brown",
+    "pick_no": 8,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 9,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9488",
+    "label": "Jaxon Smith-Njigba",
+    "pick_no": 9,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 10,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6786",
+    "label": "CeeDee Lamb",
+    "pick_no": 10,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 11,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6794",
+    "label": "Justin Jefferson",
+    "pick_no": 11,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 12,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:1:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9224",
+    "label": "Chase Brown",
+    "pick_no": 12,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 13,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4866",
+    "label": "Saquon Barkley",
+    "pick_no": 13,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 14,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9226",
+    "label": "De'Von Achane",
+    "pick_no": 14,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 15,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12507",
+    "label": "Omarion Hampton",
+    "pick_no": 15,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 16,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:3198",
+    "label": "Derrick Henry",
+    "pick_no": 16,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 17,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5859",
+    "label": "A.J. Brown",
+    "pick_no": 17,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 18,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8112",
+    "label": "Drake London",
+    "pick_no": 18,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 19,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8151",
+    "label": "Kenneth Walker",
+    "pick_no": 19,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 20,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7569",
+    "label": "Nico Collins",
+    "pick_no": 20,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 21,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12527",
+    "label": "Ashton Jeanty",
+    "pick_no": 21,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 22,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8137",
+    "label": "George Pickens",
+    "pick_no": 22,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 23,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11604",
+    "label": "Brock Bowers",
+    "pick_no": 23,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 24,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:2:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8130",
+    "label": "Trey McBride",
+    "pick_no": 24,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 25,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4984",
+    "label": "Josh Allen",
+    "pick_no": 25,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 26,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8144",
+    "label": "Chris Olave",
+    "pick_no": 26,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 27,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8150",
+    "label": "Kyren Williams",
+    "pick_no": 27,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 28,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11632",
+    "label": "Malik Nabers",
+    "pick_no": 28,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 29,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7525",
+    "label": "DeVonta Smith",
+    "pick_no": 29,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 30,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:10229",
+    "label": "Rashee Rice",
+    "pick_no": 30,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 31,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7588",
+    "label": "Javonte Williams",
+    "pick_no": 31,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 32,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13287",
+    "label": "Jeremiyah Love",
+    "pick_no": 32,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 33,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4881",
+    "label": "Lamar Jackson",
+    "pick_no": 33,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 34,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8155",
+    "label": "Breece Hall",
+    "pick_no": 34,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 35,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7543",
+    "label": "Travis Etienne",
+    "pick_no": 35,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 36,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:3:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11635",
+    "label": "Ladd McConkey",
+    "pick_no": 36,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 37,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7526",
+    "label": "Jaylen Waddle",
+    "pick_no": 37,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 38,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12514",
+    "label": "Emeka Egbuka",
+    "pick_no": 38,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 39,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6790",
+    "label": "D'Andre Swift",
+    "pick_no": 39,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 40,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6801",
+    "label": "Tee Higgins",
+    "pick_no": 40,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 41,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12481",
+    "label": "Cam Skattebo",
+    "pick_no": 41,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 42,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12526",
+    "label": "Tetairoa McMillan",
+    "pick_no": 42,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 43,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9997",
+    "label": "Zay Flowers",
+    "pick_no": 43,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 44,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8146",
+    "label": "Garrett Wilson",
+    "pick_no": 44,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 45,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12517",
+    "label": "Colston Loveland",
+    "pick_no": 45,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 46,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5892",
+    "label": "David Montgomery",
+    "pick_no": 46,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 47,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5927",
+    "label": "Terry McLaurin",
+    "pick_no": 47,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 48,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:4:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5850",
+    "label": "Josh Jacobs",
+    "pick_no": 48,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 49,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12512",
+    "label": "Quinshon Judkins",
+    "pick_no": 49,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 50,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12490",
+    "label": "Bhayshul Tuten",
+    "pick_no": 50,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 51,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11584",
+    "label": "Bucky Irving",
+    "pick_no": 51,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 52,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12529",
+    "label": "TreVeyon Henderson",
+    "pick_no": 52,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 53,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13286",
+    "label": "Jadarian Price",
+    "pick_no": 53,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 54,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8148",
+    "label": "Jameson Williams",
+    "pick_no": 54,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 55,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4983",
+    "label": "DJ Moore",
+    "pick_no": 55,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 56,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9484",
+    "label": "Tucker Kraft",
+    "pick_no": 56,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 57,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12518",
+    "label": "Tyler Warren",
+    "pick_no": 57,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 58,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11620",
+    "label": "Rome Odunze",
+    "pick_no": 58,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 59,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:2133",
+    "label": "Davante Adams",
+    "pick_no": 59,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 60,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:5:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12519",
+    "label": "Luther Burden",
+    "pick_no": 60,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 61,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11564",
+    "label": "Drake Maye",
+    "pick_no": 61,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 62,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8228",
+    "label": "Jaylen Warren",
+    "pick_no": 62,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 63,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8167",
+    "label": "Christian Watson",
+    "pick_no": 63,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 64,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13279",
+    "label": "Carnell Tate",
+    "pick_no": 64,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 65,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6904",
+    "label": "Jalen Hurts",
+    "pick_no": 65,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 66,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7553",
+    "label": "Kyle Pitts",
+    "pick_no": 66,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 67,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9487",
+    "label": "Parker Washington",
+    "pick_no": 67,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 68,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7611",
+    "label": "Rhamondre Stevenson",
+    "pick_no": 68,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 69,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6770",
+    "label": "Joe Burrow",
+    "pick_no": 69,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 70,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:2216",
+    "label": "Mike Evans",
+    "pick_no": 70,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 71,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11628",
+    "label": "Marvin Harrison",
+    "pick_no": 71,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 72,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:6:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11631",
+    "label": "Brian Thomas",
+    "pick_no": 72,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 73,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5846",
+    "label": "DK Metcalf",
+    "pick_no": 73,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 74,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11583",
+    "label": "Jonathon Brooks",
+    "pick_no": 74,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 75,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11581",
+    "label": "MarShawn Lloyd",
+    "pick_no": 75,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 76,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:10222",
+    "label": "Jayden Reed",
+    "pick_no": 76,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 77,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7021",
+    "label": "Rico Dowdle",
+    "pick_no": 77,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 78,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11560",
+    "label": "Caleb Williams",
+    "pick_no": 78,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 79,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5967",
+    "label": "Tony Pollard",
+    "pick_no": 79,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 80,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6819",
+    "label": "Michael Pittman",
+    "pick_no": 80,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 81,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12489",
+    "label": "RJ Harvey",
+    "pick_no": 81,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 82,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12506",
+    "label": "Harold Fannin",
+    "pick_no": 82,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 83,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:10859",
+    "label": "Sam LaPorta",
+    "pick_no": 83,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 84,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:7:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:10232",
+    "label": "Michael Wilson",
+    "pick_no": 84,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 85,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8408",
+    "label": "Jordan Mason",
+    "pick_no": 85,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 86,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11566",
+    "label": "Jayden Daniels",
+    "pick_no": 86,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 87,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6806",
+    "label": "J.K. Dobbins",
+    "pick_no": 87,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 88,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7594",
+    "label": "Chuba Hubbard",
+    "pick_no": 88,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 89,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5045",
+    "label": "Courtland Sutton",
+    "pick_no": 89,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 90,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4037",
+    "label": "Chris Godwin",
+    "pick_no": 90,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 91,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12534",
+    "label": "Kyle Monangai",
+    "pick_no": 91,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 92,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8142",
+    "label": "Alec Pierce",
+    "pick_no": 92,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 93,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11586",
+    "label": "Blake Corum",
+    "pick_no": 93,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 94,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4217",
+    "label": "George Kittle",
+    "pick_no": 94,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 95,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:3294",
+    "label": "Dak Prescott",
+    "pick_no": 95,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 96,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:8:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13294",
+    "label": "Makai Lemon",
+    "pick_no": 96,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 97,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:10236",
+    "label": "Dalton Kincaid",
+    "pick_no": 97,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 98,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7567",
+    "label": "Kenny Gainwell",
+    "pick_no": 98,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 99,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:6797",
+    "label": "Justin Herbert",
+    "pick_no": 99,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 100,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9756",
+    "label": "Jordan Addison",
+    "pick_no": 100,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 101,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12533",
+    "label": "Jacory Croskey-Merritt",
+    "pick_no": 101,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 102,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8131",
+    "label": "Isaiah Likely",
+    "pick_no": 102,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 103,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8132",
+    "label": "Tyler Allgeier",
+    "pick_no": 103,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 104,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4199",
+    "label": "Aaron Jones",
+    "pick_no": 104,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 105,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9754",
+    "label": "Quentin Johnston",
+    "pick_no": 105,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 106,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12501",
+    "label": "Matthew Golden",
+    "pick_no": 106,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 107,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:2449",
+    "label": "Stefon Diggs",
+    "pick_no": 107,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 108,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:9:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13298",
+    "label": "KC Concepcion",
+    "pick_no": 108,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 109,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13417",
+    "label": "De'Zhaun Stribling",
+    "pick_no": 109,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 110,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:10219",
+    "label": "Chris Rodriguez",
+    "pick_no": 110,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 111,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8136",
+    "label": "Rachaad White",
+    "pick_no": 111,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 112,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:421",
+    "label": "Matthew Stafford",
+    "pick_no": 112,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 113,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9500",
+    "label": "Josh Downs",
+    "pick_no": 113,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 114,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8110",
+    "label": "Jake Ferguson",
+    "pick_no": 114,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 115,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11655",
+    "label": "Tyrone Tracy",
+    "pick_no": 115,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 116,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7523",
+    "label": "Trevor Lawrence",
+    "pick_no": 116,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 117,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8126",
+    "label": "Wan'Dale Robinson",
+    "pick_no": 117,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 118,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9511",
+    "label": "Keaton Mitchell",
+    "pick_no": 118,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 119,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11624",
+    "label": "Xavier Worthy",
+    "pick_no": 119,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 120,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:10:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5872",
+    "label": "Deebo Samuel",
+    "pick_no": 120,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 121,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:3214",
+    "label": "Hunter Henry",
+    "pick_no": 121,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 122,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9753",
+    "label": "Zach Charbonnet",
+    "pick_no": 122,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 123,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8121",
+    "label": "Romeo Doubs",
+    "pick_no": 123,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 124,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12474",
+    "label": "Woody Marks",
+    "pick_no": 124,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 125,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5022",
+    "label": "Dallas Goedert",
+    "pick_no": 125,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 126,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8676",
+    "label": "Rashid Shaheed",
+    "pick_no": 126,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 127,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13305",
+    "label": "Mike Washington",
+    "pick_no": 127,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 128,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8134",
+    "label": "Khalil Shakir",
+    "pick_no": 128,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 129,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5947",
+    "label": "Jakobi Meyers",
+    "pick_no": 129,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 130,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11646",
+    "label": "Jalen Coker",
+    "pick_no": 130,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 131,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11533",
+    "label": "Brandon Aubrey",
+    "pick_no": 131,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 132,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:11:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:1466",
+    "label": "Travis Kelce",
+    "pick_no": 132,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 133,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9508",
+    "label": "Tyjae Spears",
+    "pick_no": 133,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 134,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13345",
+    "label": "Jonah Coleman",
+    "pick_no": 134,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 135,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11610",
+    "label": "Malik Washington",
+    "pick_no": 135,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 136,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:LAR",
+    "label": "Los Angeles Rams",
+    "pick_no": 136,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 137,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12469",
+    "label": "Dylan Sampson",
+    "pick_no": 137,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 138,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12508",
+    "label": "Jaxson Dart",
+    "pick_no": 138,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 139,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13281",
+    "label": "Jordyn Tyson",
+    "pick_no": 139,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 140,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13414",
+    "label": "Kaelon Black",
+    "pick_no": 140,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 141,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5012",
+    "label": "Mark Andrews",
+    "pick_no": 141,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 142,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:HOU",
+    "label": "Houston Texans",
+    "pick_no": 142,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 143,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:10213",
+    "label": "Tre Tucker",
+    "pick_no": 143,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 144,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:12:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:SEA",
+    "label": "Seattle Seahawks",
+    "pick_no": 144,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 145,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:2747",
+    "label": "Jason Myers",
+    "pick_no": 145,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 146,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:DEN",
+    "label": "Denver Broncos",
+    "pick_no": 146,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 147,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8259",
+    "label": "Cameron Dicker",
+    "pick_no": 147,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 148,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12509",
+    "label": "Tre' Harris",
+    "pick_no": 148,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 149,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:3451",
+    "label": "Ka'imi Fairbairn",
+    "pick_no": 149,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 150,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9480",
+    "label": "Brenton Strange",
+    "pick_no": 150,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 151,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8154",
+    "label": "Brian Robinson",
+    "pick_no": 151,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 152,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:PHI",
+    "label": "Philadelphia Eagles",
+    "pick_no": 152,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 153,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11786",
+    "label": "Cam Little",
+    "pick_no": 153,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 154,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4046",
+    "label": "Patrick Mahomes",
+    "pick_no": 154,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 155,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:BAL",
+    "label": "Baltimore Ravens",
+    "pick_no": 155,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 156,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:13:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:9225",
+    "label": "Tank Bigsby",
+    "pick_no": 156,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 157,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:LAC",
+    "label": "Los Angeles Chargers",
+    "pick_no": 157,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 158,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11618",
+    "label": "Jalen McMillan",
+    "pick_no": 158,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 159,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:MIN",
+    "label": "Minnesota Vikings",
+    "pick_no": 159,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 160,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11576",
+    "label": "Braelon Allen",
+    "pick_no": 160,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 161,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:8210",
+    "label": "Chig Okonkwo",
+    "pick_no": 161,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 162,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:NE",
+    "label": "New England Patriots",
+    "pick_no": 162,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 163,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7839",
+    "label": "Evan McPherson",
+    "pick_no": 163,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 164,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:JAX",
+    "label": "Jacksonville Jaguars",
+    "pick_no": 164,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 165,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11563",
+    "label": "Bo Nix",
+    "pick_no": 165,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 166,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13337",
+    "label": "Emmett Johnson",
+    "pick_no": 166,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 167,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11539",
+    "label": "Jake Bates",
+    "pick_no": 167,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 168,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:14:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:5849",
+    "label": "Kyler Murray",
+    "pick_no": 168,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:6",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 169,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:6",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:4035",
+    "label": "Alvin Kamara",
+    "pick_no": 169,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:12",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 170,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:12",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11575",
+    "label": "Ray Davis",
+    "pick_no": 170,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:7",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 171,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:7",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13296",
+    "label": "Caleb Douglas",
+    "pick_no": 171,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:10",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 172,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:10",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:DET",
+    "label": "Detroit Lions",
+    "pick_no": 172,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:3",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 173,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:3",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:7002",
+    "label": "Juwan Johnson",
+    "pick_no": 173,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:4",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 174,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:4",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:PIT",
+    "label": "Pittsburgh Steelers",
+    "pick_no": 174,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:5",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 175,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:5",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12015",
+    "label": "Harrison Mevis",
+    "pick_no": 175,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:2",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 176,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:2",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:1945",
+    "label": "Chris Boswell",
+    "pick_no": 176,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:11",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 177,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:11",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11603",
+    "label": "AJ Barner",
+    "pick_no": 177,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1338979666412716032",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:8",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 178,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:8",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:11792",
+    "label": "Will Reichard",
+    "pick_no": 178,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:9",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 179,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:9",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:13330",
+    "label": "Kenyon Sadiq",
+    "pick_no": 179,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:1",
+    "as_of": "2026-09-02",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 180,
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2026:15:1",
+    "as_of": "2026-09-02",
+    "kind": "player",
+    "player_key": "player:12711",
+    "label": "Tyler Loop",
+    "pick_no": 180,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1389723418827460609"
+  },
+  {
+    "pick_key": "pick:2025:1:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 1,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7564",
+    "label": "Ja'Marr Chase",
+    "pick_no": 1,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 2,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9509",
+    "label": "Bijan Robinson",
+    "pick_no": 2,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 3,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9221",
+    "label": "Jahmyr Gibbs",
+    "pick_no": 3,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 4,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4866",
+    "label": "Saquon Barkley",
+    "pick_no": 4,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 5,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6786",
+    "label": "CeeDee Lamb",
+    "pick_no": 5,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 6,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6794",
+    "label": "Justin Jefferson",
+    "pick_no": 6,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 7,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:3198",
+    "label": "Derrick Henry",
+    "pick_no": 7,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 8,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12527",
+    "label": "Ashton Jeanty",
+    "pick_no": 8,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 9,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4034",
+    "label": "Christian McCaffrey",
+    "pick_no": 9,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 10,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11632",
+    "label": "Malik Nabers",
+    "pick_no": 10,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 11,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7547",
+    "label": "Amon-Ra St. Brown",
+    "pick_no": 11,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 12,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:1:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5850",
+    "label": "Josh Jacobs",
+    "pick_no": 12,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 13,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7569",
+    "label": "Nico Collins",
+    "pick_no": 13,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 14,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9226",
+    "label": "De'Von Achane",
+    "pick_no": 14,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 15,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11631",
+    "label": "Brian Thomas",
+    "pick_no": 15,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 16,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6813",
+    "label": "Jonathan Taylor",
+    "pick_no": 16,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 17,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9493",
+    "label": "Puka Nacua",
+    "pick_no": 17,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 18,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4984",
+    "label": "Josh Allen",
+    "pick_no": 18,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 19,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8112",
+    "label": "Drake London",
+    "pick_no": 19,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 20,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9224",
+    "label": "Chase Brown",
+    "pick_no": 20,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 21,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4881",
+    "label": "Lamar Jackson",
+    "pick_no": 21,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 22,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11584",
+    "label": "Bucky Irving",
+    "pick_no": 22,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 23,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11604",
+    "label": "Brock Bowers",
+    "pick_no": 23,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 24,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:2:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5859",
+    "label": "A.J. Brown",
+    "pick_no": 24,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 25,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8150",
+    "label": "Kyren Williams",
+    "pick_no": 25,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 26,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12507",
+    "label": "Omarion Hampton",
+    "pick_no": 26,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 27,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11566",
+    "label": "Jayden Daniels",
+    "pick_no": 27,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 28,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11635",
+    "label": "Ladd McConkey",
+    "pick_no": 28,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 29,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6801",
+    "label": "Tee Higgins",
+    "pick_no": 29,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 30,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8138",
+    "label": "James Cook",
+    "pick_no": 30,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 31,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8130",
+    "label": "Trey McBride",
+    "pick_no": 31,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 32,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9488",
+    "label": "Jaxon Smith-Njigba",
+    "pick_no": 32,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 33,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5846",
+    "label": "DK Metcalf",
+    "pick_no": 33,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 34,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8155",
+    "label": "Breece Hall",
+    "pick_no": 34,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 35,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11628",
+    "label": "Marvin Harrison",
+    "pick_no": 35,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 36,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:3:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4035",
+    "label": "Alvin Kamara",
+    "pick_no": 36,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 37,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7594",
+    "label": "Chuba Hubbard",
+    "pick_no": 37,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 38,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6770",
+    "label": "Joe Burrow",
+    "pick_no": 38,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 39,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5892",
+    "label": "David Montgomery",
+    "pick_no": 39,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 40,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5927",
+    "label": "Terry McLaurin",
+    "pick_no": 40,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 41,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8151",
+    "label": "Kenneth Walker",
+    "pick_no": 41,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 42,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:2216",
+    "label": "Mike Evans",
+    "pick_no": 42,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 43,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:3321",
+    "label": "Tyreek Hill",
+    "pick_no": 43,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 44,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6904",
+    "label": "Jalen Hurts",
+    "pick_no": 44,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 45,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5045",
+    "label": "Courtland Sutton",
+    "pick_no": 45,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 46,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12526",
+    "label": "Tetairoa McMillan",
+    "pick_no": 46,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 47,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:2133",
+    "label": "Davante Adams",
+    "pick_no": 47,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 48,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:4:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4217",
+    "label": "George Kittle",
+    "pick_no": 48,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 49,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12529",
+    "label": "TreVeyon Henderson",
+    "pick_no": 49,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 50,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7525",
+    "label": "DeVonta Smith",
+    "pick_no": 50,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 51,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4137",
+    "label": "James Conner",
+    "pick_no": 51,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 52,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5967",
+    "label": "Tony Pollard",
+    "pick_no": 52,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 53,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:10859",
+    "label": "Sam LaPorta",
+    "pick_no": 53,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 54,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8205",
+    "label": "Isiah Pacheco",
+    "pick_no": 54,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 55,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12489",
+    "label": "RJ Harvey",
+    "pick_no": 55,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 56,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8146",
+    "label": "Garrett Wilson",
+    "pick_no": 56,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 57,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6790",
+    "label": "D'Andre Swift",
+    "pick_no": 57,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 58,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12518",
+    "label": "Tyler Warren",
+    "pick_no": 58,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 59,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4983",
+    "label": "DJ Moore",
+    "pick_no": 59,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 60,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:5:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8137",
+    "label": "George Pickens",
+    "pick_no": 60,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 61,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:10229",
+    "label": "Rashee Rice",
+    "pick_no": 61,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 62,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11624",
+    "label": "Xavier Worthy",
+    "pick_no": 62,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 63,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4046",
+    "label": "Patrick Mahomes",
+    "pick_no": 63,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 64,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8148",
+    "label": "Jameson Williams",
+    "pick_no": 64,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 65,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7526",
+    "label": "Jaylen Waddle",
+    "pick_no": 65,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 66,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4199",
+    "label": "Aaron Jones",
+    "pick_no": 66,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 67,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8228",
+    "label": "Jaylen Warren",
+    "pick_no": 67,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 68,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11655",
+    "label": "Tyrone Tracy",
+    "pick_no": 68,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 69,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9997",
+    "label": "Zay Flowers",
+    "pick_no": 69,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 70,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4981",
+    "label": "Calvin Ridley",
+    "pick_no": 70,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 71,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12514",
+    "label": "Emeka Egbuka",
+    "pick_no": 71,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 72,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:6:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12504",
+    "label": "Kaleb Johnson",
+    "pick_no": 72,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 73,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12530",
+    "label": "Travis Hunter",
+    "pick_no": 73,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 74,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11638",
+    "label": "Ricky Pearsall",
+    "pick_no": 74,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 75,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11620",
+    "label": "Rome Odunze",
+    "pick_no": 75,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 76,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5012",
+    "label": "Mark Andrews",
+    "pick_no": 76,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 77,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6783",
+    "label": "Jerry Jeudy",
+    "pick_no": 77,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 78,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:1466",
+    "label": "Travis Kelce",
+    "pick_no": 78,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 79,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12501",
+    "label": "Matthew Golden",
+    "pick_no": 79,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 80,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7543",
+    "label": "Travis Etienne",
+    "pick_no": 80,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 81,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8144",
+    "label": "Chris Olave",
+    "pick_no": 81,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 82,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12517",
+    "label": "Colston Loveland",
+    "pick_no": 82,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 83,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12512",
+    "label": "Quinshon Judkins",
+    "pick_no": 83,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 84,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:7:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5947",
+    "label": "Jakobi Meyers",
+    "pick_no": 84,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 85,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:2449",
+    "label": "Stefon Diggs",
+    "pick_no": 85,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 86,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9753",
+    "label": "Zach Charbonnet",
+    "pick_no": 86,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 87,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11563",
+    "label": "Bo Nix",
+    "pick_no": 87,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 88,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9484",
+    "label": "Tucker Kraft",
+    "pick_no": 88,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 89,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8408",
+    "label": "Jordan Mason",
+    "pick_no": 89,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 90,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12533",
+    "label": "Jacory Croskey-Merritt",
+    "pick_no": 90,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 91,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4892",
+    "label": "Baker Mayfield",
+    "pick_no": 91,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 92,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5872",
+    "label": "Deebo Samuel",
+    "pick_no": 92,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 93,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8154",
+    "label": "Brian Robinson",
+    "pick_no": 93,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 94,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4066",
+    "label": "Evan Engram",
+    "pick_no": 94,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 95,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6806",
+    "label": "J.K. Dobbins",
+    "pick_no": 95,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 96,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:8:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4018",
+    "label": "Joe Mixon",
+    "pick_no": 96,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 97,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9756",
+    "label": "Jordan Addison",
+    "pick_no": 97,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 98,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11637",
+    "label": "Keon Coleman",
+    "pick_no": 98,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 99,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7588",
+    "label": "Javonte Williams",
+    "pick_no": 99,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 100,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4039",
+    "label": "Cooper Kupp",
+    "pick_no": 100,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 101,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9225",
+    "label": "Tank Bigsby",
+    "pick_no": 101,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 102,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12481",
+    "label": "Cam Skattebo",
+    "pick_no": 102,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 103,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8134",
+    "label": "Khalil Shakir",
+    "pick_no": 103,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 104,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5844",
+    "label": "T.J. Hockenson",
+    "pick_no": 104,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 105,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4663",
+    "label": "Austin Ekeler",
+    "pick_no": 105,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 106,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4988",
+    "label": "Nick Chubb",
+    "pick_no": 106,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 107,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12495",
+    "label": "Ollie Gordon",
+    "pick_no": 107,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 108,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:9:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4033",
+    "label": "David Njoku",
+    "pick_no": 108,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 109,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12457",
+    "label": "Jaydon Blue",
+    "pick_no": 109,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 110,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:10236",
+    "label": "Dalton Kincaid",
+    "pick_no": 110,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 111,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6819",
+    "label": "Michael Pittman",
+    "pick_no": 111,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 112,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5849",
+    "label": "Kyler Murray",
+    "pick_no": 112,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 113,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:3294",
+    "label": "Dak Prescott",
+    "pick_no": 113,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 114,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:10222",
+    "label": "Jayden Reed",
+    "pick_no": 114,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 115,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7049",
+    "label": "Jauan Jennings",
+    "pick_no": 115,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 116,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9500",
+    "label": "Josh Downs",
+    "pick_no": 116,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 117,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7611",
+    "label": "Rhamondre Stevenson",
+    "pick_no": 117,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 118,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9494",
+    "label": "Marvin Mims",
+    "pick_no": 118,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 119,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12490",
+    "label": "Bhayshul Tuten",
+    "pick_no": 119,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 120,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:10:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11576",
+    "label": "Braelon Allen",
+    "pick_no": 120,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 121,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8183",
+    "label": "Brock Purdy",
+    "pick_no": 121,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 122,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11564",
+    "label": "Drake Maye",
+    "pick_no": 122,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 123,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11589",
+    "label": "Trey Benson",
+    "pick_no": 123,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 124,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4037",
+    "label": "Chris Godwin",
+    "pick_no": 124,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 125,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11575",
+    "label": "Ray Davis",
+    "pick_no": 125,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 126,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7528",
+    "label": "Najee Harris",
+    "pick_no": 126,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 127,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8676",
+    "label": "Rashid Shaheed",
+    "pick_no": 127,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 128,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12484",
+    "label": "Jayden Higgins",
+    "pick_no": 128,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 129,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:10444",
+    "label": "Cedric Tillman",
+    "pick_no": 129,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 130,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:1479",
+    "label": "Keenan Allen",
+    "pick_no": 130,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 131,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7553",
+    "label": "Kyle Pitts",
+    "pick_no": 131,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 132,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:11:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11533",
+    "label": "Brandon Aubrey",
+    "pick_no": 132,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 133,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8143",
+    "label": "Jerome Ford",
+    "pick_no": 133,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 134,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:1689",
+    "label": "Adam Thielen",
+    "pick_no": 134,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 135,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7090",
+    "label": "Darnell Mooney",
+    "pick_no": 135,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 136,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8136",
+    "label": "Rachaad White",
+    "pick_no": 136,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 137,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6803",
+    "label": "Brandon Aiyuk",
+    "pick_no": 137,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 138,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4098",
+    "label": "Kareem Hunt",
+    "pick_no": 138,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 139,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8259",
+    "label": "Cameron Dicker",
+    "pick_no": 139,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 140,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6797",
+    "label": "Justin Herbert",
+    "pick_no": 140,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 141,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4950",
+    "label": "Christian Kirk",
+    "pick_no": 141,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 142,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12541",
+    "label": "Dont'e Thornton",
+    "pick_no": 142,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 143,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12474",
+    "label": "Woody Marks",
+    "pick_no": 143,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 144,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:12:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12519",
+    "label": "Luther Burden",
+    "pick_no": 144,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 145,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:DEN",
+    "label": "Denver Broncos",
+    "pick_no": 145,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 146,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7591",
+    "label": "Justin Fields",
+    "pick_no": 146,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 147,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11560",
+    "label": "Caleb Williams",
+    "pick_no": 147,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 148,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:PHI",
+    "label": "Philadelphia Eagles",
+    "pick_no": 148,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 149,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12469",
+    "label": "Dylan Sampson",
+    "pick_no": 149,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 150,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7571",
+    "label": "Rashod Bateman",
+    "pick_no": 150,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 151,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7670",
+    "label": "Joshua Palmer",
+    "pick_no": 151,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 152,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:3163",
+    "label": "Jared Goff",
+    "pick_no": 152,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 153,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9754",
+    "label": "Quentin Johnston",
+    "pick_no": 153,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 154,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6650",
+    "label": "Chase McLaughlin",
+    "pick_no": 154,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 155,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9501",
+    "label": "DeMario Douglas",
+    "pick_no": 155,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 156,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:13:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:6804",
+    "label": "Jordan Love",
+    "pick_no": 156,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 157,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:5022",
+    "label": "Dallas Goedert",
+    "pick_no": 157,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 158,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12535",
+    "label": "Isaac TeSlaa",
+    "pick_no": 158,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 159,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:PIT",
+    "label": "Pittsburgh Steelers",
+    "pick_no": 159,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 160,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8110",
+    "label": "Jake Ferguson",
+    "pick_no": 160,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 161,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11539",
+    "label": "Jake Bates",
+    "pick_no": 161,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 162,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:1945",
+    "label": "Chris Boswell",
+    "pick_no": 162,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 163,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:MIN",
+    "label": "Minnesota Vikings",
+    "pick_no": 163,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 164,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:7839",
+    "label": "Evan McPherson",
+    "pick_no": 164,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 165,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12509",
+    "label": "Tre' Harris",
+    "pick_no": 165,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 166,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4227",
+    "label": "Harrison Butker",
+    "pick_no": 166,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 167,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:NYJ",
+    "label": "New York Jets",
+    "pick_no": 167,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 168,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:14:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9758",
+    "label": "C.J. Stroud",
+    "pick_no": 168,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:12",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 1,
+    "pick_no": 169,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:12",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:3678",
+    "label": "Wil Lutz",
+    "pick_no": 169,
+    "draft_slot": 1,
+    "drafted_by_roster_id": 12,
+    "drafted_by_user_id": "1132552110328983552",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:1",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 2,
+    "pick_no": 170,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:1",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:11786",
+    "label": "Cam Little",
+    "pick_no": 170,
+    "draft_slot": 2,
+    "drafted_by_roster_id": 1,
+    "drafted_by_user_id": "1132151320410140672",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:4",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 3,
+    "pick_no": 171,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:4",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:BAL",
+    "label": "Baltimore Ravens",
+    "pick_no": 171,
+    "draft_slot": 3,
+    "drafted_by_roster_id": 4,
+    "drafted_by_user_id": "1132149096636141568",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:7",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 4,
+    "pick_no": 172,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:7",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:12711",
+    "label": "Tyler Loop",
+    "pick_no": 172,
+    "draft_slot": 4,
+    "drafted_by_roster_id": 7,
+    "drafted_by_user_id": "1132146625205567488",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:10",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 5,
+    "pick_no": 173,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:10",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:SF",
+    "label": "San Francisco 49ers",
+    "pick_no": 173,
+    "draft_slot": 5,
+    "drafted_by_roster_id": 10,
+    "drafted_by_user_id": "741001884449525760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:9",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 6,
+    "pick_no": 174,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:9",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:8132",
+    "label": "Tyler Allgeier",
+    "pick_no": 174,
+    "draft_slot": 6,
+    "drafted_by_roster_id": 9,
+    "drafted_by_user_id": "1131056110791880704",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:5",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 7,
+    "pick_no": 175,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:5",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:9508",
+    "label": "Tyjae Spears",
+    "pick_no": 175,
+    "draft_slot": 7,
+    "drafted_by_roster_id": 5,
+    "drafted_by_user_id": "1132151393051095040",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:11",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 8,
+    "pick_no": 176,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:11",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:WAS",
+    "label": "Washington Commanders",
+    "pick_no": 176,
+    "draft_slot": 8,
+    "drafted_by_roster_id": 11,
+    "drafted_by_user_id": "1259573343355404288",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:8",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 9,
+    "pick_no": 177,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:8",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:HOU",
+    "label": "Houston Texans",
+    "pick_no": 177,
+    "draft_slot": 9,
+    "drafted_by_roster_id": 8,
+    "drafted_by_user_id": "1132355027018035200",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:6",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 10,
+    "pick_no": 178,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:6",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:KC",
+    "label": "Kansas City Chiefs",
+    "pick_no": 178,
+    "draft_slot": 10,
+    "drafted_by_roster_id": 6,
+    "drafted_by_user_id": "719995760556478464",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:2",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 11,
+    "pick_no": 179,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:2",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:4666",
+    "label": "Younghoe Koo",
+    "pick_no": 179,
+    "draft_slot": 11,
+    "drafted_by_roster_id": 2,
+    "drafted_by_user_id": "458342725222133760",
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:3",
+    "as_of": "2025-09-03",
+    "kind": "slot",
+    "draft_slot": 12,
+    "pick_no": 180,
+    "draft_id": "1253382149021638656"
+  },
+  {
+    "pick_key": "pick:2025:15:3",
+    "as_of": "2025-09-03",
+    "kind": "player",
+    "player_key": "player:MIA",
+    "label": "Miami Dolphins",
+    "pick_no": 180,
+    "draft_slot": 12,
+    "drafted_by_roster_id": 3,
+    "drafted_by_user_id": "740721014035660800",
+    "draft_id": "1253382149021638656"
+  }
+]

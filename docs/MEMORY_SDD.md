@@ -1,0 +1,483 @@
+# League memory — receipt law
+
+**Role:** The dashboard’s second job after the needle. League members remember
+seasons, seats, and trades wrong. Chuckle is the receipt they can open and text.
+
+Companion: needle / clocks [`PRODUCT.md`](PRODUCT.md). Trade open row + hop tape
+[`UI_SDD.md`](UI_SDD.md). Aged math [`VALUE_SDD.md`](VALUE_SDD.md). Data desks
+[`DATA_SDD.md`](DATA_SDD.md). Store five-tab law [`STORE_LAW.md`](STORE_LAW.md).
+Formats / empty first year [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md).
+Which Cuckle fights to put on the door
+[`DEBATE_CATALOG.md`](DEBATE_CATALOG.md) — tape-ranked, not a 17th chip.
+
+This file is **WANT**. If the generator disagrees, the generator is behind — fix
+the page in the same pass as any UI that claims to be proof.
+
+---
+
+## 1. The argument we exist to settle
+
+Sleeper’s trade log is bags of names. People fill the rest from ego.
+
+Typical lies (all first-person, all common):
+
+- “We have always been a playoff team.”
+- “That CMC trade was a smash.” / “I got robbed.”
+- “That 2022 first became nothing.” (it became the player — or it was flipped)
+- “I never sell picks.” (hop tape says otherwise)
+
+The product answer is not a lecture and not a Best 10 board. It is a **small
+chip they can tap, read in one breath, and send in the group text.**
+
+The user sentence we are building for:
+
+> That’s not how I remember it. Look.
+
+Votes, news, and Ledger are opinion. They may *start* the argument. They may
+not write the receipt.
+
+---
+
+## 2. Closed chip catalog (16 kinds, one paint)
+
+About a hundred group-chat fights collapse to **16 chip kinds**. Every kind uses
+the same paint. Do not invent a 17th kind for each argument.
+
+**Memory (a specific thing happened)**
+
+| Id | Door label |
+|----|----------|
+| `my_trades` | My Trade History |
+| `league_trades` | League Trade History |
+| `my_draft` | Draft picks |
+| `league_draft` | League Draft Picks |
+| `profit_loss` | Profit / Loss |
+| `season_place` / `season_title` | How I finished |
+
+Share chips (same tape, not board tiles): `trade_mark` (Trade ticket),
+`pick_print` (What my pick became). Saved boards that still store
+`lopsided` / `trade_mark` / `pick_print` / `my_picks` remap onto the
+four history doors.
+
+**Who (a list behind the door)**
+
+| Id | Door label |
+|----|----------|
+| `passed_around` | Passed around |
+| `least_traded` | Least traded (catalog only) |
+| `forever` | Never left (catalog only) |
+| `week_scores` | Week scores — highest / lowest five team weeks (playoff = title hunt) |
+| `past_champions` | Past champions |
+| `widest_clock` | Same smash/bust if you change the question (catalog only) |
+| `seat_run` | Who has been on a heater / cold streak on tape (catalog only) |
+| `draft_marks` | Draft hits (`seat_draft`) |
+| `held_firsts` | Who has firsts (`firsts_held` / `held_picks`) |
+| `vs_you` | Me vs them |
+
+**Today’s bag (research; opens calc or a hunt, still no bag-total hero)**
+
+| Id | Question |
+|----|----------|
+| `fill_holes` / `move_extras` | Who has what you need / who can take extras |
+| `uninsured` / `cuffs_board` | No backup |
+| `book_top` | Biggest names (highest **pieces**, not a seat total) |
+
+**Banned as chips:** `best10`, `worst10`, `bag_total`, `realized`, career
+`win_now` / `investor` as a grade, luck, H2H, vote tallies, Ledger stakes.
+Direction (Hard rebuild) stays a **label on League rows**, not a “best
+rebuilder” trophy.
+
+The 27-id Data encyclopedia under **More** still exists for desks. It is not
+Your board. Your board is thirteen labeled doors from these 16 kinds.
+The example lives **inside** the portal list, not on the tile face.
+Which fights to rank first is in [`DEBATE_CATALOG.md`](DEBATE_CATALOG.md)
+from this league’s hop tape — not from Sleeper chat.
+
+---
+
+## 3. Readability law (anyone knows in one breath)
+
+Every chip and every deeper screen is the same three lines, in this order:
+
+1. **Verdict** — one English sentence. Not `t0`, `aged`, `Δ`, `2qb`.
+2. **The number** — one signed figure, gold, big enough to read at arm’s length.
+3. **Because** — one short clause that names the clock or the hop. Optional on
+   the chip; required on the ticket.
+
+If a stranger cannot finish the sentence “so this means ___” after two seconds,
+the copy is wrong. Finance geometry (curve, spark, waterfall) is **support**.
+It never replaces the verdict.
+
+**Clock names on glass (never internals):**
+
+| Internal | On glass |
+|----------|----------|
+| `t0` | **Day they traded** |
+| `y1` / `y2` / `y3` | **After 1 / 2 / 3 seasons** |
+| `all` | **From then to now** |
+| `aged` (all − t0, same flatten book) | **How it aged** — caption: faded or grew after they accepted |
+
+Signed numbers stay green / red. Incomplete legs stay listed and stay out of
+the number.
+
+---
+
+## 4. Click-by-click copy (lock these headlines)
+
+One stack, one Back, no new pill. Home / News / Ledger unchanged. No receipts
+on Home. Share is a **small icon** on the ticket (44px hit, not a gold banner).
+It does not live on the door.
+
+### L0 — Your board (History / Data)
+
+Heading: **Your board**. Two-column doors. Hold a tile, then drag to
+move it. Face is
+**house icon + label only**. No verdict sentence, no gold example number,
+no who-line, no share icon on the door. Icons exist so a thumb can find
+the room at a glance.
+
+Search and filter do **not** live on the board — they live inside the
+portal after you tap. Every filter is a labeled dropdown (`receiptLookSelect`).
+No bubble / pill / chip rows. No All / Memory / Who / Research chips on the board.
+
+Each tile is a **door into a scenario**, not a finished receipt. Tap = that
+scenario’s list. Search only when that list is long (league draft rows after a seat,
+forever / passed / uninsured). Short indexes drop the box. My Draft
+Picks and Profit / Loss have no search box. League Trade History
+filters by a Team dropdown, not a type-in.
+
+**Default thirteen doors** (first visit; saved boards remap Trade THEN/NOW and the old pick doors onto these four):
+
+1. My Trade History (`my_trades`) — your partners, most deals first, then that pair newest-first (search after a pair)
+2. League Trade History (`league_trades`) — Team dropdown, then that seat's partners
+3. Draft picks (`my_draft`) — unused 2027+ hub: Mine / League / Tape
+4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
+5. Profit / Loss (`profit_loss`) — Held vs Sold rooms at the top, sort only
+6. Past champions (`past_champions`)
+7. How I finished (`season_place`)
+8. Me vs them (`vs_you`)
+9. Who has firsts (`firsts_held`)
+10. Week scores (`week_scores`) — highest five and lowest five team weeks ever
+11. Passed around (`passed_around`)
+12. Draft hits (`seat_draft`)
+13. No backup (`uninsured`)
+
+**Hold, then drag** is how they reorder. Mouse can drag without a long
+press. The first four doors wear a gold ring — that is the top 4, and
+those four also sit on Home for instant access. Hint on the board:
+`Top 4 wear gold. Hold a tile, then drag to move it.` shows only in **Edit**. **Edit** still adds or removes a door
+from the catalog. Unsigned / outsider: default thirteen. A shared link opens
+one public ticket, not someone’s private layout.
+
+**Door face (every tile)**
+
+- House SVG icon (gold stroke, ~28px)
+- Label in the table above
+- Nothing else
+
+**My Trade History**
+
+Tap the tile. First screen is **your partners**, most deals first, count
+on the row. No search on nine names. Tap a partner. That pair’s tickets, newest first. Filters on
+the deal list: **League year** and **Look** dropdowns (Smash / Robbery /
+Grew / Faded / Even). Smash and Robbery score the accept-day mark (`t0` — **Day they
+traded**). Grew, Faded, and Even score how it aged (`all − t0` —
+**From then to now**). Tap a deal → L1 ticket. No claimed seat:
+`Claim your seat to see your partners.`
+
+**League Trade History**
+
+First screen is a **Team** dropdown (`receiptLookSelect`). All teams
+shows every pairing (`NameA vs NameB`). Pick one seat to see **that
+team's trade partners**, most deals first. No type-in search. Tap a
+pairing → those tickets, newest first, same year + look dropdowns.
+
+**Draft picks** (`my_draft`)
+
+One hub for still-unused capital, 2027 first (soonest draft). Not four
+overlapping tiles.
+
+- **Mine** — who holds the unused picks that started on your seat.
+  2027, then later years. Row: holder, origin window (Contend / Tank),
+  projected slot, Early / Mid / Late.
+- **League** — every unused pick that year, firsts first. Early / Mid /
+  Late board on firsts: last-place 2026 window is 1.01, title window is
+  1.10.
+- **Tape** — the old Used / Traded away / Traded in grades. Each
+  used row grades the player vs the slot (Star / Hit / Even / Miss /
+  Bust). The section prints a **Hit rate**.
+
+Early / Mid / Late is the **origin seat's 2026 outlook**, not the
+Sleeper roster slot. Blend: analyzer now (desk strength today) 62%,
+window kind (win-now vs tank) 24%, seat-direction 14%. 2028 uses later
++ now; 2029+ leans later. Tap a row for a 2-way calc (get it back / ask
+for the early). If the 2-way is stuck, a 3-way line names a third seat.
+
+Year + Picks dropdowns stay. No claimed seat: the door says so.
+
+**League Draft Picks**
+
+First screen is **every seat**, most used + away + in first. No search
+on ten names. Tap a seat → the same three buckets + grades as your own door. Back:
+`← Seats` then `← Your board`. Leaving History (Home / Teams / News /
+Ledger) drops the open door. Coming back shows Your board.
+
+**Profit / Loss**
+
+Tap the tile. Two rooms at the top (not filter chips): **Held** and
+**Sold**. Toggle between them. One row per player this seat has traded
+(named player legs only — picks stay on My Draft Picks). Sort is most
+or least profitable. No player type-in. Two-point mark (T0 / today),
+not the 3y mean.
+
+- **Held** — still on this roster. Number is today minus paid
+  (last inbound T0). Row prints `paid` and `now`.
+- **Sold** — gone from this roster.
+  - **Sold** — sale T0 minus paid. Row prints `paid` and `sold`.
+  - **Sold vs now** — sent with no inbound cost. Exit T0 vs today.
+  - **Left** — received, then gone without a sale. Last quote minus paid.
+    Off the current book (retired / dropped from DP) last quote is 0,
+    not a dash.
+  Drafted then sold uses the slot as cost.
+
+Filters are **dropdowns**, never pill chips (HIG-23):
+
+1. **Sort** — most profitable or least profitable. No year filter and
+   no player type-in.
+
+No net bag total on the door. Count is `held` or `sold · left` for the
+open room. Tap a row → the last trade ticket. No claimed seat: the door
+says so. Do not add a catalog id `realized`.
+
+**Season / finish portal**
+
+- Past champions: year · seat rows. Tap → the crown list.
+- How I finished: ranked average finish, season count under the name, every year · place.
+
+A door’s list is the **catalog**, not one lead example. Tap a row → that
+object’s ticket. Share lives on the ticket.
+
+### L1 — the ticket (one scroll)
+
+Same chrome as today’s open-trade / titles screens: Back, league name,
+small share icon in the header. No new app.
+
+**If they tapped a trade chip**
+
+Top of screen, always visible before the bags:
+
+- Verdict (h2): `Truman came out ahead — from then to now.`
+- Big number: `+184`
+- Because: `On the day they traded it was +312. It faded 58 after accept.`
+
+Then, in this order only:
+
+1. **What each side got** — names first, values second. VA in English:
+   `Value Adjustment +80 (extras on the thin side).` Incomplete: `No price yet`
+   not `no DP row`.
+2. **Same deal, different question** — **two chips first**: `Day they traded`
+   and `From then to now`. **More clocks** reveals After 1 / 2 / 3 seasons.
+   Hollow if not lived (`Only 11 months so far`). Tap = same ticket, new
+   verdict and bags. Never say “clock” to a novice — say **question**.
+3. **How the received bag moved** — existing spark. Caption always:
+   `What they received, year by year. A break is a missing year, not a zero.`
+4. **Picks in this deal** (only if a pick is in a bag) — one row each:
+   `2022 1st · became Bijan · tap for the journey`.
+5. House SVG **How it aged, year by year** only after 1–4 exist. Caption:
+   `Each bar is a year-end mark. We do not guess injuries.`
+
+Share sits in the ticket hero (gold number). Menu grows a **Share receipt**
+row while a ticket or priced calc is open. `Remember it differently?` on a
+normal open-trade row jumps to this **same**
+trade ticket.
+
+**If they tapped a pick chip / pick row**
+
+- Verdict (you owned it): `You sold this 1st. They used it. It is Bijan now.`
+- Else: `This pick was sold, then used. The player is Bijan.`
+- Then the hop list (L2). No trade bags unless they tap a hop that names a trade.
+
+**If they tapped a season chip**
+
+- Verdict: `ChiefGumby won 2025 in the bracket.`
+- Existing Past Champions body (record, used picks). No second trophy wall.
+
+### L2 — tap a pick row: the journey
+
+- Verdict: `You sold this 1st. They used it. The player is Bijan.`
+- Because: `The trade number follows Bijan. Your hold ended at the sale.`
+- List, newest first, each line English:
+  `Apr 2024 · used by TipsUp · Bijan` /
+  `Aug 2023 · you sold to ARae` /
+  `Sep 2022 · you got this pick`.
+- No hop P&L on the same chart as the deal. If we show a sold-at number, it is
+  a caption on that one hop: `You exited here.`
+
+Tap a hop that names a trade → that trade’s L1. Tap a name → L3.
+
+### L3 — tap a name: this seat
+
+A sheet (not a new tab). Back dismisses.
+
+- Verdict: `Truman: one title. 8th in 2023.`
+- Place list (year · place). Gold on their row.
+- One line: `vs you` + a single trade chip if they have tape together.
+- **See their team** already exists on Teams — this sheet does not become a
+  bag-total page.
+
+---
+
+## 5. Share contract (member and outsider)
+
+The group chat is the courtroom. A PNG is optional garnish and **must print
+the URL** if we add one later.
+
+**URL** (aliases in brackets):
+
+```
+/?r=trade&t=<tx>&league=<sleeper_id>&lens=all&src=share
+/?r=pick&pick=<asset_key>&league=…&src=share
+/?r=title&title=2025&league=…&src=share
+/?league=<sleeper_id>&view=data&tile=<door_id>&src=share
+/?league=<sleeper_id>&view=data&tile=<door_id>&slice=top|bot&src=share
+/?league=<sleeper_id>&view=data&tile=<door_id>&who=<user_id|name>&src=share
+```
+
+Data-tile shares are **member views**, not public receipts. Do not reuse
+`?r=trade`. A small gold share icon sits bottom-right on every data-set
+door (home top 4 + Your board) and beside the open-tile title — icon only,
+no “Share” word. Team lists (Career net, How I finished, week scores, and
+the other door lists) break into **Top 5 / Also / Bottom 5**. Each band
+and each row has its own share chip so a group text can send the whole
+list, just the top 5, just the bottom 5, or one seat. Week scores use
+Highest 5 / Lowest 5. Tapping a chip runs `shareProofNow` with the
+actual lines plus the URL (`slice=` or `who=`). A Career net seat share
+includes that seat’s year ledger (entry, place money, sacko, MP).
+Signed-in members with a claimed seat land on the tile. Anyone without a
+username/password or a claimed seat is gated: create account, then claim
+one of the **remaining** (unclaimed) teams. `honorPendingDataTile()` waits
+for `dataTileSeatReady()`, opens the same door, and applies `slice` / `who`
+(Career net `who=` opens the year ledger). Show all clears the slice.
+
+```text
+GM 1QB · Career net
+kotula · −$2,400
+won $300 · lost $2,700
+2024 · 3rd · +$0
+2023 · 12th · −$500
+https://…/?league=…&view=data&tile=pot_net&who=kotula&src=share
+```
+
+Honor existing `?view=trade&t=` and `?tx=` as the same as `r=trade`. Default
+`league` = Cuckle when omitted so old links still work.
+
+**Text first** (OS share sheet). Shape:
+
+```text
+This deal faded after they accepted.
+TipsUp vs Truman · +184 from then to now · aged −58
+https://…/?r=trade&t=…&league=…&src=share
+```
+
+Longer card (same facts, still no calc PNG):
+
+```text
+Cuckle · from then to now · RECEIPT
+TipsUp vs Truman · 2022-09-14
+Got: …  Gave: …
++184 · it faded 58 after they accepted
+https://slabslip.github.io/cuckle-trade-tracker/?r=trade&t=…&league=…&src=share
+Your league: open that link → Create a league → paste your Sleeper ID
+```
+
+Calc already shares a **priced hypothetical** as a picture
+([`UI_SDD.md`](UI_SDD.md) §3b). That is a proposal. Proof share is a
+**completed** Sleeper fact plus the book. Do not reuse `calcShareNow` as the
+memory receipt.
+
+`shareProofNow()` — text + `navigator.share` / clipboard. Shares **this layer**.
+
+---
+
+## 6. Public receipt + import CTA
+
+When `src=share` (or `r=` + no session):
+
+1. **Do not** set `appScreen = "gate"`. New `appScreen = "receipt"`.
+2. Load `data/leagues/<league>/ui` (Cuckle may fall back to `data/ui`).
+3. Paint L0/L1 from the query. Votes, Ledger, Desk, Menu create-league-for-
+   Cuckle-admin stay off.
+4. Sticky footer (not covering numbers):
+   `This is {league name}’s book — completed trades, named clocks.`
+   **Get this for your league** → signup → Create a league → paste Sleeper ID.
+   Secondary: Sign in. Later: TestFlight.
+5. After they create **their** league, land on their pending/ready home — do
+   not keep them on the demo trade.
+
+Privacy: public Pages tape only. No `seat_data_dash`, no Ledger, no vote
+identity. Showing Cuckle (or any synced league) numbers to a stranger is the
+demo. That is the point.
+
+---
+
+## 7. Where it sits (do not grow the bar)
+
+| Surface | Proof job |
+|---------|-----------|
+| **Home** | No personal bag hero. Calling card + flair/name/place tab only — no tape line. Team Ideas / calc stay *today’s* deal. The top 4 doors from Your board sit here with no heading. Hero title/emblem/calc-door load eager; barracks thumbs warm on idle. A proof chip does not remount News. |
+| **Teams** | Seat place + titles already argue “historically good.” L3 sheet is a peek, not a bag-total page. |
+| **History / Data** | Home of **Your board**. Cold load is the doors only. Still one Data cell. |
+| **Open trade** | Long receipt. Share proof. `Remember it differently?` → same L1 ticket. |
+| **Pick hop** | Journey. Share proof. English hops. |
+
+No + FAB. No sixth pill. No SwiftUI port of this. No Chart.js.
+
+---
+
+## 8. Edit board
+
+Hold a tile, then drag to reorder. Edit still hides or adds from the catalog.
+Persist per seat per league
+(`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
+default thirteen, no edit. Shared link still opens one ticket, not the
+editor’s private layout. The v1 key is retired so old example-chip boards
+reload as the thirteen doors. Saved boards that still store Trade THEN /
+Trade NOW / What my pick became / My Picks land on the four history doors.
+
+---
+
+## 9. Portability
+
+Proof that is only Cuckle’s tape is a private scrapbook. A second Sleeper
+league must see **their** trades, hops, and titles after `league-sync`.
+A 2026 startup with three trades gets three chips, not a broken seven-year
+path. Wrong format book (1QB scored as Superflex) is a false memory — worse
+than no app. Empty title slot copy lives in [`FORMAT_BOOKS.md`](FORMAT_BOOKS.md).
+
+---
+
+## 10. Acceptance
+
+A member can: find a door by icon + label → tap **My Trade History** →
+see partners, most deals first → tap a name → newest tickets → filter
+League year or Grew / Faded → open a deal, see two questions first
+(Day they traded / From then to now). Tap **League Trade History** →
+pick a team from the dropdown → see that seat's partners → same tickets.
+Tap **Draft picks** → Mine shows who holds your unused 2027s → League
+shows every 2027 first Early / Mid / Late → tap a pick to open calc or
+a 3-way line. Tape still has Used / Traded away / Traded in. Tap
+**League Draft Picks** → pick a seat → the same three buckets. A nerd
+can Edit the board, reorder, reload on another phone, same layout.
+
+Two-second test (novice): they can say “so it looked better when they traded,
+and now it’s worse” and “that 1st I sold is Bijan now.” They never have
+to say aged, t0, or Superflex.
+
+An outsider can: open the same link unsigned → **read the real numbers** →
+tap Create a league → make an account → paste a Sleeper ID → leave the demo
+book.
+
+Still out: sixth tab, chart npm, Best 10 / Worst 10, bag-total heroes, career
+Win-now trophies, luck / H2H chips, merging hop P&L into the needle, Swift
+rewrite, App Store as the only door, teasing/blurring the receipt, a different
+UI for nerds vs novices (same ticket, More clocks / Edit board only).

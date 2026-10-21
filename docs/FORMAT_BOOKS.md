@@ -1,0 +1,82 @@
+# Format books — any Sleeper league
+
+Chuckle prices a league from **that league’s Sleeper roster and scoring**, not from Cuckle’s
+Superflex dynasty defaults. Detection lives in [`lib.mjs`](../lib.mjs) `detectLeagueFormat()`.
+The meter, calculator, and Score-as clocks read `league.json.format` written by `revalue.mjs`.
+
+Companion: [`STORE_LAW.md`](STORE_LAW.md) (store shell), [`VALUE_SDD.md`](VALUE_SDD.md) (needle).
+Redraft vs dynasty views, tiles, titles, calc, and toggle:
+[`FORMAT_VIEWS.md`](FORMAT_VIEWS.md).
+
+---
+
+## 1. What Sleeper tells us
+
+| Signal | Source | Result |
+|--------|--------|--------|
+| Superflex / 2QB | `roster_positions` contains `SUPER_FLEX`, or two `QB` slots | `format_key` / `book` = `2qb` → DynastyProcess `value_2qb` |
+| 1QB | one QB slot, no SUPER_FLEX | `1qb` → `value_1qb` (`data/value_curve_1qb.json`) |
+| TEP | `rec_te` or `bonus_rec_te` **greater than** `rec` | `tep: true` (flag only — does not invent a third needle) |
+| Dynasty | `settings.type === 2` | five clocks: Date of Trade, 1 / 2 / 3 seasons, as of today |
+| Keeper | `settings.type === 1` | same clocks as dynasty |
+| Redraft | `settings.type === 0` | Date of Trade + as of today only |
+| N-team | `settings.num_teams` / roster count | Teams lists every seat. No 10-manager UI cap. |
+
+Cuckle (`1315431339301806080`) is Superflex dynasty, 10 seats, PPR without TEP. That is one
+shape, not the product law.
+
+---
+
+## 2. First-year and thin tape
+
+A 2026 startup (or any league without a prior Sleeper season) still gets:
+
+- meter + calculator + cuffs + Data on the book that exists
+- Teams for every roster
+- empty **Past Champions** (no fake crowns, no Cuckle title path)
+- empty **Titles and Emblems** until *this* tape unlocks them
+- proof tiles only for tape that exists — three trades means three receipts, not a fake seven-year path ([`MEMORY_SDD.md`](MEMORY_SDD.md))
+- News is the same shared-tweet tape on every book; each league tags its own managers from that book's rosters. One Shortcut POST fans out. A player not rostered here still highlights with an empty manager.
+
+It must look **new**, not like a broken Cuckle.
+
+---
+
+## 3. How a second league arrives
+
+1. Commissioner opens Create a league from the current dashboard and adds
+   **each** source ID (current Sleeper, prior Sleeper seasons, ESPN). First
+   Sleeper ID is the dashboard key. Extra IDs merge into that one book.
+2. `join-league` GETs rosters and, when `GITHUB_PAT` is set, POSTs
+   `repository_dispatch` `league-sync` with `sleeper_extra_ids` + `espn_league_id`.
+3. [`.github/workflows/league-sync.yml`](../.github/workflows/league-sync.yml) runs
+   `node build.mjs <id>` (generate-page is no longer Cuckle-only).
+4. `mark-league-ready.mjs` flips `ready` when the service role key is present.
+5. Commissioner can add more IDs on Settings → Leagues or the invite console
+   (Add Sleeper ID / Add ESPN ID) and tap **Rebuild dashboard** to run the
+   same merge + build again. Those IDs stay on this device for the next rebuild.
+
+Laptop fallback: `node build.mjs <sleeper_league_id>`.
+
+Two-provider redraft dogfood (Sleeper `1389723418827460608` + ESPN `35763180`):
+[`REDRAFT_TWO_PROVIDER.md`](REDRAFT_TWO_PROVIDER.md). ESPN years need `ESPN_S2` /
+`ESPN_SWID`; without them the Sleeper seasons still build.
+
+Dogfood (no operator laptop required for the assertion):
+
+```bash
+node scripts/test-league-format.mjs
+node scripts/dogfood-league-format.mjs
+```
+
+The dogfood script GETs Cuckle, a 12-team Superflex dynasty (`1313051744942428160`), and
+Sleeper’s public 1QB redraft (`289646328504385536`). It does not write a second meter book
+into `data/` (that is the Action / `build.mjs` job).
+
+---
+
+## 4. What we will not do
+
+- Silently score a 1QB league on Cuckle’s Superflex curve.
+- Copy Cuckle flair, Truman-only news admin, or a seven-year Champions Path onto a startup.
+- Merge TEP, votes, or Ledger into the needle.

@@ -1,0 +1,266 @@
+/**
+ * 100-loop coverage of Your board against real Cuckle tape.
+ * 10 seats × 10 manager jobs. Each loop asks: can the default 13 doors
+ * surface a non-empty, named answer for this seat?
+ */
+import fs from "node:fs";
+import path from "node:path";
+
+const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
+const UI = path.join(ROOT, "data/ui");
+const read = (f) => JSON.parse(fs.readFileSync(path.join(UI, f), "utf8"));
+
+const members = read("members.json");
+const titles = read("titles.json");
+const picks = read("picks.json");
+const cuffs = read("cuffs.json");
+const league = read("league.json");
+const marks = read("marks.json");
+const direction = read("seat-direction.json");
+const calc = read("calculator.json");
+const weekScores = read("week-scores.json");
+
+const DOORS = [
+  "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
+  "past_champions", "season_place", "vs_you", "firsts_held", "week_scores",
+  "passed_around", "seat_draft", "uninsured",
+];
+const PARKED_DEAL = [
+  "fill_holes", "move_extras", "poach_cuffs", "stash_young",
+  "my_block", "league_block", "block_fits", "held_picks",
+  "available_cuffs", "my_cuffs", "seat_manners", "seat_run",
+];
+
+function pickParts(key) {
+  const m = String(key || "").match(/^pick:(\d{4}):(\d+):/);
+  if (!m) return null;
+  return { season: m[1], round: Number(m[2]) };
+}
+function windowDelta(side, key) {
+  const w = side && side.windows && side.windows[key];
+  if (!w || w.incomplete) return null;
+  if (w.got == null || w.sent == null) return null;
+  return w.got - w.sent;
+}
+function pickOwner(p) {
+  const hops = (p && p.hops) || [];
+  if (hops.length) return hops[hops.length - 1].to || "";
+  return originOf(p);
+}
+function everOwned(p, seat) {
+  if (!p || !seat) return false;
+  if (p.used_by === seat) return true;
+  if (originOf(p) === seat) return true;
+  const hops = p.hops || [];
+  for (let i = 0; i < hops.length; i++) {
+    if (hops[i].from === seat || hops[i].to === seat) return true;
+  }
+  return false;
+}
+function originOf(p) {
+  const label = (p && p.label) || "";
+  const m = /\(([^)]+)\)\s*$/.exec(label);
+  if (m) return m[1];
+  const hops = (p && p.hops) || [];
+  return hops.length ? (hops[0].from || "") : "";
+}
+
+const sides = (league.trade_boards && league.trade_boards.sides) || [];
+const lists = league.player_lists || {};
+const bookPlayers = (calc.players || []).concat(calc.picks || []);
+const titleRows = titles.titles || [];
+
+function mePath(uid) {
+  const p = path.join(UI, "me", uid + ".json");
+  return fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : null;
+}
+
+function score(ok, note, door) {
+  return { status: ok ? "hit" : "miss", note, door };
+}
+
+function jobMyTrades(seat) {
+  const seen = {};
+  let n = 0;
+  let sample = "";
+  for (let i = 0; i < sides.length; i++) {
+    const s = sides[i];
+    const tid = String((s && s.transaction_id) || "");
+    if (!tid || seen[tid]) continue;
+    if (s.name !== seat && s.other !== seat) continue;
+    seen[tid] = true;
+    n += 1;
+    if (!sample) sample = (s.name === seat ? s.other : s.name) || "";
+  }
+  return score(n > 0, n + " deals" + (sample ? " · vs " + sample : ""), "my_trades");
+}
+function jobLeagueTrades() {
+  const seen = {};
+  let n = 0;
+  for (let i = 0; i < sides.length; i++) {
+    const s = sides[i];
+    const tid = String((s && s.transaction_id) || "");
+    if (!tid || !s.name || !s.other || s.name === s.other || seen[tid]) continue;
+    seen[tid] = true;
+    n += 1;
+  }
+  return score(n > 0, n + " pairings on tape", "league_trades");
+}
+function soldBy(p, seat) {
+  const hops = (p && p.hops) || [];
+  for (let i = 0; i < hops.length; i++) {
+    if (hops[i].from === seat && hops[i].to && hops[i].to !== seat) return true;
+  }
+  return false;
+}
+function gotIn(p, seat) {
+  const hops = (p && p.hops) || [];
+  for (let i = 0; i < hops.length; i++) {
+    if (hops[i].to === seat && hops[i].from && hops[i].from !== seat) return true;
+  }
+  return false;
+}
+function jobMyDraft(seat) {
+  const keys = Object.keys(picks);
+  let used = 0, away = 0, inn = 0;
+  let sample = "";
+  for (let i = 0; i < keys.length; i++) {
+    const p = picks[keys[i]];
+    if (p && p.became && p.used_by === seat) {
+      used += 1;
+      if (!sample) sample = keys[i] + " → " + p.became;
+    }
+    if (originOf(p) === seat && soldBy(p, seat)) away += 1;
+    if (gotIn(p, seat) && originOf(p) !== seat) inn += 1;
+  }
+  const n = used + away + inn;
+  return score(n > 0, used + " used · " + away + " away · " + inn + " in" + (sample ? " · " + sample : ""), "my_draft");
+}
+function jobLeagueDraft(seat) {
+  const r = jobMyDraft(seat);
+  return score(r.status === "hit", r.note, "league_draft");
+}
+function jobTitles(seat) {
+  const won = titleRows.filter((t) => t.name === seat);
+  return score(titleRows.length > 0, won.length ? won.map((t) => t.season).join(",") : "league has titles, this seat has 0", "past_champions");
+}
+function jobFinish(mem) {
+  return score(mem.place != null, (mem.place_season || "?") + " · " + mem.place, "season_place");
+}
+function jobVs(mem) {
+  const me = mePath(mem.user_id);
+  const partners = (me && me.partners) || [];
+  const top = partners[0];
+  return score(partners.length > 0, top ? (top.name + " · " + top.trades + " deals") : "no partners file", "vs_you");
+}
+function jobFirsts(seat) {
+  const keys = Object.keys(picks);
+  let n = 0;
+  const years = [];
+  for (let i = 0; i < keys.length; i++) {
+    const p = picks[keys[i]];
+    const parts = pickParts(keys[i]);
+    if (!parts || parts.round !== 1) continue;
+    if (!p.still_pick) continue;
+    const owner = pickOwner(p);
+    if (owner !== seat) continue;
+    n += 1;
+    years.push(parts.season);
+  }
+  // Zero firsts is a real answer (tank / win-now). Door currently omits the row.
+  return {
+    status: "hit",
+    note: n + " firsts" + (years.length ? " · " + years.sort().join(",") : " · ZERO — door hides this seat"),
+    door: "firsts_held",
+    hiddenZero: n === 0,
+  };
+}
+function jobWeekScores() {
+  const high = (weekScores && weekScores.all && weekScores.all.high) || [];
+  const low = (weekScores && weekScores.all && weekScores.all.low) || [];
+  const ok = high.length === 5 && low.length === 5 && high[0].name && low[0].name
+    && high[0].points >= low[0].points;
+  const note = ok
+    ? high[0].name + " " + high[0].points + " / " + low[0].name + " " + low[0].points
+    : "missing highest or lowest five";
+  return score(ok, note, "week_scores");
+}
+function jobDepthFlow(mem) {
+  const mine = ((cuffs && cuffs.rows) || []).filter((r) => String(r.owner_id) === String(mem.user_id) && !r.cuff_owned);
+  const ownedNames = new Set(bookPlayers.filter((a) => String(a.owner_id) === String(mem.user_id)).map((a) => a.name));
+  const passed = (lists.most_traded || []).filter((r) => ownedNames.has(r.name) || r.team === mem.name);
+  const draft = marks.seats && marks.seats[mem.user_id] && marks.seats[mem.user_id].draft;
+  const bits = [];
+  if (mine.length) bits.push(mine.length + " uninsured · cuff hidden as 'No cuff'");
+  if (passed.length) bits.push("holds " + passed[0].name);
+  if (draft) bits.push("draft " + (draft.title || draft.hit || draft.sort || "row"));
+  return {
+    status: bits.length ? "hit" : "miss",
+    note: bits.join(" · ") || "no cuff / passed / draft row",
+    door: mine.length ? "uninsured" : (passed.length ? "passed_around" : "seat_draft"),
+    cuffNameHidden: mine.some((r) => r.cuff),
+  };
+}
+
+const JOBS = [
+  ["my_partners", (m) => jobMyTrades(m.name)],
+  ["league_pairings", () => jobLeagueTrades()],
+  ["my_draft_buckets", (m) => jobMyDraft(m.name)],
+  ["league_draft_seat", (m) => jobLeagueDraft(m.name)],
+  ["who_won", (m) => jobTitles(m.name)],
+  ["last_finish", (m) => jobFinish(m)],
+  ["vs_them", (m) => jobVs(m)],
+  ["future_firsts", (m) => jobFirsts(m.name)],
+  ["week_high_low", () => jobWeekScores()],
+  ["depth_or_flow", (m) => jobDepthFlow(m)],
+];
+
+const loops = [];
+let n = 0;
+for (let s = 0; s < members.length; s++) {
+  const mem = members[s];
+  for (let j = 0; j < JOBS.length; j++) {
+    n += 1;
+    const [job, fn] = JOBS[j];
+    const r = fn(mem);
+    loops.push({ n, seat: mem.name, job, ...r });
+  }
+}
+
+const hits = loops.filter((r) => r.status === "hit").length;
+const misses = loops.filter((r) => r.status === "miss").length;
+const hiddenZeros = loops.filter((r) => r.hiddenZero).length;
+const cuffHidden = loops.filter((r) => r.cuffNameHidden).length;
+
+const byJob = {};
+for (let i = 0; i < loops.length; i++) {
+  const r = loops[i];
+  if (!byJob[r.job]) byJob[r.job] = { hit: 0, miss: 0, notes: [] };
+  byJob[r.job][r.status] += 1;
+  if (r.hiddenZero || r.cuffNameHidden || r.status === "miss") byJob[r.job].notes.push(r.seat + ": " + r.note);
+}
+
+const parkedNeed = [];
+for (let s = 0; s < members.length; s++) {
+  const d = (direction.seats || []).find((x) => String(x.seat_user_id) === String(members[s].user_id));
+  if (d && (d.holes || []).length) parkedNeed.push(members[s].name + " holes " + d.holes.join("/"));
+  if (d && d.label === "Hard rebuild") parkedNeed.push(members[s].name + " " + d.label + " — Give/Get parked");
+}
+
+const out = {
+  loops: n,
+  doors_on_board: DOORS,
+  parked_deal_ids: PARKED_DEAL,
+  hit: hits,
+  miss: misses,
+  hidden_zero_firsts: hiddenZeros,
+  uninsured_cuff_name_hidden: cuffHidden,
+  by_job: byJob,
+  parked_pressure: parkedNeed,
+  sample_misses: loops.filter((r) => r.status === "miss").slice(0, 12),
+};
+console.log(JSON.stringify(out, null, 2));
+if (n !== 100) {
+  console.error("expected 100 loops, got", n);
+  process.exit(1);
+}

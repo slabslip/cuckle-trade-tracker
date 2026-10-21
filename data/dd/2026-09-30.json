@@ -1,0 +1,5733 @@
+{
+  "as_of": "2026-09-30",
+  "source": "dynastydealer",
+  "format": "superflex",
+  "fetched_at": "2026-09-30T14:02:07.863Z",
+  "url": "https://www.dynastydealer.com/api/player-values?perSlot=true",
+  "players": [
+    {
+      "name": "Jahmyr Gibbs",
+      "sleeper_id": "9221",
+      "pos": "RB",
+      "team": "DET",
+      "age": 24,
+      "value": 9947,
+      "current_value": 9880
+    },
+    {
+      "name": "Josh Allen",
+      "sleeper_id": "4984",
+      "pos": "QB",
+      "team": "BUF",
+      "age": 30,
+      "value": 10000,
+      "current_value": 9821
+    },
+    {
+      "name": "Jaxon Smith-Njigba",
+      "sleeper_id": "9488",
+      "pos": "WR",
+      "team": "SEA",
+      "age": 24,
+      "value": 9819,
+      "current_value": 9805
+    },
+    {
+      "name": "Bijan Robinson",
+      "sleeper_id": "9509",
+      "pos": "RB",
+      "team": "ATL",
+      "age": 24,
+      "value": 9910,
+      "current_value": 9662
+    },
+    {
+      "name": "Ja'Marr Chase",
+      "sleeper_id": "7564",
+      "pos": "WR",
+      "team": "CIN",
+      "age": 26,
+      "value": 9460,
+      "current_value": 9524
+    },
+    {
+      "name": "Lamar Jackson",
+      "sleeper_id": "4881",
+      "pos": "QB",
+      "team": "BAL",
+      "age": 29,
+      "value": 8639,
+      "current_value": 8624
+    },
+    {
+      "name": "Amon-Ra St. Brown",
+      "sleeper_id": "7547",
+      "pos": "WR",
+      "team": "DET",
+      "age": 26,
+      "value": 8517,
+      "current_value": 8542
+    },
+    {
+      "name": "Puka Nacua",
+      "sleeper_id": "9493",
+      "pos": "WR",
+      "team": "LAR",
+      "age": 25,
+      "value": 8644,
+      "current_value": 8411
+    },
+    {
+      "name": "2027 Pick 1.01",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 8373,
+      "current_value": 8373,
+      "pick_key": "pickval:2027:1:Early"
+    },
+    {
+      "name": "Ashton Jeanty",
+      "sleeper_id": "12527",
+      "pos": "RB",
+      "team": "LV",
+      "age": 22,
+      "value": 8164,
+      "current_value": 8334
+    },
+    {
+      "name": "Brock Bowers",
+      "sleeper_id": "11604",
+      "pos": "TE",
+      "team": "LV",
+      "age": 23,
+      "value": 8542,
+      "current_value": 8270
+    },
+    {
+      "name": "Trey McBride",
+      "sleeper_id": "8130",
+      "pos": "TE",
+      "team": "ARI",
+      "age": 26,
+      "value": 8493,
+      "current_value": 8188
+    },
+    {
+      "name": "CeeDee Lamb",
+      "sleeper_id": "6786",
+      "pos": "WR",
+      "team": "DAL",
+      "age": 27,
+      "value": 7892,
+      "current_value": 8160
+    },
+    {
+      "name": "Jeremiyah Love",
+      "sleeper_id": "13287",
+      "pos": "RB",
+      "team": "ARI",
+      "age": 21,
+      "value": 8163,
+      "current_value": 8137
+    },
+    {
+      "name": "Joe Burrow",
+      "sleeper_id": "6770",
+      "pos": "QB",
+      "team": "CIN",
+      "age": 29,
+      "value": 8070,
+      "current_value": 8104
+    },
+    {
+      "name": "Justin Jefferson",
+      "sleeper_id": "6794",
+      "pos": "WR",
+      "team": "MIN",
+      "age": 27,
+      "value": 8074,
+      "current_value": 8031
+    },
+    {
+      "name": "Drake Maye",
+      "sleeper_id": "11564",
+      "pos": "QB",
+      "team": "NE",
+      "age": 24,
+      "value": 7918,
+      "current_value": 7968
+    },
+    {
+      "name": "Caleb Williams",
+      "sleeper_id": "11560",
+      "pos": "QB",
+      "team": "CHI",
+      "age": 24,
+      "value": 8414,
+      "current_value": 7868
+    },
+    {
+      "name": "Jalen Hurts",
+      "sleeper_id": "6904",
+      "pos": "QB",
+      "team": "PHI",
+      "age": 28,
+      "value": 7317,
+      "current_value": 7755
+    },
+    {
+      "name": "Jonathan Taylor",
+      "sleeper_id": "6813",
+      "pos": "RB",
+      "team": "IND",
+      "age": 27,
+      "value": 7737,
+      "current_value": 7740
+    },
+    {
+      "name": "2027 Round 1 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 7648,
+      "current_value": 7648,
+      "pick_key": "pickval:2027:1:Early"
+    },
+    {
+      "name": "2027 Pick 1.02",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 7617,
+      "current_value": 7617,
+      "pick_key": "pickval:2027:1:Early"
+    },
+    {
+      "name": "Malik Nabers",
+      "sleeper_id": "11632",
+      "pos": "WR",
+      "team": "NYG",
+      "age": 23,
+      "value": 7634,
+      "current_value": 7580
+    },
+    {
+      "name": "James Cook",
+      "sleeper_id": "8138",
+      "pos": "RB",
+      "team": "BUF",
+      "age": 27,
+      "value": 7455,
+      "current_value": 7519
+    },
+    {
+      "name": "Patrick Mahomes",
+      "sleeper_id": "4046",
+      "pos": "QB",
+      "team": "KC",
+      "age": 31,
+      "value": 7487,
+      "current_value": 7462
+    },
+    {
+      "name": "2027 Pick 1.03",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 7371,
+      "current_value": 7371,
+      "pick_key": "pickval:2027:1:Early"
+    },
+    {
+      "name": "Kenneth Walker",
+      "sleeper_id": "8151",
+      "pos": "RB",
+      "team": "KC",
+      "age": 25,
+      "value": 7778,
+      "current_value": 7247
+    },
+    {
+      "name": "Chris Olave",
+      "sleeper_id": "8144",
+      "pos": "WR",
+      "team": "NO",
+      "age": 26,
+      "value": 7066,
+      "current_value": 7246
+    },
+    {
+      "name": "2027 Pick 1.04",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 7232,
+      "current_value": 7232,
+      "pick_key": "pickval:2027:1:Early"
+    },
+    {
+      "name": "Brock Purdy",
+      "sleeper_id": "8183",
+      "pos": "QB",
+      "team": "SF",
+      "age": 26,
+      "value": 7332,
+      "current_value": 7085
+    },
+    {
+      "name": "Jayden Daniels",
+      "sleeper_id": "11566",
+      "pos": "QB",
+      "team": "WAS",
+      "age": 25,
+      "value": 7127,
+      "current_value": 7062
+    },
+    {
+      "name": "De'Von Achane",
+      "sleeper_id": "9226",
+      "pos": "RB",
+      "team": "MIA",
+      "age": 24,
+      "value": 6754,
+      "current_value": 6985
+    },
+    {
+      "name": "Trevor Lawrence",
+      "sleeper_id": "7523",
+      "pos": "QB",
+      "team": "JAX",
+      "age": 26,
+      "value": 7523,
+      "current_value": 6981
+    },
+    {
+      "name": "Omarion Hampton",
+      "sleeper_id": "12507",
+      "pos": "RB",
+      "team": "LAC",
+      "age": 23,
+      "value": 7093,
+      "current_value": 6980
+    },
+    {
+      "name": "Jaxson Dart",
+      "sleeper_id": "12508",
+      "pos": "QB",
+      "team": "NYG",
+      "age": 23,
+      "value": 6598,
+      "current_value": 6740
+    },
+    {
+      "name": "Dak Prescott",
+      "sleeper_id": "3294",
+      "pos": "QB",
+      "team": "DAL",
+      "age": 33,
+      "value": 6358,
+      "current_value": 6734
+    },
+    {
+      "name": "Tetairoa McMillan",
+      "sleeper_id": "12526",
+      "pos": "WR",
+      "team": "CAR",
+      "age": 23,
+      "value": 6696,
+      "current_value": 6704
+    },
+    {
+      "name": "Drake London",
+      "sleeper_id": "8112",
+      "pos": "WR",
+      "team": "ATL",
+      "age": 25,
+      "value": 7115,
+      "current_value": 6670
+    },
+    {
+      "name": "2027 Pick 1.05",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 6647,
+      "current_value": 6647,
+      "pick_key": "pickval:2027:1:Mid"
+    },
+    {
+      "name": "Garrett Wilson",
+      "sleeper_id": "8146",
+      "pos": "WR",
+      "team": "NYJ",
+      "age": 26,
+      "value": 6639,
+      "current_value": 6608
+    },
+    {
+      "name": "Justin Herbert",
+      "sleeper_id": "6797",
+      "pos": "QB",
+      "team": "LAC",
+      "age": 28,
+      "value": 6728,
+      "current_value": 6548
+    },
+    {
+      "name": "Tyler Shough",
+      "sleeper_id": "12545",
+      "pos": "QB",
+      "team": "NO",
+      "age": 27,
+      "value": 6365,
+      "current_value": 6482
+    },
+    {
+      "name": "Chase Brown",
+      "sleeper_id": "9224",
+      "pos": "RB",
+      "team": "CIN",
+      "age": 26,
+      "value": 6493,
+      "current_value": 6466
+    },
+    {
+      "name": "George Pickens",
+      "sleeper_id": "8137",
+      "pos": "WR",
+      "team": "DAL",
+      "age": 25,
+      "value": 6555,
+      "current_value": 6463
+    },
+    {
+      "name": "Bo Nix",
+      "sleeper_id": "11563",
+      "pos": "QB",
+      "team": "DEN",
+      "age": 26,
+      "value": 6547,
+      "current_value": 6419
+    },
+    {
+      "name": "Nico Collins",
+      "sleeper_id": "7569",
+      "pos": "WR",
+      "team": "HOU",
+      "age": 27,
+      "value": 6487,
+      "current_value": 6385
+    },
+    {
+      "name": "Tyler Warren",
+      "sleeper_id": "12518",
+      "pos": "TE",
+      "team": "IND",
+      "age": 24,
+      "value": 6474,
+      "current_value": 6367
+    },
+    {
+      "name": "DeVonta Smith",
+      "sleeper_id": "7525",
+      "pos": "WR",
+      "team": "PHI",
+      "age": 27,
+      "value": 6125,
+      "current_value": 6328
+    },
+    {
+      "name": "Colston Loveland",
+      "sleeper_id": "12517",
+      "pos": "TE",
+      "team": "CHI",
+      "age": 22,
+      "value": 6404,
+      "current_value": 6250
+    },
+    {
+      "name": "2027 Pick 1.06",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 6193,
+      "current_value": 6193,
+      "pick_key": "pickval:2027:1:Mid"
+    },
+    {
+      "name": "2027 Pick 1.07",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 6193,
+      "current_value": 6193,
+      "pick_key": "pickval:2027:1:Mid"
+    },
+    {
+      "name": "2027 Round 1 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 6165,
+      "current_value": 6165,
+      "pick_key": "pickval:2027:1:Mid"
+    },
+    {
+      "name": "Jared Goff",
+      "sleeper_id": "3163",
+      "pos": "QB",
+      "team": "DET",
+      "age": 31,
+      "value": 5798,
+      "current_value": 6106
+    },
+    {
+      "name": "Zay Flowers",
+      "sleeper_id": "9997",
+      "pos": "WR",
+      "team": "BAL",
+      "age": 26,
+      "value": 6483,
+      "current_value": 6102
+    },
+    {
+      "name": "Christian McCaffrey",
+      "sleeper_id": "4034",
+      "pos": "RB",
+      "team": "SF",
+      "age": 30,
+      "value": 6760,
+      "current_value": 6084
+    },
+    {
+      "name": "Derrick Henry",
+      "sleeper_id": "3198",
+      "pos": "RB",
+      "team": "BAL",
+      "age": 32,
+      "value": 5827,
+      "current_value": 6043
+    },
+    {
+      "name": "Kyren Williams",
+      "sleeper_id": "8150",
+      "pos": "RB",
+      "team": "LAR",
+      "age": 26,
+      "value": 5871,
+      "current_value": 5981
+    },
+    {
+      "name": "Emeka Egbuka",
+      "sleeper_id": "12514",
+      "pos": "WR",
+      "team": "TB",
+      "age": 23,
+      "value": 6083,
+      "current_value": 5956
+    },
+    {
+      "name": "Bucky Irving",
+      "sleeper_id": "11584",
+      "pos": "RB",
+      "team": "TB",
+      "age": 24,
+      "value": 5753,
+      "current_value": 5903
+    },
+    {
+      "name": "Parker Washington",
+      "sleeper_id": "9487",
+      "pos": "WR",
+      "team": "JAX",
+      "age": 24,
+      "value": 5878,
+      "current_value": 5892
+    },
+    {
+      "name": "Saquon Barkley",
+      "sleeper_id": "4866",
+      "pos": "RB",
+      "team": "PHI",
+      "age": 29,
+      "value": 5880,
+      "current_value": 5846
+    },
+    {
+      "name": "Ladd McConkey",
+      "sleeper_id": "11635",
+      "pos": "WR",
+      "team": "LAC",
+      "age": 24,
+      "value": 6046,
+      "current_value": 5825
+    },
+    {
+      "name": "Luther Burden",
+      "sleeper_id": "12519",
+      "pos": "WR",
+      "team": "CHI",
+      "age": 22,
+      "value": 5531,
+      "current_value": 5815
+    },
+    {
+      "name": "Breece Hall",
+      "sleeper_id": "8155",
+      "pos": "RB",
+      "team": "NYJ",
+      "age": 25,
+      "value": 6187,
+      "current_value": 5781
+    },
+    {
+      "name": "Bryce Young",
+      "sleeper_id": "9228",
+      "pos": "QB",
+      "team": "CAR",
+      "age": 25,
+      "value": 5992,
+      "current_value": 5669
+    },
+    {
+      "name": "2028 Round 1 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 5668,
+      "current_value": 5668,
+      "pick_key": "pickval:2028:1:Early"
+    },
+    {
+      "name": "Carnell Tate",
+      "sleeper_id": "13279",
+      "pos": "WR",
+      "team": "TEN",
+      "age": 21,
+      "value": 5612,
+      "current_value": 5660
+    },
+    {
+      "name": "2027 Pick 1.08",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 5626,
+      "current_value": 5626,
+      "pick_key": "pickval:2027:1:Late"
+    },
+    {
+      "name": "Javonte Williams",
+      "sleeper_id": "7588",
+      "pos": "RB",
+      "team": "DAL",
+      "age": 26,
+      "value": 5572,
+      "current_value": 5623
+    },
+    {
+      "name": "TreVeyon Henderson",
+      "sleeper_id": "12529",
+      "pos": "RB",
+      "team": "NE",
+      "age": 23,
+      "value": 5583,
+      "current_value": 5537
+    },
+    {
+      "name": "Sam LaPorta",
+      "sleeper_id": "10859",
+      "pos": "TE",
+      "team": "DET",
+      "age": 25,
+      "value": 5497,
+      "current_value": 5534
+    },
+    {
+      "name": "Rashee Rice",
+      "sleeper_id": "10229",
+      "pos": "WR",
+      "team": "KC",
+      "age": 26,
+      "value": 5542,
+      "current_value": 5518
+    },
+    {
+      "name": "Jordan Love",
+      "sleeper_id": "6804",
+      "pos": "QB",
+      "team": "GB",
+      "age": 27,
+      "value": 6082,
+      "current_value": 5474
+    },
+    {
+      "name": "Fernando Mendoza",
+      "sleeper_id": "13269",
+      "pos": "QB",
+      "team": "LV",
+      "age": 22,
+      "value": 5944,
+      "current_value": 5471
+    },
+    {
+      "name": "Tee Higgins",
+      "sleeper_id": "6801",
+      "pos": "WR",
+      "team": "CIN",
+      "age": 27,
+      "value": 5650,
+      "current_value": 5456
+    },
+    {
+      "name": "Jaylen Waddle",
+      "sleeper_id": "7526",
+      "pos": "WR",
+      "team": "DEN",
+      "age": 27,
+      "value": 5415,
+      "current_value": 5437
+    },
+    {
+      "name": "Christian Watson",
+      "sleeper_id": "8167",
+      "pos": "WR",
+      "team": "GB",
+      "age": 27,
+      "value": 5326,
+      "current_value": 5428
+    },
+    {
+      "name": "Quinshon Judkins",
+      "sleeper_id": "12512",
+      "pos": "RB",
+      "team": "CLE",
+      "age": 22,
+      "value": 5488,
+      "current_value": 5371
+    },
+    {
+      "name": "Tucker Kraft",
+      "sleeper_id": "9484",
+      "pos": "TE",
+      "team": "GB",
+      "age": 25,
+      "value": 5394,
+      "current_value": 5365
+    },
+    {
+      "name": "C.J. Stroud",
+      "sleeper_id": "9758",
+      "pos": "QB",
+      "team": "HOU",
+      "age": 24,
+      "value": 5507,
+      "current_value": 5334
+    },
+    {
+      "name": "Jordyn Tyson",
+      "sleeper_id": "13281",
+      "pos": "WR",
+      "team": "NO",
+      "age": 22,
+      "value": 5507,
+      "current_value": 5334
+    },
+    {
+      "name": "Harold Fannin",
+      "sleeper_id": "12506",
+      "pos": "TE",
+      "team": "CLE",
+      "age": 22,
+      "value": 5311,
+      "current_value": 5303
+    },
+    {
+      "name": "Baker Mayfield",
+      "sleeper_id": "4892",
+      "pos": "QB",
+      "team": "TB",
+      "age": 31,
+      "value": 5033,
+      "current_value": 5227
+    },
+    {
+      "name": "2029 Round 1 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 5210,
+      "current_value": 5210,
+      "pick_key": "pickval:2029:1:Early"
+    },
+    {
+      "name": "D'Andre Swift",
+      "sleeper_id": "6790",
+      "pos": "RB",
+      "team": "CHI",
+      "age": 27,
+      "value": 5098,
+      "current_value": 5189
+    },
+    {
+      "name": "Rome Odunze",
+      "sleeper_id": "11620",
+      "pos": "WR",
+      "team": "CHI",
+      "age": 24,
+      "value": 4960,
+      "current_value": 5170
+    },
+    {
+      "name": "Cam Skattebo",
+      "sleeper_id": "12481",
+      "pos": "RB",
+      "team": "NYG",
+      "age": 24,
+      "value": 5374,
+      "current_value": 5155
+    },
+    {
+      "name": "Dalton Kincaid",
+      "sleeper_id": "10236",
+      "pos": "TE",
+      "team": "BUF",
+      "age": 26,
+      "value": 5532,
+      "current_value": 5146
+    },
+    {
+      "name": "A.J. Brown",
+      "sleeper_id": "5859",
+      "pos": "WR",
+      "team": "NE",
+      "age": 29,
+      "value": 5247,
+      "current_value": 5075
+    },
+    {
+      "name": "Jadarian Price",
+      "sleeper_id": "13286",
+      "pos": "RB",
+      "team": "SEA",
+      "age": 22,
+      "value": 5373,
+      "current_value": 5045
+    },
+    {
+      "name": "Matthew Golden",
+      "sleeper_id": "12501",
+      "pos": "WR",
+      "team": "GB",
+      "age": 23,
+      "value": 4846,
+      "current_value": 5008
+    },
+    {
+      "name": "2028 Round 1 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4954,
+      "current_value": 4954,
+      "pick_key": "pickval:2028:1:Mid"
+    },
+    {
+      "name": "Denzel Boston",
+      "sleeper_id": "13346",
+      "pos": "WR",
+      "team": "CLE",
+      "age": 22,
+      "value": 4757,
+      "current_value": 4929
+    },
+    {
+      "name": "Makai Lemon",
+      "sleeper_id": "13294",
+      "pos": "WR",
+      "team": "PHI",
+      "age": 22,
+      "value": 4823,
+      "current_value": 4883
+    },
+    {
+      "name": "2027 Pick 1.09",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4845,
+      "current_value": 4845,
+      "pick_key": "pickval:2027:1:Late"
+    },
+    {
+      "name": "Matthew Stafford",
+      "sleeper_id": "421",
+      "pos": "QB",
+      "team": "LAR",
+      "age": 38,
+      "value": 4458,
+      "current_value": 4830
+    },
+    {
+      "name": "Isaiah Likely",
+      "sleeper_id": "8131",
+      "pos": "TE",
+      "team": "NYG",
+      "age": 26,
+      "value": 4649,
+      "current_value": 4829
+    },
+    {
+      "name": "2027 Pick 1.10",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4807,
+      "current_value": 4807,
+      "pick_key": "pickval:2027:1:Late"
+    },
+    {
+      "name": "Jalen Coker",
+      "sleeper_id": "11646",
+      "pos": "WR",
+      "team": "CAR",
+      "age": 24,
+      "value": 4688,
+      "current_value": 4791
+    },
+    {
+      "name": "Bhayshul Tuten",
+      "sleeper_id": "12490",
+      "pos": "RB",
+      "team": "JAX",
+      "age": 23,
+      "value": 5024,
+      "current_value": 4765
+    },
+    {
+      "name": "2027 Round 1 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4747,
+      "current_value": 4747,
+      "pick_key": "pickval:2027:1:Late"
+    },
+    {
+      "name": "2027 Pick 1.11",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4744,
+      "current_value": 4744,
+      "pick_key": "pickval:2027:1:Late"
+    },
+    {
+      "name": "David Montgomery",
+      "sleeper_id": "5892",
+      "pos": "RB",
+      "team": "HOU",
+      "age": 29,
+      "value": 4279,
+      "current_value": 4707
+    },
+    {
+      "name": "Cam Ward",
+      "sleeper_id": "12522",
+      "pos": "QB",
+      "team": "TEN",
+      "age": 24,
+      "value": 4851,
+      "current_value": 4705
+    },
+    {
+      "name": "Davante Adams",
+      "sleeper_id": "2133",
+      "pos": "WR",
+      "team": "LAR",
+      "age": 33,
+      "value": 4253,
+      "current_value": 4678
+    },
+    {
+      "name": "Kenyon Sadiq",
+      "sleeper_id": "13330",
+      "pos": "TE",
+      "team": "NYJ",
+      "age": 21,
+      "value": 4740,
+      "current_value": 4612
+    },
+    {
+      "name": "Sam Darnold",
+      "sleeper_id": "4943",
+      "pos": "QB",
+      "team": "SEA",
+      "age": 29,
+      "value": 4902,
+      "current_value": 4596
+    },
+    {
+      "name": "2027 Pick 1.12",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4593,
+      "current_value": 4593,
+      "pick_key": "pickval:2027:1:Late"
+    },
+    {
+      "name": "George Kittle",
+      "sleeper_id": "4217",
+      "pos": "TE",
+      "team": "SF",
+      "age": 32,
+      "value": 4296,
+      "current_value": 4583
+    },
+    {
+      "name": "2029 Round 1 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4554,
+      "current_value": 4554,
+      "pick_key": "pickval:2029:1:Mid"
+    },
+    {
+      "name": "DJ Moore",
+      "sleeper_id": "4983",
+      "pos": "WR",
+      "team": "BUF",
+      "age": 29,
+      "value": 4417,
+      "current_value": 4530
+    },
+    {
+      "name": "Jameson Williams",
+      "sleeper_id": "8148",
+      "pos": "WR",
+      "team": "DET",
+      "age": 25,
+      "value": 4621,
+      "current_value": 4515
+    },
+    {
+      "name": "Kyler Murray",
+      "sleeper_id": "5849",
+      "pos": "QB",
+      "team": "MIN",
+      "age": 29,
+      "value": 4407,
+      "current_value": 4498
+    },
+    {
+      "name": "2027 Pick 2.01",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4479,
+      "current_value": 4479,
+      "pick_key": "pickval:2027:2:Early"
+    },
+    {
+      "name": "2027 Pick 2.02",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4479,
+      "current_value": 4479,
+      "pick_key": "pickval:2027:2:Early"
+    },
+    {
+      "name": "2027 Pick 2.03",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4479,
+      "current_value": 4479,
+      "pick_key": "pickval:2027:2:Early"
+    },
+    {
+      "name": "2027 Round 2 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4454,
+      "current_value": 4454,
+      "pick_key": "pickval:2027:2:Early"
+    },
+    {
+      "name": "Kyle Pitts",
+      "sleeper_id": "7553",
+      "pos": "TE",
+      "team": "ATL",
+      "age": 25,
+      "value": 4156,
+      "current_value": 4451
+    },
+    {
+      "name": "Chuba Hubbard",
+      "sleeper_id": "7594",
+      "pos": "RB",
+      "team": "CAR",
+      "age": 27,
+      "value": 4422,
+      "current_value": 4402
+    },
+    {
+      "name": "2027 Pick 2.04",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4377,
+      "current_value": 4377,
+      "pick_key": "pickval:2027:2:Early"
+    },
+    {
+      "name": "2027 Pick 2.05",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4377,
+      "current_value": 4377,
+      "pick_key": "pickval:2027:2:Mid"
+    },
+    {
+      "name": "2028 Round 1 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 4272,
+      "current_value": 4272,
+      "pick_key": "pickval:2028:1:Late"
+    },
+    {
+      "name": "Tom Brady",
+      "sleeper_id": "167",
+      "pos": "QB",
+      "team": "FA",
+      "age": 45,
+      "value": 4197,
+      "current_value": 4197
+    },
+    {
+      "name": "KC Concepcion",
+      "sleeper_id": "13298",
+      "pos": "WR",
+      "team": "CLE",
+      "age": 22,
+      "value": 4467,
+      "current_value": 4189
+    },
+    {
+      "name": "Michael Wilson",
+      "sleeper_id": "10232",
+      "pos": "WR",
+      "team": "ARI",
+      "age": 26,
+      "value": 3991,
+      "current_value": 4177
+    },
+    {
+      "name": "Daniel Jones",
+      "sleeper_id": "5870",
+      "pos": "QB",
+      "team": "IND",
+      "age": 29,
+      "value": 4104,
+      "current_value": 4163
+    },
+    {
+      "name": "Marvin Harrison",
+      "sleeper_id": "11628",
+      "pos": "WR",
+      "team": "ARI",
+      "age": 24,
+      "value": 4285,
+      "current_value": 4159
+    },
+    {
+      "name": "Travis Etienne",
+      "sleeper_id": "7543",
+      "pos": "RB",
+      "team": "NO",
+      "age": 27,
+      "value": 4408,
+      "current_value": 4155
+    },
+    {
+      "name": "Brian Thomas",
+      "sleeper_id": "11631",
+      "pos": "WR",
+      "team": "JAX",
+      "age": 23,
+      "value": 4256,
+      "current_value": 4120
+    },
+    {
+      "name": "Jonah Coleman",
+      "sleeper_id": "13345",
+      "pos": "RB",
+      "team": "DEN",
+      "age": 23,
+      "value": 3778,
+      "current_value": 4053
+    },
+    {
+      "name": "Michael Penix",
+      "sleeper_id": "11559",
+      "pos": "QB",
+      "team": "ATL",
+      "age": 26,
+      "value": 3827,
+      "current_value": 4003
+    },
+    {
+      "name": "Blake Corum",
+      "sleeper_id": "11586",
+      "pos": "RB",
+      "team": "LAR",
+      "age": 25,
+      "value": 3637,
+      "current_value": 4001
+    },
+    {
+      "name": "Mike Evans",
+      "sleeper_id": "2216",
+      "pos": "WR",
+      "team": "SF",
+      "age": 33,
+      "value": 3647,
+      "current_value": 3994
+    },
+    {
+      "name": "Malik Willis",
+      "sleeper_id": "8161",
+      "pos": "QB",
+      "team": "MIA",
+      "age": 27,
+      "value": 3980,
+      "current_value": 3982
+    },
+    {
+      "name": "2027 Pick 2.06",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3950,
+      "current_value": 3950,
+      "pick_key": "pickval:2027:2:Mid"
+    },
+    {
+      "name": "Ty Simpson",
+      "sleeper_id": "13275",
+      "pos": "QB",
+      "team": "LAR",
+      "age": 23,
+      "value": 4315,
+      "current_value": 3950
+    },
+    {
+      "name": "2027 Round 2 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3936,
+      "current_value": 3936,
+      "pick_key": "pickval:2027:2:Mid"
+    },
+    {
+      "name": "2029 Round 1 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3926,
+      "current_value": 3926,
+      "pick_key": "pickval:2029:1:Late"
+    },
+    {
+      "name": "DK Metcalf",
+      "sleeper_id": "5846",
+      "pos": "WR",
+      "team": "PIT",
+      "age": 28,
+      "value": 3552,
+      "current_value": 3905
+    },
+    {
+      "name": "Jaylen Warren",
+      "sleeper_id": "8228",
+      "pos": "RB",
+      "team": "PIT",
+      "age": 27,
+      "value": 3795,
+      "current_value": 3890
+    },
+    {
+      "name": "Jordan Addison",
+      "sleeper_id": "9756",
+      "pos": "WR",
+      "team": "MIN",
+      "age": 24,
+      "value": 3770,
+      "current_value": 3890
+    },
+    {
+      "name": "Terry McLaurin",
+      "sleeper_id": "5927",
+      "pos": "WR",
+      "team": "WAS",
+      "age": 31,
+      "value": 3514,
+      "current_value": 3865
+    },
+    {
+      "name": "Josh Jacobs",
+      "sleeper_id": "5850",
+      "pos": "RB",
+      "team": "GB",
+      "age": 28,
+      "value": 3857,
+      "current_value": 3797
+    },
+    {
+      "name": "2027 Pick 2.07",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3776,
+      "current_value": 3776,
+      "pick_key": "pickval:2027:2:Mid"
+    },
+    {
+      "name": "Josh Downs",
+      "sleeper_id": "9500",
+      "pos": "WR",
+      "team": "IND",
+      "age": 25,
+      "value": 3838,
+      "current_value": 3748
+    },
+    {
+      "name": "Zach Charbonnet",
+      "sleeper_id": "9753",
+      "pos": "RB",
+      "team": "SEA",
+      "age": 25,
+      "value": 3452,
+      "current_value": 3737
+    },
+    {
+      "name": "Jalen Tolbert",
+      "sleeper_id": "8117",
+      "pos": "WR",
+      "team": "MIA",
+      "age": 27,
+      "value": 3395,
+      "current_value": 3735
+    },
+    {
+      "name": "Terrance Ferguson",
+      "sleeper_id": "12487",
+      "pos": "TE",
+      "team": "LAR",
+      "age": 23,
+      "value": 3417,
+      "current_value": 3719
+    },
+    {
+      "name": "Travis Kelce",
+      "sleeper_id": "1466",
+      "pos": "TE",
+      "team": "KC",
+      "age": 36,
+      "value": 3380,
+      "current_value": 3718
+    },
+    {
+      "name": "Kyle Monangai",
+      "sleeper_id": "12534",
+      "pos": "RB",
+      "team": "CHI",
+      "age": 24,
+      "value": 3562,
+      "current_value": 3702
+    },
+    {
+      "name": "Alec Pierce",
+      "sleeper_id": "8142",
+      "pos": "WR",
+      "team": "IND",
+      "age": 26,
+      "value": 3540,
+      "current_value": 3701
+    },
+    {
+      "name": "Rhamondre Stevenson",
+      "sleeper_id": "7611",
+      "pos": "RB",
+      "team": "NE",
+      "age": 28,
+      "value": 3350,
+      "current_value": 3685
+    },
+    {
+      "name": "De'Zhaun Stribling",
+      "sleeper_id": "13417",
+      "pos": "WR",
+      "team": "SF",
+      "age": 23,
+      "value": 3563,
+      "current_value": 3678
+    },
+    {
+      "name": "LeQuint Allen",
+      "sleeper_id": "12544",
+      "pos": "RB",
+      "team": "JAX",
+      "age": 22,
+      "value": 3473,
+      "current_value": 3660
+    },
+    {
+      "name": "2027 Pick 2.08",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3642,
+      "current_value": 3642,
+      "pick_key": "pickval:2027:2:Late"
+    },
+    {
+      "name": "2027 Pick 2.09",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3642,
+      "current_value": 3642,
+      "pick_key": "pickval:2027:2:Late"
+    },
+    {
+      "name": "Oronde Gadsden",
+      "sleeper_id": "12493",
+      "pos": "TE",
+      "team": "LAC",
+      "age": 23,
+      "value": 3339,
+      "current_value": 3610
+    },
+    {
+      "name": "Xavier Worthy",
+      "sleeper_id": "11624",
+      "pos": "WR",
+      "team": "KC",
+      "age": 23,
+      "value": 3573,
+      "current_value": 3597
+    },
+    {
+      "name": "Juwan Johnson",
+      "sleeper_id": "7002",
+      "pos": "TE",
+      "team": "NO",
+      "age": 30,
+      "value": 3355,
+      "current_value": 3585
+    },
+    {
+      "name": "2027 Pick 2.10",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3583,
+      "current_value": 3583,
+      "pick_key": "pickval:2027:2:Late"
+    },
+    {
+      "name": "2027 Round 2 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3570,
+      "current_value": 3570,
+      "pick_key": "pickval:2027:2:Late"
+    },
+    {
+      "name": "2028 Round 2 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3557,
+      "current_value": 3557,
+      "pick_key": "pickval:2028:2:Early"
+    },
+    {
+      "name": "Jake Ferguson",
+      "sleeper_id": "8110",
+      "pos": "TE",
+      "team": "DAL",
+      "age": 27,
+      "value": 3620,
+      "current_value": 3554
+    },
+    {
+      "name": "Dallas Goedert",
+      "sleeper_id": "5022",
+      "pos": "TE",
+      "team": "PHI",
+      "age": 31,
+      "value": 3218,
+      "current_value": 3540
+    },
+    {
+      "name": "2027 Pick 2.11",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3527,
+      "current_value": 3527,
+      "pick_key": "pickval:2027:2:Late"
+    },
+    {
+      "name": "2027 Pick 2.12",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3527,
+      "current_value": 3527,
+      "pick_key": "pickval:2027:2:Late"
+    },
+    {
+      "name": "Ollie Gordon",
+      "sleeper_id": "12495",
+      "pos": "RB",
+      "team": "MIA",
+      "age": 22,
+      "value": 3192,
+      "current_value": 3511
+    },
+    {
+      "name": "Travis Hunter",
+      "sleeper_id": "12530",
+      "pos": "WR",
+      "team": "JAX",
+      "age": 23,
+      "value": 3376,
+      "current_value": 3494
+    },
+    {
+      "name": "Omar Cooper",
+      "sleeper_id": "13276",
+      "pos": "WR",
+      "team": "NYJ",
+      "age": 22,
+      "value": 3627,
+      "current_value": 3491
+    },
+    {
+      "name": "Emmett Johnson",
+      "sleeper_id": "13337",
+      "pos": "RB",
+      "team": "KC",
+      "age": 22,
+      "value": 3389,
+      "current_value": 3481
+    },
+    {
+      "name": "Jacory Croskey-Merritt",
+      "sleeper_id": "12533",
+      "pos": "RB",
+      "team": "WAS",
+      "age": 25,
+      "value": 3261,
+      "current_value": 3479
+    },
+    {
+      "name": "Luke McCaffrey",
+      "sleeper_id": "11650",
+      "pos": "WR",
+      "team": "WAS",
+      "age": 25,
+      "value": 3366,
+      "current_value": 3475
+    },
+    {
+      "name": "Antonio Williams",
+      "sleeper_id": "13301",
+      "pos": "WR",
+      "team": "WAS",
+      "age": 22,
+      "value": 3443,
+      "current_value": 3471
+    },
+    {
+      "name": "Chris Bell",
+      "sleeper_id": "13311",
+      "pos": "WR",
+      "team": "MIA",
+      "age": 22,
+      "value": 3147,
+      "current_value": 3462
+    },
+    {
+      "name": "Jayden Higgins",
+      "sleeper_id": "12484",
+      "pos": "WR",
+      "team": "HOU",
+      "age": 23,
+      "value": 3141,
+      "current_value": 3455
+    },
+    {
+      "name": "Ja'Kobi Lane",
+      "sleeper_id": "13293",
+      "pos": "WR",
+      "team": "BAL",
+      "age": 22,
+      "value": 3138,
+      "current_value": 3452
+    },
+    {
+      "name": "Stefon Diggs",
+      "sleeper_id": "2449",
+      "pos": "WR",
+      "team": "WAS",
+      "age": 32,
+      "value": 3132,
+      "current_value": 3445
+    },
+    {
+      "name": "Michael Pittman",
+      "sleeper_id": "6819",
+      "pos": "WR",
+      "team": "PIT",
+      "age": 28,
+      "value": 3211,
+      "current_value": 3435
+    },
+    {
+      "name": "Drew Allar",
+      "sleeper_id": "13289",
+      "pos": "QB",
+      "team": "PIT",
+      "age": 22,
+      "value": 3242,
+      "current_value": 3401
+    },
+    {
+      "name": "RJ Harvey",
+      "sleeper_id": "12489",
+      "pos": "RB",
+      "team": "DEN",
+      "age": 25,
+      "value": 3586,
+      "current_value": 3393
+    },
+    {
+      "name": "J'Mari Taylor",
+      "sleeper_id": "13348",
+      "pos": "RB",
+      "team": "JAX",
+      "age": 24,
+      "value": 3748,
+      "current_value": 3373
+    },
+    {
+      "name": "Brenton Strange",
+      "sleeper_id": "9480",
+      "pos": "TE",
+      "team": "JAX",
+      "age": 25,
+      "value": 3104,
+      "current_value": 3367
+    },
+    {
+      "name": "Mark Andrews",
+      "sleeper_id": "5012",
+      "pos": "TE",
+      "team": "BAL",
+      "age": 31,
+      "value": 3177,
+      "current_value": 3357
+    },
+    {
+      "name": "Eli Stowers",
+      "sleeper_id": "13349",
+      "pos": "TE",
+      "team": "PHI",
+      "age": 23,
+      "value": 3080,
+      "current_value": 3351
+    },
+    {
+      "name": "Quentin Johnston",
+      "sleeper_id": "9754",
+      "pos": "WR",
+      "team": "LAC",
+      "age": 25,
+      "value": 3205,
+      "current_value": 3342
+    },
+    {
+      "name": "Rico Dowdle",
+      "sleeper_id": "7021",
+      "pos": "RB",
+      "team": "PIT",
+      "age": 28,
+      "value": 3073,
+      "current_value": 3329
+    },
+    {
+      "name": "Jayden Reed",
+      "sleeper_id": "10222",
+      "pos": "WR",
+      "team": "GB",
+      "age": 26,
+      "value": 3100,
+      "current_value": 3319
+    },
+    {
+      "name": "T.J. Hockenson",
+      "sleeper_id": "5844",
+      "pos": "TE",
+      "team": "MIN",
+      "age": 29,
+      "value": 3004,
+      "current_value": 3304
+    },
+    {
+      "name": "2028 Round 2 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3298,
+      "current_value": 3298,
+      "pick_key": "pickval:2028:2:Mid"
+    },
+    {
+      "name": "Jordan Mason",
+      "sleeper_id": "8408",
+      "pos": "RB",
+      "team": "MIN",
+      "age": 27,
+      "value": 3058,
+      "current_value": 3297
+    },
+    {
+      "name": "Deebo Samuel",
+      "sleeper_id": "5872",
+      "pos": "WR",
+      "team": "SF",
+      "age": 30,
+      "value": 3039,
+      "current_value": 3292
+    },
+    {
+      "name": "Jacoby Brissett",
+      "sleeper_id": "3257",
+      "pos": "QB",
+      "team": "ARI",
+      "age": 33,
+      "value": 2992,
+      "current_value": 3291
+    },
+    {
+      "name": "Chris Godwin",
+      "sleeper_id": "4037",
+      "pos": "WR",
+      "team": "TB",
+      "age": 30,
+      "value": 2977,
+      "current_value": 3275
+    },
+    {
+      "name": "2029 Round 2 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3269,
+      "current_value": 3269,
+      "pick_key": "pickval:2029:2:Early"
+    },
+    {
+      "name": "Wan'Dale Robinson",
+      "sleeper_id": "8126",
+      "pos": "WR",
+      "team": "TEN",
+      "age": 25,
+      "value": 3035,
+      "current_value": 3259
+    },
+    {
+      "name": "MarShawn Lloyd",
+      "sleeper_id": "11581",
+      "pos": "RB",
+      "team": "GB",
+      "age": 25,
+      "value": 2962,
+      "current_value": 3258
+    },
+    {
+      "name": "Malachi Fields",
+      "sleeper_id": "13285",
+      "pos": "WR",
+      "team": "NYG",
+      "age": 23,
+      "value": 3088,
+      "current_value": 3257
+    },
+    {
+      "name": "J.K. Dobbins",
+      "sleeper_id": "6806",
+      "pos": "RB",
+      "team": "DEN",
+      "age": 27,
+      "value": 2937,
+      "current_value": 3231
+    },
+    {
+      "name": "Geno Smith",
+      "sleeper_id": "1373",
+      "pos": "QB",
+      "team": "NYJ",
+      "age": 35,
+      "value": 3030,
+      "current_value": 3231
+    },
+    {
+      "name": "Caleb Douglas",
+      "sleeper_id": "13296",
+      "pos": "WR",
+      "team": "MIA",
+      "age": 23,
+      "value": 3040,
+      "current_value": 3229
+    },
+    {
+      "name": "Jonathon Brooks",
+      "sleeper_id": "11583",
+      "pos": "RB",
+      "team": "CAR",
+      "age": 23,
+      "value": 3242,
+      "current_value": 3194
+    },
+    {
+      "name": "Courtland Sutton",
+      "sleeper_id": "5045",
+      "pos": "WR",
+      "team": "DEN",
+      "age": 30,
+      "value": 2901,
+      "current_value": 3191
+    },
+    {
+      "name": "Dontayvion Wicks",
+      "sleeper_id": "9486",
+      "pos": "WR",
+      "team": "PHI",
+      "age": 25,
+      "value": 3038,
+      "current_value": 3187
+    },
+    {
+      "name": "Tony Pollard",
+      "sleeper_id": "5967",
+      "pos": "RB",
+      "team": "TEN",
+      "age": 29,
+      "value": 2944,
+      "current_value": 3183
+    },
+    {
+      "name": "Germie Bernard",
+      "sleeper_id": "13274",
+      "pos": "WR",
+      "team": "PIT",
+      "age": 22,
+      "value": 2940,
+      "current_value": 3176
+    },
+    {
+      "name": "Woody Marks",
+      "sleeper_id": "12474",
+      "pos": "RB",
+      "team": "HOU",
+      "age": 25,
+      "value": 2881,
+      "current_value": 3169
+    },
+    {
+      "name": "Kaelon Black",
+      "sleeper_id": "13414",
+      "pos": "RB",
+      "team": "SF",
+      "age": 24,
+      "value": 3143,
+      "current_value": 3168
+    },
+    {
+      "name": "Aaron Jones",
+      "sleeper_id": "4199",
+      "pos": "RB",
+      "team": "MIN",
+      "age": 31,
+      "value": 2992,
+      "current_value": 3140
+    },
+    {
+      "name": "Braelon Allen",
+      "sleeper_id": "11576",
+      "pos": "RB",
+      "team": "NYJ",
+      "age": 22,
+      "value": 2853,
+      "current_value": 3138
+    },
+    {
+      "name": "Jakobi Meyers",
+      "sleeper_id": "5947",
+      "pos": "WR",
+      "team": "JAX",
+      "age": 29,
+      "value": 2852,
+      "current_value": 3137
+    },
+    {
+      "name": "Adonai Mitchell",
+      "sleeper_id": "11625",
+      "pos": "WR",
+      "team": "NYJ",
+      "age": 23,
+      "value": 2862,
+      "current_value": 3121
+    },
+    {
+      "name": "Mike Washington",
+      "sleeper_id": "13305",
+      "pos": "RB",
+      "team": "LV",
+      "age": 23,
+      "value": 2967,
+      "current_value": 3117
+    },
+    {
+      "name": "2028 Round 2 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3115,
+      "current_value": 3115,
+      "pick_key": "pickval:2028:2:Late"
+    },
+    {
+      "name": "Dalton Schultz",
+      "sleeper_id": "5001",
+      "pos": "TE",
+      "team": "HOU",
+      "age": 30,
+      "value": 3061,
+      "current_value": 3097
+    },
+    {
+      "name": "Ted Hurst",
+      "sleeper_id": "13317",
+      "pos": "WR",
+      "team": "TB",
+      "age": 22,
+      "value": 2816,
+      "current_value": 3094
+    },
+    {
+      "name": "Romeo Doubs",
+      "sleeper_id": "8121",
+      "pos": "WR",
+      "team": "NE",
+      "age": 26,
+      "value": 2896,
+      "current_value": 3083
+    },
+    {
+      "name": "Khalil Shakir",
+      "sleeper_id": "8134",
+      "pos": "WR",
+      "team": "BUF",
+      "age": 26,
+      "value": 2803,
+      "current_value": 3083
+    },
+    {
+      "name": "Shedeur Sanders",
+      "sleeper_id": "12524",
+      "pos": "QB",
+      "team": "CLE",
+      "age": 24,
+      "value": 2827,
+      "current_value": 3081
+    },
+    {
+      "name": "Tre Tucker",
+      "sleeper_id": "10213",
+      "pos": "WR",
+      "team": "LV",
+      "age": 25,
+      "value": 2798,
+      "current_value": 3078
+    },
+    {
+      "name": "Pat Freiermuth",
+      "sleeper_id": "7600",
+      "pos": "TE",
+      "team": "PIT",
+      "age": 27,
+      "value": 2794,
+      "current_value": 3073
+    },
+    {
+      "name": "Tank Bigsby",
+      "sleeper_id": "9225",
+      "pos": "RB",
+      "team": "PHI",
+      "age": 24,
+      "value": 2773,
+      "current_value": 3050
+    },
+    {
+      "name": "Tua Tagovailoa",
+      "sleeper_id": "6768",
+      "pos": "QB",
+      "team": "ATL",
+      "age": 28,
+      "value": 2758,
+      "current_value": 3034
+    },
+    {
+      "name": "Pat Bryant",
+      "sleeper_id": "12492",
+      "pos": "WR",
+      "team": "DEN",
+      "age": 23,
+      "value": 2758,
+      "current_value": 3034
+    },
+    {
+      "name": "2029 Round 2 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 3031,
+      "current_value": 3031,
+      "pick_key": "pickval:2029:2:Mid"
+    },
+    {
+      "name": "Chig Okonkwo",
+      "sleeper_id": "8210",
+      "pos": "TE",
+      "team": "WAS",
+      "age": 27,
+      "value": 2847,
+      "current_value": 3027
+    },
+    {
+      "name": "AJ Barner",
+      "sleeper_id": "11603",
+      "pos": "TE",
+      "team": "SEA",
+      "age": 24,
+      "value": 2818,
+      "current_value": 3024
+    },
+    {
+      "name": "Ty Johnson",
+      "sleeper_id": "6039",
+      "pos": "RB",
+      "team": "BUF",
+      "age": 29,
+      "value": 2857,
+      "current_value": 3021
+    },
+    {
+      "name": "Deshaun Watson",
+      "sleeper_id": "4017",
+      "pos": "QB",
+      "team": "CLE",
+      "age": 31,
+      "value": 3046,
+      "current_value": 2991
+    },
+    {
+      "name": "Brian Robinson",
+      "sleeper_id": "8154",
+      "pos": "RB",
+      "team": "ATL",
+      "age": 27,
+      "value": 2813,
+      "current_value": 2991
+    },
+    {
+      "name": "Rachaad White",
+      "sleeper_id": "8136",
+      "pos": "RB",
+      "team": "WAS",
+      "age": 27,
+      "value": 2718,
+      "current_value": 2990
+    },
+    {
+      "name": "Jalen McMillan",
+      "sleeper_id": "11618",
+      "pos": "WR",
+      "team": "TB",
+      "age": 24,
+      "value": 2689,
+      "current_value": 2958
+    },
+    {
+      "name": "Michael Mayer",
+      "sleeper_id": "9482",
+      "pos": "TE",
+      "team": "LV",
+      "age": 25,
+      "value": 2678,
+      "current_value": 2946
+    },
+    {
+      "name": "Trevor Etienne",
+      "sleeper_id": "12531",
+      "pos": "RB",
+      "team": "CAR",
+      "age": 22,
+      "value": 3063,
+      "current_value": 2936
+    },
+    {
+      "name": "Tyler Allgeier",
+      "sleeper_id": "8132",
+      "pos": "RB",
+      "team": "ARI",
+      "age": 26,
+      "value": 2832,
+      "current_value": 2929
+    },
+    {
+      "name": "Jake Tonges",
+      "sleeper_id": "8698",
+      "pos": "TE",
+      "team": "SF",
+      "age": 27,
+      "value": 2656,
+      "current_value": 2922
+    },
+    {
+      "name": "Kirk Cousins",
+      "sleeper_id": "1166",
+      "pos": "QB",
+      "team": "LV",
+      "age": 38,
+      "value": 2910,
+      "current_value": 2920
+    },
+    {
+      "name": "Malik Washington",
+      "sleeper_id": "11610",
+      "pos": "WR",
+      "team": "MIA",
+      "age": 25,
+      "value": 2684,
+      "current_value": 2917
+    },
+    {
+      "name": "Dont'e Thornton",
+      "sleeper_id": "12541",
+      "pos": "WR",
+      "team": "LV",
+      "age": 23,
+      "value": 2852,
+      "current_value": 2916
+    },
+    {
+      "name": "J.J. McCarthy",
+      "sleeper_id": "11565",
+      "pos": "QB",
+      "team": "NYG",
+      "age": 23,
+      "value": 3068,
+      "current_value": 2914
+    },
+    {
+      "name": "Mac Jones",
+      "sleeper_id": "7527",
+      "pos": "QB",
+      "team": "SF",
+      "age": 28,
+      "value": 2622,
+      "current_value": 2884
+    },
+    {
+      "name": "Hunter Henry",
+      "sleeper_id": "3214",
+      "pos": "TE",
+      "team": "NE",
+      "age": 31,
+      "value": 2611,
+      "current_value": 2872
+    },
+    {
+      "name": "2029 Round 2 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 2863,
+      "current_value": 2863,
+      "pick_key": "pickval:2029:2:Late"
+    },
+    {
+      "name": "Devaughn Vele",
+      "sleeper_id": "11834",
+      "pos": "WR",
+      "team": "NO",
+      "age": 28,
+      "value": 2645,
+      "current_value": 2857
+    },
+    {
+      "name": "Nicholas Singleton",
+      "sleeper_id": "13288",
+      "pos": "RB",
+      "team": "TEN",
+      "age": 22,
+      "value": 2694,
+      "current_value": 2833
+    },
+    {
+      "name": "Kenny Gainwell",
+      "sleeper_id": "7567",
+      "pos": "RB",
+      "team": "TB",
+      "age": 27,
+      "value": 2784,
+      "current_value": 2831
+    },
+    {
+      "name": "Tank Dell",
+      "sleeper_id": "9502",
+      "pos": "WR",
+      "team": "HOU",
+      "age": 26,
+      "value": 2573,
+      "current_value": 2830
+    },
+    {
+      "name": "Kayshon Boutte",
+      "sleeper_id": "9504",
+      "pos": "WR",
+      "team": "HOU",
+      "age": 24,
+      "value": 2566,
+      "current_value": 2823
+    },
+    {
+      "name": "Aaron Rodgers",
+      "sleeper_id": "96",
+      "pos": "QB",
+      "team": "PIT",
+      "age": 42,
+      "value": 2565,
+      "current_value": 2822
+    },
+    {
+      "name": "Cade Otton",
+      "sleeper_id": "8111",
+      "pos": "TE",
+      "team": "TB",
+      "age": 27,
+      "value": 2560,
+      "current_value": 2816
+    },
+    {
+      "name": "Chris Rodriguez",
+      "sleeper_id": "10219",
+      "pos": "RB",
+      "team": "JAX",
+      "age": 27,
+      "value": 2615,
+      "current_value": 2816
+    },
+    {
+      "name": "Odell Beckham",
+      "sleeper_id": "2078",
+      "pos": "WR",
+      "team": "NYG",
+      "age": 33,
+      "value": 3119,
+      "current_value": 2807
+    },
+    {
+      "name": "Jaylin Lane",
+      "sleeper_id": "12641",
+      "pos": "WR",
+      "team": "WAS",
+      "age": 24,
+      "value": 2728,
+      "current_value": 2782
+    },
+    {
+      "name": "Keon Coleman",
+      "sleeper_id": "11637",
+      "pos": "WR",
+      "team": "BUF",
+      "age": 23,
+      "value": 2528,
+      "current_value": 2781
+    },
+    {
+      "name": "Skyler Bell",
+      "sleeper_id": "13402",
+      "pos": "WR",
+      "team": "BUF",
+      "age": 24,
+      "value": 2514,
+      "current_value": 2765
+    },
+    {
+      "name": "Will Kacmarek",
+      "sleeper_id": "13434",
+      "pos": "TE",
+      "team": "MIA",
+      "age": 23,
+      "value": 3070,
+      "current_value": 2763
+    },
+    {
+      "name": "Cyrus Allen",
+      "sleeper_id": "13413",
+      "pos": "WR",
+      "team": "KC",
+      "age": 23,
+      "value": 2527,
+      "current_value": 2763
+    },
+    {
+      "name": "Tre' Harris",
+      "sleeper_id": "12509",
+      "pos": "WR",
+      "team": "LAC",
+      "age": 24,
+      "value": 2784,
+      "current_value": 2749
+    },
+    {
+      "name": "Carson Beck",
+      "sleeper_id": "13272",
+      "pos": "QB",
+      "team": "ARI",
+      "age": 23,
+      "value": 2962,
+      "current_value": 2746
+    },
+    {
+      "name": "Chimere Dike",
+      "sleeper_id": "12540",
+      "pos": "WR",
+      "team": "TEN",
+      "age": 24,
+      "value": 2491,
+      "current_value": 2740
+    },
+    {
+      "name": "Devin Singletary",
+      "sleeper_id": "6130",
+      "pos": "RB",
+      "team": "NYG",
+      "age": 29,
+      "value": 2486,
+      "current_value": 2735
+    },
+    {
+      "name": "Jameis Winston",
+      "sleeper_id": "2306",
+      "pos": "QB",
+      "team": "NYG",
+      "age": 32,
+      "value": 2592,
+      "current_value": 2729
+    },
+    {
+      "name": "Eli Raridon",
+      "sleeper_id": "13421",
+      "pos": "TE",
+      "team": "NE",
+      "age": 22,
+      "value": 2689,
+      "current_value": 2721
+    },
+    {
+      "name": "Sean Tucker",
+      "sleeper_id": "9506",
+      "pos": "RB",
+      "team": "TB",
+      "age": 24,
+      "value": 2467,
+      "current_value": 2714
+    },
+    {
+      "name": "Rashid Shaheed",
+      "sleeper_id": "8676",
+      "pos": "WR",
+      "team": "SEA",
+      "age": 28,
+      "value": 2463,
+      "current_value": 2709
+    },
+    {
+      "name": "Brandin Cooks",
+      "sleeper_id": "2197",
+      "pos": "WR",
+      "team": "SF",
+      "age": 33,
+      "value": 2705,
+      "current_value": 2705
+    },
+    {
+      "name": "Alvin Kamara",
+      "sleeper_id": "4035",
+      "pos": "RB",
+      "team": "NO",
+      "age": 31,
+      "value": 2445,
+      "current_value": 2690
+    },
+    {
+      "name": "Gunnar Helm",
+      "sleeper_id": "12502",
+      "pos": "TE",
+      "team": "TEN",
+      "age": 24,
+      "value": 2575,
+      "current_value": 2688
+    },
+    {
+      "name": "Deion Burks",
+      "sleeper_id": "13333",
+      "pos": "WR",
+      "team": "IND",
+      "age": 23,
+      "value": 2626,
+      "current_value": 2685
+    },
+    {
+      "name": "Christian Kirk",
+      "sleeper_id": "4950",
+      "pos": "WR",
+      "team": "SF",
+      "age": 29,
+      "value": 2435,
+      "current_value": 2679
+    },
+    {
+      "name": "Zachariah Branch",
+      "sleeper_id": "13320",
+      "pos": "WR",
+      "team": "ATL",
+      "age": 22,
+      "value": 2509,
+      "current_value": 2672
+    },
+    {
+      "name": "Dylan Sampson",
+      "sleeper_id": "12469",
+      "pos": "RB",
+      "team": "CLE",
+      "age": 22,
+      "value": 2429,
+      "current_value": 2672
+    },
+    {
+      "name": "Keaton Mitchell",
+      "sleeper_id": "9511",
+      "pos": "RB",
+      "team": "LAC",
+      "age": 24,
+      "value": 2418,
+      "current_value": 2660
+    },
+    {
+      "name": "Oscar Delp",
+      "sleeper_id": "13319",
+      "pos": "TE",
+      "team": "NO",
+      "age": 23,
+      "value": 2417,
+      "current_value": 2659
+    },
+    {
+      "name": "Tyler Higbee",
+      "sleeper_id": "3271",
+      "pos": "TE",
+      "team": "LAR",
+      "age": 33,
+      "value": 2654,
+      "current_value": 2654
+    },
+    {
+      "name": "Isiah Pacheco",
+      "sleeper_id": "8205",
+      "pos": "RB",
+      "team": "DET",
+      "age": 27,
+      "value": 2410,
+      "current_value": 2651
+    },
+    {
+      "name": "Kimani Vidal",
+      "sleeper_id": "11647",
+      "pos": "RB",
+      "team": "LAC",
+      "age": 25,
+      "value": 2414,
+      "current_value": 2645
+    },
+    {
+      "name": "Isaac TeSlaa",
+      "sleeper_id": "12535",
+      "pos": "WR",
+      "team": "DET",
+      "age": 24,
+      "value": 2394,
+      "current_value": 2633
+    },
+    {
+      "name": "Jaylin Noel",
+      "sleeper_id": "12536",
+      "pos": "WR",
+      "team": "HOU",
+      "age": 24,
+      "value": 2393,
+      "current_value": 2632
+    },
+    {
+      "name": "John Metchie",
+      "sleeper_id": "8147",
+      "pos": "WR",
+      "team": "CAR",
+      "age": 26,
+      "value": 2477,
+      "current_value": 2623
+    },
+    {
+      "name": "Ricky Pearsall",
+      "sleeper_id": "11638",
+      "pos": "WR",
+      "team": "SF",
+      "age": 26,
+      "value": 2572,
+      "current_value": 2618
+    },
+    {
+      "name": "Isaiah Bond",
+      "sleeper_id": "12503",
+      "pos": "WR",
+      "team": "CLE",
+      "age": 22,
+      "value": 2380,
+      "current_value": 2618
+    },
+    {
+      "name": "Tai Felton",
+      "sleeper_id": "12496",
+      "pos": "WR",
+      "team": "MIN",
+      "age": 23,
+      "value": 2379,
+      "current_value": 2617
+    },
+    {
+      "name": "Jerry Jeudy",
+      "sleeper_id": "6783",
+      "pos": "WR",
+      "team": "CLE",
+      "age": 27,
+      "value": 2369,
+      "current_value": 2606
+    },
+    {
+      "name": "Jalon Daniels",
+      "sleeper_id": "13425",
+      "pos": "QB",
+      "team": "TB",
+      "age": 23,
+      "value": 2606,
+      "current_value": 2606
+    },
+    {
+      "name": "Justin Joly",
+      "sleeper_id": "13400",
+      "pos": "TE",
+      "team": "MIA",
+      "age": 22,
+      "value": 2368,
+      "current_value": 2605
+    },
+    {
+      "name": "Elic Ayomanor",
+      "sleeper_id": "12499",
+      "pos": "WR",
+      "team": "TEN",
+      "age": 23,
+      "value": 2346,
+      "current_value": 2581
+    },
+    {
+      "name": "Evan Engram",
+      "sleeper_id": "4066",
+      "pos": "TE",
+      "team": "DEN",
+      "age": 32,
+      "value": 2325,
+      "current_value": 2558
+    },
+    {
+      "name": "Darnell Washington",
+      "sleeper_id": "9479",
+      "pos": "TE",
+      "team": "PIT",
+      "age": 25,
+      "value": 2339,
+      "current_value": 2557
+    },
+    {
+      "name": "Rashod Bateman",
+      "sleeper_id": "7571",
+      "pos": "WR",
+      "team": "BAL",
+      "age": 26,
+      "value": 2320,
+      "current_value": 2552
+    },
+    {
+      "name": "Mike Gesicki",
+      "sleeper_id": "4993",
+      "pos": "TE",
+      "team": "CIN",
+      "age": 30,
+      "value": 2319,
+      "current_value": 2551
+    },
+    {
+      "name": "Noah Fant",
+      "sleeper_id": "5857",
+      "pos": "TE",
+      "team": "NO",
+      "age": 28,
+      "value": 2317,
+      "current_value": 2549
+    },
+    {
+      "name": "Tyjae Spears",
+      "sleeper_id": "9508",
+      "pos": "RB",
+      "team": "TEN",
+      "age": 25,
+      "value": 2307,
+      "current_value": 2538
+    },
+    {
+      "name": "Nate Boerkircher",
+      "sleeper_id": "13299",
+      "pos": "TE",
+      "team": "JAX",
+      "age": 25,
+      "value": 2523,
+      "current_value": 2523
+    },
+    {
+      "name": "Darren Waller",
+      "sleeper_id": "2505",
+      "pos": "TE",
+      "team": "CAR",
+      "age": 34,
+      "value": 2291,
+      "current_value": 2520
+    },
+    {
+      "name": "Roschon Johnson",
+      "sleeper_id": "10235",
+      "pos": "RB",
+      "team": "CHI",
+      "age": 25,
+      "value": 2547,
+      "current_value": 2514
+    },
+    {
+      "name": "Emanuel Wilson",
+      "sleeper_id": "11435",
+      "pos": "RB",
+      "team": "SEA",
+      "age": 27,
+      "value": 2284,
+      "current_value": 2512
+    },
+    {
+      "name": "David Njoku",
+      "sleeper_id": "4033",
+      "pos": "TE",
+      "team": "LAC",
+      "age": 30,
+      "value": 2299,
+      "current_value": 2496
+    },
+    {
+      "name": "Jaylen Wright",
+      "sleeper_id": "11643",
+      "pos": "RB",
+      "team": "MIA",
+      "age": 23,
+      "value": 2282,
+      "current_value": 2490
+    },
+    {
+      "name": "Mason Taylor",
+      "sleeper_id": "12498",
+      "pos": "TE",
+      "team": "NYJ",
+      "age": 22,
+      "value": 2260,
+      "current_value": 2486
+    },
+    {
+      "name": "Anthony Richardson",
+      "sleeper_id": "9229",
+      "pos": "QB",
+      "team": "IND",
+      "age": 24,
+      "value": 2412,
+      "current_value": 2485
+    },
+    {
+      "name": "Theo Johnson",
+      "sleeper_id": "11597",
+      "pos": "TE",
+      "team": "NYG",
+      "age": 25,
+      "value": 2258,
+      "current_value": 2484
+    },
+    {
+      "name": "Will Howard",
+      "sleeper_id": "12511",
+      "pos": "QB",
+      "team": "PIT",
+      "age": 25,
+      "value": 2452,
+      "current_value": 2476
+    },
+    {
+      "name": "Joshua Palmer",
+      "sleeper_id": "7670",
+      "pos": "WR",
+      "team": "BUF",
+      "age": 27,
+      "value": 2231,
+      "current_value": 2454
+    },
+    {
+      "name": "Tanner Koziol",
+      "sleeper_id": "13408",
+      "pos": "TE",
+      "team": "JAX",
+      "age": 22,
+      "value": 2213,
+      "current_value": 2434
+    },
+    {
+      "name": "Darius Slayton",
+      "sleeper_id": "6149",
+      "pos": "WR",
+      "team": "IND",
+      "age": 29,
+      "value": 2435,
+      "current_value": 2432
+    },
+    {
+      "name": "Carson Wentz",
+      "sleeper_id": "3161",
+      "pos": "QB",
+      "team": "MIN",
+      "age": 33,
+      "value": 2428,
+      "current_value": 2428
+    },
+    {
+      "name": "Kaleb Johnson",
+      "sleeper_id": "12504",
+      "pos": "RB",
+      "team": "GB",
+      "age": 23,
+      "value": 2627,
+      "current_value": 2428
+    },
+    {
+      "name": "Darnell Mooney",
+      "sleeper_id": "7090",
+      "pos": "WR",
+      "team": "NYG",
+      "age": 28,
+      "value": 2198,
+      "current_value": 2418
+    },
+    {
+      "name": "Xavier Hutchinson",
+      "sleeper_id": "10218",
+      "pos": "WR",
+      "team": "HOU",
+      "age": 26,
+      "value": 2197,
+      "current_value": 2417
+    },
+    {
+      "name": "Drew Lock",
+      "sleeper_id": "5854",
+      "pos": "QB",
+      "team": "SEA",
+      "age": 29,
+      "value": 2412,
+      "current_value": 2412
+    },
+    {
+      "name": "Jack Bech",
+      "sleeper_id": "12483",
+      "pos": "WR",
+      "team": "LV",
+      "age": 23,
+      "value": 2192,
+      "current_value": 2411
+    },
+    {
+      "name": "Konata Mumpfield",
+      "sleeper_id": "12718",
+      "pos": "WR",
+      "team": "LAR",
+      "age": 23,
+      "value": 2405,
+      "current_value": 2405
+    },
+    {
+      "name": "Adam Trautman",
+      "sleeper_id": "6869",
+      "pos": "TE",
+      "team": "DEN",
+      "age": 29,
+      "value": 2403,
+      "current_value": 2403
+    },
+    {
+      "name": "Marcus Mariota",
+      "sleeper_id": "2307",
+      "pos": "QB",
+      "team": "WAS",
+      "age": 32,
+      "value": 2547,
+      "current_value": 2381
+    },
+    {
+      "name": "Elijah Sarratt",
+      "sleeper_id": "13268",
+      "pos": "WR",
+      "team": "BAL",
+      "age": 23,
+      "value": 2157,
+      "current_value": 2373
+    },
+    {
+      "name": "Tory Horton",
+      "sleeper_id": "12497",
+      "pos": "WR",
+      "team": "SEA",
+      "age": 23,
+      "value": 2157,
+      "current_value": 2373
+    },
+    {
+      "name": "Cade Klubnik",
+      "sleeper_id": "13303",
+      "pos": "QB",
+      "team": "NYJ",
+      "age": 22,
+      "value": 2450,
+      "current_value": 2363
+    },
+    {
+      "name": "Jalen Nailor",
+      "sleeper_id": "8180",
+      "pos": "WR",
+      "team": "LV",
+      "age": 27,
+      "value": 2147,
+      "current_value": 2362
+    },
+    {
+      "name": "Greg Dulcich",
+      "sleeper_id": "8172",
+      "pos": "TE",
+      "team": "MIA",
+      "age": 26,
+      "value": 2281,
+      "current_value": 2359
+    },
+    {
+      "name": "Bryce Lance",
+      "sleeper_id": "13420",
+      "pos": "WR",
+      "team": "NO",
+      "age": 24,
+      "value": 2142,
+      "current_value": 2356
+    },
+    {
+      "name": "Troy Franklin",
+      "sleeper_id": "11627",
+      "pos": "WR",
+      "team": "DEN",
+      "age": 23,
+      "value": 2483,
+      "current_value": 2354
+    },
+    {
+      "name": "Ryan Flournoy",
+      "sleeper_id": "11783",
+      "pos": "WR",
+      "team": "DAL",
+      "age": 26,
+      "value": 2136,
+      "current_value": 2350
+    },
+    {
+      "name": "Jack Strand",
+      "sleeper_id": "13602",
+      "pos": "QB",
+      "team": "ATL",
+      "age": 22,
+      "value": 2605,
+      "current_value": 2345
+    },
+    {
+      "name": "Tyrone Tracy",
+      "sleeper_id": "11655",
+      "pos": "RB",
+      "team": "NYG",
+      "age": 26,
+      "value": 2128,
+      "current_value": 2341
+    },
+    {
+      "name": "Eli Heidenreich",
+      "sleeper_id": "13423",
+      "pos": "RB",
+      "team": "PIT",
+      "age": 23,
+      "value": 2246,
+      "current_value": 2331
+    },
+    {
+      "name": "Elijah Arroyo",
+      "sleeper_id": "12521",
+      "pos": "TE",
+      "team": "SEA",
+      "age": 23,
+      "value": 2114,
+      "current_value": 2325
+    },
+    {
+      "name": "Seth McGowan",
+      "sleeper_id": "13424",
+      "pos": "RB",
+      "team": "IND",
+      "age": 24,
+      "value": 2098,
+      "current_value": 2308
+    },
+    {
+      "name": "Will Shipley",
+      "sleeper_id": "11577",
+      "pos": "RB",
+      "team": "PHI",
+      "age": 24,
+      "value": 2561,
+      "current_value": 2305
+    },
+    {
+      "name": "James Conner",
+      "sleeper_id": "4137",
+      "pos": "RB",
+      "team": "ARI",
+      "age": 31,
+      "value": 2095,
+      "current_value": 2305
+    },
+    {
+      "name": "Sione Vaki",
+      "sleeper_id": "11729",
+      "pos": "RB",
+      "team": "DET",
+      "age": 25,
+      "value": 2302,
+      "current_value": 2302
+    },
+    {
+      "name": "DeMario Douglas",
+      "sleeper_id": "9501",
+      "pos": "WR",
+      "team": "NE",
+      "age": 25,
+      "value": 2093,
+      "current_value": 2302
+    },
+    {
+      "name": "Ja'Tavion Sanders",
+      "sleeper_id": "11600",
+      "pos": "TE",
+      "team": "CAR",
+      "age": 23,
+      "value": 2094,
+      "current_value": 2299
+    },
+    {
+      "name": "Tahj Brooks",
+      "sleeper_id": "12543",
+      "pos": "RB",
+      "team": "CIN",
+      "age": 24,
+      "value": 2543,
+      "current_value": 2289
+    },
+    {
+      "name": "Mack Hollins",
+      "sleeper_id": "4177",
+      "pos": "WR",
+      "team": "NE",
+      "age": 33,
+      "value": 2074,
+      "current_value": 2281
+    },
+    {
+      "name": "Colby Parkinson",
+      "sleeper_id": "6865",
+      "pos": "TE",
+      "team": "LAR",
+      "age": 27,
+      "value": 2069,
+      "current_value": 2276
+    },
+    {
+      "name": "Cooper Rush",
+      "sleeper_id": "4574",
+      "pos": "QB",
+      "team": "ATL",
+      "age": 32,
+      "value": 2258,
+      "current_value": 2258
+    },
+    {
+      "name": "Jordan James",
+      "sleeper_id": "12467",
+      "pos": "RB",
+      "team": "SF",
+      "age": 22,
+      "value": 2053,
+      "current_value": 2258
+    },
+    {
+      "name": "Keenan Allen",
+      "sleeper_id": "1479",
+      "pos": "WR",
+      "team": "IND",
+      "age": 34,
+      "value": 2074,
+      "current_value": 2255
+    },
+    {
+      "name": "Tez Johnson",
+      "sleeper_id": "12485",
+      "pos": "WR",
+      "team": "TB",
+      "age": 24,
+      "value": 2035,
+      "current_value": 2239
+    },
+    {
+      "name": "Josh Cameron",
+      "sleeper_id": "13394",
+      "pos": "WR",
+      "team": "JAX",
+      "age": 23,
+      "value": 2245,
+      "current_value": 2236
+    },
+    {
+      "name": "Kevin Coleman",
+      "sleeper_id": "13338",
+      "pos": "WR",
+      "team": "MIA",
+      "age": 23,
+      "value": 2472,
+      "current_value": 2236
+    },
+    {
+      "name": "Isaiah Davis",
+      "sleeper_id": "11571",
+      "pos": "RB",
+      "team": "NYJ",
+      "age": 24,
+      "value": 2031,
+      "current_value": 2234
+    },
+    {
+      "name": "Jalen Milroe",
+      "sleeper_id": "12510",
+      "pos": "QB",
+      "team": "SEA",
+      "age": 23,
+      "value": 2315,
+      "current_value": 2230
+    },
+    {
+      "name": "Calvin Ridley",
+      "sleeper_id": "4981",
+      "pos": "WR",
+      "team": "TEN",
+      "age": 31,
+      "value": 2025,
+      "current_value": 2227
+    },
+    {
+      "name": "Kalif Raymond",
+      "sleeper_id": "3634",
+      "pos": "WR",
+      "team": "CHI",
+      "age": 32,
+      "value": 2217,
+      "current_value": 2217
+    },
+    {
+      "name": "Davis Mills",
+      "sleeper_id": "7585",
+      "pos": "QB",
+      "team": "HOU",
+      "age": 27,
+      "value": 2453,
+      "current_value": 2208
+    },
+    {
+      "name": "Case Keenum",
+      "sleeper_id": "1737",
+      "pos": "QB",
+      "team": "CHI",
+      "age": 38,
+      "value": 2205,
+      "current_value": 2205
+    },
+    {
+      "name": "Tyreek Hill",
+      "sleeper_id": "3321",
+      "pos": "WR",
+      "team": "FA",
+      "age": 31,
+      "value": 2363,
+      "current_value": 2198
+    },
+    {
+      "name": "Jalen Royals",
+      "sleeper_id": "12505",
+      "pos": "WR",
+      "team": "KC",
+      "age": 23,
+      "value": 2174,
+      "current_value": 2197
+    },
+    {
+      "name": "AJ Dillon",
+      "sleeper_id": "6828",
+      "pos": "RB",
+      "team": "CAR",
+      "age": 28,
+      "value": 2183,
+      "current_value": 2183
+    },
+    {
+      "name": "Marvin Mims",
+      "sleeper_id": "9494",
+      "pos": "WR",
+      "team": "DEN",
+      "age": 24,
+      "value": 1972,
+      "current_value": 2169
+    },
+    {
+      "name": "Cole Kmet",
+      "sleeper_id": "6826",
+      "pos": "TE",
+      "team": "CHI",
+      "age": 27,
+      "value": 1996,
+      "current_value": 2164
+    },
+    {
+      "name": "Taylen Green",
+      "sleeper_id": "13306",
+      "pos": "QB",
+      "team": "CLE",
+      "age": 23,
+      "value": 2226,
+      "current_value": 2153
+    },
+    {
+      "name": "Justin Fields",
+      "sleeper_id": "7591",
+      "pos": "QB",
+      "team": "KC",
+      "age": 27,
+      "value": 2295,
+      "current_value": 2147
+    },
+    {
+      "name": "Najee Harris",
+      "sleeper_id": "7528",
+      "pos": "RB",
+      "team": "NYG",
+      "age": 28,
+      "value": 2263,
+      "current_value": 2145
+    },
+    {
+      "name": "Tyquan Thornton",
+      "sleeper_id": "8188",
+      "pos": "WR",
+      "team": "KC",
+      "age": 26,
+      "value": 1956,
+      "current_value": 2144
+    },
+    {
+      "name": "Demond Claiborne",
+      "sleeper_id": "13347",
+      "pos": "RB",
+      "team": "MIN",
+      "age": 22,
+      "value": 2250,
+      "current_value": 2133
+    },
+    {
+      "name": "Demarcus Robinson",
+      "sleeper_id": "3286",
+      "pos": "WR",
+      "team": "SF",
+      "age": 32,
+      "value": 2133,
+      "current_value": 2133
+    },
+    {
+      "name": "Cooper Kupp",
+      "sleeper_id": "4039",
+      "pos": "WR",
+      "team": "SEA",
+      "age": 33,
+      "value": 1930,
+      "current_value": 2120
+    },
+    {
+      "name": "Kyle Williams",
+      "sleeper_id": "12547",
+      "pos": "WR",
+      "team": "NE",
+      "age": 23,
+      "value": 2075,
+      "current_value": 2109
+    },
+    {
+      "name": "Garrett Nussmeier",
+      "sleeper_id": "13404",
+      "pos": "QB",
+      "team": "KC",
+      "age": 24,
+      "value": 2336,
+      "current_value": 2102
+    },
+    {
+      "name": "Joe Flacco",
+      "sleeper_id": "19",
+      "pos": "QB",
+      "team": "CIN",
+      "age": 41,
+      "value": 2311,
+      "current_value": 2080
+    },
+    {
+      "name": "Trey Lance",
+      "sleeper_id": "7610",
+      "pos": "QB",
+      "team": "LAC",
+      "age": 26,
+      "value": 2074,
+      "current_value": 2074
+    },
+    {
+      "name": "Max Klare",
+      "sleeper_id": "13278",
+      "pos": "TE",
+      "team": "LAR",
+      "age": 23,
+      "value": 1883,
+      "current_value": 2065
+    },
+    {
+      "name": "Raheim Sanders",
+      "sleeper_id": "12472",
+      "pos": "RB",
+      "team": "CLE",
+      "age": 24,
+      "value": 1875,
+      "current_value": 2063
+    },
+    {
+      "name": "Tyson Bagent",
+      "sleeper_id": "11256",
+      "pos": "QB",
+      "team": "CHI",
+      "age": 26,
+      "value": 2291,
+      "current_value": 2062
+    },
+    {
+      "name": "Zavion Thomas",
+      "sleeper_id": "13411",
+      "pos": "WR",
+      "team": "CHI",
+      "age": 22,
+      "value": 2285,
+      "current_value": 2057
+    },
+    {
+      "name": "Colbie Young",
+      "sleeper_id": "13477",
+      "pos": "WR",
+      "team": "CIN",
+      "age": 24,
+      "value": 2118,
+      "current_value": 2047
+    },
+    {
+      "name": "Chris Brazzell",
+      "sleeper_id": "13353",
+      "pos": "WR",
+      "team": "CAR",
+      "age": 23,
+      "value": 2235,
+      "current_value": 2040
+    },
+    {
+      "name": "Malik Benson",
+      "sleeper_id": "13329",
+      "pos": "WR",
+      "team": "LV",
+      "age": 23,
+      "value": 1970,
+      "current_value": 2039
+    },
+    {
+      "name": "Brandon Aiyuk",
+      "sleeper_id": "6803",
+      "pos": "WR",
+      "team": "SF",
+      "age": 28,
+      "value": 2059,
+      "current_value": 2029
+    },
+    {
+      "name": "Kaytron Allen",
+      "sleeper_id": "13405",
+      "pos": "RB",
+      "team": "WAS",
+      "age": 23,
+      "value": 2123,
+      "current_value": 2028
+    },
+    {
+      "name": "Malik Davis",
+      "sleeper_id": "8800",
+      "pos": "RB",
+      "team": "DAL",
+      "age": 27,
+      "value": 2092,
+      "current_value": 2027
+    },
+    {
+      "name": "Justice Hill",
+      "sleeper_id": "5995",
+      "pos": "RB",
+      "team": "BAL",
+      "age": 28,
+      "value": 2144,
+      "current_value": 2025
+    },
+    {
+      "name": "Roman Wilson",
+      "sleeper_id": "11630",
+      "pos": "WR",
+      "team": "PIT",
+      "age": 25,
+      "value": 2236,
+      "current_value": 2012
+    },
+    {
+      "name": "Treylon Burks",
+      "sleeper_id": "8135",
+      "pos": "WR",
+      "team": "WAS",
+      "age": 26,
+      "value": 2043,
+      "current_value": 1991
+    },
+    {
+      "name": "Will Levis",
+      "sleeper_id": "9999",
+      "pos": "QB",
+      "team": "NYJ",
+      "age": 27,
+      "value": 2208,
+      "current_value": 1987
+    },
+    {
+      "name": "George Holani",
+      "sleeper_id": "12048",
+      "pos": "RB",
+      "team": "SEA",
+      "age": 26,
+      "value": 1799,
+      "current_value": 1979
+    },
+    {
+      "name": "Matt Hibner",
+      "sleeper_id": "13324",
+      "pos": "TE",
+      "team": "BAL",
+      "age": 24,
+      "value": 2043,
+      "current_value": 1972
+    },
+    {
+      "name": "Brenen Thompson",
+      "sleeper_id": "13380",
+      "pos": "WR",
+      "team": "LAC",
+      "age": 23,
+      "value": 2183,
+      "current_value": 1965
+    },
+    {
+      "name": "Marlin Klein",
+      "sleeper_id": "13307",
+      "pos": "TE",
+      "team": "HOU",
+      "age": 24,
+      "value": 2093,
+      "current_value": 1963
+    },
+    {
+      "name": "Samaje Perine",
+      "sleeper_id": "4147",
+      "pos": "RB",
+      "team": "CIN",
+      "age": 31,
+      "value": 1885,
+      "current_value": 1949
+    },
+    {
+      "name": "CJ Daniels",
+      "sleeper_id": "13270",
+      "pos": "WR",
+      "team": "LAR",
+      "age": 24,
+      "value": 2139,
+      "current_value": 1943
+    },
+    {
+      "name": "DJ Giddens",
+      "sleeper_id": "12471",
+      "pos": "RB",
+      "team": "IND",
+      "age": 23,
+      "value": 2128,
+      "current_value": 1928
+    },
+    {
+      "name": "Charlie Kolar",
+      "sleeper_id": "8127",
+      "pos": "TE",
+      "team": "LAC",
+      "age": 27,
+      "value": 2138,
+      "current_value": 1924
+    },
+    {
+      "name": "Emari Demercado",
+      "sleeper_id": "11199",
+      "pos": "RB",
+      "team": "DAL",
+      "age": 27,
+      "value": 1864,
+      "current_value": 1922
+    },
+    {
+      "name": "Spencer Rattler",
+      "sleeper_id": "11562",
+      "pos": "QB",
+      "team": "NO",
+      "age": 26,
+      "value": 2129,
+      "current_value": 1916
+    },
+    {
+      "name": "Jacob Saylors",
+      "sleeper_id": "11237",
+      "pos": "RB",
+      "team": "DET",
+      "age": 25,
+      "value": 1890,
+      "current_value": 1890
+    },
+    {
+      "name": "Sam Howell",
+      "sleeper_id": "8162",
+      "pos": "QB",
+      "team": "DAL",
+      "age": 26,
+      "value": 2092,
+      "current_value": 1883
+    },
+    {
+      "name": "Michael Trigg",
+      "sleeper_id": "13401",
+      "pos": "TE",
+      "team": "DAL",
+      "age": 24,
+      "value": 1813,
+      "current_value": 1882
+    },
+    {
+      "name": "Tommy Tremble",
+      "sleeper_id": "7694",
+      "pos": "TE",
+      "team": "CAR",
+      "age": 26,
+      "value": 1871,
+      "current_value": 1871
+    },
+    {
+      "name": "Chris Brooks",
+      "sleeper_id": "11370",
+      "pos": "RB",
+      "team": "GB",
+      "age": 26,
+      "value": 1698,
+      "current_value": 1868
+    },
+    {
+      "name": "Kendre Miller",
+      "sleeper_id": "9757",
+      "pos": "RB",
+      "team": "NO",
+      "age": 24,
+      "value": 2074,
+      "current_value": 1867
+    },
+    {
+      "name": "Kendrick Bourne",
+      "sleeper_id": "4454",
+      "pos": "WR",
+      "team": "ARI",
+      "age": 31,
+      "value": 1686,
+      "current_value": 1855
+    },
+    {
+      "name": "Kyle McCord",
+      "sleeper_id": "12494",
+      "pos": "QB",
+      "team": "MIA",
+      "age": 24,
+      "value": 1853,
+      "current_value": 1853
+    },
+    {
+      "name": "Xavier Legette",
+      "sleeper_id": "11626",
+      "pos": "WR",
+      "team": "CAR",
+      "age": 25,
+      "value": 2019,
+      "current_value": 1837
+    },
+    {
+      "name": "Joe Milton",
+      "sleeper_id": "11557",
+      "pos": "QB",
+      "team": "DAL",
+      "age": 26,
+      "value": 1903,
+      "current_value": 1836
+    },
+    {
+      "name": "Ray Davis",
+      "sleeper_id": "11575",
+      "pos": "RB",
+      "team": "BUF",
+      "age": 26,
+      "value": 2030,
+      "current_value": 1832
+    },
+    {
+      "name": "2027 Pick 3.01",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1831,
+      "current_value": 1831,
+      "pick_key": "pickval:2027:3:Early"
+    },
+    {
+      "name": "Adam Randall",
+      "sleeper_id": "13302",
+      "pos": "RB",
+      "team": "BAL",
+      "age": 22,
+      "value": 2033,
+      "current_value": 1830
+    },
+    {
+      "name": "2027 Pick 3.02",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1817,
+      "current_value": 1817,
+      "pick_key": "pickval:2027:3:Early"
+    },
+    {
+      "name": "Quinn Ewers",
+      "sleeper_id": "12500",
+      "pos": "QB",
+      "team": "JAX",
+      "age": 23,
+      "value": 1955,
+      "current_value": 1814
+    },
+    {
+      "name": "Riley Leonard",
+      "sleeper_id": "12470",
+      "pos": "QB",
+      "team": "IND",
+      "age": 24,
+      "value": 1750,
+      "current_value": 1808
+    },
+    {
+      "name": "2027 Round 3 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1806,
+      "current_value": 1806,
+      "pick_key": "pickval:2027:3:Early"
+    },
+    {
+      "name": "Erick All",
+      "sleeper_id": "11592",
+      "pos": "TE",
+      "team": "CIN",
+      "age": 26,
+      "value": 1750,
+      "current_value": 1801
+    },
+    {
+      "name": "Dohnte Meyers",
+      "sleeper_id": "13264",
+      "pos": "WR",
+      "team": "CIN",
+      "age": 26,
+      "value": 1798,
+      "current_value": 1798
+    },
+    {
+      "name": "Jerome Ford",
+      "sleeper_id": "8143",
+      "pos": "RB",
+      "team": "MIN",
+      "age": 27,
+      "value": 1632,
+      "current_value": 1795
+    },
+    {
+      "name": "Austin Ekeler",
+      "sleeper_id": "4663",
+      "pos": "RB",
+      "team": "WAS",
+      "age": 31,
+      "value": 1789,
+      "current_value": 1789
+    },
+    {
+      "name": "2027 Pick 3.03",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1787,
+      "current_value": 1787,
+      "pick_key": "pickval:2027:3:Early"
+    },
+    {
+      "name": "2027 Pick 3.04",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1787,
+      "current_value": 1787,
+      "pick_key": "pickval:2027:3:Early"
+    },
+    {
+      "name": "2027 Pick 3.05",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1787,
+      "current_value": 1787,
+      "pick_key": "pickval:2027:3:Mid"
+    },
+    {
+      "name": "Myles Price",
+      "sleeper_id": "13075",
+      "pos": "WR",
+      "team": "MIN",
+      "age": 24,
+      "value": 1622,
+      "current_value": 1784
+    },
+    {
+      "name": "Jauan Jennings",
+      "sleeper_id": "7049",
+      "pos": "WR",
+      "team": "MIN",
+      "age": 29,
+      "value": 1764,
+      "current_value": 1747
+    },
+    {
+      "name": "2027 Round 3 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1745,
+      "current_value": 1745,
+      "pick_key": "pickval:2027:3:Mid"
+    },
+    {
+      "name": "2027 Pick 3.06",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1731,
+      "current_value": 1731,
+      "pick_key": "pickval:2027:3:Mid"
+    },
+    {
+      "name": "2027 Pick 3.07",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1731,
+      "current_value": 1731,
+      "pick_key": "pickval:2027:3:Mid"
+    },
+    {
+      "name": "2027 Pick 3.08",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1731,
+      "current_value": 1731,
+      "pick_key": "pickval:2027:3:Late"
+    },
+    {
+      "name": "Trey Benson",
+      "sleeper_id": "11589",
+      "pos": "RB",
+      "team": "ARI",
+      "age": 24,
+      "value": 1892,
+      "current_value": 1725
+    },
+    {
+      "name": "Tyler Huntley",
+      "sleeper_id": "7083",
+      "pos": "QB",
+      "team": "BAL",
+      "age": 28,
+      "value": 1906,
+      "current_value": 1715
+    },
+    {
+      "name": "Barion Brown",
+      "sleeper_id": "13533",
+      "pos": "WR",
+      "team": "NO",
+      "age": 22,
+      "value": 1558,
+      "current_value": 1714
+    },
+    {
+      "name": "Devontez Walker",
+      "sleeper_id": "11629",
+      "pos": "WR",
+      "team": "BAL",
+      "age": 25,
+      "value": 1540,
+      "current_value": 1694
+    },
+    {
+      "name": "2027 Pick 3.09",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1678,
+      "current_value": 1678,
+      "pick_key": "pickval:2027:3:Late"
+    },
+    {
+      "name": "2027 Pick 3.10",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1678,
+      "current_value": 1678,
+      "pick_key": "pickval:2027:3:Late"
+    },
+    {
+      "name": "2027 Round 3 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1677,
+      "current_value": 1677,
+      "pick_key": "pickval:2027:3:Late"
+    },
+    {
+      "name": "2027 Pick 3.11",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1675,
+      "current_value": 1675,
+      "pick_key": "pickval:2027:3:Late"
+    },
+    {
+      "name": "2027 Pick 3.12",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1675,
+      "current_value": 1675,
+      "pick_key": "pickval:2027:3:Late"
+    },
+    {
+      "name": "Luke Musgrave",
+      "sleeper_id": "9481",
+      "pos": "TE",
+      "team": "GB",
+      "age": 26,
+      "value": 1553,
+      "current_value": 1673
+    },
+    {
+      "name": "Kenny Pickett",
+      "sleeper_id": "8160",
+      "pos": "QB",
+      "team": "CAR",
+      "age": 28,
+      "value": 1671,
+      "current_value": 1671
+    },
+    {
+      "name": "Tyrod Taylor",
+      "sleeper_id": "827",
+      "pos": "QB",
+      "team": "GB",
+      "age": 37,
+      "value": 1679,
+      "current_value": 1664
+    },
+    {
+      "name": "Camden Brown",
+      "sleeper_id": "13726",
+      "pos": "WR",
+      "team": "DAL",
+      "age": 22,
+      "value": 1828,
+      "current_value": 1645
+    },
+    {
+      "name": "Tutu Atwell",
+      "sleeper_id": "7562",
+      "pos": "WR",
+      "team": "LAR",
+      "age": 26,
+      "value": 1622,
+      "current_value": 1643
+    },
+    {
+      "name": "Sam Roush",
+      "sleeper_id": "13322",
+      "pos": "TE",
+      "team": "CHI",
+      "age": 23,
+      "value": 1509,
+      "current_value": 1623
+    },
+    {
+      "name": "Jarquez Hunter",
+      "sleeper_id": "11569",
+      "pos": "RB",
+      "team": "MIA",
+      "age": 23,
+      "value": 1499,
+      "current_value": 1623
+    },
+    {
+      "name": "Savion Williams",
+      "sleeper_id": "12482",
+      "pos": "WR",
+      "team": "GB",
+      "age": 24,
+      "value": 1774,
+      "current_value": 1611
+    },
+    {
+      "name": "Skyy Moore",
+      "sleeper_id": "8168",
+      "pos": "WR",
+      "team": "GB",
+      "age": 26,
+      "value": 1609,
+      "current_value": 1609
+    },
+    {
+      "name": "2028 Round 3 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1591,
+      "current_value": 1591,
+      "pick_key": "pickval:2028:3:Early"
+    },
+    {
+      "name": "Andy Dalton",
+      "sleeper_id": "829",
+      "pos": "QB",
+      "team": "PHI",
+      "age": 38,
+      "value": 1588,
+      "current_value": 1588
+    },
+    {
+      "name": "2028 Round 3 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1559,
+      "current_value": 1559,
+      "pick_key": "pickval:2028:3:Mid"
+    },
+    {
+      "name": "Olamide Zaccheaus",
+      "sleeper_id": "6271",
+      "pos": "WR",
+      "team": "ATL",
+      "age": 29,
+      "value": 1400,
+      "current_value": 1540
+    },
+    {
+      "name": "Jahan Dotson",
+      "sleeper_id": "8119",
+      "pos": "WR",
+      "team": "ATL",
+      "age": 26,
+      "value": 1444,
+      "current_value": 1528
+    },
+    {
+      "name": "2028 Round 3 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1522,
+      "current_value": 1522,
+      "pick_key": "pickval:2028:3:Late"
+    },
+    {
+      "name": "Noah Gray",
+      "sleeper_id": "7828",
+      "pos": "TE",
+      "team": "KC",
+      "age": 27,
+      "value": 1545,
+      "current_value": 1509
+    },
+    {
+      "name": "2029 Round 3 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1497,
+      "current_value": 1497,
+      "pick_key": "pickval:2029:3:Early"
+    },
+    {
+      "name": "2027 Pick 4.01",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1488,
+      "current_value": 1488,
+      "pick_key": "pickval:2027:4:Early"
+    },
+    {
+      "name": "Jaydon Blue",
+      "sleeper_id": "12457",
+      "pos": "RB",
+      "team": "PHI",
+      "age": 22,
+      "value": 1562,
+      "current_value": 1474
+    },
+    {
+      "name": "2029 Round 3 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1466,
+      "current_value": 1466,
+      "pick_key": "pickval:2029:3:Mid"
+    },
+    {
+      "name": "Cedric Tillman",
+      "sleeper_id": "10444",
+      "pos": "WR",
+      "team": "NO",
+      "age": 26,
+      "value": 1310,
+      "current_value": 1440
+    },
+    {
+      "name": "2029 Round 3 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1432,
+      "current_value": 1432,
+      "pick_key": "pickval:2029:3:Late"
+    },
+    {
+      "name": "DeeJay Dallas",
+      "sleeper_id": "6931",
+      "pos": "RB",
+      "team": "MIN",
+      "age": 28,
+      "value": 1422,
+      "current_value": 1422
+    },
+    {
+      "name": "Marquise Brown",
+      "sleeper_id": "5848",
+      "pos": "WR",
+      "team": "PHI",
+      "age": 29,
+      "value": 1575,
+      "current_value": 1418
+    },
+    {
+      "name": "Isaiah Williams",
+      "sleeper_id": "11608",
+      "pos": "WR",
+      "team": "NYJ",
+      "age": 25,
+      "value": 1284,
+      "current_value": 1412
+    },
+    {
+      "name": "Ben Sinnott",
+      "sleeper_id": "11596",
+      "pos": "TE",
+      "team": "WAS",
+      "age": 24,
+      "value": 1349,
+      "current_value": 1389
+    },
+    {
+      "name": "2027 Round 4 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1383,
+      "current_value": 1383,
+      "pick_key": "pickval:2027:4:Early"
+    },
+    {
+      "name": "2028 Round 4 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1351,
+      "current_value": 1351,
+      "pick_key": "pickval:2028:4:Early"
+    },
+    {
+      "name": "2027 Pick 4.02",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1348,
+      "current_value": 1348,
+      "pick_key": "pickval:2027:4:Early"
+    },
+    {
+      "name": "2027 Pick 4.03",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1348,
+      "current_value": 1348,
+      "pick_key": "pickval:2027:4:Early"
+    },
+    {
+      "name": "2027 Pick 4.04",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1348,
+      "current_value": 1348,
+      "pick_key": "pickval:2027:4:Early"
+    },
+    {
+      "name": "Daniel Bellinger",
+      "sleeper_id": "8225",
+      "pos": "TE",
+      "team": "TEN",
+      "age": 26,
+      "value": 1218,
+      "current_value": 1340
+    },
+    {
+      "name": "2027 Round 4 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Mid"
+    },
+    {
+      "name": "2027 Pick 4.05",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Mid"
+    },
+    {
+      "name": "2027 Pick 4.06",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Mid"
+    },
+    {
+      "name": "2027 Pick 4.07",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Mid"
+    },
+    {
+      "name": "2027 Pick 4.08",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Late"
+    },
+    {
+      "name": "2027 Pick 4.09",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Late"
+    },
+    {
+      "name": "2027 Pick 4.10",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Late"
+    },
+    {
+      "name": "2027 Pick 4.11",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1326,
+      "current_value": 1326,
+      "pick_key": "pickval:2027:4:Late"
+    },
+    {
+      "name": "2027 Round 4 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1323,
+      "current_value": 1323,
+      "pick_key": "pickval:2027:4:Late"
+    },
+    {
+      "name": "2028 Round 4 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1317,
+      "current_value": 1317,
+      "pick_key": "pickval:2028:4:Mid"
+    },
+    {
+      "name": "2027 Pick 4.12",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1315,
+      "current_value": 1315,
+      "pick_key": "pickval:2027:4:Late"
+    },
+    {
+      "name": "2028 Round 4 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1315,
+      "current_value": 1315,
+      "pick_key": "pickval:2028:4:Late"
+    },
+    {
+      "name": "Jimmy Garoppolo",
+      "sleeper_id": "1837",
+      "pos": "QB",
+      "team": "FA",
+      "age": 34,
+      "value": 1281,
+      "current_value": 1281
+    },
+    {
+      "name": "Audric Estime",
+      "sleeper_id": "11579",
+      "pos": "RB",
+      "team": "FA",
+      "age": 23,
+      "value": 1153,
+      "current_value": 1268
+    },
+    {
+      "name": "Dawson Knox",
+      "sleeper_id": "5906",
+      "pos": "TE",
+      "team": "BUF",
+      "age": 29,
+      "value": 1156,
+      "current_value": 1256
+    },
+    {
+      "name": "2029 Round 4 Early",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1241,
+      "current_value": 1241,
+      "pick_key": "pickval:2029:4:Early"
+    },
+    {
+      "name": "2029 Round 4 Mid",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1210,
+      "current_value": 1210,
+      "pick_key": "pickval:2029:4:Mid"
+    },
+    {
+      "name": "2029 Round 4 Late",
+      "sleeper_id": null,
+      "pos": "PI",
+      "team": "NFL",
+      "age": 0,
+      "value": 1209,
+      "current_value": 1209,
+      "pick_key": "pickval:2029:4:Late"
+    },
+    {
+      "name": "Jonnu Smith",
+      "sleeper_id": "4144",
+      "pos": "TE",
+      "team": "GB",
+      "age": 31,
+      "value": 1085,
+      "current_value": 1194
+    },
+    {
+      "name": "Joe Mixon",
+      "sleeper_id": "4018",
+      "pos": "RB",
+      "team": "FA",
+      "age": 29,
+      "value": 1326,
+      "current_value": 1193
+    },
+    {
+      "name": "Foster Moreau",
+      "sleeper_id": "5985",
+      "pos": "TE",
+      "team": "HOU",
+      "age": 29,
+      "value": 1154,
+      "current_value": 1154
+    },
+    {
+      "name": "Jarrett Stidham",
+      "sleeper_id": "6136",
+      "pos": "QB",
+      "team": "DEN",
+      "age": 30,
+      "value": 1048,
+      "current_value": 1153
+    },
+    {
+      "name": "Cole Payton",
+      "sleeper_id": "13335",
+      "pos": "QB",
+      "team": "PHI",
+      "age": 23,
+      "value": 1263,
+      "current_value": 1137
+    },
+    {
+      "name": "Calvin Austin",
+      "sleeper_id": "8125",
+      "pos": "WR",
+      "team": "NYG",
+      "age": 27,
+      "value": 1262,
+      "current_value": 1136
+    },
+    {
+      "name": "Devin Neal",
+      "sleeper_id": "12476",
+      "pos": "RB",
+      "team": "MIN",
+      "age": 23,
+      "value": 1006,
+      "current_value": 1105
+    },
+    {
+      "name": "Josh Cuevas",
+      "sleeper_id": "13273",
+      "pos": "TE",
+      "team": "BAL",
+      "age": 23,
+      "value": 1103,
+      "current_value": 1103
+    },
+    {
+      "name": "Jack Endries",
+      "sleeper_id": "13282",
+      "pos": "TE",
+      "team": "CIN",
+      "age": 22,
+      "value": 1026,
+      "current_value": 1096
+    },
+    {
+      "name": "Darius Cooper",
+      "sleeper_id": "13150",
+      "pos": "WR",
+      "team": "PHI",
+      "age": 24,
+      "value": 1082,
+      "current_value": 1082
+    },
+    {
+      "name": "Joshua Dobbs",
+      "sleeper_id": "4179",
+      "pos": "QB",
+      "team": "DET",
+      "age": 31,
+      "value": 1068,
+      "current_value": 1068
+    },
+    {
+      "name": "Stetson Bennett",
+      "sleeper_id": "10857",
+      "pos": "QB",
+      "team": "LAR",
+      "age": 28,
+      "value": 913,
+      "current_value": 913
+    },
+    {
+      "name": "Tanner McKee",
+      "sleeper_id": "9230",
+      "pos": "QB",
+      "team": "PHI",
+      "age": 26,
+      "value": 880,
+      "current_value": 868
+    },
+    {
+      "name": "Jordan Whittington",
+      "sleeper_id": "11623",
+      "pos": "WR",
+      "team": "LAR",
+      "age": 25,
+      "value": 841,
+      "current_value": 841
+    },
+    {
+      "name": "Haynes King",
+      "sleeper_id": "13415",
+      "pos": "QB",
+      "team": "CAR",
+      "age": 25,
+      "value": 831,
+      "current_value": 831
+    },
+    {
+      "name": "Brashard Smith",
+      "sleeper_id": "12455",
+      "pos": "RB",
+      "team": "KC",
+      "age": 23,
+      "value": 878,
+      "current_value": 825
+    },
+    {
+      "name": "Julian Edelman",
+      "sleeper_id": "344",
+      "pos": "WR",
+      "team": "FA",
+      "age": 35,
+      "value": 764,
+      "current_value": 764
+    },
+    {
+      "name": "Phil Mafah",
+      "sleeper_id": "12738",
+      "pos": "RB",
+      "team": "NYG",
+      "age": 23,
+      "value": 620,
+      "current_value": 615
+    },
+    {
+      "name": "KeAndre Lambert-Smith",
+      "sleeper_id": "12670",
+      "pos": "WR",
+      "team": "LAC",
+      "age": 24,
+      "value": 668,
+      "current_value": 601
+    },
+    {
+      "name": "Rasheen Ali",
+      "sleeper_id": "11570",
+      "pos": "RB",
+      "team": "BAL",
+      "age": 25,
+      "value": 540,
+      "current_value": 594
+    },
+    {
+      "name": "Jeff Caldwell",
+      "sleeper_id": "13392",
+      "pos": "WR",
+      "team": "KC",
+      "age": 23,
+      "value": 524,
+      "current_value": 576
+    },
+    {
+      "name": "Kyle Allen",
+      "sleeper_id": "5127",
+      "pos": "QB",
+      "team": "BUF",
+      "age": 30,
+      "value": 473,
+      "current_value": 473
+    },
+    {
+      "name": "Jahdae Walker",
+      "sleeper_id": "13079",
+      "pos": "WR",
+      "team": "CHI",
+      "age": 24,
+      "value": 414,
+      "current_value": 414
+    },
+    {
+      "name": "Gardner Minshew",
+      "sleeper_id": "6011",
+      "pos": "QB",
+      "team": "ARI",
+      "age": 30,
+      "value": 438,
+      "current_value": 394
+    },
+    {
+      "name": "Johnny Mundt",
+      "sleeper_id": "4314",
+      "pos": "TE",
+      "team": "PHI",
+      "age": 31,
+      "value": 366,
+      "current_value": 366
+    },
+    {
+      "name": "Jacob Cowing",
+      "sleeper_id": "11616",
+      "pos": "WR",
+      "team": "SF",
+      "age": 25,
+      "value": 332,
+      "current_value": 365
+    },
+    {
+      "name": "Elijah Higgins",
+      "sleeper_id": "10231",
+      "pos": "TE",
+      "team": "ARI",
+      "age": 25,
+      "value": 327,
+      "current_value": 327
+    },
+    {
+      "name": "Dylan Laube",
+      "sleeper_id": "11574",
+      "pos": "RB",
+      "team": "LV",
+      "age": 26,
+      "value": 305,
+      "current_value": 305
+    },
+    {
+      "name": "Amari Cooper",
+      "sleeper_id": "2309",
+      "pos": "WR",
+      "team": "FA",
+      "age": 31,
+      "value": 286,
+      "current_value": 286
+    },
+    {
+      "name": "John Michael Gyllenborg",
+      "sleeper_id": "13342",
+      "pos": "TE",
+      "team": "KC",
+      "age": 24,
+      "value": 260,
+      "current_value": 260
+    },
+    {
+      "name": "Kentrel Bullock",
+      "sleeper_id": "13436",
+      "pos": "RB",
+      "team": "CIN",
+      "age": 24,
+      "value": 252,
+      "current_value": 252
+    },
+    {
+      "name": "Collin Schlee",
+      "sleeper_id": "13119",
+      "pos": "QB",
+      "team": "FA",
+      "age": 24,
+      "value": 252,
+      "current_value": 252
+    },
+    {
+      "name": "Zack Moss",
+      "sleeper_id": "6845",
+      "pos": "RB",
+      "team": "FA",
+      "age": 27,
+      "value": 245,
+      "current_value": 245
+    },
+    {
+      "name": "Austin Mack",
+      "sleeper_id": "6873",
+      "pos": "WR",
+      "team": "FA",
+      "age": 26,
+      "value": 245,
+      "current_value": 245
+    },
+    {
+      "name": "Danny Davis",
+      "sleeper_id": "8602",
+      "pos": "WR",
+      "team": "FA",
+      "age": 24,
+      "value": 245,
+      "current_value": 245
+    },
+    {
+      "name": "Derius Davis",
+      "sleeper_id": "10234",
+      "pos": "WR",
+      "team": "LAC",
+      "age": 26,
+      "value": 242,
+      "current_value": 242
+    },
+    {
+      "name": "Ameer Abdullah",
+      "sleeper_id": "2359",
+      "pos": "RB",
+      "team": "JAX",
+      "age": 33,
+      "value": 210,
+      "current_value": 210
+    },
+    {
+      "name": "Julius Chestnut",
+      "sleeper_id": "8254",
+      "pos": "RB",
+      "team": "TEN",
+      "age": 25,
+      "value": 208,
+      "current_value": 208
+    },
+    {
+      "name": "Greg Dortch",
+      "sleeper_id": "5970",
+      "pos": "WR",
+      "team": "BUF",
+      "age": 28,
+      "value": 187,
+      "current_value": 206
+    },
+    {
+      "name": "Jimmy Horn",
+      "sleeper_id": "12523",
+      "pos": "WR",
+      "team": "CLE",
+      "age": 24,
+      "value": 186,
+      "current_value": 205
+    },
+    {
+      "name": "Matt Ryan",
+      "sleeper_id": "24",
+      "pos": "QB",
+      "team": "FA",
+      "age": 37,
+      "value": 186,
+      "current_value": 186
+    },
+    {
+      "name": "Lan Larison",
+      "sleeper_id": "12969",
+      "pos": "RB",
+      "team": "NE",
+      "age": 24,
+      "value": 162,
+      "current_value": 162
+    },
+    {
+      "name": "Xavier Restrepo",
+      "sleeper_id": "12520",
+      "pos": "WR",
+      "team": "TEN",
+      "age": 24,
+      "value": 136,
+      "current_value": 150
+    },
+    {
+      "name": "Xavier Gipson",
+      "sleeper_id": "11306",
+      "pos": "WR",
+      "team": "PHI",
+      "age": 25,
+      "value": 148,
+      "current_value": 148
+    },
+    {
+      "name": "Arian Smith",
+      "sleeper_id": "12539",
+      "pos": "WR",
+      "team": "NYJ",
+      "age": 24,
+      "value": 144,
+      "current_value": 144
+    },
+    {
+      "name": "Jonathan Mingo",
+      "sleeper_id": "10225",
+      "pos": "WR",
+      "team": "DAL",
+      "age": 25,
+      "value": 132,
+      "current_value": 132
+    },
+    {
+      "name": "Bub Means",
+      "sleeper_id": "11748",
+      "pos": "WR",
+      "team": "CLE",
+      "age": 25,
+      "value": 132,
+      "current_value": 132
+    },
+    {
+      "name": "Dameon Pierce",
+      "sleeper_id": "8129",
+      "pos": "RB",
+      "team": "PHI",
+      "age": 26,
+      "value": 114,
+      "current_value": 114
+    },
+    {
+      "name": "Zonovan Knight",
+      "sleeper_id": "8122",
+      "pos": "RB",
+      "team": "ARI",
+      "age": 25,
+      "value": 112,
+      "current_value": 112
+    },
+    {
+      "name": "Reggie Virgil",
+      "sleeper_id": "13297",
+      "pos": "WR",
+      "team": "ARI",
+      "age": 22,
+      "value": 85,
+      "current_value": 85
+    },
+    {
+      "name": "Cade Stover",
+      "sleeper_id": "11599",
+      "pos": "TE",
+      "team": "HOU",
+      "age": 26,
+      "value": 85,
+      "current_value": 85
+    },
+    {
+      "name": "Osirus Mitchell",
+      "sleeper_id": "7860",
+      "pos": "WR",
+      "team": "FA",
+      "age": 23,
+      "value": 83,
+      "current_value": 83
+    },
+    {
+      "name": "Andrei Iosivas",
+      "sleeper_id": "10226",
+      "pos": "WR",
+      "team": "CIN",
+      "age": 26,
+      "value": 66,
+      "current_value": 73
+    },
+    {
+      "name": "Dillon Gabriel",
+      "sleeper_id": "12486",
+      "pos": "QB",
+      "team": "CLE",
+      "age": 25,
+      "value": 64,
+      "current_value": 70
+    },
+    {
+      "name": "Roman Hemby",
+      "sleeper_id": "13416",
+      "pos": "RB",
+      "team": "LV",
+      "age": 24,
+      "value": 69,
+      "current_value": 69
+    },
+    {
+      "name": "KaVontae Turpin",
+      "sleeper_id": "8917",
+      "pos": "WR",
+      "team": "DAL",
+      "age": 30,
+      "value": 63,
+      "current_value": 69
+    },
+    {
+      "name": "Jared Wiley",
+      "sleeper_id": "11595",
+      "pos": "TE",
+      "team": "KC",
+      "age": 25,
+      "value": 68,
+      "current_value": 68
+    },
+    {
+      "name": "Zach Ertz",
+      "sleeper_id": "1339",
+      "pos": "TE",
+      "team": "PHI",
+      "age": 35,
+      "value": 65,
+      "current_value": 65
+    },
+    {
+      "name": "Luke Schoonmaker",
+      "sleeper_id": "10871",
+      "pos": "TE",
+      "team": "DAL",
+      "age": 28,
+      "value": 63,
+      "current_value": 63
+    },
+    {
+      "name": "Jalen Greene",
+      "sleeper_id": "6685",
+      "pos": "WR",
+      "team": "FA",
+      "age": 25,
+      "value": 63,
+      "current_value": 63
+    },
+    {
+      "name": "Jordan Watkins",
+      "sleeper_id": "12634",
+      "pos": "WR",
+      "team": "SF",
+      "age": 24,
+      "value": 58,
+      "current_value": 58
+    },
+    {
+      "name": "Dean Connors",
+      "sleeper_id": "13315",
+      "pos": "RB",
+      "team": "LAR",
+      "age": 23,
+      "value": 54,
+      "current_value": 54
+    },
+    {
+      "name": "Joe Royer",
+      "sleeper_id": "13435",
+      "pos": "TE",
+      "team": "CLE",
+      "age": 24,
+      "value": 53,
+      "current_value": 53
+    },
+    {
+      "name": "Myles Gaskin",
+      "sleeper_id": "5980",
+      "pos": "RB",
+      "team": "FA",
+      "age": 28,
+      "value": 50,
+      "current_value": 50
+    },
+    {
+      "name": "Chris Moore",
+      "sleeper_id": "3269",
+      "pos": "WR",
+      "team": "BAL",
+      "age": 33,
+      "value": 44,
+      "current_value": 44
+    },
+    {
+      "name": "Ethan Fernea",
+      "sleeper_id": "8831",
+      "pos": "WR",
+      "team": "FA",
+      "age": 26,
+      "value": 41,
+      "current_value": 41
+    },
+    {
+      "name": "Jalin Hyatt",
+      "sleeper_id": "9497",
+      "pos": "WR",
+      "team": "NYG",
+      "age": 25,
+      "value": 39,
+      "current_value": 39
+    },
+    {
+      "name": "Seydou Traore",
+      "sleeper_id": "13429",
+      "pos": "TE",
+      "team": "MIA",
+      "age": 24,
+      "value": 39,
+      "current_value": 39
+    },
+    {
+      "name": "Isaac Guerendo",
+      "sleeper_id": "11651",
+      "pos": "RB",
+      "team": "SF",
+      "age": 26,
+      "value": 39,
+      "current_value": 39
+    },
+    {
+      "name": "Jaleel McLaughlin",
+      "sleeper_id": "11439",
+      "pos": "RB",
+      "team": "CLE",
+      "age": 26,
+      "value": 34,
+      "current_value": 34
+    },
+    {
+      "name": "Corey Kiner",
+      "sleeper_id": "12491",
+      "pos": "RB",
+      "team": "NE",
+      "age": 24,
+      "value": 33,
+      "current_value": 33
+    },
+    {
+      "name": "Mitchell Trubisky",
+      "sleeper_id": "3976",
+      "pos": "QB",
+      "team": "TEN",
+      "age": 32,
+      "value": 31,
+      "current_value": 31
+    },
+    {
+      "name": "Marquez Valdes-Scantling",
+      "sleeper_id": "5086",
+      "pos": "WR",
+      "team": "LAC",
+      "age": 31,
+      "value": 29,
+      "current_value": 29
+    },
+    {
+      "name": "Henry Ruggs",
+      "sleeper_id": "6789",
+      "pos": "WR",
+      "team": "FA",
+      "age": 22,
+      "value": 26,
+      "current_value": 26
+    },
+    {
+      "name": "Antonio Brown",
+      "sleeper_id": "536",
+      "pos": "WR",
+      "team": "FA",
+      "age": 33,
+      "value": 26,
+      "current_value": 26
+    },
+    {
+      "name": "Tyler Badie",
+      "sleeper_id": "8208",
+      "pos": "RB",
+      "team": "DEN",
+      "age": 26,
+      "value": 26,
+      "current_value": 26
+    },
+    {
+      "name": "Kaden Wetjen",
+      "sleeper_id": "13491",
+      "pos": "WR",
+      "team": "PIT",
+      "age": 24,
+      "value": 25,
+      "current_value": 25
+    },
+    {
+      "name": "Jam Miller",
+      "sleeper_id": "13403",
+      "pos": "RB",
+      "team": "FA",
+      "age": 0,
+      "value": 25,
+      "current_value": 25
+    },
+    {
+      "name": "Diego Pavia",
+      "sleeper_id": "13427",
+      "pos": "QB",
+      "team": "FA",
+      "age": 24,
+      "value": 24,
+      "current_value": 24
+    },
+    {
+      "name": "Mason Rudolph",
+      "sleeper_id": "4972",
+      "pos": "QB",
+      "team": "PIT",
+      "age": 31,
+      "value": 24,
+      "current_value": 24
+    },
+    {
+      "name": "Zavier Scott",
+      "sleeper_id": "11299",
+      "pos": "RB",
+      "team": "CHI",
+      "age": 27,
+      "value": 23,
+      "current_value": 23
+    },
+    {
+      "name": "Tommy DeVito",
+      "sleeper_id": "11292",
+      "pos": "QB",
+      "team": "NE",
+      "age": 28,
+      "value": 21,
+      "current_value": 21
+    },
+    {
+      "name": "Jermaine Burton",
+      "sleeper_id": "11640",
+      "pos": "WR",
+      "team": "FA",
+      "age": 24,
+      "value": 21,
+      "current_value": 21
+    },
+    {
+      "name": "Zach Wilson",
+      "sleeper_id": "7538",
+      "pos": "QB",
+      "team": "NO",
+      "age": 27,
+      "value": 20,
+      "current_value": 20
+    },
+    {
+      "name": "John Bates",
+      "sleeper_id": "7716",
+      "pos": "TE",
+      "team": "WAS",
+      "age": 28,
+      "value": 20,
+      "current_value": 20
+    },
+    {
+      "name": "Elijah Moore",
+      "sleeper_id": "7596",
+      "pos": "WR",
+      "team": "PHI",
+      "age": 26,
+      "value": 18,
+      "current_value": 18
+    },
+    {
+      "name": "Tyler Conklin",
+      "sleeper_id": "5133",
+      "pos": "TE",
+      "team": "DET",
+      "age": 31,
+      "value": 18,
+      "current_value": 18
+    },
+    {
+      "name": "JuJu Smith-Schuster",
+      "sleeper_id": "4040",
+      "pos": "WR",
+      "team": "FA",
+      "age": 29,
+      "value": 18,
+      "current_value": 18
+    },
+    {
+      "name": "Adrian Peterson",
+      "sleeper_id": "184",
+      "pos": "RB",
+      "team": "FA",
+      "age": 37,
+      "value": 15,
+      "current_value": 15
+    },
+    {
+      "name": "Efton Chism",
+      "sleeper_id": "12542",
+      "pos": "WR",
+      "team": "NE",
+      "age": 24,
+      "value": 15,
+      "current_value": 15
+    },
+    {
+      "name": "Brock Wright",
+      "sleeper_id": "7891",
+      "pos": "TE",
+      "team": "DET",
+      "age": 27,
+      "value": 15,
+      "current_value": 15
+    },
+    {
+      "name": "Cody White",
+      "sleeper_id": "7039",
+      "pos": "WR",
+      "team": "LV",
+      "age": 27,
+      "value": 14,
+      "current_value": 14
+    },
+    {
+      "name": "Jaren Kanak",
+      "sleeper_id": "13422",
+      "pos": "TE",
+      "team": "TEN",
+      "age": 22,
+      "value": 14,
+      "current_value": 14
+    },
+    {
+      "name": "Kareem Hunt",
+      "sleeper_id": "4098",
+      "pos": "RB",
+      "team": "FA",
+      "age": 30,
+      "value": 14,
+      "current_value": 14
+    },
+    {
+      "name": "Donovan Edwards",
+      "sleeper_id": "12515",
+      "pos": "RB",
+      "team": "FA",
+      "age": 23,
+      "value": 14,
+      "current_value": 14
+    },
+    {
+      "name": "Ben Roethlisberger",
+      "sleeper_id": "138",
+      "pos": "QB",
+      "team": "PIT",
+      "age": 39,
+      "value": 13,
+      "current_value": 13
+    },
+    {
+      "name": "Jackson Hawes",
+      "sleeper_id": "12658",
+      "pos": "TE",
+      "team": "BUF",
+      "age": 25,
+      "value": 11,
+      "current_value": 11
+    },
+    {
+      "name": "Jeremy Ruckert",
+      "sleeper_id": "8145",
+      "pos": "TE",
+      "team": "NYJ",
+      "age": 26,
+      "value": 11,
+      "current_value": 11
+    },
+    {
+      "name": "Nate Adkins",
+      "sleeper_id": "11433",
+      "pos": "TE",
+      "team": "DEN",
+      "age": 27,
+      "value": 10,
+      "current_value": 10
+    },
+    {
+      "name": "Brett Gabbert",
+      "sleeper_id": "13221",
+      "pos": "QB",
+      "team": "FA",
+      "age": 25,
+      "value": 10,
+      "current_value": 10
+    },
+    {
+      "name": "Jacob Eason",
+      "sleeper_id": "6823",
+      "pos": "QB",
+      "team": "FA",
+      "age": 26,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Joe Horn",
+      "sleeper_id": "6692",
+      "pos": "WR",
+      "team": "FA",
+      "age": 27,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Nick Chubb",
+      "sleeper_id": "4988",
+      "pos": "RB",
+      "team": "FA",
+      "age": 30,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Jawhar Jordan",
+      "sleeper_id": "11588",
+      "pos": "RB",
+      "team": "HOU",
+      "age": 27,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Brevyn Spann-Ford",
+      "sleeper_id": "11593",
+      "pos": "TE",
+      "team": "DAL",
+      "age": 26,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Kameron Johnson",
+      "sleeper_id": "11994",
+      "pos": "WR",
+      "team": "TB",
+      "age": 24,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Tarik Cohen",
+      "sleeper_id": "4157",
+      "pos": "RB",
+      "team": "FA",
+      "age": 29,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Bo Melton",
+      "sleeper_id": "8204",
+      "pos": "WR",
+      "team": "GB",
+      "age": 27,
+      "value": 9,
+      "current_value": 9
+    },
+    {
+      "name": "Jamal Haynes",
+      "sleeper_id": "13946",
+      "pos": "RB",
+      "team": "FA",
+      "age": 23,
+      "value": 8,
+      "current_value": 8
+    },
+    {
+      "name": "Kalel Mullings",
+      "sleeper_id": "12516",
+      "pos": "RB",
+      "team": "TEN",
+      "age": 23,
+      "value": 8,
+      "current_value": 8
+    },
+    {
+      "name": "Jaydn Ott",
+      "sleeper_id": "13419",
+      "pos": "RB",
+      "team": "KC",
+      "age": 23,
+      "value": 6,
+      "current_value": 6
+    },
+    {
+      "name": "Nick Westbrook-Ikhine",
+      "sleeper_id": "7496",
+      "pos": "WR",
+      "team": "IND",
+      "age": 29,
+      "value": 6,
+      "current_value": 6
+    },
+    {
+      "name": "Michael Carter",
+      "sleeper_id": "7607",
+      "pos": "RB",
+      "team": "TEN",
+      "age": 27,
+      "value": 6,
+      "current_value": 6
+    },
+    {
+      "name": "Austin Hooper",
+      "sleeper_id": "3202",
+      "pos": "TE",
+      "team": "ATL",
+      "age": 31,
+      "value": 5,
+      "current_value": 5
+    },
+    {
+      "name": "Phillip Dorsett",
+      "sleeper_id": "2334",
+      "pos": "WR",
+      "team": "LV",
+      "age": 33,
+      "value": 5,
+      "current_value": 5
+    },
+    {
+      "name": "Malachi Corley",
+      "sleeper_id": "11617",
+      "pos": "WR",
+      "team": "CLE",
+      "age": 24,
+      "value": 5,
+      "current_value": 5
+    },
+    {
+      "name": "Jacob Warren",
+      "sleeper_id": "12118",
+      "pos": "TE",
+      "team": "FA",
+      "age": 24,
+      "value": 5,
+      "current_value": 5
+    },
+    {
+      "name": "Taysom Hill",
+      "sleeper_id": "4381",
+      "pos": "TE",
+      "team": "FA",
+      "age": 35,
+      "value": 4,
+      "current_value": 4
+    },
+    {
+      "name": "Lil'Jordan Humphrey",
+      "sleeper_id": "5938",
+      "pos": "WR",
+      "team": "DEN",
+      "age": 28,
+      "value": 4,
+      "current_value": 4
+    },
+    {
+      "name": "Donte Moncrief",
+      "sleeper_id": "1971",
+      "pos": "WR",
+      "team": "FA",
+      "age": 28,
+      "value": 4,
+      "current_value": 4
+    },
+    {
+      "name": "John Ross",
+      "sleeper_id": "4038",
+      "pos": "WR",
+      "team": "FA",
+      "age": 29,
+      "value": 4,
+      "current_value": 4
+    },
+    {
+      "name": "Cole McDonald",
+      "sleeper_id": "6954",
+      "pos": "QB",
+      "team": "FA",
+      "age": 23,
+      "value": 4,
+      "current_value": 4
+    },
+    {
+      "name": "Elijah Mitchell",
+      "sleeper_id": "7561",
+      "pos": "RB",
+      "team": "FA",
+      "age": 28,
+      "value": 4,
+      "current_value": 4
+    },
+    {
+      "name": "Kevin Austin",
+      "sleeper_id": "8200",
+      "pos": "WR",
+      "team": "NO",
+      "age": 26,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "A.J. Green",
+      "sleeper_id": "830",
+      "pos": "WR",
+      "team": "FA",
+      "age": 34,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Ra'Shaun Henry",
+      "sleeper_id": "8571",
+      "pos": "WR",
+      "team": "FA",
+      "age": 25,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Julio Jones",
+      "sleeper_id": "947",
+      "pos": "WR",
+      "team": "FA",
+      "age": 35,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Mark Ingram",
+      "sleeper_id": "956",
+      "pos": "RB",
+      "team": "FA",
+      "age": 33,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Aidan O'Connell",
+      "sleeper_id": "10866",
+      "pos": "QB",
+      "team": "LV",
+      "age": 28,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Cody Fajardo",
+      "sleeper_id": "2576",
+      "pos": "QB",
+      "team": "FA",
+      "age": 32,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Frank Gore",
+      "sleeper_id": "11573",
+      "pos": "RB",
+      "team": "BUF",
+      "age": 24,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Tim Patrick",
+      "sleeper_id": "4351",
+      "pos": "WR",
+      "team": "NYJ",
+      "age": 32,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Jalin Conyers",
+      "sleeper_id": "12866",
+      "pos": "TE",
+      "team": "FA",
+      "age": 24,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "C.J. Beathard",
+      "sleeper_id": "4127",
+      "pos": "QB",
+      "team": "FA",
+      "age": 32,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Curtis Samuel",
+      "sleeper_id": "4082",
+      "pos": "WR",
+      "team": "FA",
+      "age": 29,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Zay Jones",
+      "sleeper_id": "4080",
+      "pos": "WR",
+      "team": "FA",
+      "age": 31,
+      "value": 3,
+      "current_value": 3
+    },
+    {
+      "name": "Max Bredeson",
+      "sleeper_id": "13516",
+      "pos": "RB",
+      "team": "MIN",
+      "age": 23,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Dan Arnold",
+      "sleeper_id": "4741",
+      "pos": "TE",
+      "team": "FA",
+      "age": 28,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Ja'Mori Maclin",
+      "sleeper_id": "13696",
+      "pos": "WR",
+      "team": "BUF",
+      "age": 25,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Ashton Dulin",
+      "sleeper_id": "6427",
+      "pos": "WR",
+      "team": "IND",
+      "age": 29,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Montorie Foster",
+      "sleeper_id": "13199",
+      "pos": "WR",
+      "team": "SEA",
+      "age": 25,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Josh Oliver",
+      "sleeper_id": "5973",
+      "pos": "TE",
+      "team": "MIN",
+      "age": 29,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Tayvion Robinson",
+      "sleeper_id": "11962",
+      "pos": "WR",
+      "team": "FA",
+      "age": 24,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Mecole Hardman",
+      "sleeper_id": "5917",
+      "pos": "WR",
+      "team": "FA",
+      "age": 28,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Allen Lazard",
+      "sleeper_id": "5185",
+      "pos": "WR",
+      "team": "FA",
+      "age": 30,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Russell Wilson",
+      "sleeper_id": "1234",
+      "pos": "QB",
+      "team": "FA",
+      "age": 37,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Marshawn Lynch",
+      "sleeper_id": "745",
+      "pos": "RB",
+      "team": "FA",
+      "age": 35,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Brevin Jordan",
+      "sleeper_id": "7568",
+      "pos": "TE",
+      "team": "HOU",
+      "age": 26,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Rondale Moore",
+      "sleeper_id": "7601",
+      "pos": "WR",
+      "team": "FA",
+      "age": 25,
+      "value": 1,
+      "current_value": 1
+    },
+    {
+      "name": "Grant Calcaterra",
+      "sleeper_id": "8177",
+      "pos": "TE",
+      "team": "PHI",
+      "age": 27,
+      "value": 1,
+      "current_value": 1
+    }
+  ],
+  "board": {
+    "n": 626,
+    "max": 10000,
+    "p50": 2311,
+    "min": 1
+  }
+}

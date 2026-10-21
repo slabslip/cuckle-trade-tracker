@@ -1,10 +1,15 @@
-/** Today-only pricing: retired=0, else 0.40 flatten + 0.60 KTC when a snap exists. */
-import fs from "node:fs";
-import { DATA, pickTier, readJson } from "./lib.mjs";
+/** Today-only pricing: retired=0, else a renormalized multi-source blend. */
+import { pickTier, readJson } from "./lib.mjs";
+import { listSnapDates, loadLatestSnap, loadSnapAsOf } from "./market-snap.mjs";
 
-export const TODAY_FLAT_W = 0.40;
-export const TODAY_KTC_W = 0.60;
+export const TODAY_FLAT_W = 0.25;
+export const TODAY_KTC_W = 0.30;
+export const TODAY_FC_W = 0.25;
+export const TODAY_DD_W = 0.20;
 export const TEAMS = 10;
+/** Treat a market board as already ~10k when its max sits in this band. */
+const SCALE_LO = 8000;
+const SCALE_HI = 12000;
 /** Done names missing from KTC. Hill (3321) is on KTC — do not list him. */
 export const RETIRED_SLEEPER_IDS = new Set([
   "3164", // Ezekiel Elliott
@@ -22,34 +27,48 @@ export function normName(name) {
 }
 
 export function listKtcSnaps() {
-  const dir = `${DATA}/ktc`;
-  if (!fs.existsSync(dir)) return [];
-  return fs.readdirSync(dir)
-    .filter((f) => /^\d{4}-\d{2}-\d{2}\.json$/.test(f))
-    .map((f) => f.slice(0, 10))
-    .sort();
+  return listSnapDates("ktc");
 }
 
 /** Latest committed KTC file with as_of <= day. No file → null (flatten-only). */
 export function loadKtcAsOf(day) {
-  const dates = listKtcSnaps().filter((d) => d <= day);
-  if (dates.length) return readJson(`ktc/${dates[dates.length - 1]}.json`);
-  const latest = readJson("ktc/latest.json", null);
-  if (latest?.as_of && latest.as_of <= day) return latest;
-  return null;
+  return loadSnapAsOf("ktc", day);
 }
 
 export function buildKtcIndexes(snap) {
+  return buildMarketIndexes(snap);
+}
+
+export function buildMarketIndexes(snap) {
   const bySleeper = new Map();
   const byPick = new Map();
   const byName = new Map();
+  const values = [];
   for (const p of snap?.players || []) {
     if (p.pick_key) byPick.set(p.pick_key, p);
     if (p.sleeper_id) bySleeper.set(String(p.sleeper_id), p);
     const n = normName(p.name);
     if (n && !byName.has(n)) byName.set(n, p);
+    if (Number.isFinite(p.value) && p.value > 0) values.push(p.value);
   }
-  return { bySleeper, byPick, byName, as_of: snap?.as_of || null };
+  return { bySleeper, byPick, byName, as_of: snap?.as_of || null, vmax: vmaxOf(values) };
+}
+
+/** A 0 quote is a miss, not a price. DynastyDealer ships hundreds of placeholder zeros. */
+export function marketQuote(v) {
+  return Number.isFinite(v) && v > 0 ? v : null;
+}
+
+function vmaxOf(values) {
+  let mx = 0;
+  for (const v of values) if (v > mx) mx = v;
+  return mx || null;
+}
+
+export function scaleToFlat(v, vmax) {
+  if (v == null || !Number.isFinite(v)) return null;
+  if (!vmax || (vmax >= SCALE_LO && vmax <= SCALE_HI)) return v;
+  return Math.round(10000 * v / vmax);
 }
 
 export function loadNflPlayers() {
@@ -63,8 +82,12 @@ export const SKILL_POS = new Set(["QB", "RB", "WR", "TE"]);
  * 357 Sleeper names collide. First-id-wins handed "Kenneth Walker" to a retired WR
  * instead of the KC back, which then missed KTC and priced flatten-only.
  * Rank candidates: on the Superflex board, on a roster, still active.
+ *
+ * Exported because news-match.mjs faces the same 357 collisions from the other direction — a
+ * headline naming "Josh Allen" has to pick between the Bills quarterback and a Jaguars
+ * linebacker — and a second ranking function would be a second thing to keep in agreement.
  */
-function nameCandidateScore(p) {
+export function nameCandidateScore(p) {
   let score = 0;
   if (SKILL_POS.has(String(p?.position || "").toUpperCase())) score += 8;
   if (hasNflTeam(p)) score += 4;
@@ -131,56 +154,102 @@ export function isRetired(leg, ctx) {
   const sid = sleeperIdFromLeg(leg, ctx.nameToId);
   if (sid && RETIRED_SLEEPER_IDS.has(sid)) return true;
   if (onKtcBoard(leg, ctx.ktc, sid)) return false;
-  return !hasNflTeam(sid ? ctx.players[sid] : null);
+  const players = ctx.players || {};
+  // Empty NFL dict (gitignore / cache miss) must not retire the off-KTC board.
+  if (!Object.keys(players).length) return false;
+  return !hasNflTeam(sid ? players[sid] : null);
 }
 
-export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
-  if (!leg) return null;
+export function marketValue(leg, idx, nameToId) {
+  if (!leg || !idx) return null;
   if (leg.kind === "pick" && !leg.became) {
     const key = pickvalKey(leg);
-    if (!key || !ktcByPick.has(key)) return null;
-    const v = ktcByPick.get(key).value;
-    return Number.isFinite(v) ? v : null;
+    if (!key) return null;
+    let row = idx.byPick.get(key);
+    if (!row) {
+      const mid = key.replace(/:(Early|Late)$/, ":Mid");
+      if (mid !== key) row = idx.byPick.get(mid);
+    }
+    return marketQuote(row?.value);
   }
   const sid = sleeperIdFromLeg(leg, nameToId);
-  if (sid && ktcBySleeper.has(sid)) {
-    const v = ktcBySleeper.get(sid).value;
-    if (Number.isFinite(v)) return v;
-  }
-  // A KTC row without a sleeper_id still counts; isRetired already trusts this index.
-  if (ktcByName) {
-    const name = normName(leg.became || (leg.kind === "player" ? leg.label : ""));
-    const row = name ? ktcByName.get(name) : null;
-    if (row && Number.isFinite(row.value)) return row.value;
+  const name = normName(leg.became || (leg.kind === "player" ? leg.label : ""));
+  if (sid && idx.bySleeper.has(sid)) return marketQuote(idx.bySleeper.get(sid).value);
+  // KTC sometimes lists a camp QB with no sleeper_id (Jack Strand). Use the name
+  // only when that row is unmapped — never to override a different id.
+  if (name && idx.byName.has(name)) {
+    const row = idx.byName.get(name);
+    if (!sid || !row.sleeper_id || String(row.sleeper_id) === sid) {
+      return marketQuote(row.value);
+    }
   }
   return null;
 }
 
+export function ktcValue(leg, ktcBySleeper, ktcByPick, nameToId, ktcByName) {
+  return marketValue(leg, {
+    bySleeper: ktcBySleeper,
+    byPick: ktcByPick,
+    byName: ktcByName || new Map(),
+  }, nameToId);
+}
+
+function scaledMarket(leg, idx, nameToId) {
+  return scaleToFlat(marketValue(leg, idx, nameToId), idx?.vmax);
+}
+
+/**
+ * retired → 0
+ * else today = sum(w_i * scale_i(source_i)) / sum(w_i of sources that hit)
+ * Missing flatten drops its weight — camp UDFAs often have FC/DD before DP lists them.
+ * Every source misses → flatten (or null if there is no flatten). Do not invent a DP flatten.
+ */
 export function priceTodayValue(flattenValue, leg, ctx) {
-  if (flattenValue == null || !Number.isFinite(flattenValue)) return flattenValue;
   if (isRetired(leg, ctx)) return 0;
-  const ktc = ktcValue(leg, ctx.ktc.bySleeper, ctx.ktc.byPick, ctx.nameToId, ctx.ktc.byName);
-  if (ktc == null) return flattenValue;
-  return Math.round(TODAY_FLAT_W * flattenValue + TODAY_KTC_W * ktc);
+  if (flattenValue != null && !Number.isFinite(flattenValue)) return flattenValue;
+  // 1QB / redraft books stay on the 1QB flatten. Superflex KTC/FC/DD would
+  // silently score them on Cuckle's 2QB market.
+  if (ctx && ctx.flattenOnly) {
+    return Number.isFinite(flattenValue) ? Math.round(flattenValue) : flattenValue;
+  }
+  const parts = [
+    { w: TODAY_FLAT_W, v: Number.isFinite(flattenValue) ? flattenValue : null },
+    { w: TODAY_KTC_W, v: scaledMarket(leg, ctx.ktc, ctx.nameToId) },
+    { w: TODAY_FC_W, v: scaledMarket(leg, ctx.fc, ctx.nameToId) },
+    { w: TODAY_DD_W, v: scaledMarket(leg, ctx.dd, ctx.nameToId) },
+  ].filter((p) => p.v != null && Number.isFinite(p.v));
+  if (!parts.length) return Number.isFinite(flattenValue) ? flattenValue : null;
+  const wsum = parts.reduce((s, p) => s + p.w, 0);
+  if (!wsum) return Number.isFinite(flattenValue) ? flattenValue : null;
+  return Math.round(parts.reduce((s, p) => s + p.w * p.v, 0) / wsum);
 }
 
 export function repriceTodayLegs(legs, ctx) {
   return (legs || []).map((l) => {
-    const flat = l.value_flat != null ? l.value_flat : l.value;
+    // Require value_flat. Falling back to value re-blended an already-today number.
+    const flat = l.value_flat;
     if (flat == null || !Number.isFinite(flat)) return l;
     const priced = { ...l, value: flat };
     return { ...l, value_flat: flat, value: priceTodayValue(flat, priced, ctx) };
   });
 }
 
-export function makeTodayPrice(asOf) {
-  const snap = loadKtcAsOf(asOf);
+export function makeTodayPrice(asOf, opts) {
+  const flattenOnly = !!(opts && opts.flattenOnly);
+  const ktcSnap = flattenOnly ? null : (loadLatestSnap("ktc") || loadSnapAsOf("ktc", asOf));
+  const fcSnap = flattenOnly ? null : (loadLatestSnap("fc") || loadSnapAsOf("fc", asOf));
+  const ddSnap = flattenOnly ? null : (loadLatestSnap("dd") || loadSnapAsOf("dd", asOf));
   const players = loadNflPlayers();
   return {
     as_of: asOf,
-    ktc: buildKtcIndexes(snap),
+    flattenOnly,
+    ktc: buildMarketIndexes(ktcSnap),
+    fc: buildMarketIndexes(fcSnap),
+    dd: buildMarketIndexes(ddSnap),
     players,
     nameToId: nflNameIndex(players),
-    hasKtc: !!snap,
+    hasKtc: !!ktcSnap,
+    hasFc: !!fcSnap,
+    hasDd: !!ddSnap,
   };
 }

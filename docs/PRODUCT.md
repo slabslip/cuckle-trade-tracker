@@ -2,11 +2,12 @@
 
 **Role:** The single **want** source for this tracker. Spine, who “you” are, clocks, in/out, build order, CUT/PARKED.
 
-**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
+**Not this file:** What the scripts actually emit today → [`ARCHITECTURE.md`](./ARCHITECTURE.md) (HAVE). How to price assets → [`VALUE_SDD.md`](./VALUE_SDD.md). How the dashboard must look → [`UI_SDD.md`](./UI_SDD.md). Data tab / direction → [`DATA_SDD.md`](./DATA_SDD.md). Titles/emblems → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md). Award ladder + parked grind → [`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md). Unsettled calls → [`OPEN_QUESTIONS.md`](./OPEN_QUESTIONS.md).
 
 **Repo:** `cuckle-trade-tracker` only. **Not** SlabSlip (`tradeslabs-web`). Superflex dynasty Sleeper league `1315431339301806080` (2019–2026 and onward).
 
-**Values:** DynastyProcess Superflex (`value_2qb`) from GitHub `dynastyprocess/data`. GPL-3. Official Sleeper GETs for tape and drafts. No other price book.
+**Values:** DynastyProcess from GitHub `dynastyprocess/data` is the history book. Cuckle (and any Superflex / 2QB roster) uses `value_2qb` and five Score-as windows. A 1QB league uses `value_1qb`. Redraft keeps Date of Trade + as of today only. TEP is a scoring flag, not a second needle. Today / `even` is a daily multi-source blend (flatten + KTC + FantasyCalc + DynastyDealer). Official Sleeper GETs for tape and drafts. The phone never scrapes price APIs. Format detection: [`FORMAT_BOOKS.md`](./FORMAT_BOOKS.md).
+Redraft environment (tiles, titles, calc, suggestions): [`FORMAT_VIEWS.md`](./FORMAT_VIEWS.md).
 
 ---
 
@@ -23,23 +24,68 @@ Identity on the wire: `?me=TipsUp` (canonical display name or Sleeper user id). 
 1. Pull the league’s completed trades and drafts from Sleeper.
 2. Price each asset on DynastyProcess Superflex **as of a chosen clock**.
 3. Needle = **you received − you gave up** on that clock.
-4. Show **your** after-action score first (Home). League tape is the water cooler (League).
+4. **Home** is the daily paper (Linear bottom pill + signed-in calling card + top board doors
+   + **Cuckle trade calculator** + signed-in **Team Ideas** — no bag hero, no Recent Trade chip,
+   no News door). The Home banner opens Titles and Emblems; the name tab and Menu **My team**
+   open team home. Menu **Titles and Emblems** stays a door to awards. **News** is a peer tab
+   (full-page shareable feed, with a missed-count bubble). **Menu** (hamburger) opens a
+   glass popover above the pill: My team / Titles and Emblems / Calculator / League Data / Settings. **Teams** is first-person after a
+   seat. Price a hypothetical on **`?view=calc`**. League tape stays the water cooler.
 5. A pick that has been used is **the player it became**, unless the viewer asks for pick-at-accept.
+6. **Memory is short.** Seats remember seasons, “how good we are,” and old deals
+   wrong. The dashboard is the receipt: a digest tile they can open and text
+   that says what really happened — one English verdict, one gold number, Text
+   this. Sixteen chip kinds on Your board (History). Opinion (votes, news,
+   Ledger) may start the argument. It does not write the receipt. Law:
+   [`MEMORY_SDD.md`](./MEMORY_SDD.md).
 
-That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle.
+That is the product. Style labels (Win-now / Investor / Balanced) describe bag mix. They **do not** move the needle. Recent-window direction (Hard rebuild / Rebuild / Reload / Win-now) may filter who to ping; it does not move a clock or a delta.
 
 ---
 
 ## 3. Clocks (do not mix)
 
-| Clock | Question it answers | On the needle? |
+Five windows ship, chosen in one **Score as** dropdown. `Since trade` is the default.
+
+| Clock | Question it answers | Price book |
 | --- | --- | --- |
-| **Today** (default) | What is that bag worth **now**, became-player? | Yes — Home hero, trade row, Best/Worst “as of today” |
-| **T0** (toggle: Pick at trade day) | What did they accept **that day** (pick still a pick)? | Yes — as a second lens, not a second hero |
-| **Aged** | Today Δ − T0 Δ (how the deal moved after accept) | Yes — Best/Worst “aged”; caption on an open row when T0 exists |
-| **First 3 years** | Mean of year-end (became-player) values in `[accept, accept+3y]`, with the activity floor | Yes — **third chip only**. Must not replace Today or T0. Must not become a second Home hero. |
+| **Since trade** (`all`, default) | Mean of year-end (became-player) values from accept through today | Flatten only |
+| **At trade** (`t0`) | What did they accept **that day** (pick still a pick)? | Flatten only |
+| **First 1 / 2 / 3 years** (`y1` `y2` `y3`) | Mean of year-end (became-player) values in `[accept, accept+Ny]`, with the activity floor | Flatten only |
+| **Aged** | `all` Δ − `t0` Δ, how the deal moved after accept | Derived — both terms from the **same** book, never by subtracting two |
+
+**All five windows are flatten-only.** Do not backfill KTC, FantasyCalc, or DynastyDealer onto a
+clock that predates that source, and never average two clocks into one figure.
+
+**The today blend is a sixth price, and it is not one of the five windows.** A trade's `even` bag
+prices each leg as a **renormalized blend** of flatten (0.25), KeepTradeCut Superflex (0.30),
+FantasyCalc Superflex dynasty (0.25), and DynastyDealer `base_value` (0.20). A missing source
+drops its weight. A quote of 0 is a miss. Flatten-only if every market source misses. If flatten
+itself is missing, today is the markets that hit — do not leave a rostered camp body blank when
+FantasyCalc or DynastyDealer already prices him. Do not invent a fake DP flatten for windows.
+Today reads each market’s latest committed snap — it does not wait for the DP
+curve date to catch up. An asset that is **off the KTC Superflex board and off an NFL roster** prices
+at **0**. Missing FantasyCalc or DynastyDealer does not retire anyone. The explicit
+`RETIRED_SLEEPER_IDS` set still wins outright. Production / P/E is a Desk signal only, and only
+when FFPG is at least 4.
+
+`even` is what the pipeline's own aggregates are built on. Trade rows still read `windows[lens]`,
+so `sideOf()`’s `even` fallback never fires there. **The calculator is the first reachable screen
+that renders `even`** (today book + VA). That closes the “no screen draws it” gap for a
+hypothetical; it does **not** add a sixth Score-as clock. See `DASHBOARD_AUDIT.md` §8c / D5 for
+the measured window-vs-blend gap. Until that is answered, **do not describe "Since trade" to a
+user as a today price.**
+
+**Shipped on the calculator:** league leftover (percent of league capital after a priced
+2-team deal) and a vote-nudge that opens the existing vote sheet. Votes still never enter
+the book.
 
 Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the needle. One-ways and FAAB-only never enter the meter.
+
+**Value Adjustment** (rate 0.15, extras capped at 3, a late 4th counting 0.5) prices the stud-for-
+quantity premium on a two-team swap. It is **0 on any trade with more than two seats**: an N-way
+seat's `sent` bag does not correspond to any single other seat's `got` bag, so there is no
+non-arbitrary attribution and no way to stay zero-sum. It is also 0 on an incomplete side.
 
 ---
 
@@ -50,35 +96,85 @@ Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the
 - Completed Sleeper trades with at least two seats, each receiving a player or pick.
 - Players and draft picks only.
 - Hop tape for a pick (who held it, flip vs used).
+- Memory proof: Your board + public share tickets you can tap and text
+  ([`MEMORY_SDD.md`](./MEMORY_SDD.md)). Not a sixth tab. Not Best 10. Clock
+  names on glass are Day they traded / From then to now — never `t0` / `y1`.
 - Rookie surplus (player today − pick cost on draft day) and a separate 2019 startup tab (player today; DP has no 2019 startup pick prices).
 - Phone-first static page, existing CSS, no new packages.
+- **Chuckle Fantasy multi-league app** — commissioner creates a league (Sleeper ID +
+  optional ESPN ID), sends per-seat invites; members set username/password only.
+  Spec: [`APP_SDD.md`](APP_SDD.md). Build today: [`DESKTOP_CHECKLIST.md`](DESKTOP_CHECKLIST.md).
 
 **Out (CUT)**
 
 - FAAB as a leg, a point, or a tape line.
 - One-way deals (one seat gets players/picks; the other gets nothing or only FAAB).
-- Browser-side Sleeper calls, login, live refresh.
+- Browser-side Sleeper calls for the **meter** (join/preview via Edge Function is in).
+- Live refresh of DynastyProcess from the phone.
+- Play binaries and web push (PARKED). App Store / TestFlight is the Cuckle-first
+  WebView shell — law in [`STORE_LAW.md`](./STORE_LAW.md), ops in [`STORE_OPS.md`](./STORE_OPS.md).
 - A third hero number that pretends to be “today.”
 - Chart libraries, npm, Tailwind, new CSS systems.
 - Applying the 300 activity floor to the **today** clock (Hill is 285 — still a real player).
 - Letting Win-now / Investor change any delta.
 
+**Removed by user decision — do not re-propose**
+
+- **Best 10 / Worst 10.** Removed once, restored by an agent on the audit's recommendation,
+  removed again on sight. `Most lopsided trades` on league home is the permanent replacement.
+- **The league screen entirely.** `renderLeague()` and the `Traders` / `Drafters` lists it still
+  held went on a second ruling. There is no `league` view.
+- **`realized_*`.** The stored `realized_total` / `realized_per_trade` described a book no longer
+  in the file — up to ~37,000 off, with sign flips on four seats. Deleted rather than repaired.
+
 **PARKED** (honest later, not now)
 
-- Best/Worst (and `realized_per_trade`) on the 3-year clock — only after that lens is trusted.
 - Weekly/monthly spark (full git density) instead of year-end + today.
 - Peak-in-window, AUC, or “years above 300” as the **headline** over-time number.
 - Flip P&L as the default over-time identity (hop tape already exists; do not merge it into the trade needle).
-- Auto-publish / scheduled rebuild (cadence is an open question).
+- Auto-publish polish (join-league already dispatches `league-sync` when `GITHUB_PAT` is set).
+- PWA install prompt + web push.
+- Play Store wrapper. iOS TestFlight shell is in [`ios/`](../ios/) — do not rewrite the meter in SwiftUI.
+- Accept-odds / suggested counter; public/private marketplace.
+- Equipped **title** painted on names across the app (header, news, trade cards, ledger,
+  smack). Wave 1 already paints the calling card on each manager's team home and your
+  equipped **emblem** next to your own seat name.
+- League Oracle, waiver hot sheet, lineup-vs-optimal, playoff-odds engine, push “3 actions today”.
+- Expanded award grind (weekly scores, legal lineups, waiver throne, streaks). Championship
+  ladder stays the top of [`COSMETICS_SDD.md`](COSMETICS_SDD.md); the rest is
+  [`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md) until those engines exist.
 
 ---
 
 ## 5. Build order
 
-1. **Keep Today + T0 + hops + Best/Worst frozen.** Do not “fix” needle math in passing.
-2. **Finish First 3 years as a chip** — compose with `MIN_ACTIVE` on **that** clock only; self-checks in `revalue.mjs` must keep passing (`y3 leaves realized_per_trade`, Zeke 3y ≠ leftover 3, no sub-300 positive 3y snap).
-3. **Make the 3-year window readable** on the existing spark (caption + shade). No new chart stack.
-4. Only then: decide Best/Worst / partner averages on 3y, denser dates, or a different aggregator (see `OPEN_QUESTIONS.md`).
+`node build.mjs` is the whole rebuild and it is the only rebuild:
+`sleeper-sync` → `draft-resolve` → `value-snapshot` → `revalue` → `title-path` →
+`apply-value-adjust` → `build-cuffs` → `build-calculator` → `build-cosmetics` →
+`generate-page`.
+
+Home digest + calc + barracks archive: [`plans/home_digest.md`](plans/home_digest.md).
+**Home overnight (v1, Cuckle dynasty only):** league letter each night in dashboard chrome (Out / IR on the card; trades, wire, meters behind Show all), gold share chip, `?r=overnight` link — [`plans/dynasty_daily_habit.md`](./plans/dynasty_daily_habit.md). Off on GM / redraft. Out / IR rows name the starter’s cuff owner or `cuff unowned` from `cuffs.json`, and the collapsed list leads with Sunday starters, not book-value benches. Tap a name for the teammates who benefit (owner or unowned) and an obvious leftover ↔ cuff trade when the desk is short. **Team analyzer** on every dynasty team home uses dashboard chrome (same card as the Home letter), scores desk slots with `teamAnalyzerValueGrade` (`calcValueNum` vs `deskCuts`: starter 3 / stud 7.5 / elite 10) and weighs the next two drafts hardest on the pick chest (not vs the league; same bag reprints the same 0–10; team grade uses a window mix plus a fixed stretch so seats do not bunch at 6–7, a historic 2027/2028 chest moves a tank, and a thin chest does not sink a win-now roster). Now is this year’s starting desk (picks out); Later is the book plus the next two drafts. The gold chip saves a PNG. Next need cut: yesterday’s injury snap on the lede, still on that card.
+Memory / proof tiles: [`MEMORY_SDD.md`](./MEMORY_SDD.md).
+Titles/emblems law: [`COSMETICS_SDD.md`](COSMETICS_SDD.md). Award expansion:
+[`plans/awards_titles_emblems.md`](plans/awards_titles_emblems.md).
+
+`apply-value-adjust.mjs` is not optional. It owns the today blend, the Value Adjustment, the trade
+boards and `marks.json`, so a build without it ships the flatten-only book. `title-path.mjs` writes
+`titles.json`. Both were missing from the list, which is why `titles.json.as_of` and `league.today`
+could disagree in production.
+
+Standing checks after any change to the book, over all ten seats:
+
+1. Every side's `today` equals `sum(priced legs) + value_adjust`, and `today_delta` equals
+   `today − sent_today`.
+2. Stored Value Adjustment matches a fresh `value-adjust.mjs` recompute; stored today values match
+   a fresh `price-today.mjs` recompute.
+3. Zero-sum on the 288 complete two-team trades **and** on the 2 N-way trades.
+4. The generator's inline `applyVa` agrees numerically with `value-adjust.mjs` on every shipped side —
+   read it out of `index.html` via `check-value-feed.mjs`, not out of `generate-page.mjs`.
+5. Team Ideas talks and calc Favors share `calcReceiveTotals` (receive bags + VA).
+6. No NaN, no Infinity, and the self-checks in `apply-value-adjust.mjs` pass.
 
 ---
 
@@ -91,4 +187,9 @@ Incomplete (a player/pick with no DP row) stays **listed** and stays **off** the
 - **No silent Mid** on a slotted pick when Early/Late/slot exists; Mid is only the no-slot fallback and must flag `priced_as_mid`.
 - **Drafter name in parentheses** is who **used** the pick, not who received it in this trade.
 - **Zero-sum on complete 2-team** today-deltas. Partner per-trade numbers invert.
+- **Value Adjustment is 0 on N-way trades.** Zero-sum needs `sum(gotVA) == sum(sentVA)` across
+  seats, and with three bags there is no non-arbitrary attribution.
+- **Pipeline owns all arithmetic; the browser only formats.** One helper per number. If a figure
+  is computed in two places it will disagree in production — the home tile and the Partners tab
+  did, on 20 of 82 graded partners.
 - **Ponytail:** rebuild pipeline, don’t add a web app. Mark ceilings with `ponytail:`.

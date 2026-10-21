@@ -3,23 +3,188 @@ import fs from "node:fs";
 export const ROOT = new URL(".", import.meta.url).pathname;
 export const DATA = `${ROOT}data`;
 export const SLEEPER = "https://api.sleeper.app/v1";
+export const ESPN_READS = "https://lm-api-reads.fantasy.espn.com/apis/v3/games/ffl";
+export const ESPN_WEB = "https://fantasy.espn.com/apis/v3/games/ffl";
+export const CUCKLE_LEAGUE_ID = "1315431339301806080";
+/** Dogfood / review redraft: Sleeper current + ESPN prior years. */
+export const REDRAFT_REVIEW_LEAGUE_ID = "1389723418827460608";
+export const REDRAFT_ESPN_LEAGUE_ID = "35763180";
+
+/** Active league for this process. Set via setLeagueId / LEAGUE_ID env / argv. */
+export let LEAGUE_ID = process.env.LEAGUE_ID || CUCKLE_LEAGUE_ID;
+
+const SHARED_JSON = new Set([
+  "value_curve.json",
+  "value_curve_1qb.json",
+  "value_snapshots.json",
+  "players.nfl.json",
+]);
+
+export function setLeagueId(id) {
+  const next = String(id || "").trim() || CUCKLE_LEAGUE_ID;
+  LEAGUE_ID = next;
+  process.env.LEAGUE_ID = next;
+  return LEAGUE_ID;
+}
+
+export function leagueDataDir(id = LEAGUE_ID) {
+  return `${DATA}/leagues/${id}`;
+}
+
+export function leagueRawDir(id = LEAGUE_ID) {
+  return `${leagueDataDir(id)}/raw`;
+}
+
+export function leagueUiDir(id = LEAGUE_ID) {
+  return `${leagueDataDir(id)}/ui`;
+}
+
+function isSharedJson(name) {
+  return SHARED_JSON.has(name) || name.startsWith("ktc/") || name.startsWith("fc/")
+    || name.startsWith("dd/") || name.startsWith("tx_cache/");
+}
 
 export function readJson(name, fallback = null) {
+  if (!isSharedJson(name)) {
+    const scoped = `${leagueRawDir()}/${name}`;
+    if (fs.existsSync(scoped)) return JSON.parse(fs.readFileSync(scoped, "utf8"));
+  }
   const path = `${DATA}/${name}`;
   if (!fs.existsSync(path)) return fallback;
   return JSON.parse(fs.readFileSync(path, "utf8"));
 }
 
 export function writeJson(name, value) {
-  const path = `${DATA}/${name}`;
+  const path = isSharedJson(name) ? `${DATA}/${name}` : `${leagueRawDir()}/${name}`;
   fs.mkdirSync(path.slice(0, path.lastIndexOf("/")), { recursive: true });
   fs.writeFileSync(path, JSON.stringify(value, null, 2) + "\n");
 }
 
 export function writeUi(name, value) {
-  const path = `${DATA}/ui/${name}`;
-  fs.mkdirSync(path.slice(0, path.lastIndexOf("/")), { recursive: true });
-  fs.writeFileSync(path, JSON.stringify(value) + "\n");
+  const scoped = `${leagueUiDir()}/${name}`;
+  fs.mkdirSync(scoped.slice(0, scoped.lastIndexOf("/")), { recursive: true });
+  const body = JSON.stringify(value) + "\n";
+  fs.writeFileSync(scoped, body);
+  // Dual-write Cuckle to legacy data/ui so news-refresh and older readers keep working.
+  if (LEAGUE_ID === CUCKLE_LEAGUE_ID) {
+    const legacy = `${DATA}/ui/${name}`;
+    fs.mkdirSync(legacy.slice(0, legacy.lastIndexOf("/")), { recursive: true });
+    fs.writeFileSync(legacy, body);
+  }
+}
+
+export function readUi(name, fallback = null) {
+  const scoped = `${leagueUiDir()}/${name}`;
+  if (fs.existsSync(scoped)) return JSON.parse(fs.readFileSync(scoped, "utf8"));
+  if (LEAGUE_ID === CUCKLE_LEAGUE_ID) {
+    const legacy = `${DATA}/ui/${name}`;
+    if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8"));
+  }
+  return fallback;
+}
+
+/** Sleeper league IDs are long decimal strings. ESPN history rows use espn:<id>:<year>. */
+export function isSleeperLeagueId(id) {
+  const s = String(id || "").trim();
+  return /^\d{10,64}$/.test(s);
+}
+
+export function loadProviders(id = LEAGUE_ID) {
+  const fallback = {
+    sleeper_league_id: String(id),
+    sleeper_extra_ids: [],
+    espn_league_id: null,
+    espn_extra_ids: [],
+    yahoo_league_ids: [],
+    espn_through_season: null,
+    kind: null,
+    name: null,
+  };
+  const raw = readJson("providers.json", null);
+  if (!raw || typeof raw !== "object") return fallback;
+  const extra = Array.isArray(raw.sleeper_extra_ids)
+    ? raw.sleeper_extra_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : String(raw.sleeper_extra_ids || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const espnExtra = Array.isArray(raw.espn_extra_ids)
+    ? raw.espn_extra_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : String(raw.espn_extra_ids || "").split(",").map((x) => x.trim()).filter(Boolean);
+  const yahoo = Array.isArray(raw.yahoo_league_ids)
+    ? raw.yahoo_league_ids.map((x) => String(x || "").trim()).filter(Boolean)
+    : String(raw.yahoo_league_ids || "").split(",").map((x) => x.trim()).filter(Boolean);
+  return {
+    ...fallback,
+    ...raw,
+    sleeper_league_id: String(raw.sleeper_league_id || id),
+    sleeper_extra_ids: extra.filter((x) => x !== String(raw.sleeper_league_id || id)),
+    espn_extra_ids: espnExtra,
+    yahoo_league_ids: yahoo,
+  };
+}
+
+function stripSecretWrap(raw) {
+  let s = String(raw || "").trim();
+  if ((s.startsWith("\"") && s.endsWith("\"")) || (s.startsWith("'") && s.endsWith("'"))) {
+    s = s.slice(1, -1).trim();
+  }
+  return s;
+}
+
+function cleanEspnS2(raw) {
+  let s = stripSecretWrap(raw);
+  if (/^espn_s2=/i.test(s)) s = s.replace(/^espn_s2=/i, "").trim();
+  return s;
+}
+
+function cleanEspnSwid(raw) {
+  let s = stripSecretWrap(raw);
+  if (/^swid=/i.test(s)) s = s.replace(/^swid=/i, "").trim();
+  const braced = s.match(/\{[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}/);
+  if (braced) return braced[0];
+  const bare = s.match(/[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}/);
+  if (bare) return "{" + bare[0] + "}";
+  return s;
+}
+
+export function espnCookieHeader() {
+  const full = stripSecretWrap(process.env.ESPN_COOKIE);
+  if (full) return full;
+  const s2 = cleanEspnS2(process.env.ESPN_S2 || "");
+  const swid = cleanEspnSwid(process.env.ESPN_SWID || process.env.SWID || "");
+  if (!s2 && !swid) return "";
+  const parts = [];
+  if (s2) parts.push(`espn_s2=${s2}`);
+  if (swid) parts.push(`SWID=${swid}`);
+  return parts.join("; ");
+}
+
+export function espnCookieDebug() {
+  const s2 = cleanEspnS2(process.env.ESPN_S2 || "");
+  const swid = cleanEspnSwid(process.env.ESPN_SWID || process.env.SWID || "");
+  return {
+    s2_len: s2.length,
+    swid_len: swid.length,
+    swid_uuid: /^\{[0-9A-Fa-f-]{36}\}$/.test(swid),
+  };
+}
+
+export async function espnGet(url) {
+  const headers = {
+    Accept: "application/json, text/plain, */*",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    Referer: "https://fantasy.espn.com/",
+    Origin: "https://fantasy.espn.com",
+    "X-Fantasy-Source": "kona",
+    "X-Fantasy-Platform": "kona-web-2.0.0",
+  };
+  const cookie = espnCookieHeader();
+  if (cookie) headers.Cookie = cookie;
+  const res = await fetch(url, { headers });
+  const text = await res.text();
+  let json = null;
+  if (text) {
+    try { json = JSON.parse(text); } catch { json = null; }
+  }
+  return { ok: res.ok, status: res.status, json, text };
 }
 
 export async function sleeperGet(path) {
@@ -78,6 +243,157 @@ export function pickTier(slot, teams = 10) {
   if (!s) return "Mid";
   const third = teams / 3;
   if (s <= Math.ceil(third)) return "Early";
-  if (s <= Math.ceil(third * 2)) return "Mid";
+  if (s <= Math.ceil(2 * third)) return "Mid";
   return "Late";
+}
+
+/** NFL week-1 Thursdays used to split in-season vs offseason for trade clocks. */
+export const NFL_KICKOFF = {
+  2019: "2019-09-05",
+  2020: "2020-09-10",
+  2021: "2021-09-09",
+  2022: "2022-09-08",
+  2023: "2023-09-07",
+  2024: "2024-09-05",
+  2025: "2025-09-04",
+  2026: "2026-09-10",
+};
+
+export function nflKickoff(seasonYear) {
+  const y = Number(seasonYear);
+  return NFL_KICKOFF[y] || `${y}-09-08`;
+}
+
+/** End of the fantasy/NFL season window (after playoffs). */
+export function nflSeasonEnd(seasonYear) {
+  const y = Number(seasonYear);
+  return `${y + 1}-01-31`;
+}
+
+/**
+ * Map a trade date onto an NFL season year and phase.
+ * In-season: kickoff(Y) … seasonEnd(Y). Offseason before kickoff(Y) targets season Y.
+ */
+export function nflSeasonContext(date) {
+  const y = Number(String(date || "").slice(0, 4));
+  if (!y) return { season: null, phase: "offseason" };
+  const endPrev = nflSeasonEnd(y - 1);
+  if (date <= endPrev) return { season: y - 1, phase: "in_season" };
+  const kick = nflKickoff(y);
+  if (date < kick) return { season: y, phase: "offseason" };
+  const end = nflSeasonEnd(y);
+  if (date <= end) return { season: y, phase: "in_season" };
+  return { season: y + 1, phase: "offseason" };
+}
+
+/** Last day of the 1- or 2-season value window that starts at `date`. */
+export function seasonWindowEnd(date, seasonCount) {
+  const n = Math.max(1, Number(seasonCount) || 1);
+  const { season } = nflSeasonContext(date);
+  if (season == null) return date;
+  return nflSeasonEnd(season + n - 1);
+}
+
+export function addDays(ymd, n) {
+  const [y, m, d] = String(ymd || "").split("-").map(Number);
+  if (!y || !m || !d) return ymd;
+  const dt = new Date(Date.UTC(y, m - 1, d + n));
+  return dt.toISOString().slice(0, 10);
+}
+
+/** Weekly anchors from `from` through `to` (inclusive), for in-window value averages. */
+export function weekAsOfs(from, to) {
+  if (!from || !to || from > to) return from ? [from] : [];
+  const out = [];
+  let d = from;
+  while (d < to) {
+    out.push(d);
+    d = addDays(d, 7);
+  }
+  if (!out.includes(to)) out.push(to);
+  return out;
+}
+
+/**
+ * Snap dates for a season-span clock: weekly from accept through min(window end, today).
+ * In-season trades cover the rest of that season; offseason trades cover through the next
+ * season (seasonCount=1) or the next two (seasonCount=2).
+ */
+export function seasonAsOfs(t0, today, seasonCount) {
+  const end = seasonWindowEnd(t0, seasonCount);
+  const cap = !today || end < today ? end : today;
+  return weekAsOfs(t0, cap);
+}
+
+/** True once today is on/after the season-span window end for this trade date. */
+export function seasonLived(date, seasonCount, today) {
+  if (!date || !today) return false;
+  return today >= seasonWindowEnd(date, seasonCount);
+}
+
+/**
+ * Book + clock shape from a Sleeper league (or the newest row in leagues.json).
+ * DynastyProcess: value_2qb vs value_1qb. TEP is a scoring flag on top of that.
+ * type: 0 redraft, 1 keeper, 2 dynasty (Sleeper settings.type).
+ */
+export function detectLeagueFormat(raw) {
+  const row = Array.isArray(raw) ? raw[raw.length - 1] : raw;
+  const settings = (row && row.settings) || {};
+  const positions = (row && (row.roster_positions || row.rosterPositions)) || [];
+  const scoring = (row && (row.scoring_settings || row.scoringSettings || settings.scoring_settings)) || {};
+  const qbSlots = positions.filter((p) => p === "QB" || p === "SUPER_FLEX").length;
+  const superflex = row && row.superflex != null
+    ? !!row.superflex
+    : qbSlots >= 2 || positions.includes("SUPER_FLEX");
+  const rec = Number(scoring.rec);
+  const recTe = Number(scoring.rec_te != null ? scoring.rec_te : scoring.bonus_rec_te);
+  const tep = Number.isFinite(recTe) && Number.isFinite(rec) ? recTe > rec : !!row?.tep;
+  const typeN = Number(settings.type != null ? settings.type : row && row.league_type);
+  let kind = "dynasty";
+  if (typeN === 0) kind = "redraft";
+  else if (typeN === 1) kind = "keeper";
+  else if (typeN === 2) kind = "dynasty";
+  else if (row && row.kind) kind = String(row.kind);
+  const teamN = Number(settings.num_teams || row && (row.num_teams || row.total_rosters) || 0) || null;
+  const format_key = superflex ? "2qb" : "1qb";
+  const windows = kind === "redraft"
+    ? ["t0", "all"]
+    : ["t0", "y1", "y2", "y3", "all"];
+  return {
+    kind,
+    superflex,
+    tep: !!tep,
+    format_key,
+    book: format_key,
+    team_n: teamN,
+    windows,
+  };
+}
+
+/**
+ * Current Sleeper holder of each moved future pick (`pick:year:round:originRoster`).
+ * Hop tape can miss a later flip; the calculator must not offer a pick the seat
+ * does not hold. Untraded origin slots are absent from this map.
+ */
+export function livePickHolders() {
+  const traded = readJson("traded_picks.json", []) || [];
+  const seats = readJson("seats.json", []) || [];
+  const members = readJson("members.json", []) || [];
+  const latestSeason = String(Math.max(0, ...seats.map((s) => Number(s.season) || 0)));
+  const uidByRoster = new Map();
+  for (const s of seats) {
+    if (String(s.season) !== latestSeason || s.roster_id == null || !s.owner_id) continue;
+    uidByRoster.set(Number(s.roster_id), String(s.owner_id));
+  }
+  const nameById = Object.fromEntries(
+    members.map((m) => [String(m.user_id), m.canonical_name || m.name || String(m.user_id)]),
+  );
+  const byKey = new Map();
+  for (const p of traded) {
+    if (!p || p.season == null || p.round == null || p.roster_id == null || p.owner_id == null) continue;
+    const key = `pick:${p.season}:${Number(p.round)}:${Number(p.roster_id)}`;
+    const uid = uidByRoster.get(Number(p.owner_id)) || String(p.owner_id);
+    byKey.set(key, { user_id: uid, name: nameById[uid] || uid });
+  }
+  return byKey;
 }

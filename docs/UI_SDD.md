@@ -1,128 +1,540 @@
 # CuckleChunckle — UI SDD (display law)
 
-Phone-first dashboard. Existing CSS in `generate-page.mjs` only. No chart library, no new tokens, no SlabSlip chrome.
+Phone-first dashboard, generated whole by `generate-page.mjs` into `index.html`. Existing CSS in
+that file only. No chart library, no npm, no new tokens, no SlabSlip chrome.
+
+**This file describes what ships.** If it and the generator disagree, the generator wins and this
+file is wrong — fix it in the same pass. What we *want* → [`PRODUCT.md`](./PRODUCT.md). What the
+scripts emit → [`ARCHITECTURE.md`](./ARCHITECTURE.md). Pricing → [`VALUE_SDD.md`](./VALUE_SDD.md).
+Votes → [`VOTES_SDD.md`](./VOTES_SDD.md). Data tab / direction → [`DATA_SDD.md`](./DATA_SDD.md).
+Memory receipts → [`MEMORY_SDD.md`](./MEMORY_SDD.md).
+Cosmetics → [`COSMETICS_SDD.md`](./COSMETICS_SDD.md).
+Phone behavior (Apple HIG adopted as Cuckle law) → [`HIG_SDD.md`](./HIG_SDD.md).
+Known defects → [`DASHBOARD_AUDIT.md`](./DASHBOARD_AUDIT.md).
+
+**Filter menus (HIG-23):** a labeled `<select>` (`.receipt-look`). Never a row of
+bubble / pill / chip buttons. One constructor: `receiptLookSelect`. Action chips
+(Back, Edit, Save), the nav pill, board presets, chart metric pickers, and
+Profit / Loss rooms (Held / Sold) are not filters. Hunt position
+and tape year use the same dropdown.
 
 ---
 
 ## 1. Two rooms
 
-**Home = your after-action score.** The first thing you see after picking a name is **your** per-complete-trade needle (became-player today), how many deals are on it, and your last few bags. You are the seat. This is not a league recap.
+**Home** (no seat picked) is the daily paper: a Linear-style floating pill
+**Home | Teams | News | Ledger | Menu** at the true bottom (the slot the News Feed peek used to
+occupy), then the digest — signed-in calling card (flair + name + place above
+the title banner; banner taps Titles and Emblems; name tab opens team home),
+the top board doors (no heading), **Cuckle trade calculator**, and signed-in **Team Ideas**.
+**News** is a peer tab (signed-in **Alerts** + the league feed). **Menu** is the hamburger;
+it opens a glass popover above the unchanged pill. It is the water cooler.
+Menu also lists **My team**, **Titles and Emblems**, and **Settings** so those
+rooms are one tap from any digest room. The brand-end does not show team flair
+or a settings gear — Menu owns those doors. The bottom pill stays on Settings.
+Back from Settings returns to league Home.
+The `Score as` clock is not on it; the clock lives in the brand header on screens it applies to
+(§2a).
 
-**League = water-cooler tape.** Best smash / worst beatings, then everyone else’s per-trade and per-pick lists. You are highlighted (`· you`), not the default subject.
+**Alerts** live on the **News** tab. They may name a wager or an uncast vote. Omit the strip
+when signed out. When signed in and nothing is waiting, keep the heading and leave the slot
+blank — do not fill it. That is an *action*, not a personal bag number. Lineup recaps, waivers,
+and bag totals stay off Home. The calculator door is its own row on Home — it is not an Alerts
+filler. Home does not remount the Recent Trade chip; the vote notification on News is the door
+into that deal. The News tab may badge a gold count of missed alerts + unseen posts (`9+` cap).
 
-Do not merge them. Home teasers may **point** at League (Best smash / Worst chips → League, all-time today). They must not replace the Home hero.
+**Team home** is what you get after picking a name in the **Teams** tab, or from the
+Home name tab / Menu **My team**. **You are that seat.** Six style tiles, an optional league chart,
+your best and worst deal, your two edge partners, your best and worst rookie pick.
+Visitors always see **Show off** (where the seat is accomplished) and **The tape**
+(where it is not). The owner may **Format page** to hide blocks for themselves
+(`cuckle.team.home.layout.v1`); they cannot hide the tape from other seats.
+Every number is first-person for that `user_id`.
 
----
-
-## 2. Identity and chrome
-
-- Tiles = the ten canonical names. `?me=TipsUp` (or user id) selects that seat. Serve over HTTP.
-- Caption under the title: `{name} · DynastyProcess Superflex · FAAB thrown out`.
-- Tabs: `home` · `trades` · `partners` · `drafts` · `league`.
-- Lens chips (global, under tabs):
-  1. **Became the player** (default) — Today clock.
-  2. **Pick at trade day** — T0 identity on the same rows.
-  3. **First 3 years** — over-time mean. **Third chip, not a second hero.**
-
-Win-now / Investor is a one-line caption on Home only. It never recolors the hero.
-
----
-
-## 3. Home (first-person)
-
-| Block | Law |
-| --- | --- |
-| Hero | One big number: `realized_per_trade` (or `pick_per_trade` if that chip is on). Caption: “per complete trade · received vs what you sent · total … · N complete · K incomplete (no DP row), off this number.” |
-| Hero + y3 chip | **Do not** swap the hero to a 3-year average. IN FLIGHT already leaves the hero on today — keep that. The chip may change the **latest-trades** row margins (same as Trades). |
-| Style | Caption only. |
-| Rookie hit / miss | One line. Surplus = player today − pick cost on draft day. |
-| League teasers | Two chips from `trade_boards.today` **all-time**. Not aged, not 3y, not windowed. |
-| Partner teasers | Best / Worst / Most from `partner_headlines` (2+ complete when possible). |
-| Latest trades | Same row DNA as Trades (below). |
-| Latest rookies | Spark: green = player, blue = pick cost. Number = surplus. |
+Do not merge them. Home must not grow a personal bag number. The name tab may
+show the seat and last-season place. Team home must not become a league recap.
 
 ---
 
-## 4. Open trade = first person
+## 2. Chrome
 
-Closed row: other name(s) · date · `got {received} / sent {gave up}` · margin = needle for the **active chip**.
+**HAVE (2026-09-08).** Brand row: back chevron (`#goBack`) · wordmark · centered league name
+(`#leagueSub`). `#leagueSub` always returns to **League Home** (`goLeagueHome()`). There is
+**no `#goHome` icon** and no `class="go-home"` — a generate-time guard forbids both. Do not
+invent a house icon. From a seat, `#goBack` steps Teams (seat home) then Home tab; the league
+name skips the stack and lands on the digest.
 
-Open row:
+**There is no seat picker in the header** and **no Teams-chip dropdown.** The **Teams** top tab
+is the only door into a seat: a ten-row list in last season's finishing order. Selecting a name
+is not "view as": it swaps the whole app to that seat.
 
-1. **You received** · total.
-2. **You gave up** · total.
-3. If **3+ names** (`others.length > 1`): one extra bag per other seat, titled `{name} received`. **No `other_bags` on a 2-team row** (data may still contain them — do not render).
-4. If T0 exists **and** the chip is Became-the-player: caption `At accept: {t0_delta} · since then: {aged}`.
-5. If the chip is First 3 years: caption that this number is the year-end mean in the 3 years after accept; under-300 **player** years count as 0; if the window has not elapsed, say so.
-6. Clock note: became-player vs pick-at-accept vs 3y. Drafter name ≠ trade recipient.
-7. Spark + hint (below).
+`h1.brand` keeps `overflow: visible` and keeps its assertion. The row still holds focusable
+targets with outline rings; a clip here turns it into a scroll box, and it has been re-clipped
+twice already (7f97711, then f9fdb39). The invariant is cheaper to keep than to rediscover.
 
-Incomplete: badge `no DP row`; totals show `—` when every shown leg is unpriced; margin `—`.
+**The Teams tab lists every seat** in **last season's finishing order**, with that seat's
+equipped **title banner + emblem** under the name (or that seat's highest unlock when
+no shared equip is on file). The
+champion still carries a gold crown. Three rules hold it together:
 
-Flags on a leg: `no DP row` · `as 2028` · `Mid`.
+- **No "Team" / "None" row that only clears the seat.** `#leagueSub` and the **Home** tab do
+  that. The list is ten seats, not eleven.
+- **The order is derived, never written down.** `title-path.mjs` is the only script that walks
+  `previous_league_id`, so it derives the standings there and writes `place` onto
+  `data/ui/members.json`, which is the file the Teams list reads. The rule: **the winners bracket's
+  placement games (`p`) settle every team they place, then regular-season record — standings
+  points, then points for, then `roster_id` — orders the rest.** The losers bracket is not read;
+  its `p` is a place inside the consolation round, not a league place. When 2026 completes it
+  becomes the order with no code change. 2025 reads SF69erss, TipsUp, TedCumberbatch,
+  KingHenryXXVI, TrumanCooper, DarkWingDucks2023, bigjberg, ChiefGumby, ARae, BubbaCuckShremp.
+- **Rows stay at least 44px.** Calling cards make the list taller than one screen — that scroll
+  is intended. Do not drop the 44px floor to squeeze ten banners into the first viewport.
+  An eleventh seat still fails the build.
 
-Pick legs expand hop tape (date · from → to · sold|used|held · t0 → out). Hop math stays pick-local except the drafter’s last hop.
+The crown is an inline SVG in the `#e0b44c` the gold cards already use, `aria-hidden`, so an
+option's accessible name stays exactly the manager's name.
+
+**One list, one mount, and the seams stay welded anyway.** `whoOptions()` is the only place a seat
+option is built, the chip's menu carries class `.who-menu` rather than a copy of its rules, and the
+listbox keyboard matches that class rather than the menu's id. That was written when there were two
+mounts and it survives the removal of one: a build asserts a seat option is emitted in exactly one
+place, and that `whoOptions()` is mounted in exactly one — a second mount has to be declared, not
+assumed. The header picker's own guards were **re-pointed onto the chip**, not dropped: the
+constant label, the accessible name carrying the seat, the ten options, the crown on first place,
+the 44px rows and the no-scroll cap.
+
+**A menu that opens from the middle of the page is not on screen just because it is in the DOM.**
+The header picker never needed to care — it sat in the brand row at the top. Both chip menus do:
+focusing an option scrolls *that option* into view and nothing else, which left 1 of N managers
+(Cuckle happens to be 10; Teams lists every roster, not a ten-seat cap)
+and 2 of 6 data sets visible at 375px. `showMenu()` scrolls by the least amount that puts the whole
+panel inside the viewport, and both openers call it. It is asserted, along with the
+`focus({ preventScroll: true })` that has to come first.
+
+**The league ticker is deleted.** Most lopsided lives on History → League lists. Most active /
+Least active are not pressable destinations.
+
+**Seat tabs** appear only when a seat is picked: `home` · `trades` · `partners` · `drafts`. They
+are a `tablist` with roving `tabindex` and arrow keys. There is **no `league` tab** — see §8.
+
+**Score as** is a dropdown, not a row of chips, and it is the only clock control. It is a
+content chip (`chip-lens-btn`) with a fixed `#scoreAs` portal — **not** inside `h1.brand` (§2a).
+Five windows:
+
+| Key | Label (shipped) | What it scores |
+| --- | --- | --- |
+| `t0` | Date of Trade | Accept day. Picks are still picks. Unfiltered. |
+| `y1` | 1 season | Year-end mean over the first year. Hides deals younger than that. |
+| `y2` | 2 seasons | Same, two years. |
+| `y3` | 3 seasons | Same, three years. |
+| `all` | as of today | **Default.** Mean of year-ends from accept through today, became-player. Unfiltered. |
+
+`t0` and `all` are unfiltered; `y1`/`y2`/`y3` hide a deal that has not lived the clock and say so
+above the list (`livedHint`). The dropdown button carries a dot when the clock is not `all`.
+
+### 2a. Where the clock lives, and where it does not
+
+It is **not** in the brand header. A generate-time guard forbids a clock control inside
+`h1.brand` (the 288px row cannot hold wordmark + `#leagueSub` + a window name). The trigger is
+a `chip-lens-btn` on the screens that use a clock; the menu portals to fixed `#scoreAs` so
+`render()` replacing `#app` cannot destroy the open panel. `paintLens()` runs after the body is
+built, because `renderDrafts()` pins the clock for its own render and restores it on the way out.
+
+The visible label is **the window alone** (`as of today`, `Date of Trade`, `2 seasons`) — not
+`Score as …`. `Score as` lives in the accessible name. The brand row must not grow a second
+copy of this control.
+
+It **hides on Champions Path and on Drafts**, which are the two screens the clock cannot move.
+`renderTitles()` reads no clock at all — no `lens`, no `chipLived()`, no `clockName()` — and the
+Drafts tab pins the clock to `all` for the whole of its render, so every pick is graded from accept
+day whatever the control says. Leaving it visible there would put a control on screen that visibly
+does nothing, which is the ticker's dead-pill defect (§below) in a new place. The set of screens the
+clock is *offered* on is therefore exactly the set that rendered it before: league home, a seat's
+home, both trades lists, partners and the full-screen trade. The selected window is state, not
+markup, so a trip through Drafts or Champions Path brings the control back reading what it read on
+the way in.
+
+Its panel is absolutely positioned against `.lens-wrap` inside the `h1`, which is why
+`h1.brand { overflow: visible }` is **load-bearing again** and still asserted: a clip there would
+cut a 418px panel down to the 44px header, which is exactly how the seat picker shipped unusable
+twice (A9). `.lens-wrap` stacks at `z-index: 5`, above `.filter-wrap` at 4 and `.ds-wrap` at 3, so
+an open panel paints over the chip box it drops across — verified by hit-testing the overlap point,
+not by reading the sheet. Opening it closes every other popup and opening any of them closes it, so
+two menus can never be open over each other.
+
+All five are flatten-only. **The today multi-source blend is not on this menu.** Trade rows still read
+`windows[lens]`. The calculator (`?view=calc`) is the first screen that **renders** the today /
+`even` blend. Whether the blend also earns a sixth Score-as entry is an open user decision
+(`DASHBOARD_AUDIT.md` §8c).
+
+URL state: `?me=<display name or user_id>&view=<tab>&t=<transaction_id>&lens=<key>&title=<season>&tab=<homeTab>`.
+`tab` is `teams` / `news` / `ledger` / `history` when those tabs are open; omitted on Home.
+Stored `homeTab=league` is an alias for Home. Boot reads every param; an unknown value falls back
+to Home rather than throwing. `history.replaceState` fires only when the URL string actually changes.
+
+### 2b. Five cells (Linear pill)
+
+Four labeled destinations plus Menu in a floating pill:
+**Home | Teams | News | Ledger | Menu**. Not a top underline bar. First tab label is
+**Home**. `homeTab` stores `home`. Menu is three stacked lines only (`aria-label="Menu"`).
+Tapping it opens a **separate** glass popover above the pill: header (gold mark +
+**More**), then **Calculator**, **League Data**, **Settings** as icon + label rows
+with a gold capsule on hover / selected. Three reserved slot nodes stay in the
+card; empty slots collapse (Linear hamburger pattern from the rizz_abh video).
+The pill stays a pill. No dim overlay. No + FAB. League Data keeps the
+internal id `history` (`?tab=history`; `?tab=data` also opens it). News is `?tab=news`
+(`?view=news` remaps onto it). Ledger may badge as a gold dot. News may badge a missed
+count. No sixth cell. No + FAB. Calculator, Settings, and Titles stay sub-screens.
 
 ---
 
-## 5. First 3 years on the existing spark
+## 3. Home
 
-The spark already plots **each side’s received bag** at year-end (+ today). Colors: green, blue, gold (max 3 lines). Do not add a library.
+**News** — a full-page Twitter-style feed. No Alerts / Vote strip on this tab.
+Vote lives on the open-trade ticket. Each post has Share.
 
-**RECOMMEND** to make the window readable, in later slice, without a new chart:
+**No Recent Trade chip on Home.** The H2H chip still
+renders on the open-trade screen and on Teams / History feed cards.
 
-1. Keep the full spark (career context).
-2. Caption: `Each line = that side received bag at year-end · row number = received − sent (first 3 years)` when the y3 chip is on; `(today)` otherwise. Draft sparks stay `Green = player · Blue = pick`.
-3. Shade the 3-year span: a single `<rect>` in the existing SVG from the first year-end ≥ accept to the last year-end ≤ accept+3y (or today). Use a dim fill (`#1c1c22` / 20% white). No second series.
-4. Optional: list the dates that entered the mean (`2020-12-31 · 2021-12-31`) in the caption. That is how you show “2019 YE was empty” without a tooltip stack.
+**Cuckle trade calculator** · its own row on Home. Title-style gold banner (cartoon calc
+plate). Opens `?view=calc`.
 
-Do **not** draw a fourth line for the 3y mean. The chip number is the mean; the spark is the path.
+**Team Ideas** — omit if signed out (same rule as Alerts). Heading only — no section
+lede and no still-held firsts caption. Signed-in: one to three talks,
+and **every card includes you**. Never a pair of two other managers. Prefer three different
+counterparties and distinct jobs from **Upgrade / Downgrade / Swap / Buy / Sell**.
+The claimed seat’s **window** (`seat-direction.json` label, else live bag route) picks
+which jobs to hunt: Win-now wants upgrade / buy / swap; Rebuild / Hard rebuild wants
+downgrade / sell / swap; Reload mixes from holes and surplus. Do not backfill three
+Swaps when a real Upgrade or Sell exists. Do not invent a fake job.
+
+- **Upgrade** — send a decent same-position piece plus picks or another player, receive a
+  foundation (stud) at that position.
+- **Downgrade** — sell high on a foundation, receive a lesser same-position piece plus
+  picks or players on top.
+- **Swap** — value-adjacent 1-for-1. Prefer a cuff fit (`cuffs.json`) or a stack (your
+  QB throws to that skill, or their QB throws to yours).
+- **Buy** — add depth or a startable, paying with surplus-position capital or picks.
+- **Sell** — move extra capital (surplus / picks) without a same-position climb or drop.
+
+Pair label is `You ·` the other seat. Card meta starts with the window pace
+(`Win-now · a few moves can finish it` / `Reload · this year or next` /
+`Rebuild · not this year` / `Hard rebuild · 2-3 years out`) then the job why.
+Historic Win-now / Investor tape labels do not move any number. Refuse still vetoes
+(never send a starter into a Hard rebuild sold-down position). Empty `buy[]` on a
+Reload / Win-now does not blank the Home slot. Meta may name a flatten-vs-today split
+(`markets bid up` / `markets cooler on` / `new on the market books`) and a buy / fair /
+sell chip from `pe.json` — signal only. Partner memory (from `trade_boards.sides` +
+`windows.all`, threshold `GRADE_EVEN`) may add `you extract vs X` / `they extract vs you`
+/ `even tape vs X` — words only, no numbers. Startable floors: QB 2 / RB 2 /
+WR 3 / TE 1 at today ≥ 2200; stud ≥ 5500; deep = 2+ extras above 1800. Tap opens the
+calculator with **your** outgoing pieces on side A. No bag numbers. Do not invent a
+fourth card or “Open the calculator” filler.
+The News Feed is the **News** tab: a full-page scrollable list, no Vote chip.
+It is not a Home door and not a bottom peek.
+
+Draft Data, Cuffs, Champions Path, and League Data Sets live on **Data**, not stacked on Home.
+
+### 3b. Calculator
+
+`?view=calc`. Two sides stacked (Team 1 sends / Team 2 sends — the picked team's
+roster pieces they would give up). Team pickers are optional
+button menus (not a native `<select>` — remounting that on iOS reopened the team list).
+The open list sits **in flow** under the header so `.calc-block { overflow: hidden }` cannot
+clip it to two names. Picking a name closes the menu and ignores the ghost tap that would
+open it again.
+With no team, search stays on: typing players or picks searches the whole today book
+(research — owner in the meta). Choosing a team **drops the search bar** and opens a
+**self-contained scroll list** of that seat’s remaining roster plus still-held draft picks —
+**one list, highest today value first**, no second Players / Draft picks grouping, no
+duplicate rows, no raw Sleeper ids labeled “Player”. The pane keeps its scroll through
+re-renders; a team change starts at the top. Every row shows the today value. Tap highlights a piece (tap again to clear); many can be on at once. **Done** adds
+the highlighted set to that side and closes the list. **Close** dismisses without adding.
+**Add from roster** reopens it. It does not wipe pieces already on that side. Selected
+assets are rows (name, pos/team, value, remove). Card footers are the send pile **plus**
+any Value Adjustment on that card (one add, one round). Compare bar is **receive**
+amounts with Value Adjustment folded in via `applyVa` on the flipped bags
+(stud-for-quantity bump lands on the side that receives the star). Gold fill length is
+the receive **gap** (`gap / 3000` of that half; empty when |gap| < 25; full at a few
+thousand reaches that end) growing from the **center tick** toward the manager who is
+ahead — not from the edge, and not pile share. **Favors** names the manager who would
+**receive** the larger VA-adjusted pile. Even-up copy and leftover chips stay on the short **send** pile;
+league leftover stays raw capital percents. After both sides are priced, **League
+leftover** is percents of league capital (from → to), not bag totals.
+A **Vote** nudge may open the last tape deal between those two names when the room has
+no choice yet. Roster meta and selected player rows may chip buy / fair / sell from
+`pe.json`. Pick rows show a collapsed became / still-a-pick line and a **tape** toggle
+for hop values. Price book is today
+/ `even` (0.25 flatten + 0.30 KTC + 0.25 FantasyCalc + 0.20 DynastyDealer, renormalized)
+plus Value Adjustment via `calcReceiveTotals` / `applyVa` on the hypothetical receive
+bags. A non-zero bump is a gold **Value Adjustment** line on the **star send card**
+(fewer pieces) and under the compare receive that banks it. Team Ideas even talks reuse that helper. Team home has a
+**Price a deal** door (wipe first; if you are not that seat, A = you and B = them).
+Votes do
+not appear on a hypothetical and do not change the number. How-it-works copy does not
+sit on the screen: one **Info** control at the bottom opens the blend formula,
+the VA formula (`0.15 × extras × star × damp`), and a
+worked example.
+After both sides are priced, **Share trade** paints one dark card image (send piles,
+VA, receive totals, center-out meter) and opens the OS share sheet so it can be
+texted as a single picture. File share when the browser allows it; otherwise copy
+or download `cuckle-trade.png`.
+
+### 3c. Titles and Emblems
+
+Profile barracks (`?view=cosmetics`) from Settings → Profile and Account. Shared catalog of 124 (62 matched title↔emblem pairs).
+Equip one title and one emblem. The title **list** is a 3-column grid of the same
+1024×180 crop scaled down, grouped by unlock (week-score bands sit in one wrapping
+block). Extra titles wrap inside their group. The equipped calling card and the
+detail sheet stay full-bleed.
+Championship titles outrank every other award in prestige. Locked shows the
+requirement; unlocked shows the receipt. Visual only. The equipped pair paints as a calling
+card on **that manager's team home** (under the seat name, above the four tabs). Your equipped
+emblem also paints next to your seat name; the title shows on the barracks / Profile plate.
+Broader title paint across the app is later — see [`COSMETICS_SDD.md`](./COSMETICS_SDD.md) and
+
+[`plans/awards_titles_emblems.md`](./plans/awards_titles_emblems.md).
+
+**Data** is the league deal-research terminal (visible tab label; internal `homeTab` stays
+`history`). Law: [`DATA_SDD.md`](./DATA_SDD.md). Cold load is **Your board**
+(labeled doors only). Give / Get, Moves, League, and More are parked. There is
+**no Data top search**. No bag totals. The **trade block** is league-readable and
+owner-write on `public.seat_trade_block` (cap 8). Snapshot facts stay in parked
+desks.
+**Teams** is the door into a seat (header picker stays gone — §2). Do not put bag totals on Home.
+Do not restore Best 10 / Worst 10. Style labels (Win-now / Rebuild) may caption a row; they
+must not move a clock or a delta. Votes never enter these numbers.
+
+**League Data Sets** (Data → Lists) — one list on screen. Five sets: Most lopsided trades · Most
+passed around · Least traded · Forever players · Homesteaders. **Nothing is selected on a cold
+load.** The Home tab and a Data back chip both return to Data (Moves) / Lists.
+
+The old popup dropdown is gone. Rooms are in-flow. Data has no top search.
+
+**Its height is capped to its own list, not to a slice of the viewport.** The old cap,
+`min(100dvh - 96px, 480px)`, was a number six options never reach, so it never bit: the panel
+measured 439px at 320px and simply hung off the bottom of the screen. The cap is now
+`min(calc(6 * 76px + 34px), calc(100dvh - 96px))` — six rows at the 76px a two-line option takes at
+320px, five 4px gaps, 12px of padding and 2px of border — which is the same rule the seat menu is
+held to, and the build checks the option count against it, so a sixth set fails rather than ships.
+With `showMenu()` (§2) the whole panel is on screen when it opens: **6 of 6 options inside the
+viewport at 320, 375, 390 and desktop, `scrollHeight == clientHeight` at all four**, against 4, 1,
+3 and 6 before.
+
+**The two blank chips are `span`s, not `button`s.** No `tabindex`, no `data-*`, no role, nothing
+for a handler to find — a dashed edge, a dimmed em dash and `cursor: default`, and `aria-hidden`
+because a placeholder is not a reading. This is the ticker's dead-pill rule (below) applied to a
+control four times the size: an inert cell that looks pressable is a defect, and the generate-time
+guard that closed it for the pills now covers the chip grid too.
+
+`Score as` is a **separate** control and stays one, and now in a separate place: the clock is a
+global setting in the brand header, this picks which list is on this one screen. Two axes, two
+menus, two homes.
+
+**Most lopsided trades** — top 10 sides by absolute margin on the selected clock, deduped to one
+side per transaction. This is the **permanent** replacement for the old Best 10 / Worst 10 board
+(§8). Filtered by the lived clock, so `all` shows the newest deals, and it is the one set the
+`Score as` clock acts on.
+
+**The ticker** carries a pill per set, which selects it and scrolls to it. A pill with no
+destination — `Most active`, `Least active`, whose league-wide Traders list was deleted in D4b —
+is a static `span`, not a `button`: they shipped as buttons carrying an empty destination, so they
+looked pressable and were ignored on every tap.
 
 ---
 
-## 6. Best / Worst
+## 4. Team home
 
-HAVE: complete 2-team only; clocks **today_delta** and **aged**; windows 3m / 6m / 1y / 3y / all by **trade date**; Home teasers = all-time today.
+**The seat is named on screen, once, above the tab row.** `h2.screen-h.seat-h` carries an `.sr-only`
+`Team: ` prefix and the manager's display name, on all four tabs and on none of the league-wide
+screens, which title themselves. With no picker in the header this heading is the **only** thing on
+those four screens that says whose seat you are in — the partners and drafts tabs named the seat
+zero times in the page body before it existed — so it is a blocker rather than a nicety, and it is
+asserted at generate time along with the `tabs.length` gate that keeps it off Champions Path and
+the full-screen trade. It is also where `focusNext` lands after a seat is taken. `overflow-wrap:
+anywhere`, because a heading has no ellipsis to fall back on and `DarkWingDucks2023` is 17
+characters with no break opportunity.
 
-**Third clock on these boards? RECOMMEND no** until the 3y lens is trusted (short windows, pick-floor, dropped 2019 YE). Shipping “Best 3-year smash” now would crown 2026 deals whose “3 years” is floored-today.
+**Equipped title + emblem** sit directly under that heading as the same calling card used in
+barracks (thin banner + 40px mark). Omitted on team home when that seat has not equipped
+either. The **Teams list** always paints the card: selected art when they have equipped,
+blank banner + blank emblem when they have not. Anyone opening the seat sees that pair —
+not the viewer's.
 
-When (if) it ships: same window chips, a third clock labeled **First 3 years**, still 2-team complete only, still exclude incomplete and null T0-aged rules as today.
+**GM redraft Home tab** is the career book — the same crowning achievements / book /
+past names a manager sees at onboarding, with year money, RS place, path (championship,
+3rd-place game, first round, regular season), record, and points. Name + title + emblem
+stay in the chrome above the tabs. Cuckle dynasty Home stays the trade story (best/worst
+deal, partners, draft tape).
+
+**Six style tiles**, all read from `data/ui/marks.json` (§7). Tapping one opens a ten-row league
+chart for that metric, sorted, with your seat highlighted. The chart draws from the rows already
+loaded at boot; it must never fetch a seat file.
+
+| Tile | Reads | Labels |
+| --- | --- | --- |
+| Run | total and per-deal on the selected clock | Ahead / Behind / Even |
+| Volume | two-way trade count | Hyper 80+ / Active 40–79 / Quiet |
+| Posture | picks-for-players vs players-for-picks | Buys picks / Buys players / Swap shop (within 5) |
+| Manners | partner grades **on the selected clock** | Extracts / Gets extracted / Fair |
+| Aging | mean of (`all` delta − `t0` delta) on 2-team deals | Aged up / Aged down / Held (±100) |
+| Draft | mean rookie surplus | Hit factory >200 / Miss factory <−500 / Mixed |
+
+Then: **Best deal**, **Worst deal**, two **Partners** (your best and worst per-deal), and your
+rookie **hit** and **miss**.
+
+Every one of those partner numbers comes from `partnerPer()`, the single per-partner helper. The
+tile and the Partners tab cannot disagree, because the tile is a tally of exactly the grades the
+tab prints. ±100 is the one `GRADE_EVEN` threshold in the browser; `apply-value-adjust.mjs` holds
+the matching `EVEN`.
+
+**No Home hero.** The old single big `realized_per_trade` number is gone and the `.hero` CSS with
+it. Whether a hero returns is still an open user decision — do not invent one.
 
 ---
 
-## 7. Partners and drafts
+## 5. A trade row
 
-- Partners: 2-team complete only. ±100 = you extract / they extract / even. 3-team excluded from the grade, included in Trades.
-- Drafts: Rookie 2020–26 surplus; Startup 2019 by player today (no 2019 pick cost). Sparks as Home rookies.
+Closed: `you {received} ← margin → {sent} {them}`, with the date beneath. The margin is
+`round(today) − round(sent_today)` on the selected clock — round each bag, then subtract, so the
+middle always equals the difference of the two figures shown. Margin colour follows its sign;
+`—` and `0` are neutral.
+
+The row is a `<button>`; the expanded detail is its **sibling**, not its child, because the detail
+holds clickable pick legs and a button may not contain a button. `aria-expanded` tracks the state,
+and focus survives the rebuild that expanding triggers.
+
+Open:
+
+1. **You received** · total, then each leg with its value.
+2. **You gave up** · total, then each leg.
+3. **Value Adjustment**, when non-zero, as its own line in the bag it belongs to.
+4. One extra bag per other seat when `others.length > 1`, titled `{name} received`, with the same
+   Value Adjustment line. Two-team rows carry no `other_bags` in the payload at all.
+5. Pick legs expand a hop tape: date · from → to · sold | used | held.
+6. Spark of each side's received bag at year-end plus today. A missing year-end is a **gap**, not
+   a zero.
+7. **Share proof** ([`MEMORY_SDD.md`](./MEMORY_SDD.md)): `shareProofNow()` on the
+   open trade, hop tape, and every receipt chip copies a text receipt (English
+   verdict + one number + URL) into the OS share sheet. This is not the
+   calculator’s hypothetical PNG. Deep link `?r=trade&t=` (aliases `?tx=`,
+   `?view=trade&t=`) must open this same ticket. Unsigned share links skip the
+   gate (`appScreen = "receipt"`).
+
+Incomplete side: badge `no DP row`, totals `—` when every shown leg is unpriced, margin `—`, and
+**Value Adjustment 0**.
+
+Leg flags: `no DP row` · `as 2028` · `Mid`.
 
 ---
 
-## 8. Phone-first, CSS-only
+## 6. Tabs
 
-- Viewport + safe-area padding already in `index.html`. Keep 44px targets.
-- One column of bags on small screens; two at `min-width: 640px`.
-- Tiles 2-up on phone, 5-up when wide (ten names).
-- Existing variables only (`--bg --card --line --text --muted --dim --green --red`).
-- No Tailwind, no Recharts, no new font.
+**Trades** — year filter (radios in a `radiogroup`; exactly one year at a time) plus the clock.
+Filtered by the lived clock, same as the home tiles, with `livedHint` above the list.
+
+**Partners** — one row per partner: complete count, deal count, grade, per-deal margin. Tapping one
+lists that partner's deals on the selected clock.
+
+**Drafts** — rookie surplus (player today − pick cost on draft day) and a startup toggle. Startup
+picks carry a real `pick_cost`, so their margin is `player − cost` like every other pick. Sort by
+date or by surplus; filter by round (no 5th rounders exist in this league). This tab pins the
+clock to `all`.
+
+**Champions Path** (`?view=titles`) — one entry per title season: previous season, offseason, then
+the year they won. Deliberately outside the trade needle: nothing here feeds a delta.
 
 ---
 
-## 9. Later slices (list, do not implement)
+## 7. Where numbers come from
 
-Errors, waste, and edges to fix **after** the 3y chip is trusted. Not this spec pass.
+The pipeline owns all arithmetic. The browser formats.
 
-1. **Stop shipping `other_bags` on 2-team `slimTrade`.** UI already hides them. Biggest easy shrink of `me/*.json` (SF69erss is 561 KB).
-2. **`trade_boards.sides` (574 rows) in `league.json`.** Needed for client-side windows. If we add a 3y clock later, do not duplicate the whole side object — add one number per row, or rank on rebuild and ship the five window packs.
-3. **Apostrophe hazard.** Fixed for captions (JSON `fetch`, HTML text). Keep it that way. `Wan'Dale`, `Ja'Marr`, `De'Zhaun` are in labels and board headlines. Never `'` + label + `'` inside a `<script>`.
-4. **`?me=` race.** Abort or serialize `selectMe`. Board `data-open-me` chains `selectMe` then `view = trades`.
-5. **Home hero vs y3 chip mismatch.** Either disable the hero change (current, correct) and dim the chip’s effect on Home’s latest-trades, or add one line under the hero: “Rows below use First 3 years; this number is still today.”
-6. **Spark `|| 0`.** Null year-ends draw a crash. Use skip / gap, or omit that x.
-7. **Trade row is a `<button>` wrapping hop expanders.** Legal-ish (divs), messy for a11y. Later: `div.row` + keyboard. Don’t nest real buttons.
-8. **Click-handler leftovers.** One long `if` on `#app`. Home teaser `data-board` forces League. Adding chips will collide unless names stay distinct (`data-lens` / `data-board` / `data-window`).
-9. **Duplicate pricing.** `partnersFor` twice in self-check; `year_ends` + `pick_year_ends` on every slim trade; unused `t0_legs` on the open row (HAVE computes them, UI does not list T0 legs — aged caption only). Fine until files hurt.
-10. **Provisional 3y on 2025–26 rows.** Visual: a `not yet 3y` badge so a +406 on a four-day-old trade is not read as a career grade.
-11. **3-team receiver-only.** If `sent` is empty, say “you sent nothing” instead of `sent 0`.
-12. **Incomplete IDP copy.** “no DP row” is true; “IDP / not on Superflex board” is kinder for Bosa / Parsons.
-13. **Publish cadence.** Not a UI feature. A line in the caption (`as of 2026-08-28`) is enough until someone automates `node build.mjs`.
+| File | Size | Holds |
+| --- | --- | --- |
+| `members.json` | <1 KB | every seat (Cuckle is 10; N-team leagues list all rosters) |
+| `league.json` | 266 KB | `today`, `traders`, `player_lists`, `trade_boards.sides`, `format` (plus `drafters_rookie`, now unread) |
+| `marks.json` | 6 KB | N seats × 6 metrics × clocks — everything the tiles and the chart need |
+| `me/<user_id>.json` | 156–602 KB | that seat's trades, partners, drafts |
+| `picks.json` | 111 KB | hop tape per asset key |
+| `titles.json` | 4 KB | Champions Path |
+| `votes.json` | <1 KB | fallback vote tallies when Supabase is unreachable (opinion only — never value) |
 
-Ponytail: every item above is a delete or a caption unless Truman asks for a new clock.
+Votes are the one number that does **not** come from the pipeline. The live league tally is read
+from Supabase and `localStorage` is the source of truth for this device's own ballot; committed
+`votes.json` is the fallback. See [`VOTES_SDD.md`](./VOTES_SDD.md).
+
+A `trade_boards.sides` row ships exactly what the page reads: `transaction_id`, `date`, `user_id`,
+`name`, `other`, `headline`, and `windows[lens].{got, sent, incomplete}`. The full row, with
+`today_delta`, `t0_delta`, `aged`, `snaps` and the per-window Value Adjustment, exists only inside
+the pipeline for its own checks.
+
+The browser's inline `applyVa()` is a clone of `value-adjust.mjs` and must stay numerically
+identical to it over every side; that is a standing check. `tradeDelta` is memoised per trade and
+clock — it used to be called inside sort comparators, roughly 2,000 recomputations per home render.
+
+Nothing the UI does not read should ship. `other_bags` on two-team trades, `realized`,
+`recent_trades`, `year_ends`, `partner_headlines`, `legs[].drafted_by`, `hero` beyond `two_way`,
+`partners[].grade`, `league.review_trades` and `drafters_startup` were all removed for this reason.
+`league.drafters_rookie` (~2.5 KB) is the one that got away — it lost its last reader when the
+league screen was deleted, and `revalue.mjs` still emits it.
+
+Before deleting a field, check it against the current generator, not against a snapshot. That is
+not a style note: `drafters_rookie` was **kept** during the payload cut precisely because
+`renderLeague()` read it at the time.
+
+---
+
+## 8. There is no league screen
+
+The board screen (`renderTradeBoards`, `rankSides`, `monthsAgo`, `boardScore`, the `boardClock` /
+`boardWindow` state and their handlers) is **deleted**. The user removed it once before the audit
+was written, an agent restored it on the audit's recommendation, and the user removed it again on
+sight. **Most lopsided trades is the permanent replacement. Do not propose it a third time.**
+
+`renderLeague()` and the two lists it held — `Traders · per complete two-way` and
+`Drafters · rookie surplus per pick` — are **also deleted**, by a separate user ruling. `league`
+is no longer in `VIEWS`; `?view=league` is an unknown view and falls through to league home like
+any other. `boardTape` outlived the board it is named for: it is what Most lopsided and the
+Recent Trade card both render.
+
+`league.traders` still ships because `leagueBubbles()` reads it for the Most active / Least
+active ticker pills. `league.drafters_rookie` now has **no reader at all** and is the one piece of
+known-dead payload still on the wire.
+
+---
+
+## 9. Phone and keyboard
+
+- 375px is the target, not 390px: a 390px device with a scrollbar leaves 375px usable.
+- Every grid track that holds text gets `min-width: 0`. Names ellipsize; **figures never truncate**.
+- The five league tabs share one row and never wrap.
+- 44px minimum on every tap target (`HIG-01` in [`HIG_SDD.md`](./HIG_SDD.md)), including the team
+  menu, the year filter rows, the chips and the Score as trigger and all five of its options.
+  When a list of them stops fitting, the list's cap gives way, not the 44px.
+  The chips' own floor is 56px, because the longest label needs two lines in a 127px cell.
+- One column of bags on a phone, two at `min-width: 640px`.
+- `aria-expanded` on every expandable row. `Escape` closes whatever is topmost: the seat menu,
+  then the clock menu, then a filter panel, then an open pick, draft or trade.
+- A popup opened from mid-page is scrolled into view as a whole (`showMenu()`), never left to the
+  browser's scroll-the-focused-option behaviour.
+- `render()` replaces the whole subtree, so it re-finds the focused control by its `data-*`
+  attributes afterwards.
+- Existing variables only (`--bg --card --line --text --muted --dim --green --red`). No Tailwind,
+  no chart stack, no new font.
+
+---
+
+## 10. Rules that do not bend
+
+- **One identity per number.** Today-blend, pick-at-accept, the year windows and hop-local P&L are
+  separate stories. Never average two clocks.
+- **Windows stay flatten-only.** `t0`/`y1`/`y2`/`y3`/`all` never get the KTC blend; do not backfill
+  KTC onto a historical clock.
+- **Incomplete ≠ zero.** No DP row → list it, drop it from the average.
+- **Zero-sum on complete two-team today-deltas.** Value Adjustment is 0 on any trade with more than
+  two seats, because a seat's `sent` bag does not correspond to any single other seat's `got` bag.
+- **Champions Path stays out of trade-needle math.**
+- **Votes are opinion.** They live in their own file behind their own two doors and never reach a
+  delta, a grade or a ranking.
+- **Ties are legal.**

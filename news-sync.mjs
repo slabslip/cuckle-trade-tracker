@@ -1,0 +1,1953 @@
+#!/usr/bin/env node
+/**
+ * Build data/ui/news.json: NFL news, filtered to players this league actually rosters, addressed
+ * to the manager who owns them, in the league's voice.
+ *
+ * Read-only against every source. Writes every league's news.json (same tweets, per-book tags).
+ * It does not touch the value book, the
+ * Value Adjustment, the lens windows, `today_delta`, partner grades or any ranking — news is a
+ * separate payload with a separate loader, on purpose.
+ *
+ *   node news-sync.mjs                 # fetch live, write every league's news.json
+ *   node news-sync.mjs --report        # fetch live, print the match report, write nothing
+ *   node news-sync.mjs --voice         # print every voice variant, fetch nothing
+ *   node news-sync.mjs --empty         # write a valid empty file (no network)
+ *   node news-sync.mjs --retag-leagues # no network: fan the on-disk tape to every book
+ *   node news-sync.mjs --with-automated  # turn the automated sources back on for this run
+ *   node news-sync.mjs --corpus        # fetch RSS live, write data/fixtures/rss-corpus.json
+ *
+ * ## The feed is manual submissions only
+ *
+ * As of 2026-08-30 the rendered feed carries **only** tweets league members shared in from X.
+ * The automated sources below still work, are still tested and are still wired up — they are
+ * behind the AUTOMATED_SOURCES switch, which is off. Read the note on that constant before
+ * changing anything here; the short version is that the code stays because Path A is the only
+ * attribution in this project that cannot be wrong, and deleting it would throw that away.
+ *
+ * `matchPlayer` and the index builders are exported so a test can run *this* matcher — the one
+ * that ships — over the committed corpus rather than over a reimplementation of it. main() is
+ * therefore guarded to the direct invocation; `--voice` in the test suite proves that guard
+ * still resolves true, because a guard that silently stopped matching would silently stop the
+ * daily refresh.
+ *
+ * ## Rosters and the mapping
+ *
+ * `data/rosters_now.json` and `data/ui/members.json` already exist: sleeper-sync.mjs writes the
+ * first from `/v1/league/<id>/rosters` and the second from `/users`. Nothing here re-syncs them.
+ * If they are missing, run `node sleeper-sync.mjs` — this script is a consumer, not a second sync.
+ *
+ * ## The two source paths, and why one is much safer than the other
+ *
+ * **Path A — Sleeper's GraphQL `get_player_news`, keyed by player_id.** We ask about a specific
+ * rostered player and get that player's news back. The owner is known before the text is read,
+ * so attribution cannot be wrong. This is the primary path.
+ *
+ * **Path B — RSS.** A headline is prose; which player it is about has to be inferred from the
+ * words. That inference is the most dangerous thing in this feature, because a wrong match tells
+ * the wrong manager their running back tore an ACL. matchPlayer() below is therefore built to
+ * *refuse* rather than to guess, and every refusal is counted in the report.
+ */
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import { CUCKLE_LEAGUE_ID, DATA, isSleeperLeagueId, leagueUiDir, readJson } from "./lib.mjs";
+import { CATEGORIES, classify, leagueLine, leagueLineAsync, noteFreeOfAddress, trimNote, tweetPokeKind, voiceSamples } from "./news-voice.mjs";
+import { appendSmackTip, trimAgentTip } from "./smack-tips.mjs";
+import { PUBLISH_MIN, buildMatchIndex, matchText } from "./news-match.mjs";
+import {
+  RSS_FEEDS,
+  fetchRss,
+  fetchSleeperPlayerNews,
+  fetchSubmissions,
+  fetchTrending,
+  fetchTweet,
+  isCosmeticsShareRow,
+  markSubmissionProcessed,
+  parseTweetUrl,
+} from "./news-sources.mjs";
+import { SKILL_POS, nameCandidateScore } from "./price-today.mjs";
+
+/** Bump when the shape of news.json changes. The UI refuses a version it does not know. */
+const SCHEMA_VERSION = 1;
+
+/**
+ * **The off switch for the automated sources.** Off. `--with-automated` turns it on for one run.
+ *
+ * When this is false, neither Path A (Sleeper's GraphQL `get_player_news`) nor Path B (the five
+ * RSS feeds) is fetched at all, and no row from either reaches `news.json`. The feed is the
+ * submission queue and nothing else. That is what was asked for: *"wipe the news feed now, and
+ * only have it include what i share through our new shortcut"*.
+ *
+ * ## Why the code is still here
+ *
+ * It is a switch and not a deletion, and that is a deliberate choice rather than timidity:
+ *
+ * **Path A cannot mis-attribute, and nothing else in this project can say that.** Sleeper's
+ * `get_player_news` is asked about one `player_id` and answers about that player, so the owner
+ * is known before a word of the text is read. Every other way this app decides who a story is
+ * about — the RSS name matcher, the tweet matcher, `target_name` — is an inference over prose
+ * or over a name somebody typed on a phone, and each can be wrong. Deleting Path A would throw
+ * away the one source in the feature that is right by construction, to save a function call.
+ *
+ * **The stated reason for turning it off is temporary.** The feed went manual because the
+ * shared-tweet path had just landed and the automated rows were drowning it, not because the
+ * automated rows were wrong. The Schefter path is the thing being built towards; when it is
+ * wired, coverage is wanted back. A switch makes that one word. A deletion makes it a rewrite
+ * of 300 lines that already work and are already documented against real failures.
+ *
+ * **Off means off, not filtered.** The check is at the fetch, so a build in this state makes no
+ * request to Sleeper, to ESPN, to Rotowire, to CBS, to Yahoo or to ProFootballTalk. There is no
+ * path by which an automated row can appear in the file while this is false, and main()'s
+ * self-check asserts exactly that rather than trusting it.
+ */
+const AUTOMATED_SOURCES = false;
+
+/** Rows kept in the shipped file. The feed is a scroll box, not an archive. */
+const MAX_ITEMS = 60;
+/**
+ * How many submissions to read. Above MAX_ITEMS because rejected URLs and tweets shared twice
+ * both cost a row here and none in the feed, so reading exactly MAX_ITEMS could ship fewer.
+ */
+const SUBMISSION_FETCH_LIMIT = 200;
+/** Nothing older than this is news. */
+const MAX_AGE_DAYS = 10;
+/**
+ * Summaries are trimmed to this before they ship. RotoBaller's `analysis` runs to full
+ * paragraphs, and the feed row shows two lines of it, so the untrimmed field was most of a
+ * 70KB payload for text no one would read on a phone.
+ */
+const MAX_SUMMARY = 240;
+
+/** Trim to a word boundary and mark it, so a cut sentence does not read as a source's own. */
+function clip(s, n = MAX_SUMMARY) {
+  const text = String(s == null ? "" : s).trim();
+  if (text.length <= n) return text;
+  const cut = text.slice(0, n);
+  const space = cut.lastIndexOf(" ");
+  return (space > n * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:.]+$/, "") + "\u2026";
+}
+
+const args = new Set(process.argv.slice(2));
+
+/** The switch above, with the per-run override applied. Read this, never the constant. */
+const automatedOn = AUTOMATED_SOURCES || args.has("--with-automated");
+
+/* ------------------------------------------------------------- rosters ---- */
+
+/**
+ * Every book that receives the shared-tweet tape.
+ *
+ * Cuckle is always included (legacy `data/ui/news.json`). Every numeric Sleeper id under
+ * `data/leagues/` is a second (or third) book — GM redraft today, any later league tomorrow.
+ * One Shortcut POST fans to all of them; tags are a write-time projection onto each roster.
+ */
+export function listNewsLeagues() {
+  const ids = new Set([CUCKLE_LEAGUE_ID]);
+  const root = `${DATA}/leagues`;
+  if (fs.existsSync(root)) {
+    for (const id of fs.readdirSync(root)) {
+      if (isSleeperLeagueId(id)) ids.add(id);
+    }
+  }
+  return [...ids];
+}
+
+function readLeagueMembers(leagueId) {
+  const id = String(leagueId || "").trim() || CUCKLE_LEAGUE_ID;
+  const ui = `${DATA}/leagues/${id}/ui/members.json`;
+  if (fs.existsSync(ui)) return JSON.parse(fs.readFileSync(ui, "utf8")) || [];
+  const raw = `${DATA}/leagues/${id}/raw/members.json`;
+  if (fs.existsSync(raw)) return JSON.parse(fs.readFileSync(raw, "utf8")) || [];
+  if (id === CUCKLE_LEAGUE_ID) {
+    const legacy = `${DATA}/ui/members.json`;
+    if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8")) || [];
+  }
+  return [];
+}
+
+function readLeagueRosters(leagueId) {
+  const id = String(leagueId || "").trim() || CUCKLE_LEAGUE_ID;
+  const scoped = `${DATA}/leagues/${id}/raw/rosters_now.json`;
+  if (fs.existsSync(scoped)) return JSON.parse(fs.readFileSync(scoped, "utf8")) || [];
+  if (id === CUCKLE_LEAGUE_ID) {
+    const legacy = `${DATA}/rosters_now.json`;
+    if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8")) || [];
+  }
+  return [];
+}
+
+/**
+ * player_id -> { user_id, manager } for every player on a current roster, plus the reverse
+ * index the RSS matcher needs.
+ *
+ * A player on two rosters is impossible in Sleeper, so a collision here means the roster file
+ * is stale rather than that a choice has to be made. It is counted and the first owner wins.
+ */
+export function buildOwnershipFor(leagueId = CUCKLE_LEAGUE_ID) {
+  const id = String(leagueId || "").trim() || CUCKLE_LEAGUE_ID;
+  const rosters = readLeagueRosters(id);
+  const members = readLeagueMembers(id);
+  const nameById = new Map(members.map((m) => [m.user_id, m.name]));
+  const owner = new Map();
+  let dupes = 0;
+  for (const r of rosters) {
+    const uid = r.owner_id;
+    if (!uid) continue;
+    for (const pid of r.players || []) {
+      if (owner.has(String(pid))) { dupes++; continue; }
+      owner.set(String(pid), {
+        user_id: uid,
+        manager: nameById.get(uid) || uid,
+        roster_id: r.roster_id,
+      });
+    }
+  }
+  return {
+    league_id: id,
+    owner,
+    members,
+    dupes,
+    rosters: rosters.length,
+    managers: nameById.size,
+  };
+}
+
+/** Cuckle (or `LEAGUE_ID`) ownership. Kept so existing callers and `--corpus` stay one-arg. */
+export function buildOwnership() {
+  return buildOwnershipFor(CUCKLE_LEAGUE_ID);
+}
+
+/**
+ * Union of every book's rostered player_ids so a GM-only name still identifies.
+ * Shared players keep the first book (Cuckle) as a placeholder; write-time retag
+ * overwrites seat names with that league's own owners.
+ */
+export function mergeOwnership(packs) {
+  const owner = new Map();
+  const ordered = [...(packs || [])].sort((a, b) => {
+    if (a.league_id === CUCKLE_LEAGUE_ID) return -1;
+    if (b.league_id === CUCKLE_LEAGUE_ID) return 1;
+    return String(a.league_id).localeCompare(String(b.league_id));
+  });
+  for (const pack of ordered) {
+    for (const [pid, own] of pack.owner || []) {
+      if (!owner.has(String(pid))) owner.set(String(pid), own);
+    }
+  }
+  return owner;
+}
+
+function playersDict() {
+  const path = `${DATA}/players.nfl.json`;
+  if (!fs.existsSync(path)) {
+    throw new Error("data/players.nfl.json missing — run `node sleeper-sync.mjs` first");
+  }
+  return JSON.parse(fs.readFileSync(path, "utf8"));
+}
+
+export function unionMatchIndex(players = playersDict()) {
+  const packs = listNewsLeagues().map((id) => buildOwnershipFor(id));
+  return buildMatchIndex(mergeOwnership(packs), players);
+}
+
+/** Normalise a name for comparison: lower case, no punctuation, no suffix, single spaces. */
+export function normName(s) {
+  return String(s == null ? "" : s)
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\b(jr|sr|ii|iii|iv|v)\b\.?/g, " ")
+    .replace(/[^a-z0-9 ]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * The rostered players, with the names and aliases the RSS matcher will look for.
+ *
+ * Only rostered players are indexed. That is not an optimisation — it is what makes the matcher
+ * tolerable at all. There are 12,225 players in Sleeper's dictionary and roughly 330 in this
+ * league, so restricting the search space removes almost every name collision before it can
+ * happen. The famous one is real: "Josh Allen" is both the Bills quarterback and an inactive
+ * offensive guard, and the dictionary has both.
+ */
+export function buildPlayerIndex(owner, players) {
+  const byName = new Map();
+  const rows = [];
+  for (const pid of owner.keys()) {
+    const p = players[pid];
+    if (!p) continue;
+    const full = p.full_name || `${p.first_name || ""} ${p.last_name || ""}`.trim();
+    if (!full) continue;
+    const row = {
+      player_id: pid,
+      name: full,
+      team: p.team || null,
+      position: p.position || (p.fantasy_positions || [])[0] || null,
+      // The dictionary entry itself, for nameCandidateScore() in matchTweetPlayer(): it reads
+      // `active` and the raw `team`, which the flattened fields above do not carry.
+      raw: p,
+      keys: new Set([normName(full)]),
+    };
+    // Sleeper's own search key, which already drops punctuation and suffixes.
+    if (p.search_full_name) row.keys.add(normName(p.search_full_name));
+    rows.push(row);
+    for (const k of row.keys) {
+      if (!k || k.split(" ").length < 2) continue; // never index a bare surname
+      if (!byName.has(k)) byName.set(k, []);
+      byName.get(k).push(row);
+    }
+  }
+  return { byName, rows };
+}
+
+/**
+ * Which rostered player, if any, this headline is about. Returns null far more often than not,
+ * and that is the design.
+ *
+ * Two rules, both learned from wrong answers this matcher actually gave:
+ *
+ * **1. A full name, never a surname.** "First Last" with suffixes and punctuation removed, on
+ * word boundaries. "Jones", "Smith" and "Williams" appear in dozens of unrelated NFL headlines a
+ * day. It costs real matches — ESPN's "Colts WR Allen arrested on drunk driving charges" names
+ * the player by surname only and is therefore dropped — and that is the right trade.
+ *
+ * **2. The title only. Never the summary.** The first version searched title *and* summary and
+ * attributed Rotowire's "Jalon Daniels: Wins backup QB job" to **Baker Mayfield**, because the
+ * summary mentions Mayfield as the starter Daniels is backing up. That is precisely the failure
+ * that matters — a manager told a story about a player who is not the subject. A news item's
+ * subject is named in its title; a summary names teammates, coaches and the reporter who broke
+ * it. So attribution reads the title, and the summary is used only to *classify* an item whose
+ * player is already known.
+ *
+ * **Two rostered players in one title means the item is dropped, not resolved.** There is no
+ * tie-break better than silence: "Raiders expected to name Kirk Cousins Week 1 starter over No. 1
+ * pick Fernando Mendoza" is genuinely about two owned players, and picking one would be a guess.
+ */
+export function matchPlayer(title, index) {
+  const hay = ` ${normName(title)} `;
+  const hits = new Map();
+  for (const [key, rows] of index.byName) {
+    if (!hay.includes(` ${key} `)) continue;
+    for (const row of rows) hits.set(row.player_id, row);
+  }
+  if (hits.size === 0) return { row: null, reason: "no_player" };
+  if (hits.size > 1) return { row: null, reason: "ambiguous", candidates: [...hits.values()] };
+  return { row: [...hits.values()][0], reason: "matched" };
+}
+
+/* --------------------------------------------------- shared tweets (X) ---- */
+
+/**
+ * A manager display name, as typed into an iOS Shortcut, to a Sleeper `user_id`.
+ *
+ * `target_name` carries a NAME rather than a `user_id` — the inversion of the rule the rest of
+ * this repo follows, argued in db/schema.sql section 5 — because the writer is a phone share
+ * sheet and nobody is picking an 18-digit snowflake out of a list on a phone. The cost of that
+ * choice is paid here.
+ *
+ * ## The rule, in the order it is applied
+ *
+ * The input is normalised with normName() first, which lower-cases, strips punctuation and
+ * suffixes, collapses runs of whitespace and trims. So `"  SF69erss  "` and `"sf69erss"` are
+ * already the same string as `"SF69erss"` before any comparison happens. Then, against every
+ * key this seat is known by (canonical name plus every string in `data/aliases.json`):
+ *
+ *   1. **Exact**. One seat wins.
+ *   2. **Prefix**, if nothing was exact: keys that *start with* the input. `big` -> `bigjberg`.
+ *   3. **Substring**, if nothing was a prefix: keys that *contain* it. `berg` -> `bigjberg`.
+ *
+ * Two rules bound it. **Any tier that produces more than one seat resolves to null** — the item
+ * publishes addressed to nobody rather than to a coin flip. Hits are collapsed by `user_id`
+ * before that check, so two aliases of the *same* seat ("San Francisco 69ers" and
+ * "SanFrancisco69ers") counting as two keys is not a refusal. And **tiers 2 and 3 need at least
+ * three characters**, because a one- or two-letter fragment is not a person's name, it is a
+ * typo, and it would match half the league.
+ *
+ * ## Why aliases are part of the search, not a side table
+ *
+ * Members rename themselves. Sleeper's current `display_name` and `team_name` change; the pinned
+ * name in `aliases.overrides.json` does not. `sleeper-sync.mjs` already accumulates every name a
+ * seat has ever worn into `data/aliases.json` — "The Tips", "Evil Ducks", "San Francisco 69ers",
+ * old usernames, trophy-emoji display names. A Shortcut list that offers those strings (or a
+ * sharer who types the team name they remember from last year) must still land on the same seat.
+ * Searching only `members.json` was why a correctly chosen historical name could publish under
+ * "The league": the name was right, the resolver had never heard of it.
+ *
+ * ## This reverses an earlier decision, on purpose
+ *
+ * The first version of this function refused partial matches outright, arguing that "Bubba"
+ * matching `BubbaCuckShremp` today is "Josh" matching the wrong Allen tomorrow. That argument is
+ * about matchPlayer(), and it does not carry here, because the two searches are not alike:
+ *
+ *   * matchPlayer() searches an **open** set — 12,225 names in Sleeper's dictionary, growing
+ *     every week, containing two Josh Allens and two Michael Carters. A surname there is
+ *     genuinely ambiguous and the ambiguity is invisible until it is wrong.
+ *   * This searches a **closed** set of ten, fixed, known, and inspectable at build time. There
+ *     is no unseen eleventh member for `big` to collide with, and if there ever is, rule one
+ *     catches it and refuses.
+ *
+ * And the failure modes are opposite in cost. There, a wrong match tells the wrong manager his
+ * running back tore an ACL. Here, the worst case is a jab aimed at the wrong seat — and the
+ * realistic case, the one actually seen, is a Shortcut sending `"  sf69erss  "` and the feed
+ * silently addressing it to nobody because of two spaces. Refusing was costing real attribution
+ * to prevent a collision that cannot occur in a ten-name set.
+ *
+ * @param {string|null|undefined} targetName
+ * @param {Array<{user_id:string,name:string}>} members
+ * @param {Record<string, string[]>|null} [aliasesByCanon] canonical display name -> known names
+ */
+function resolveTarget(targetName, members, aliasesByCanon = null) {
+  const want = normName(targetName);
+  if (!want) return null;
+
+  // Every string this seat answers to, all pointing at the same pinned manager name. The
+  // canonical name is always first so an exact match on today's members.json wins without
+  // needing the alias file present (self-test and synthetic fixtures pass aliases as null).
+  const keys = [];
+  for (const m of members || []) {
+    if (!m || !m.user_id || !m.name) continue;
+    const seen = new Set();
+    const push = (raw) => {
+      const key = normName(raw);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      keys.push({ user_id: m.user_id, manager: m.name, key });
+    };
+    push(m.name);
+    const extras = aliasesByCanon && aliasesByCanon[m.name];
+    if (Array.isArray(extras)) for (const a of extras) push(a);
+  }
+
+  // Collapse to unique seats. Two keys of one manager are one candidate; two managers are a
+  // refusal. Length-of-key-rows was enough when each seat had one key; with aliases it would
+  // refuse "san" against SF69erss's two San Francisco spellings.
+  const pick = (hits) => {
+    const bySeat = new Map();
+    for (const h of hits) bySeat.set(h.user_id, h);
+    if (bySeat.size !== 1) return null;
+    const one = [...bySeat.values()][0];
+    return { user_id: one.user_id, manager: one.manager };
+  };
+
+  const exact = keys.filter((x) => x.key === want);
+  if (exact.length) return pick(exact);
+  if (want.length < 3) return null;
+
+  const prefix = keys.filter((x) => x.key.startsWith(want));
+  if (prefix.length) return pick(prefix);
+
+  const inside = keys.filter((x) => x.key.includes(want));
+  return inside.length ? pick(inside) : null;
+}
+
+/**
+ * Who a shared tweet is about, and — when the sharer did not say — which single manager it may be
+ * addressed to.
+ *
+ * ## This is `news-match.mjs`, cherry-picked, not a new matcher
+ *
+ * `matchText()` came across from `cursor/x-discord-pipeline-af37` (PR #15) with its fixtures and
+ * its test suite, because it was built and measured for exactly this input. Against 139 real RSS
+ * items it agreed with `matchPlayer()` on all 27 of that matcher's matches, **lost none and
+ * re-attributed none**, and added 18 deliberate refusals — including the *"Jalon Daniels: Wins
+ * backup QB job"* headline that this repo mis-attributed in production. Writing a second matcher
+ * here would have been a second thing to keep in agreement with that measurement.
+ *
+ * It replaces the local `matchTweetPlayer()`, which is gone. That function existed to add one
+ * thing to `matchPlayer()`: a namesake collision (`Michael Carter` / `Michael Carter II`) broken
+ * with `nameCandidateScore()`. `matchText()` does that and more — it re-opens **every** name hit
+ * against the whole 12,225-player dictionary rather than against the roster, so a post about the
+ * Jaguars linebacker Josh Allen is refused instead of being handed with total confidence to
+ * whoever owns the Bills quarterback. The old function could not see that case at all, because
+ * the linebacker was never a candidate.
+ *
+ * ## What it takes to address a row
+ *
+ * Two conditions, both required, and neither is negotiable downstream:
+ *
+ * 1. **At or above PUBLISH_MIN (0.55).** The matcher scores its evidence rather than voting:
+ *    a full name unique in the dictionary is 0.90, a collision settled by explicit team context
+ *    0.85, a collision settled by ranking alone 0.65, an alias 0.70, a bare surname 0.58. Below
+ *    the line the evidence is a guess and the row publishes under "The league".
+ * 2. **One or more managers above the line.** A single seat is addressed with the locker-room
+ *    "you" voice. Two or more seats (a roundup naming several rostered players) tag **every**
+ *    matched manager on the row — the header lists them, the summary stays impersonal so we
+ *    do not roast the wrong person in second person. `addressable` is still the single-seat
+ *    case; `multi` carries the full set when `seats.size > 1`.
+ *
+ * `reason: "roundup"` (more than MAX_SUBJECTS rostered names) and `reason: "refused"` both arrive
+ * here as an empty subject list, so they fall through to "The league" without a special case.
+ */
+function matchTweetSubjects(text, matchIndex) {
+  const res = matchText(text, matchIndex);
+  const publishable = (res.subjects || []).filter((s) => s.publish);
+  const seats = new Set(publishable.map((s) => s.user_id));
+  // One subject per seat for the primary addressee list; confidence order preserved.
+  const bySeat = [];
+  const seen = new Set();
+  for (const s of publishable) {
+    if (seen.has(s.user_id)) continue;
+    seen.add(s.user_id);
+    bySeat.push(s);
+  }
+  return {
+    res,
+    // Every publishable rostered player named in the text — the row ships all of them for
+    // highlight + team tags, not just the strongest.
+    publishable,
+    // The strongest publishable subject, which is what the row's primary meta line prints.
+    top: publishable[0] || null,
+    // Below-threshold evidence still gets reported, so "where does the line fall in practice" is
+    // answerable from --report rather than by guessing.
+    best: (res.subjects || [])[0] || null,
+    seats,
+    addressable: seats.size === 1 ? publishable[0] : null,
+    multi: seats.size > 1 ? bySeat : null,
+  };
+}
+
+/** Compact player list persisted on each news row for multi-highlight + team tags. */
+function playersFromSubjects(subjects) {
+  if (!subjects || !Array.isArray(subjects.publishable)) return [];
+  return subjects.publishable.map((s) => ({
+    player_id: s.player_id,
+    player: s.player,
+    player_team: s.player_team || null,
+    player_position: s.player_position || null,
+    user_id: s.user_id || "",
+    manager: s.manager || "",
+    confidence: s.confidence,
+  }));
+}
+
+/** Unique fantasy seats that own any publishable matched player (order = confidence). */
+function managersFromSubjects(subjects) {
+  if (!subjects || !Array.isArray(subjects.publishable)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const s of subjects.publishable) {
+    if (!s.manager || seen.has(s.user_id)) continue;
+    seen.add(s.user_id);
+    out.push(s.manager);
+  }
+  return out;
+}
+
+function managersFromPlayers(players) {
+  const out = [];
+  const seen = new Set();
+  for (const p of players || []) {
+    if (!p || !p.manager || seen.has(p.user_id || p.manager)) continue;
+    seen.add(p.user_id || p.manager);
+    out.push(p.manager);
+  }
+  return out;
+}
+
+function retagPlayers(players, ownerMap) {
+  return (players || []).filter((p) => p && p.player_id && p.player).map((p) => {
+    const own = ownerMap.get(String(p.player_id));
+    return {
+      ...p,
+      user_id: own ? own.user_id : "",
+      manager: own ? own.manager : "",
+    };
+  });
+}
+
+function memberByNameOrId(members, own) {
+  if (!own) return null;
+  const names = new Set((members || []).map((m) => m.name).filter(Boolean));
+  const ids = new Set((members || []).map((m) => m.user_id).filter(Boolean));
+  if (own.manager && names.has(own.manager)) {
+    const hit = (members || []).find((m) => m.name === own.manager);
+    return { user_id: hit ? hit.user_id : own.user_id, manager: own.manager };
+  }
+  if (own.user_id && ids.has(own.user_id)) {
+    const hit = (members || []).find((m) => m.user_id === own.user_id);
+    return { user_id: own.user_id, manager: hit ? hit.name : own.manager };
+  }
+  return null;
+}
+
+/**
+ * Project a matched row onto one book's seats.
+ *
+ * `target_name` stays Cuckle-authoritative at ingest. Other books only keep that
+ * seat if the same name/id sits in *their* members file — SF69erss never lands
+ * on GM. Unrostered-here players stay on the row with an empty manager so the
+ * name still highlights.
+ */
+export function bindAttributionToLeague({ target = null, how = "none", playersList = [] } = {}, ownerMap, members) {
+  const players = retagPlayers(playersList, ownerMap);
+  const playerManagers = managersFromPlayers(players);
+  const keptTarget = memberByNameOrId(members, target);
+  if (how === "target_name" && keptTarget) {
+    const tagged = [keptTarget.manager];
+    for (const name of playerManagers) {
+      if (!tagged.includes(name)) tagged.push(name);
+    }
+    return { players, own: keptTarget, taggedManagers: tagged, how: "target_name" };
+  }
+  if (playerManagers.length >= 2) {
+    const first = players.find((p) => p.manager);
+    return {
+      players,
+      own: { user_id: first.user_id, manager: first.manager },
+      taggedManagers: playerManagers,
+      how: "player_auto_multi",
+    };
+  }
+  if (playerManagers.length === 1) {
+    const first = players.find((p) => p.manager);
+    return {
+      players,
+      own: { user_id: first.user_id, manager: first.manager },
+      taggedManagers: playerManagers,
+      how: "player_auto",
+    };
+  }
+  if (players.length) {
+    return { players, own: null, taggedManagers: [], how: "player" };
+  }
+  return { players, own: null, taggedManagers: [], how: "none" };
+}
+
+/** Add union-matched players the original Cuckle row missed (GM-only names). */
+export function enrichPlayersFromText(it, matchIndex) {
+  if (!it || !it.tweet_text || !matchIndex) return it;
+  const subjects = matchTweetSubjects(it.tweet_text, matchIndex);
+  const found = playersFromSubjects(subjects);
+  const have = new Set((it.players || []).map((p) => String(p.player_id)));
+  const merged = [...(it.players || [])];
+  for (const p of found) {
+    if (!p || !p.player_id || have.has(String(p.player_id))) continue;
+    merged.push(p);
+    have.add(String(p.player_id));
+  }
+  const next = { ...it, players: merged };
+  if (!next.player_id && merged[0]) {
+    next.player = merged[0].player;
+    next.player_id = merged[0].player_id;
+    next.player_team = merged[0].player_team || null;
+    next.player_position = merged[0].player_position || null;
+  }
+  return next;
+}
+
+/**
+ * Same tweet tape, this book's seats. Does not rewrite `league_line`.
+ *
+ * Cuckle (`keepTags`) only appends players this book does not own, so existing
+ * Cuckle manager chips stay put. Other books retag every matched player.
+ */
+export function retagItemForLeague(it, pack, matchIndex, { keepTags = false } = {}) {
+  const ownerMap = pack.owner || new Map();
+  const members = pack.members || [];
+  const enriched = enrichPlayersFromText({ ...it, players: Array.isArray(it.players) ? [...it.players] : [] }, matchIndex);
+  if (keepTags) {
+    const extra = [];
+    const have = new Set((it.players || []).map((p) => String(p.player_id)));
+    for (const p of enriched.players || []) {
+      if (have.has(String(p.player_id))) continue;
+      if (ownerMap.has(String(p.player_id))) continue;
+      extra.push({ ...p, user_id: "", manager: "" });
+    }
+    return extra.length ? { ...it, players: [...(it.players || []), ...extra] } : { ...it };
+  }
+  const bound = bindAttributionToLeague({
+    target: it.match === "target_name" && (it.manager || it.user_id)
+      ? { user_id: it.user_id || "", manager: it.manager || "" }
+      : null,
+    how: it.match || "none",
+    playersList: enriched.players,
+  }, ownerMap, members);
+  const next = { ...enriched };
+  next.players = bound.players;
+  next.user_id = bound.own ? bound.own.user_id : "";
+  next.manager = bound.own ? bound.own.manager : "";
+  next.managers = bound.taggedManagers;
+  next.match = bound.how;
+  if (next.players[0]) {
+    const prim = next.players.find((p) => p.player_id === it.player_id) || next.players[0];
+    next.player = prim.player;
+    next.player_id = prim.player_id;
+    next.player_team = prim.player_team || null;
+    next.player_position = prim.player_position || null;
+  }
+  return next;
+}
+
+/**
+ * One share per tweet.
+ *
+ * A phone's share sheet appends its own tracking — the two real submissions in the table arrived
+ * as `.../status/2094028581080834282?s=12&t=6MCtlgACvPE2VEY3UhiZeA` — so the same tweet shared
+ * twice is two different strings and, without this, two identical rows in a feed of two items.
+ * `parseTweetUrl()` already rebuilds the URL from the captured handle and id and throws the
+ * query string away, so the canonical form is the key and no stripping happens here.
+ *
+ * **The newest share wins.** The feed is newest-first, so the story belongs at the position of
+ * the share that just happened, carrying that sharer's jab; keeping the first share would pin a
+ * live story to a stale timestamp under an older note. The rows this drops are counted in the
+ * report rather than lost silently.
+ *
+ * Rows whose URL is not a tweet are dropped here, before any network call: they are reported by
+ * the caller as rejections. Input must be newest-first.
+ */
+function collapseShares(subs) {
+  const byTweet = new Map();
+  const rejected = [];
+  const duplicates = [];
+  for (const sub of subs) {
+    // Equip share rows reuse this table until seat_cosmetics exists. They are
+    // stamped deleted on write; skip them here too so a leaked row cannot
+    // become a fake tweet.
+    if (isCosmeticsShareRow(sub)) continue;
+    // Re-validated here even though the table constrains it, because the table is write-open to
+    // anyone holding the anon key and a check that runs in only one place is a check that can be
+    // walked around. This is also the gate the XSS probes in rows 1, 5 and 6 hit: `evil.com`,
+    // `javascript:` and `evil.example.com` never become a URL, never get fetched, and never
+    // reach a row.
+    const parsed = parseTweetUrl(sub.url);
+    if (!parsed) { rejected.push(sub); continue; }
+    // Keyed on the tweet's numeric id, not on the canonical URL, because the URL still carries
+    // the handle as it was typed and `x.com/AdamSchefter/status/123` and
+    // `x.com/adamschefter/status/123` are one tweet. The id is globally unique on X and is the
+    // only part of the permalink that identifies the post rather than describing it.
+    if (byTweet.has(parsed.id)) {
+      duplicates.push({ id: sub.id, kept: byTweet.get(parsed.id).sub.id });
+      continue;
+    }
+    byTweet.set(parsed.id, { sub, canonical: parsed.canonical, tweetId: parsed.id });
+  }
+  return { kept: [...byTweet.values()], rejected, duplicates };
+}
+
+/**
+ * The submission queue, turned into feed rows.
+ *
+ * Every failure is recorded rather than thrown: a tweet that has been deleted, a Supabase that
+ * is asleep and a URL somebody hand-edited must each cost their own row and nothing else. That
+ * mattered less when sixty automated items were underneath; now that these rows *are* the feed,
+ * it is the difference between one missing story and a blank page, so there is a second
+ * defence — see `previousTweets`.
+ *
+ * A submission is stamped `processed_at` only if it does not already carry one, so the value
+ * keeps meaning "first published". Nothing is gated on the stamp any more; see
+ * markSubmissionProcessed().
+ *
+ * @param previousTweets Map of canonical URL -> the tweet body already in `news.json`, used when
+ *   oEmbed fails *transiently*. A timeout against publish.twitter.com used to cost that row; in
+ *   a manual-only feed of two items, two timeouts cost the whole page. A tweet's text and author
+ *   do not change, so the last known good copy is a correct answer rather than a stale one, and
+ *   the row around it is still rebuilt from the current submission. A tweet that is genuinely
+ *   *gone* (404, or no readable body) is not carried forward — that is a permanent answer, and
+ *   showing a deleted tweet forever would be the feed lying rather than degrading.
+ */
+async function ingestSubmissions(ownership, index, members, {
+  stampRows = true, previousTweets = new Map(), aliasesByCanon = null,
+  matchIndex = null, previousLines = new Map(),
+} = {}) {
+  const report = {
+    queue_ok: false, queue_error: null, seen: 0, published: 0,
+    rejected_url: 0, duplicate_shares: 0, carried_forward: 0,
+    // targeted        — target_name resolved to a seat; the row is addressed, authoritatively
+    // auto_tagged     — no target, and the matcher resolved the text to exactly one manager
+    //                   at or above PUBLISH_MIN; the row is addressed to them
+    // player_only     — a rostered player was named but the row is NOT addressed: below the
+    //                   publish threshold, or two managers, or the player is unrostered
+    // target_unresolved — a target_name was given and matched no member, or matched two
+    targeted: 0, auto_tagged: 0, auto_tagged_multi: 0, player_only: 0, target_unresolved: 0,
+    unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0,
+    failures: [],
+    /**
+     * One entry per published submission: the score the matcher gave it, what it resolved to, and
+     * why. This is the surface the user asked for — "report the score for each of the user's real
+     * submissions so they can see where the line falls in practice" — and it exists because a
+     * threshold nobody can see the distance to is a threshold nobody can calibrate.
+     */
+    attribution: [],
+  };
+  const queue = await fetchSubmissions({
+    limit: SUBMISSION_FETCH_LIMIT,
+    // The feed is the whole table now, not the rows nobody has published yet — see
+    // fetchSubmissions(). Newest first, because collapseShares() keeps the first it sees.
+    unprocessedOnly: false,
+    newestFirst: true,
+  });
+  report.queue_ok = queue.ok;
+  report.queue_error = queue.error;
+  report.agent_tip_column = queue.agent_tip_column;
+  if (!queue.ok) return { rows: [], report };
+  report.seen = queue.rows.length;
+
+  const { kept, rejected, duplicates } = collapseShares(queue.rows);
+  report.rejected_url = rejected.length;
+  report.duplicate_shares = duplicates.length;
+  for (const sub of rejected) report.failures.push({ id: sub.id, reason: "bad_url", url: String(sub.url).slice(0, 60) });
+  for (const d of duplicates) report.failures.push({ id: d.id, reason: `duplicate_of:${d.kept}` });
+  // Stamped: a URL this shape can never become valid, so it will never publish and the stamp is
+  // the honest record of that. Duplicates are left unstamped — the tweet published, just under
+  // another row's id, and stamping them would claim they appeared on their own.
+  for (const sub of rejected) await stamp(sub, report, stampRows);
+
+  const rows = [];
+  for (const { sub, canonical } of kept) {
+    // Soft-deleted rows must not publish even if a caller forgot the query filter — the stamp
+    // is the source of truth for "this post is gone", and a bug that re-ships a removed jab
+    // is worse than dropping one row.
+    if (sub.deleted_at) {
+      report.failures.push({ id: sub.id, reason: "already_deleted" });
+      continue;
+    }
+
+    let tweet = await fetchTweet(canonical);
+    if (!tweet.ok) {
+      const permanent = tweet.reason === "not_found" || tweet.reason === "no_tweet_text" || tweet.reason === "bad_url";
+      const cached = permanent ? null : previousTweets.get(canonical);
+      if (!cached) {
+        report.failed++;
+        report.failures.push({ id: sub.id, reason: tweet.reason, status: tweet.status });
+        if (permanent) await stamp(sub, report, stampRows);
+        continue;
+      }
+      report.carried_forward++;
+      report.failures.push({ id: sub.id, reason: `carried_forward:${tweet.reason}` });
+      tweet = { ...cached, ok: true, url: canonical };
+    }
+
+    /**
+     * Attribution, in three tiers with the strongest first.
+     *
+     * ## 1. `target_name` is authoritative, and no matching runs at all
+     *
+     * The sharer said who they meant. resolveTarget() is forgiving about how it was typed, and
+     * that is where the forgiveness belongs. When it resolves, `matchText()` is **not called** —
+     * not "called and ignored". A matcher that runs on an input whose answer is already known is
+     * a matcher whose refusals and scores are noise in the report, and it is one careless edit
+     * from becoming a tie-break against the person who actually chose.
+     *
+     * ## 2. No target: the matcher may address the row, at or above the publish threshold
+     *
+     * This reinstates the fallback a previous pass removed. Its argument was good and is worth
+     * restating rather than deleting, because the guardrail exists to answer it:
+     *
+     * > A player match is evidence about a *story*; it is not consent to address a person.
+     * > TrumanCooper's *"lol suck it Brad"* on a Schefter tweet published under the name of
+     * > whoever happens to roster Keenan Allen.
+     *
+     * The user has overruled the conclusion — they want the tag — and the concern was never
+     * about the *tag*, it was about the tag making somebody else's jab read as though it had
+     * been aimed at the tagged manager. So both halves are addressed, in different places:
+     *
+     *   - **Here**, the inference is only made on evidence that has been measured. `matchText()`
+     *     scores rather than votes, and only a single manager at or above PUBLISH_MIN can be
+     *     addressed; ambiguity, a roundup, a below-threshold surname, two owners or an unrostered
+     *     player all fall through to "The league" exactly as before. Never a guess.
+     *   - **In news-voice.mjs and the UI**, the note and the summary are separated so the row
+     *     cannot read as "TrumanCooper said this to TedCumberbatch". The note is prefixed with
+     *     its author's name, the summary never names a manager or uses second person, and the
+     *     manager reaches the row only as a possessive tag in the label row. That is the whole of
+     *     the previous pass's objection, answered in the layer where it actually applies.
+     *
+     * `match` records which tier decided, so the UI can render two different claims: "the sharer
+     * aimed this at you" and "this story concerns your player" are not the same sentence.
+     *
+     * ## 3. Neither: the row is the league's
+     *
+     * Unchanged. The player still ships when one was identified — it is what the meta line prints,
+     * `Keenan Allen · IND WR`, and it is a fact about the tweet rather than a claim about a person.
+     */
+    const target = resolveTarget(sub.target_name, members, aliasesByCanon);
+    // Union matcher (every book's rostered names). Bind the seats onto *this*
+    // book's ownership so a GM user_id never lands in the Cuckle self-check.
+    const subjects = matchTweetSubjects(tweet.text, matchIndex);
+    const bound = bindAttributionToLeague({
+      target,
+      how: target ? "target_name" : "none",
+      playersList: playersFromSubjects(subjects),
+    }, (ownership && ownership.owner) || new Map(), members);
+    const playersList = bound.players;
+    let own = bound.own;
+    let how = bound.how;
+    let taggedManagers = bound.taggedManagers;
+    let player = null;
+    if (playersList[0]) {
+      const s = playersList[0];
+      player = { name: s.player, player_id: s.player_id, team: s.player_team, position: s.player_position };
+    }
+    if (how === "target_name") report.targeted++;
+    else if (how === "player_auto") report.auto_tagged++;
+    else if (how === "player_auto_multi") report.auto_tagged_multi = (report.auto_tagged_multi || 0) + 1;
+    else if (how === "player") report.player_only++;
+    if (String(sub.target_name || "").trim() && !target) report.target_unresolved++;
+    if (!own) report.unaddressed++;
+
+    report.attribution.push({
+      id: sub.id,
+      submitted_by: String(sub.submitted_by || "") || null,
+      note: trimNote(sub.note) || null,
+      agent_tip: trimAgentTip(sub.agent_tip) || null,
+      target_name: String(sub.target_name || "") || null,
+      resolved_by: how,
+      manager: own ? own.manager : "(the league)",
+      managers: taggedManagers,
+      player: player ? player.name : null,
+      players: playersList.map((p) => p.player),
+      // The score, and the distance to the line. `best` is the top subject whether or not it
+      // published, so a refusal below the threshold reports the number it was refused at.
+      confidence: subjects && subjects.best ? subjects.best.confidence : null,
+      publish_min: PUBLISH_MIN,
+      evidence: subjects && subjects.best ? subjects.best.evidence : null,
+      matcher_reason: subjects ? subjects.res.reason : "not run (target_name is authoritative)",
+      managers_above_threshold: subjects ? subjects.seats.size : null,
+      why: subjects && subjects.best ? subjects.best.why : null,
+      refusals: subjects ? (subjects.res.notes || []) : [],
+    });
+
+    rows.push(await toTweetRow(sub, tweet, own, player, how, {
+      managers: members.map((m) => m.name),
+      taggedManagers,
+      players: playersList,
+      cachedLine: previousLines.get(`tweet:${sub.id}`),
+    }));
+    report.published++;
+    await stamp(sub, report, stampRows);
+  }
+  return { rows, report };
+}
+
+/**
+ * The tweet bodies already on disk, by canonical URL, for ingestSubmissions()' carry-forward.
+ *
+ * Only rows that still satisfy every rule this pipeline enforces are offered back: the URL must
+ * still parse as a tweet and must already be in canonical form. A file hand-edited to carry a
+ * `javascript:` source_url therefore feeds nothing, so reading yesterday's output cannot become
+ * a way around today's validation.
+ */
+function previousTweetBodies() {
+  const book = readJson("ui/news.json", null);
+  const out = new Map();
+  if (!book || !Array.isArray(book.items)) return out;
+  for (const it of book.items) {
+    if (it.category !== "tweet" || !it.tweet_text || !it.tweet_handle) continue;
+    const parsed = parseTweetUrl(it.source_url);
+    if (!parsed || parsed.canonical !== it.source_url) continue;
+    out.set(parsed.canonical, {
+      text: it.tweet_text,
+      author_name: it.tweet_author || "",
+      author_handle: it.tweet_handle,
+    });
+  }
+  return out;
+}
+
+/**
+ * The `league_line` already on disk, by row id, for `leagueLineAsync()`'s cache.
+ *
+ * **Only consulted when the LLM is configured**, which it is not by default — see the note on
+ * `leagueLineAsync()`. A template line must never be cached, because the templates are edited and
+ * a cached copy would keep shipping yesterday's wording; a *generated* line must never be
+ * regenerated, because that is the whole cost control (docs/NEWS_SDD.md §6a).
+ */
+function previousLeagueLines() {
+  const book = readJson("ui/news.json", null);
+  const out = new Map();
+  if (!book || !Array.isArray(book.items)) return out;
+  for (const it of book.items) {
+    if (it.id && it.league_line) out.set(it.id, it.league_line);
+  }
+  return out;
+}
+
+/**
+ * Record when one submission first reached the feed.
+ *
+ * `--report` documents itself as writing nothing, and stamping a row is a write, so every caller
+ * passes the flag through and this is the one place that decides. That was load-bearing when the
+ * stamp consumed the queue; it is now simply the documented behaviour of the flag, and worth
+ * keeping for that reason alone.
+ *
+ * A row that already carries a stamp is left alone, so `processed_at` keeps meaning *first*
+ * published rather than "last time a build ran".
+ */
+async function stamp(sub, report, stampRows = true) {
+  const id = sub && typeof sub === "object" ? sub.id : sub;
+  if (sub && typeof sub === "object" && sub.processed_at) {
+    report.stamp_already = (report.stamp_already || 0) + 1;
+    return true;
+  }
+  if (!stampRows) { report.stamp_skipped = (report.stamp_skipped || 0) + 1; return true; }
+  const res = await markSubmissionProcessed(id);
+  if (res.ok) { report.stamped++; return true; }
+  report.stamp_errors++;
+  report.failures.push({ id, reason: `stamp_failed:${res.error}` });
+  // Warned once per run, on stderr, rather than left as a number in a report nobody reads. A
+  // queue that never drains is not visibly broken from the feed -- the rows look right -- so
+  // this is the only place it can announce itself. The item still publishes: it is a real
+  // submission and news.json is rebuilt each run, so nothing is duplicated by shipping it.
+  if (!report.stamp_warned) {
+    report.stamp_warned = true;
+    console.error(`WARNING: could not mark submission ${id} processed: ${res.error}`);
+  }
+  return false;
+}
+
+/**
+ * One submission to one feed row, in the same schema every other item uses.
+ *
+ * The row carries three fields no automated item has — `tweet_text`, `tweet_author` and
+ * `tweet_handle` — and they are the only place third-party prose reaches the expandable detail.
+ * They are stored as plain text (news-sources.mjs strips the oEmbed HTML rather than trusting
+ * it) and escaped again at render.
+ *
+ * `user_id` is `""` rather than null on an unaddressed row. main()'s self-check refuses any row
+ * whose `user_id` is not a known member, and "" is checked for explicitly there — a null would
+ * have to be special-cased in the same place, and "" keeps every id in this file a string.
+ */
+async function toTweetRow(sub, tweet, own, player, how = "none", opts = {}) {
+  const id = `tweet:${sub.id}`;
+  /**
+   * **The note no longer suppresses the line.** It used to *be* the line: leagueLine() returned a
+   * member's note verbatim and no template ran, so a row carrying "Woof" said nothing about the
+   * tweet at all. Both ship now, in two fields, and the UI renders them as two things:
+   *
+   *   `note`        the member's words, verbatim inside a length cap, attributed to them
+   *   `league_line` the summary, which is the seam's output and never names a manager
+   *
+   * Additive and optional, so `v` stays 1 — a page built before `note` existed ignores it and
+   * renders the summary alone, which is a degraded row rather than a wrong one.
+   */
+  const note = trimNote(sub.note);
+  const agentTip = trimAgentTip(sub.agent_tip);
+  // Topic polarity for the *story* (cleared / avoided IR / …). Row category stays "tweet".
+  const topic = classify(tweet.text);
+  const item = {
+    id,
+    player: player ? player.name : "",
+    team: player ? player.team : null,
+    position: player ? player.position : null,
+    category: "tweet",
+    upbeat: topic.upbeat,
+    title: tweet.text,
+    tweet_handle: tweet.author_handle,
+  };
+  const voiceManager = how === "player_auto_multi" ? "" : (own ? own.manager : "");
+  const tagged = Array.isArray(opts.taggedManagers) && opts.taggedManagers.length
+    ? opts.taggedManagers.filter(Boolean)
+    : (own && own.manager ? [own.manager] : []);
+  // Every matched rostered player for multi-highlight. Fall back to the primary player so older
+  // call sites without opts.players still paint one name.
+  let players = Array.isArray(opts.players)
+    ? opts.players.filter((p) => p && p.player_id && p.player)
+    : [];
+  if (!players.length && player && player.player_id && player.name) {
+    players = [{
+      player_id: player.player_id,
+      player: player.name,
+      player_team: player.team || null,
+      player_position: player.position || null,
+      user_id: own ? own.user_id : "",
+      manager: own ? own.manager : "",
+    }];
+  }
+  const league_line = await leagueLineAsync(item, { manager: voiceManager }, {
+    managers: opts.managers,
+    cachedLine: opts.cachedLine,
+  });
+  // Private coaching from the Shortcut Ask — never painted on the row. Appended to
+  // data/smack-tips.json so the voice can learn over time (docs/SMACK_AGENT.md).
+  if (agentTip) {
+    appendSmackTip({
+      submission_id: sub.id,
+      tweet_url: tweet.url,
+      submitted_by: sub.submitted_by,
+      created_at: sub.created_at,
+      tip: agentTip,
+      player: player ? player.name : "",
+      players: players.map((p) => p.player),
+      managers: tagged,
+      poke_kind: tweetPokeKind(tweet.text),
+      league_line,
+    });
+  }
+  return {
+    id,
+    published: Date.parse(sub.created_at) || Date.now(),
+    source: "x:submission",
+    source_label: `@${tweet.author_handle}`,
+    source_url: tweet.url,
+    player: player ? player.name : "",
+    player_id: player ? player.player_id : "",
+    player_team: player ? player.team : null,
+    player_position: player ? player.position : null,
+    // All publishable matched players — UI highlights each name and tags every related seat.
+    players,
+    user_id: own ? own.user_id : "",
+    manager: own ? own.manager : "",
+    // Every seat tagged on this row. One name for player_auto / target_name; several when
+    // multiple seats own matched players. The UI header joins them; older pages that only read
+    // `manager` still see the primary seat.
+    managers: tagged,
+    category: "tweet",
+    severity: 4,
+    upbeat: topic.upbeat,
+    // A shared tweet's headline is the tweet, and the expander below it shows the same text in
+    // full. Leaving `headline` empty keeps the collapsed row to the note and the summary, which
+    // is what the feature asked for: their words on top, the read beneath, the detail behind a
+    // control.
+    headline: "",
+    summary: "",
+    note,
+    league_line,
+    trending_add: 0,
+    /**
+     * How the ROW was addressed, which is not the same question as how the player was found.
+     *
+     *   target_name         the sharer named the seat
+     *   player_auto         one seat matched from the text, above threshold
+     *   player_auto_multi   two or more seats matched — all listed in `managers`
+     *   player              a rostered player was identified but not turned into an addressee
+     *   none                nothing was identified
+     */
+    match: how,
+    also: [],
+    tweet_text: tweet.text,
+    tweet_author: tweet.author_name,
+    tweet_handle: tweet.author_handle,
+    submitted_by: String(sub.submitted_by == null ? "" : sub.submitted_by),
+    tweet_topic: classify(tweet.text).category,
+    sleeper_league_id: String(sub.sleeper_league_id || "").trim() || null,
+  };
+}
+
+/**
+ * Drop a shared tweet that restates an automated item already in the feed.
+ *
+ * A Schefter tweet and the Rotowire write-up of it are one story, and the feed showing both
+ * reads as a stutter. Same player and same category inside a few hours is the test — the same
+ * reasoning dedupe() uses for three outlets carrying one report, with a window instead of a
+ * calendar day because a share arrives whenever somebody happened to see it.
+ *
+ * "Same category" cannot mean the row's own `category`, which is always "tweet" here and would
+ * therefore never equal an automated row's. It means what the tweet is *about*: `tweet_topic`,
+ * from running the same classify() over the tweet's text. Matching on the player alone was the
+ * first version and it was too broad — a shared trade rumour would have swallowed an unrelated
+ * injury note about the same player from the same afternoon, which is two stories, not one.
+ *
+ * **The submission wins and the automated row is dropped**, which is the opposite of dedupe()'s
+ * earliest-published rule and is deliberate: a person chose this one, it carries their jab, and
+ * it has the tweet itself behind the expander. An unattributed share is never deduped against
+ * anything, because with no player it has no story to be the same as.
+ */
+const TWEET_DEDUPE_WINDOW_MS = 6 * 3600 * 1000;
+
+function dedupeAgainstTweets(rows, tweetRows) {
+  const keys = tweetRows
+    .filter((t) => t.player_id)
+    .map((t) => ({ player_id: t.player_id, topic: t.tweet_topic, at: t.published || 0 }));
+  if (!keys.length) return { kept: rows, dropped: 0 };
+  let dropped = 0;
+  const kept = rows.filter((r) => {
+    const clash = keys.some((k) =>
+      k.player_id === r.player_id
+      && k.topic === r.category
+      && Math.abs((r.published || 0) - k.at) <= TWEET_DEDUPE_WINDOW_MS);
+    if (clash) dropped++;
+    return !clash;
+  });
+  return { kept, dropped };
+}
+
+/* ------------------------------------------------------------ assembly ---- */
+
+/** A stable id for one story, so re-runs do not churn the file and dedupe has a key. */
+function itemId(playerId, title, published) {
+  let h = 0x811c9dc5;
+  const s = `${playerId}|${normName(title)}`;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  const day = published ? new Date(published).toISOString().slice(0, 10) : "undated";
+  return `${day}:${playerId}:${h.toString(16).padStart(8, "0")}`;
+}
+
+/**
+ * Collapse the same story arriving from several sources.
+ *
+ * The same Schefter report is restated by Rotowire, RotoBaller and FantasyPros within minutes,
+ * so without this the feed reads as three identical rows. The key is the player plus the first
+ * six meaningful words of the headline plus the calendar day — tight enough that two genuinely
+ * different stories about one player on one day both survive, loose enough that the same story
+ * retitled by three outlets collapses to one. The kept row is the earliest published, and the
+ * outlets that also carried it are recorded in `also` so the row can say "and 2 more".
+ */
+function dedupe(items) {
+  const STOP = new Set(["the", "a", "an", "to", "of", "for", "on", "in", "is", "his", "with", "and", "at", "as", "be", "will", "has"]);
+  const groups = new Map();
+  for (const it of items) {
+    const words = normName(it.title).split(" ").filter((w) => w && !STOP.has(w)).slice(0, 6);
+    const key = `${it.player_id}|${it.published ? new Date(it.published).toISOString().slice(0, 10) : "x"}|${words.join(" ")}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(it);
+  }
+  const out = [];
+  for (const group of groups.values()) {
+    group.sort((a, b) => (a.published || 0) - (b.published || 0));
+    const keep = { ...group[0] };
+    keep.also = [...new Set(group.slice(1).map((g) => g.source_label).filter(Boolean))];
+    out.push(keep);
+  }
+  return out;
+}
+
+function toRow(raw, own, player, trending) {
+  // The title, not the title plus the summary — see classify()'s note on why.
+  const kind = classify(raw.title);
+  const id = itemId(player.player_id, raw.title, raw.published);
+  const item = {
+    id,
+    player: player.name,
+    player_id: player.player_id,
+    team: player.team,
+    position: player.position,
+    category: kind.category,
+    upbeat: kind.upbeat,
+    title: raw.title,
+  };
+  return {
+    id,
+    published: raw.published,
+    source: raw.source,
+    source_label: raw.source_label || raw.source,
+    source_url: raw.source_url || "",
+    player: player.name,
+    player_id: player.player_id,
+    player_team: player.team,
+    player_position: player.position,
+    user_id: own.user_id,
+    manager: own.manager,
+    category: kind.category,
+    severity: kind.severity,
+    upbeat: kind.upbeat,
+    headline: clip(raw.title, 180),
+    summary: clip(raw.summary),
+    league_line: leagueLine(item, { manager: own.manager }),
+    trending_add: trending.add.get(player.player_id) || 0,
+    match: raw.player_id ? "player_id" : "name",
+    also: raw.also || [],
+  };
+}
+
+async function build() {
+  const ownership = buildOwnership();
+  if (!ownership.owner.size) {
+    throw new Error("no current rosters — run `node sleeper-sync.mjs` first");
+  }
+  const playersPath = `${DATA}/players.nfl.json`;
+  if (!fs.existsSync(playersPath)) {
+    throw new Error("data/players.nfl.json missing — run `node sleeper-sync.mjs` first");
+  }
+  const players = JSON.parse(fs.readFileSync(playersPath, "utf8"));
+  const index = buildPlayerIndex(ownership.owner, players);
+  /**
+   * Shared-tweet matcher: union of every book's rostered names so a GM-only
+   * player still identifies. Seat names are rebound onto Cuckle at ingest
+   * (`bindAttributionToLeague`) and onto each book again in `writeBook`.
+   * RSS still uses the Cuckle-only `buildPlayerIndex` above.
+   */
+  const matchIndex = unionMatchIndex(players);
+
+  // The switch is enforced at the fetch, not at a filter downstream: with AUTOMATED_SOURCES off
+  // this build makes no request to Sleeper's news graph, to any of the five RSS feeds, or to the
+  // trending endpoint that only ever ranked their rows. An off switch that still fetches is a
+  // switch somebody will later mistake for a display toggle.
+  const trending = automatedOn ? await fetchTrending() : { add: new Map(), drop: new Map(), errors: [] };
+  const sleeper = automatedOn
+    ? await fetchSleeperPlayerNews([...ownership.owner.keys()])
+    : { ok: false, items: [], errors: [], skipped: true };
+  const rssResults = automatedOn
+    ? await fetchRss()
+    : RSS_FEEDS.map((f) => ({ feed: f, ok: false, items: [], error: "off: AUTOMATED_SOURCES" }));
+
+  const report = {
+    automated_sources: automatedOn ? "on" : "off",
+    rosters: ownership.rosters,
+    managers: ownership.managers,
+    rostered_players: ownership.owner.size,
+    indexed_players: index.rows.length,
+    duplicate_roster_entries: ownership.dupes,
+    sleeper_graphql: { items: sleeper.items.length, errors: sleeper.errors.length },
+    trending: { add: trending.add.size, drop: trending.drop.size, errors: trending.errors },
+    feeds: rssResults.map((r) => ({ id: r.feed.id, ok: r.ok, items: r.items.length, error: r.error })),
+    rss: { total: 0, matched: 0, no_player: 0, ambiguous: 0, stale: 0, ambiguous_examples: [], matched_examples: [] },
+  };
+
+  const rows = [];
+  const cutoff = Date.now() - MAX_AGE_DAYS * 86400000;
+
+  // Path A: player-keyed. The owner is known before the text is read.
+  for (const raw of sleeper.items) {
+    if (raw.published && raw.published < cutoff) continue;
+    const own = ownership.owner.get(String(raw.player_id));
+    const p = index.rows.find((r) => r.player_id === String(raw.player_id));
+    if (!own || !p) continue;
+    rows.push(toRow(raw, own, p, trending));
+  }
+
+  // Path B: RSS, name-matched, refusing on ambiguity.
+  for (const result of rssResults) {
+    for (const raw of result.items) {
+      report.rss.total++;
+      if (raw.published && raw.published < cutoff) { report.rss.stale++; continue; }
+      const hit = matchPlayer(raw.title, index);
+      if (hit.reason === "ambiguous") {
+        report.rss.ambiguous++;
+        if (report.rss.ambiguous_examples.length < 5) {
+          report.rss.ambiguous_examples.push({
+            title: raw.title.slice(0, 110),
+            candidates: hit.candidates.map((c) => `${c.name} (${c.position || "?"})`),
+          });
+        }
+        continue;
+      }
+      if (!hit.row) { report.rss.no_player++; continue; }
+      const own = ownership.owner.get(hit.row.player_id);
+      if (!own) { report.rss.no_player++; continue; }
+      report.rss.matched++;
+      if (report.rss.matched_examples.length < 8) {
+        report.rss.matched_examples.push({
+          feed: result.feed.id,
+          player: hit.row.name,
+          manager: own.manager,
+          title: raw.title.slice(0, 110),
+        });
+      }
+      rows.push(toRow(raw, own, hit.row, trending));
+    }
+  }
+
+  // Shared tweets. With the automated sources off these are the whole feed; with them on they
+  // still come last, because they get to displace an automated row rather than compete with one.
+  // A queue that is unreachable costs its own rows and nothing else — every failure inside
+  // ingestSubmissions() is recorded and returned, never thrown.
+  const members = readJson("ui/members.json", []) || [];
+  // Every name a seat has ever worn on Sleeper — display names, usernames, team names — keyed
+  // by the pinned canonical in members.json. resolveTarget() searches these so a renamed team
+  // still addresses the same seat. Written by sleeper-sync.mjs; never overwrite by hand.
+  const aliasesByCanon = readJson("aliases.json", {}) || {};
+  // Read before anything is written, so a run that fails an oEmbed can still show yesterday's
+  // copy of that tweet rather than dropping the row. writeBook() is the only writer and it runs
+  // after every check in main() has passed.
+  const previousTweets = previousTweetBodies();
+  const previousLines = previousLeagueLines();
+  const submissions = args.has("--no-submissions")
+    ? { rows: [], report: { queue_ok: false, queue_error: "skipped by --no-submissions", seen: 0, published: 0, rejected_url: 0, duplicate_shares: 0, carried_forward: 0, targeted: 0, auto_tagged: 0, auto_tagged_multi: 0, player_only: 0, target_unresolved: 0, unaddressed: 0, failed: 0, stamped: 0, stamp_errors: 0, failures: [], attribution: [] } }
+    : await ingestSubmissions(ownership, index, members, {
+      stampRows: !args.has("--report"),
+      previousTweets,
+      aliasesByCanon,
+      matchIndex,
+      previousLines,
+    });
+  report.submissions = submissions.report;
+  report.previous_tweets_on_disk = previousTweets.size;
+
+  const deduped = dedupe(rows);
+  const against = dedupeAgainstTweets(deduped, submissions.rows);
+  report.submissions.displaced_automated = against.dropped;
+  const merged = [...against.kept, ...submissions.rows]
+    .sort((a, b) => {
+      const at = a.published || 0;
+      const bt = b.published || 0;
+      if (at !== bt) return bt - at;
+      return (b.severity || 0) - (a.severity || 0);
+    })
+    .slice(0, MAX_ITEMS);
+
+  report.rows_matched_total = rows.length;
+  report.rows_after_dedupe = deduped.length;
+  report.rows_shipped = merged.length;
+  report.by_manager = {};
+  // A shared tweet that matched nobody is addressed to nobody, so it belongs under no manager
+  // rather than under an empty-string one that would read as an eleventh member.
+  for (const r of merged) {
+    const key = r.manager || "(unaddressed)";
+    report.by_manager[key] = (report.by_manager[key] || 0) + 1;
+  }
+  report.by_category = {};
+  for (const r of merged) report.by_category[r.category] = (report.by_category[r.category] || 0) + 1;
+
+  return { book: bookOf(merged, rssResults, sleeper), report };
+}
+
+/**
+ * data/ui/news.json.
+ *
+ * ## Schema, v1
+ *
+ * ```
+ * {
+ *   "v": 1,                     // SCHEMA_VERSION. The UI ignores a file whose v it does not know.
+ *   "generated": 1756569600000, // epoch ms this file was built
+ *   "automated": "off",         // the AUTOMATED_SOURCES switch, as it stood for this build
+ *   "sources": [                // which sources actually contributed, for triage. Empty of feeds
+ *     { "id": "espn", "label": "ESPN", "ok": true, "items": 18 }   // while "automated" is "off"
+ *   ],
+ *   "items": [{
+ *     "id":              "2026-08-30:4046:1a2b3c4d",  // stable: day + player + headline hash
+ *     "published":       1756569600000 | null,         // epoch ms, null when the source's date was unparseable
+ *     "source":          "sleeper:rotowire",           // feed id, or "sleeper:<aggregated source>"
+ *     "source_label":    "Rotowire",                   // what the UI prints
+ *     "source_url":      "https://…",                  // "" when the source gave no usable link
+ *     "player":          "Patrick Mahomes",
+ *     "player_id":       "4046",                       // Sleeper player_id
+ *     "player_team":     "KC" | null,
+ *     "player_position": "QB" | null,
+ *     "user_id":         "457779824002330624",         // the affected manager, Sleeper user_id
+ *     "manager":         "SF69erss",                   // their canonical name from members.json
+ *     "category":        "injury",                     // injury|suspension|trade|depth_chart|breakout|news
+ *     "severity":        5,                            // sort weight only — never a colour
+ *     "upbeat":          false,                         // the story is good news for the owner
+ *     "headline":        "…",                           // the source's own words, third-party text
+ *     "summary":         "…",                           // the source's own words, or ""
+ *     "league_line":     "…",                           // news-voice.mjs output — the replaceable part
+ *     "trending_add":    167184,                        // Sleeper adds in 24h, 0 if not trending
+ *     "match":           "player_id" | "name",          // how the player was attributed
+ *     "also":            ["RotoBaller"]                 // other outlets that carried the same story
+ *   }]
+ * }
+ * ```
+ *
+ * Every string field is third-party input except `league_line`, `category` and `match`. The UI
+ * escapes all of them anyway.
+ *
+ * ## Shared tweets — four extra fields, and why `v` stays 1
+ *
+ * An item that came in through the submission queue carries `category: "tweet"` and four fields
+ * no automated item has:
+ *
+ * ```
+ *     "tweet_text":   "…",              // the tweet, as PLAIN TEXT — the oEmbed HTML is stripped,
+ *                                       //   never forwarded. Third-party prose; escaped at render.
+ *     "tweet_author": "Adam Schefter",  // the posting account's display name
+ *     "tweet_handle": "AdamSchefter",   // the @, without the @
+ *     "submitted_by": "BubbaCuckShremp",// who shared it in, "" when they did not say.
+ *                                       //   Client-asserted and unverifiable — see db/schema.sql.
+ *     "note":         "lol suck it Brad"// the sharer's own words, verbatim inside a 240-char cap,
+ *                                       //   "" when they typed none. Third-party text.
+ * ```
+ *
+ * `note` is a **fifth** field and the newest. It used to be folded into `league_line`, which meant
+ * a note suppressed the summary entirely; they are two fields now because they are two voices, and
+ * the UI renders the note attributed to its author and the summary beneath it. Additive and
+ * optional like the four above, so `v` stays 1.
+ *
+ * `match` gains `"player_auto"` on this path — the matcher, rather than the sharer, picked the
+ * seat. The UI renders that as a possessive tag on the story rather than as an address to a
+ * person, which is the difference the value exists to carry.
+ *
+ * On such an item `user_id` and `manager` may both be `""`, meaning nobody was attributed:
+ * curation is the point, so an unmatched share still publishes and is simply addressed to no
+ * one. `headline` and `summary` are `""` — the tweet is the content, and it lives behind the
+ * expander rather than in the collapsed row.
+ *
+ * **`v` stays 1 deliberately.** These fields, and the top-level `automated`, are purely additive
+ * and every one of them is optional, so a page built before they existed ignores them and
+ * renders these rows as ordinary news rows with no expander. Bumping to 2 would make the
+ * *current* deployed page reject the whole file on its version gate — and with the feed now
+ * built from submissions alone, "reject the whole file" is a blank feed rather than a degraded
+ * one. The version gate is for changes that would make an old reader render something *wrong*,
+ * and there is no such change here.
+ *
+ * `tweet_topic` exists on the row inside the pipeline and is **not** shipped: it only feeds
+ * dedupeAgainstTweets(), and the UI has no use for it.
+ */
+function bookOf(items, rssResults, sleeper) {
+  // `sources` is a record of what actually contributed, so with the automated sources switched
+  // off it lists only the submission queue. Six entries reading `ok: false, items: 0` would say
+  // "every feed in this app is down" to whoever reads this file for triage, which is the exact
+  // opposite of what is true: nothing asked them anything. `automated` says which it is.
+  const sources = automatedOn
+    ? [
+      {
+        id: "sleeper:graphql",
+        label: "Sleeper",
+        ok: sleeper ? sleeper.ok : false,
+        items: sleeper ? sleeper.items.length : 0,
+      },
+      ...(rssResults || []).map((r) => ({
+        id: r.feed.id, label: r.feed.label, ok: r.ok, items: r.items.length,
+      })),
+    ]
+    : [];
+  if (items.some((it) => it.category === "tweet")) {
+    sources.push({ id: "x:submission", label: "Shared from X", ok: true,
+      items: items.filter((it) => it.category === "tweet").length });
+  }
+  // `tweet_topic` is pipeline-internal — see the schema note above. Stripped here rather than
+  // never being set, because dedupeAgainstTweets() runs after the rows are built.
+  const shipped = items.map(({ tweet_topic, ...rest }) => rest);
+  return {
+    v: SCHEMA_VERSION,
+    generated: Date.now(),
+    automated: automatedOn ? "on" : "off",
+    sources,
+    items: shipped,
+  };
+}
+
+function projectBookForLeague(book, pack, matchIndex, { keepTags = false } = {}) {
+  const items = (book.items || []).map((it) => retagItemForLeague(it, pack, matchIndex, { keepTags }));
+  return { ...book, items, generated: Date.now() };
+}
+
+/**
+ * One Shortcut share is every book's tape. `sleeper_league_id` on a row is not a
+ * filter — null (the one-tap path) and a tagged id both fan out. Each write
+ * retags seats from that league's own rosters.
+ */
+export function writeBook(book) {
+  const players = fs.existsSync(`${DATA}/players.nfl.json`) ? playersDict() : {};
+  const matchIndex = Object.keys(players).length ? unionMatchIndex(players) : null;
+  const projected = [];
+  for (const id of listNewsLeagues()) {
+    const pack = buildOwnershipFor(id);
+    const keepTags = id === CUCKLE_LEAGUE_ID;
+    const next = projectBookForLeague(book, pack, matchIndex, { keepTags });
+    assertNewsBook(next, pack.members, { voice: id === CUCKLE_LEAGUE_ID });
+    projected.push({ id, book: next });
+  }
+  let path = `${DATA}/ui/news.json`;
+  for (const { id, book: next } of projected) {
+    const dest = `${leagueUiDir(id)}/news.json`;
+    fs.mkdirSync(dest.slice(0, dest.lastIndexOf("/")), { recursive: true });
+    fs.writeFileSync(dest, JSON.stringify(next) + "\n");
+    if (id === CUCKLE_LEAGUE_ID) {
+      fs.mkdirSync(`${DATA}/ui`, { recursive: true });
+      fs.writeFileSync(path, JSON.stringify(next) + "\n");
+    }
+  }
+  return path;
+}
+
+function readCuckleNewsBook() {
+  const legacy = `${DATA}/ui/news.json`;
+  if (fs.existsSync(legacy)) return JSON.parse(fs.readFileSync(legacy, "utf8"));
+  const scoped = `${DATA}/leagues/${CUCKLE_LEAGUE_ID}/ui/news.json`;
+  if (fs.existsSync(scoped)) return JSON.parse(fs.readFileSync(scoped, "utf8"));
+  return null;
+}
+
+/**
+ * @param voice  Cuckle-only: league_line was written for this book, so
+ *   unaddressed / multi-tag rows must stay impersonal. Fan-out books keep the
+ *   Cuckle voice and only prove their *tags* belong to that league.
+ */
+export function assertNewsBook(book, members, { voice = true } = {}) {
+  const known = new Set((members || []).map((m) => m.user_id));
+  const knownNames = new Set((members || []).map((m) => m.name).filter(Boolean));
+  for (const it of book.items || []) {
+    const unaddressed = it.user_id === "" && it.category === "tweet";
+    if (!unaddressed && !known.has(it.user_id)) {
+      throw new Error(`self-check failed: item ${it.id} is addressed to unknown user ${it.user_id}`);
+    }
+    if (unaddressed && it.manager !== "") {
+      throw new Error(`self-check failed: item ${it.id} names a manager but is addressed to nobody`);
+    }
+    if (!it.league_line) {
+      throw new Error(`self-check failed: item ${it.id} has no league line`);
+    }
+    if (!CATEGORIES.some((c) => c.id === it.category)) {
+      throw new Error(`self-check failed: item ${it.id} has unknown category ${it.category}`);
+    }
+    if (voice && it.category === "tweet" && !it.manager) {
+      const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
+      if (offence) {
+        throw new Error(`self-check failed: shared tweet ${it.id}'s summary ${offence} — an unaddressed summary must not address a person`);
+      }
+    }
+    if (!["target_name", "player_auto", "player_auto_multi", "player_id", "name", "player", "none"].includes(it.match)) {
+      throw new Error(`self-check failed: item ${it.id} records an unknown attribution route ${it.match}`);
+    }
+    if (it.manager && (it.match === "player" || it.match === "none")) {
+      throw new Error(`self-check failed: item ${it.id} is addressed to ${it.manager} on route ${it.match}, which means "not addressed"`);
+    }
+    if (!it.manager && (it.match === "target_name" || it.match === "player_auto" || it.match === "player_auto_multi")) {
+      throw new Error(`self-check failed: item ${it.id} claims route ${it.match} but names no manager`);
+    }
+    if (it.match === "player_auto_multi") {
+      if (!Array.isArray(it.managers) || it.managers.length < 2) {
+        throw new Error(`self-check failed: item ${it.id} is player_auto_multi but managers[] is missing or too short`);
+      }
+      if (voice) {
+        const offence = noteFreeOfAddress(it.league_line, [...knownNames]);
+        if (offence) {
+          throw new Error(`self-check failed: multi-tag ${it.id}'s summary ${offence}`);
+        }
+      }
+    }
+    if (Array.isArray(it.managers)) {
+      for (const name of it.managers) {
+        if (!knownNames.has(name)) {
+          throw new Error(`self-check failed: item ${it.id} tags unknown manager ${JSON.stringify(name)}`);
+        }
+      }
+    }
+    if (it.player_id || it.player) {
+      if (!Array.isArray(it.players) || !it.players.length) {
+        throw new Error(`self-check failed: item ${it.id} has a primary player but empty players[]`);
+      }
+    }
+    if (Array.isArray(it.players)) {
+      for (const p of it.players) {
+        if (!p || !p.player_id || !p.player) {
+          throw new Error(`self-check failed: item ${it.id} has a players[] entry missing id/name`);
+        }
+        if (p.manager && !knownNames.has(p.manager)) {
+          throw new Error(`self-check failed: item ${it.id} player ${p.player} tags unknown manager ${p.manager}`);
+        }
+      }
+      if (it.players.length > 1 && Array.isArray(it.managers) && it.managers.length) {
+        for (const p of it.players) {
+          if (p.manager && !it.managers.includes(p.manager)) {
+            throw new Error(`self-check failed: item ${it.id} matched ${p.player} for ${p.manager} but managers[] omits them`);
+          }
+        }
+      }
+    }
+    if (it.category === "tweet") {
+      if (!it.tweet_text || !it.tweet_handle) {
+        throw new Error(`self-check failed: shared tweet ${it.id} has no text or no handle`);
+      }
+      const parsed = parseTweetUrl(it.source_url);
+      if (!parsed) {
+        throw new Error(`self-check failed: shared tweet ${it.id} has a non-tweet source_url ${it.source_url}`);
+      }
+      if (parsed.canonical !== it.source_url) {
+        throw new Error(`self-check failed: shared tweet ${it.id} ships an uncanonical url ${it.source_url} (should be ${parsed.canonical})`);
+      }
+    }
+  }
+  if (!automatedOn) {
+    const stray = (book.items || []).find((it) => it.category !== "tweet" || it.source !== "x:submission");
+    if (stray) {
+      throw new Error(`self-check failed: AUTOMATED_SOURCES is off but item ${stray.id} came from ${stray.source} — the feed is submissions only`);
+    }
+  }
+  const seenTweets = new Map();
+  for (const it of book.items || []) {
+    if (it.category !== "tweet") continue;
+    const tid = parseTweetUrl(it.source_url).id;
+    if (seenTweets.has(tid)) {
+      throw new Error(`self-check failed: tweet ${tid} appears twice (${seenTweets.get(tid)} and ${it.id}) — the same tweet shared twice must be one story`);
+    }
+    seenTweets.set(tid, it.id);
+  }
+}
+
+/* -------------------------------------------------------------- corpus ---- */
+
+/**
+ * Freeze one live day of RSS into data/fixtures/rss-corpus.json, **with this matcher's own
+ * verdict on every item**.
+ *
+ * The point is not to have test data. It is that any new matcher can be scored against a real
+ * third-party corpus whose answer set was produced by the code that actually ships, per item
+ * rather than in aggregate — so a divergence can be read as a specific headline rather than as
+ * a number that moved. Feeds churn hourly, so an offline corpus is also the only way the
+ * comparison is reproducible tomorrow.
+ */
+async function writeCorpus() {
+  const ownership = buildOwnership();
+  const playersPath = `${DATA}/players.nfl.json`;
+  if (!ownership.owner.size || !fs.existsSync(playersPath)) {
+    throw new Error("run `node sleeper-sync.mjs` first — corpus needs rosters and the dictionary");
+  }
+  const players = JSON.parse(fs.readFileSync(playersPath, "utf8"));
+  const index = buildPlayerIndex(ownership.owner, players);
+  const results = await fetchRss();
+  const items = [];
+  for (const result of results) {
+    for (const raw of result.items) {
+      const hit = matchPlayer(raw.title, index);
+      const own = hit.row ? ownership.owner.get(hit.row.player_id) : null;
+      items.push({
+        source: raw.source,
+        source_label: raw.source_label,
+        source_url: raw.source_url,
+        title: raw.title,
+        summary: clip(raw.summary, 500),
+        published: raw.published,
+        baseline: {
+          verdict: hit.reason,
+          player: hit.row ? hit.row.name : null,
+          player_id: hit.row ? hit.row.player_id : null,
+          manager: own ? own.manager : null,
+          candidates: (hit.candidates || []).map((c) => c.name),
+        },
+      });
+    }
+  }
+  const book = {
+    v: 1,
+    harvested: Date.now(),
+    note: "One live day of the five RSS feeds, with news-sync.mjs's own matchPlayer() verdict per item. Third-party text, verbatim; summaries clipped to 500 chars.",
+    feeds: results.map((r) => ({ id: r.feed.id, label: r.feed.label, ok: r.ok, items: r.items.length })),
+    rostered_players: ownership.owner.size,
+    items,
+  };
+  fs.mkdirSync(`${DATA}/fixtures`, { recursive: true });
+  fs.writeFileSync(`${DATA}/fixtures/rss-corpus.json`, JSON.stringify(book, null, 1) + "\n");
+  const tally = {};
+  for (const it of items) tally[it.baseline.verdict] = (tally[it.baseline.verdict] || 0) + 1;
+  return { out: "data/fixtures/rss-corpus.json", items: items.length, baseline: tally };
+}
+
+/* ---------------------------------------------------------------- main ---- */
+
+/**
+ * `--selftest`: the two rules that decide who a shared tweet is addressed to and which tweet it
+ * is, run against the real functions and the real members file, with no network.
+ *
+ * These are the cases the rules were written for, and several of them are transcriptions of what
+ * the Shortcut actually sent. They live here rather than in a scratch file because a rule that is
+ * only ever exercised by the live queue is a rule nobody notices breaking: `target_name` is null
+ * on every real submission today, so the entire resolver could stop working and every build would
+ * still look correct. Each case therefore has to be able to fail — the refusals are asserted as
+ * loudly as the matches.
+ */
+function selfTest() {
+  const members = readJson("ui/members.json", []) || [];
+  const aliasesByCanon = readJson("aliases.json", {}) || {};
+  const name = (t) => {
+    const r = resolveTarget(t, members, aliasesByCanon);
+    return r ? r.manager : null;
+  };
+  const cases = [
+    // Exact, and the whitespace and case the Shortcut sends.
+    ["SF69erss", "SF69erss"], ["sf69erss", "SF69erss"], ["  SF69erss  ", "SF69erss"],
+    ["\tBUBBACUCKSHREMP\n", "BubbaCuckShremp"],
+    // Prefix, three characters or more.
+    ["big", "bigjberg"], ["Tips", "TipsUp"], ["darkwing", "DarkWingDucks2023"],
+    // Substring, when nothing is a prefix.
+    ["berg", "bigjberg"], ["henry", "KingHenryXXVI"],
+    // Historical / team-name aliases from aliases.json. These are what a sharer types when they
+    // remember the team, not the pinned Sleeper display name — and what a rename leaves behind.
+    ["The Tips", "TipsUp"], ["Just the Tip", "TipsUp"], ["JustThaTip", "TipsUp"],
+    ["Evil Ducks", "DarkWingDucks2023"], ["MightyDucks420", "DarkWingDucks2023"],
+    ["San Francisco 69ers", "SF69erss"], ["TonyGalliani", "SF69erss"],
+    ["The IceBerg", "bigjberg"], ["420MiaKhalifaGuy69", "ChiefGumby"],
+    ["OKC The Business", "TedCumberbatch"], ["Milky Milfys", "BubbaCuckShremp"],
+    ["The Morning Chubbs", "ARae"], ["DuckTipsYumm", "TrumanCooper"],
+    ["King Henry XXVI", "KingHenryXXVI"], ["ZachDaDakSlayer", "KingHenryXXVI"],
+    // Same seat under two spellings of one alias must still resolve (collapse by user_id).
+    ["SanFrancisco69ers", "SF69erss"],
+    // Refusals. Two candidates, too short to be a name, empty, and no such member.
+    ["cu", null],            // under three characters, so no partial tier runs at all
+    ["cum", "TedCumberbatch"], // ...and at three it is unambiguous again
+    ["uc", null],
+    ["s", null], ["", null], ["   ", null], [null, null], [undefined, null],
+    ["NotAManager", null],
+    ["<script>window.__XSS_TARGET=1</script>", null],
+    // "u" appears inside six members; a three-character fragment that still hits two must refuse.
+    ["ber", null],           // TedCumBERbatch and bigjBERg
+    // Ambiguous across seats once aliases are in play: "the" starts/contains several team names.
+    ["the", null],
+    // Prefix beats substring: DuckTipsYumm starts with "duck"; DarkWingDucks2023 only contains it.
+    ["duck", "TrumanCooper"],
+    ["ducks", "DarkWingDucks2023"],
+  ];
+  const bad = [];
+  for (const [input, want] of cases) {
+    const got = name(input);
+    if (got !== want) bad.push(`resolveTarget(${JSON.stringify(input)}) = ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
+  }
+
+  /**
+   * The prefix tier, against a membership that can see it.
+   *
+   * Every case above passes with the prefix tier deleted, because in *this* league nothing that
+   * starts with a fragment is also contained in a second name — `big` reaches `bigjberg` through
+   * the substring tier just as well. Verified by deleting the tier and watching all twenty cases
+   * still pass, which is exactly the §3a failure the audit names: a check that cannot fail.
+   *
+   * The tier is still right, and it is asserted here on a membership where it decides the answer.
+   * `berg` starts one name and sits inside another; preferring the one it starts is what a person
+   * means, and without the tier both are candidates and the row goes unaddressed. resolveTarget()
+   * takes its members as an argument, so this is the real function on different data rather than
+   * a copy of the rule.
+   */
+  const SYNTHETIC = [
+    { user_id: "s1", name: "Bergman" }, { user_id: "s2", name: "bigjberg" },
+    { user_id: "s3", name: "Tank" }, { user_id: "s4", name: "TankDell" },
+  ];
+  const synth = [
+    ["berg", "Bergman"],    // prefix wins over the substring inside bigjberg
+    ["bigj", "bigjberg"],   // and the other one is still reachable by its own prefix
+    ["Tank", "Tank"],       // exact beats a longer name that merely starts the same way
+    ["tankd", "TankDell"],
+    ["ank", null],          // no prefix, two substrings: refuse
+  ];
+  for (const [input, want] of synth) {
+    const hit = resolveTarget(input, SYNTHETIC);
+    const got = hit ? hit.manager : null;
+    if (got !== want) bad.push(`resolveTarget(${JSON.stringify(input)}, synthetic) = ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
+  }
+
+  // Canonicalisation: what a phone share sheet appends must not survive into the feed, or the
+  // same tweet shared twice is two stories.
+  const CANON = "https://x.com/adamschefter/status/2094028581080834282";
+  const urls = [
+    ["https://x.com/adamschefter/status/2094028581080834282?s=12&t=6MCtlgACvPE2VEY3UhiZeA", CANON],
+    ["https://x.com/adamschefter/status/2094028581080834282", CANON],
+    ["https://twitter.com/adamschefter/status/2094028581080834282?s=20", CANON],
+    ["https://www.x.com/adamschefter/status/2094028581080834282/photo/1", CANON],
+    ["https://x.com/adamschefter/statuses/2094028581080834282#anchor", CANON],
+    ["https://evil.com/a/status/1", null],
+    ["https://evil.example.com/a/status/1", null],
+    ["javascript:window.__XSS_URL=1", null],
+    ["https://x.com/jack", null],
+    // Host confusions. `www.` is the only subdomain allowed, so an attacker-controlled label on
+    // either side of x.com must be refused — these are the two shapes a loosened host pattern
+    // lets through, and neither is caught by simply testing that evil.com fails.
+    ["https://x.evil.com/a/status/1", null],
+    ["https://evil.x.com/adamschefter/status/2094028581080834282", null],
+    ["https://x.com.evil.com/a/status/1", null],
+  ];
+  for (const [input, want] of urls) {
+    const got = parseTweetUrl(input);
+    const canonical = got ? got.canonical : null;
+    if (canonical !== want) bad.push(`parseTweetUrl(${JSON.stringify(input)}) = ${JSON.stringify(canonical)}, want ${JSON.stringify(want)}`);
+  }
+
+  const total = cases.length + synth.length + urls.length;
+  if (bad.length) {
+    console.error(bad.map((b) => `FAIL ${b}`).join("\n"));
+    throw new Error(`${bad.length} of ${total} self-test cases failed`);
+  }
+  console.log(`ok: ${cases.length} name-resolution, ${synth.length} prefix-tier and ${urls.length} url-canonicalisation cases`);
+}
+
+async function main() {
+  if (args.has("--selftest")) { selfTest(); return; }
+  if (args.has("--corpus")) {
+    console.log(JSON.stringify(await writeCorpus(), null, 2));
+    return;
+  }
+  if (args.has("--voice")) {
+    for (const s of voiceSamples("BubbaCuckShremp", "Patrick Mahomes", "KC")) {
+      console.log(`[${s.category}] ${s.line}`);
+    }
+    return;
+  }
+  if (args.has("--retag-leagues")) {
+    const book = readCuckleNewsBook();
+    if (!book || !Array.isArray(book.items)) {
+      throw new Error("no on-disk news.json to fan out — run a live news-sync first");
+    }
+    const out = writeBook(book);
+    const leagues = listNewsLeagues();
+    console.log(JSON.stringify({
+      out,
+      mode: "retag-leagues",
+      items: book.items.length,
+      leagues,
+    }, null, 2));
+    return;
+  }
+  if (args.has("--empty")) {
+    const book = bookOf([], RSS_FEEDS.map((f) => ({ feed: f, ok: false, items: 0 })), null);
+    console.log("wrote", writeBook(book), "— empty, no network");
+    return;
+  }
+
+  const { book, report } = await build();
+
+  // Submissions *are* the feed while AUTOMATED_SOURCES is off. A failed queue read used to look
+  // like "zero shares" and overwrite a full news.json with an empty one (2026-08-31: selecting
+  // agent_tip before the column existed → HTTP 400 → blank public feed). Refuse to write.
+  if (!args.has("--no-submissions") && report.submissions && report.submissions.queue_ok === false) {
+    throw new Error(
+      `submission queue unreachable (${report.submissions.queue_error || "unknown"}) — `
+      + "refusing to overwrite news.json with an empty feed",
+    );
+  }
+
+  // Ingest book is Cuckle-bound. writeBook() asserts again per league after retag.
+  assertNewsBook(book, readLeagueMembers(CUCKLE_LEAGUE_ID), { voice: true });
+
+  if (args.has("--report")) {
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
+  writeBook(book);
+  console.log(JSON.stringify({
+    out: "data/ui/news.json",
+    leagues: listNewsLeagues(),
+    automated_sources: automatedOn ? "on" : "off",
+    items: book.items.length,
+    managers_addressed: Object.keys(report.by_manager).length,
+    by_category: report.by_category,
+    submissions: {
+      queue_ok: report.submissions.queue_ok,
+      queue_error: report.submissions.queue_error,
+      agent_tip_column: report.submissions.agent_tip_column,
+      seen: report.submissions.seen,
+      published: report.submissions.published,
+      rejected_url: report.submissions.rejected_url,
+      duplicate_shares: report.submissions.duplicate_shares,
+      targeted: report.submissions.targeted,
+      auto_tagged: report.submissions.auto_tagged,
+      player_only: report.submissions.player_only,
+      target_unresolved: report.submissions.target_unresolved,
+      unaddressed: report.submissions.unaddressed,
+      carried_forward: report.submissions.carried_forward,
+    },
+    // One line per published share: the score, the route and the seat it landed on. Printed on a
+    // normal run and not only under --report, because "which of my shares got tagged, and how
+    // sure was it" is the question this feature raises every time it runs.
+    attribution: (report.submissions.attribution || []).map((a) => ({
+      id: a.id, by: a.submitted_by, note: a.note, route: a.resolved_by,
+      manager: a.manager, player: a.player, confidence: a.confidence, evidence: a.evidence,
+      managers_above_threshold: a.managers_above_threshold,
+    })),
+    rss_matched: report.rss.matched,
+    rss_total: report.rss.total,
+    rss_ambiguous: report.rss.ambiguous,
+    sleeper_items: report.sleeper_graphql.items,
+    feeds_ok: report.feeds.filter((f) => f.ok).length + "/" + report.feeds.length,
+  }, null, 2));
+}
+
+/**
+ * Run only when this file is the process entry point, so a test can import matchPlayer() without
+ * firing a live build. A guard like this fails silently if it ever stops resolving — the cron
+ * would run, print nothing and refresh nothing — so news-match.test.mjs spawns
+ * `node news-sync.mjs --voice` and asserts it produces output.
+ */
+/**
+ * This module is imported by news-match.mjs for its ownership index and its matcher, so main()
+ * cannot run on import. It must still run when the workflow invokes it as a script, and getting
+ * that backwards silently switches the live feed off — the failure would look like news simply
+ * going stale, with a green cron.
+ *
+ * fileURLToPath, not `new URL(...).pathname`: the latter leaves percent-escapes in place, so a
+ * checkout under a path containing a space would compare "/a%20b/news-sync.mjs" against
+ * "/a b/news-sync.mjs", never match, and disable the sync.
+ */
+function invokedDirectly() {
+  const entry = process.argv[1];
+  if (!entry) return false;
+  try {
+    return fs.realpathSync(entry) === fs.realpathSync(fileURLToPath(import.meta.url));
+  } catch {
+    return false;
+  }
+}
+
+if (invokedDirectly()) {
+  main().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}

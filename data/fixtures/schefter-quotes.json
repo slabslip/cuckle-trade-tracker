@@ -1,0 +1,256 @@
+{
+ "v": 1,
+ "harvested": 1788106880064,
+ "method": "Every sentence containing 'Schefter' in a live fetch of the five RSS feeds plus Sleeper's get_player_news over this league's rostered players. `verbatim` is the publisher's own text. `tweet_form` is `verbatim` with the one credit clause named in `stripped` removed and nothing else altered; `derived: false` means no clause matched and the two are equal.",
+ "sources_fetched": {
+  "rss": [
+   {
+    "id": "espn",
+    "ok": true,
+    "items": 18
+   },
+   {
+    "id": "rotowire",
+    "ok": true,
+    "items": 5
+   },
+   {
+    "id": "cbs",
+    "ok": true,
+    "items": 36
+   },
+   {
+    "id": "yahoo",
+    "ok": true,
+    "items": 50
+   },
+   {
+    "id": "pft",
+    "ok": true,
+    "items": 30
+   }
+  ],
+  "sleeper": {
+   "ok": true,
+   "items": 1675
+  }
+ },
+ "items": [
+  {
+   "id": "sq01",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "According to Adam Schefter, San Francisco 49ers tight end George Kittle (Achilles) is expected to practice this week.",
+   "tweet_form": "San Francisco 49ers tight end George Kittle (Achilles) is expected to practice this week.",
+   "stripped": "According to Adam Schefter,",
+   "derived": true
+  },
+  {
+   "id": "sq02",
+   "origin": "espn",
+   "origin_label": "ESPN",
+   "verbatim": "Adam Schefter's cheat sheet: The players our NFL insider is most excited about this season.",
+   "tweet_form": "Adam Schefter's cheat sheet: The players our NFL insider is most excited about this season.",
+   "stripped": null,
+   "derived": false
+  },
+  {
+   "id": "sq03",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Allgeier could open the regular season as the Cardinals' primary running back, as Adam Schefter of ESPN reports that Jeremiyah Love sustained a high-ankle sprain in Thursday's preseason win over the Raiders.",
+   "tweet_form": "Allgeier could open the regular season as the Cardinals' primary running back, as Adam Schefter of ESPN reports that Jeremiyah Love sustained a high-ankle sprain in Thursday's preseason win over the Raiders.",
+   "stripped": null,
+   "derived": false
+  },
+  {
+   "id": "sq04",
+   "origin": "sleeper:fantasy_pros",
+   "origin_label": "FantasyPros",
+   "verbatim": "Bijan Robinson has agreed to a three-year, $75 million contract extension with the Atlanta Falcons according to Adam Schefter.",
+   "tweet_form": "Bijan Robinson has agreed to a three-year, $75 million contract extension with the Atlanta Falcons.",
+   "stripped": "according to Adam Schefter.",
+   "derived": true
+  },
+  {
+   "id": "sq05",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "ESPN's Adam Schefter reported earlier in the week that the NFL is reviewing a potential suspension of star receiver Puka Nacua for making antisemitic slurs and allegedly biting a woman during the offseason.",
+   "tweet_form": "ESPN's Adam Schefter reported earlier in the week that the NFL is reviewing a potential suspension of star receiver Puka Nacua for making antisemitic slurs and allegedly biting a woman during the offseason.",
+   "stripped": null,
+   "derived": false
+  },
+  {
+   "id": "sq06",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "ESPN's Adam Schefter reports the Carolina Panthers have placed rookie wide receiver Chris Brazzell II (knee) on Injured Reserve, officially ending his season.",
+   "tweet_form": "The Carolina Panthers have placed rookie wide receiver Chris Brazzell II (knee) on Injured Reserve, officially ending his season.",
+   "stripped": "ESPN's Adam Schefter reports",
+   "derived": true
+  },
+  {
+   "id": "sq07",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "Houston Texans wide receiver Jayden Higgins was officially placed on season-ending injured reserve Friday, according to Adam Schefter.",
+   "tweet_form": "Houston Texans wide receiver Jayden Higgins was officially placed on season-ending injured reserve Friday.",
+   "stripped": ", according to Adam Schefter.",
+   "derived": true
+  },
+  {
+   "id": "sq08",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Hunter was traded from the Rams to the Dolphins in exchange for wide receiver Tutu Atwell on Thursday, Adam Schefter of ESPN reports.",
+   "tweet_form": "Hunter was traded from the Rams to the Dolphins in exchange for wide receiver Tutu Atwell on Thursday.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq09",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Huntley and the Ravens agreed to a two-year, $11 million contract Saturday, Adam Schefter of ESPN reports.",
+   "tweet_form": "Huntley and the Ravens agreed to a two-year, $11 million contract Saturday.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq10",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Kamara (knee) is expected to be out for at least one month after sustaining an MCL sprain during Tuesday's joint practice with the Cowboys, Adam Schefter of ESPN reports.",
+   "tweet_form": "Kamara (knee) is expected to be out for at least one month after sustaining an MCL sprain during Tuesday's joint practice with the Cowboys.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq11",
+   "origin": "rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Kittle (Achilles) is expected to practice this week as he continues his push to play in the 49ers' season opener against the Rams in Australia, Adam Schefter of ESPN reports.",
+   "tweet_form": "Kittle (Achilles) is expected to practice this week as he continues his push to play in the 49ers' season opener against the Rams in Australia.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq12",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Miller (back) and Devin Neal (hamstring) returned to practice Tuesday, while teammate Alvin Kamara (knee) is expected to be out for more than a month, per Adam Schefter of ESPN.",
+   "tweet_form": "Miller (back) and Devin Neal (hamstring) returned to practice Tuesday, while teammate Alvin Kamara (knee) is expected to be out for more than a month.",
+   "stripped": ", per Adam Schefter of ESPN.",
+   "derived": true
+  },
+  {
+   "id": "sq13",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Neal (hamstring) and Kendre Miller (back) both returned to practice Tuesday, while teammate Alvin Kamara (knee) is expected to be out for more than a month, per Adam Schefter of ESPN.",
+   "tweet_form": "Neal (hamstring) and Kendre Miller (back) both returned to practice Tuesday, while teammate Alvin Kamara (knee) is expected to be out for more than a month.",
+   "stripped": ", per Adam Schefter of ESPN.",
+   "derived": true
+  },
+  {
+   "id": "sq14",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "New Orleans Saints running back Alvin Kamara (knee) left Tuesday's joint practice with the Cowboys, and he is now expected to be sidelined for at least a month after being diagnosed with a sprained MCL, according to NFL Insider Adam Schefter.",
+   "tweet_form": "New Orleans Saints running back Alvin Kamara (knee) left Tuesday's joint practice with the Cowboys, and he is now expected to be sidelined for at least a month after being diagnosed with a sprained MCL.",
+   "stripped": ", according to NFL Insider Adam Schefter.",
+   "derived": true
+  },
+  {
+   "id": "sq15",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Robinson and the Falcons agreed to terms Tuesday on a three-year extension worth up to $75 million, Adam Schefter of ESPN reports.",
+   "tweet_form": "Robinson and the Falcons agreed to terms Tuesday on a three-year extension worth up to $75 million.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq16",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Taylor agreed to terms Thursday with the Colts on a two-year, $44 million contract extension, Adam Schefter of ESPN reports.",
+   "tweet_form": "Taylor agreed to terms Thursday with the Colts on a two-year, $44 million contract extension.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq17",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "The Cleveland Browns are releasing fourth-year wide receiver Cedric Tillman, according to NFL Insider Adam Schefter.",
+   "tweet_form": "The Cleveland Browns are releasing fourth-year wide receiver Cedric Tillman.",
+   "stripped": ", according to NFL Insider Adam Schefter.",
+   "derived": true
+  },
+  {
+   "id": "sq18",
+   "origin": "espn",
+   "origin_label": "ESPN",
+   "verbatim": "The Dolphins acquired quarterback Kyle McCord in a trade with the Packers on Sunday, sources told ESPN's Adam Schefter.",
+   "tweet_form": "The Dolphins acquired quarterback Kyle McCord in a trade with the Packers on Sunday.",
+   "stripped": ", sources told ESPN's Adam Schefter.",
+   "derived": true
+  },
+  {
+   "id": "sq19",
+   "origin": "pft",
+   "origin_label": "ProFootballTalk",
+   "verbatim": "The Jets are releasing defensive tackle Mazi Smith, Adam Schefter of ESPN reports.",
+   "tweet_form": "The Jets are releasing defensive tackle Mazi Smith.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq20",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "The Lions and Gibbs (back) agreed to terms on a three-year extension Thursday, Adam Schefter of ESPN reports.",
+   "tweet_form": "The Lions and Gibbs (back) agreed to terms on a three-year extension Thursday.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq21",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "The Miami Dolphins are acquiring running back Jarquez Hunter from the Los Angeles Rams on Thursday in exchange for wide receiver Tutu Atwell, sources told ESPN's Adam Schefter.",
+   "tweet_form": "The Miami Dolphins are acquiring running back Jarquez Hunter from the Los Angeles Rams on Thursday in exchange for wide receiver Tutu Atwell.",
+   "stripped": ", sources told ESPN's Adam Schefter.",
+   "derived": true
+  },
+  {
+   "id": "sq22",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "The Texans placed Higgins (knee) on injured reserve Friday, Adam Schefter of ESPN reports.",
+   "tweet_form": "The Texans placed Higgins (knee) on injured reserve Friday.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  },
+  {
+   "id": "sq23",
+   "origin": "sleeper:rotoballer",
+   "origin_label": "RotoBaller",
+   "verbatim": "The Washington Commanders have listed 15 players who will not participate in Saturday's preseason matchup with the Lions, but NFL Insider Adam Schefter notes that among the starters expected to see action are quarterback Jayden Daniels and wide receivers Terry McLaurin and Stefon Diggs.",
+   "tweet_form": "The Washington Commanders have listed 15 players who will not participate in Saturday's preseason matchup with the Lions, but NFL Insider Adam Schefter notes that among the starters expected to see action are quarterback Jayden Daniels and wide receivers Terry McLaurin and Stefon Diggs.",
+   "stripped": null,
+   "derived": false
+  },
+  {
+   "id": "sq24",
+   "origin": "sleeper:rotowire",
+   "origin_label": "Rotowire",
+   "verbatim": "Tillman (undisclosed) is in line to be cut by the Browns, Adam Schefter of ESPN reports.",
+   "tweet_form": "Tillman (undisclosed) is in line to be cut by the Browns.",
+   "stripped": ", Adam Schefter of ESPN reports.",
+   "derived": true
+  }
+ ]
+}

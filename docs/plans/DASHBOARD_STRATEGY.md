@@ -129,6 +129,9 @@ Insight: every win taxes their own Early.
 | Capital strip + chase pulse + Ideas-up | Shipped overnight rework |
 | Early shop bits (Late / race favorite) | Shipped — named 1.0x targets on empty capital + chase |
 | Design Mode `?seat=` persona switcher | Shipped |
+| Capital stack summary (hoarder) | Shipped |
+| Tank 1.01 locked + Late buyers | Shipped |
+| Slow-burn rate chase (no Early shop) | Shipped |
 | `delta_place` movers when race moves | Wired; needs weekly refresh ≠0 |
 | Injury lede on overnight | Next (daily habit plan) |
 | Manager dossier panel | Phase D |

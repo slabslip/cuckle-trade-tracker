@@ -19,6 +19,16 @@ import {
   TREND_WEIGHT,
   EARLY_WEEK_CUTOFF,
 } from "./lib/projected-finish.mjs";
+import {
+  runMonteCarlo,
+  scoreModelFromWeeks,
+  scaledBlendWeights,
+  weekBlendScale,
+  attachMonteCarloToBook,
+  mcBlendWeight,
+  DEFAULT_MC_SIMS,
+} from "./lib/projected-finish-mc.mjs";
+
 
 assert.ok(pythagWinPct(1000, 800) > 0.5);
 assert.ok(pythagWinPct(800, 1000) < 0.5);
@@ -51,7 +61,7 @@ const book = projectFinishBook({
   playoffWeekStart: 15,
 });
 
-assert.equal(book.v, 4);
+assert.equal(book.v, 5);
 assert.equal(book.seats[0].name, "Alpha");
 assert.equal(book.seats[0].proj_finish, 1);
 assert.equal(book.seats[0].proj_slot, 2);
@@ -276,4 +286,69 @@ console.log("projected-finish.test.mjs ok", {
     dealTrend: heatBy.DealMaker.trend_score,
     quietTrend: heatBy.QuietBag.trend_score,
   },
+});
+assert.equal(DEFAULT_MC_SIMS, 2500);
+assert.ok(weekBlendScale(1, 15).arc > weekBlendScale(12, 15).arc);
+assert.ok(weekBlendScale(12, 15).path > weekBlendScale(1, 15).path);
+const w1 = scaledBlendWeights(1, 15);
+const w12 = scaledBlendWeights(12, 15);
+assert.ok(w1.arc > w12.arc, "early weeks overweight arc");
+assert.ok(w12.path > w1.path, "late weeks overweight path");
+const sumW = w1.race + w1.path + w1.ease + w1.arc + w1.form + w1.trend;
+assert.ok(Math.abs(sumW - 1) < 0.02, "scaled weights ~1");
+
+const model = scoreModelFromWeeks([100, 110, 120], 130, 35, 3);
+assert.ok(model.mu > 100 && model.mu < 130);
+
+const mc = runMonteCarlo({
+  seats: {
+    1: { wins: 5, losses: 1, ties: 0, pf: 900, pa: 700, weekPts: [140, 150, 160, 155, 145, 150] },
+    2: { wins: 1, losses: 5, ties: 0, pf: 600, pa: 900, weekPts: [90, 95, 100, 85, 88, 92] },
+  },
+  remainingPairs: [[1, 2], [1, 2], [1, 2], [1, 2]],
+  nSims: 400,
+  seed: 7,
+  week: 6,
+});
+assert.ok(mc.by_roster["1"].mean_place < mc.by_roster["2"].mean_place);
+assert.ok(mc.by_roster["1"].p_top4 > 0.5);
+assert.ok(mcBlendWeight(12, 15) > mcBlendWeight(1, 15));
+
+const mcBook = attachMonteCarloToBook(
+  projectFinishBook({
+    rosters: [
+      { roster_id: 1, owner_id: "a", settings: { wins: 5, losses: 1, fpts: 900, fpts_against: 700 } },
+      { roster_id: 2, owner_id: "b", settings: { wins: 1, losses: 5, fpts: 600, fpts_against: 900 } },
+    ],
+    ownerByRoster: { 1: "a", 2: "b" },
+    nameByUser: { a: "Alpha", b: "Beta" },
+    remainingPairs: [[1, 2], [1, 2], [1, 2], [1, 2]],
+    teams: 2,
+    season: 2026,
+    week: 6,
+    playoffWeekStart: 15,
+  }),
+  {
+    seats: {
+      1: { wins: 5, losses: 1, ties: 0, pf: 900, pa: 700, weekPts: [140, 150, 160, 155, 145, 150] },
+      2: { wins: 1, losses: 5, ties: 0, pf: 600, pa: 900, weekPts: [90, 95, 100, 85, 88, 92] },
+    },
+    remainingPairs: [[1, 2], [1, 2], [1, 2], [1, 2]],
+    week: 6,
+    playoffWeekStart: 15,
+    nSims: 400,
+    seed: 9,
+  },
+);
+assert.ok(mcBook.mc && mcBook.mc.n_sims === 400);
+assert.ok(mcBook.seats[0].mc_mean != null);
+assert.ok(mcBook.seats[0].mc_p10 <= mcBook.seats[0].mc_p90);
+assert.equal(mcBook.seats[0].name, "Alpha");
+
+console.log("mc smoke", {
+  lead: mc.by_roster["1"].mean_place,
+  trail: mc.by_roster["2"].mean_place,
+  w1arc: w1.arc,
+  w12path: w12.path,
+  blend: mcBook.mc.blend_weight,
 });

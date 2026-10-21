@@ -31,15 +31,17 @@ This is the deepest dynasty *manager + team makeup* tool — not another KTC boa
 
 ---
 
-## Home IA (shipped overnight cut)
+## Home IA (manager OS — overnight rework)
 
 | # | Block | Content |
 | --- | --- | --- |
-| 1 | Calling card | Name · last-season place · **race pulse** (proj · record · band · type · bag) |
-| 2 | Overnight | Letter + race movers when `Δplace ≠ 0` |
-| 3 | Top-4 doors | **Projected finish · Draft picks · Who has firsts · Season arcs** |
-| 4 | Calc door | Unchanged |
-| 5 | Team Ideas ≤3 | Race/archetype tip in meta (“Proxy — fighting keeps Early Early”) |
+| 1 | Calling card | Name · last-season place · **race hero** (proj · record · band · type · bag) |
+| 2 | Capital strip | Your soonest-year firsts one line (band · slot · origin) · own-1st-sold tag |
+| 3 | Chase pulse | Archetype chase tip · self Δplace · race movers (top 3) |
+| 4 | Overnight | Letter (+ movers when tape moves) |
+| 5 | Team Ideas ≤3 | Up before doors — race/archetype tip in meta |
+| 6 | Top-4 doors | **Projected finish · Draft picks · Who has firsts · Season arcs** |
+| 7 | Calc door | Unchanged — last |
 
 Not on Home: bag totals, standings chrome, sixth tab, Votes tallies.
 
@@ -107,9 +109,9 @@ Insight: every win taxes their own Early.
 
 ## Workflows (manager OS)
 
-1. **Morning open** — race pulse → overnight → top-4 → Ideas  
-2. **Chase Early** — Who has firsts (slot sort) → Team Ideas tank tip → Calc  
-3. **Defend proxy Early** — Manager type → firsts rows → keep competing  
+1. **Morning open** — race hero → capital strip → chase pulse → Ideas → top-4  
+2. **Chase Early** — capital strip / Who has firsts → Team Ideas tank tip → Calc  
+3. **Defend proxy Early** — chase tip + firsts (own sold) → keep competing  
 4. **Bubble check** — Season arcs climb/fade → Projected finish SoS → don’t overpay  
 5. **Seat home dossier** — proj · type · bag · analyzer · marks (Phase D later)
 
@@ -124,9 +126,9 @@ Insight: every win taxes their own Early.
 | Archetype v2 gates | Shipped overnight |
 | Home race pulse + intel top-4 | Shipped overnight |
 | Team Ideas race tips | Shipped overnight |
+| Capital strip + chase pulse + Ideas-up | Shipped overnight rework |
 | `delta_place` movers when race moves | Wired; needs weekly refresh ≠0 |
 | Injury lede on overnight | Next (daily habit plan) |
-| Capital strip on Home | Later |
 | Manager dossier panel | Phase D |
 | Matchup W-L week ranks (vs PF proxy) | Later if tape lands |
 | Implied pick band on calc | Caption only; never value book |

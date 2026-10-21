@@ -120,23 +120,46 @@ function rosterIndex(rosters, members) {
   return { byPid, byRoster };
 }
 
-function playerName(id, playersNfl, injury) {
-  const p = (playersNfl && playersNfl[id]) || ((injury && injury.players) || {})[id] || {};
-  return p.full_name || p.name || `${p.first_name || ""} ${p.last_name || ""}`.trim() || String(id);
+/** Draft-pick labels + calc book — fallback when players.nfl.json is missing (gitignored). */
+function nameByPid(draftPicks, calc) {
+  const map = Object.create(null);
+  for (const row of draftPicks || []) {
+    if (!row || row.player_id == null || !row.label) continue;
+    const id = String(row.player_id);
+    if (!map[id]) map[id] = String(row.label);
+  }
+  for (const p of (calc && calc.players) || []) {
+    if (!p || p.sleeper_id == null) continue;
+    const id = String(p.sleeper_id);
+    const nm = p.name || p.full_name || "";
+    if (nm && !map[id]) map[id] = nm;
+  }
+  return map;
 }
 
-function wireLine(row, byRoster, playersNfl, injury) {
+function playerName(id, playersNfl, injury, draftNames) {
+  const key = String(id);
+  const p = (playersNfl && (playersNfl[key] || playersNfl[id]))
+    || ((injury && injury.players) || {})[key]
+    || ((injury && injury.players) || {})[id]
+    || {};
+  return p.full_name || p.name || `${p.first_name || ""} ${p.last_name || ""}`.trim()
+    || (draftNames && draftNames[key])
+    || key;
+}
+
+function wireLine(row, byRoster, playersNfl, injury, draftNames) {
   const kind = row.type === "free_agent" ? "FA" : row.type === "commissioner" ? "commish" : "waiver";
   const bags = new Map();
   for (const [pid, rid] of Object.entries(row.adds || {})) {
     const owner = byRoster.get(String(rid)) || "Someone";
     if (!bags.has(owner)) bags.set(owner, { adds: [], drops: [] });
-    bags.get(owner).adds.push(playerName(pid, playersNfl, injury));
+    bags.get(owner).adds.push(playerName(pid, playersNfl, injury, draftNames));
   }
   for (const [pid, rid] of Object.entries(row.drops || {})) {
     const owner = byRoster.get(String(rid)) || "Someone";
     if (!bags.has(owner)) bags.set(owner, { adds: [], drops: [] });
-    bags.get(owner).drops.push(playerName(pid, playersNfl, injury));
+    bags.get(owner).drops.push(playerName(pid, playersNfl, injury, draftNames));
   }
   const lines = [...bags.entries()].map(([owner, bag]) => {
     const got = bag.adds.join(" + ");
@@ -378,6 +401,8 @@ function main() {
   const injury = readJson("injury_now.json", { players: {} }) || { players: {} };
   const playersNfl = readJson("players.nfl.json", {}) || {};
   const calc = readUi("calculator.json", { players: [] }) || { players: [] };
+  const draftPicks = readJson("draft_picks.json", []) || [];
+  const draftNames = nameByPid(draftPicks, calc);
   const cuffs = readUi("cuffs.json", { rows: [] }) || { rows: [] };
   const cuffByStarter = cuffIndex(cuffs);
   const valueById = new Map();
@@ -404,7 +429,7 @@ function main() {
     .map((row) => ({
       date: row.date,
       type: row.type,
-      line: wireLine(row, byRoster, playersNfl, injury),
+      line: wireLine(row, byRoster, playersNfl, injury, draftNames),
     }))
     .slice(0, 8);
 

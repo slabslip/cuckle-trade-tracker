@@ -10,6 +10,8 @@ import {
   scoreFormLeague,
   summarizeScoringTrend,
   scoreTrendLeague,
+  summarizeHeatByRoster,
+  scoreHeatLeague,
   RACE_WEIGHT,
   PATH_WEIGHT,
   ARC_WEIGHT,
@@ -203,6 +205,63 @@ assert.ok(
 assert.ok(trendBy.LateRise.trend_delta > 0);
 assert.ok(trendBy.HotStart.trend_delta < 0);
 
+// Form slope: improving residual late should beat flattening early over-score.
+assert.ok(Number.isFinite(formRows["1"].form_slope));
+
+// Heat: deal-makers / FA scrapers get a trend nudge (2025 W6 retro).
+const heatRaw = summarizeHeatByRoster({
+  trades: [
+    { season: 2026, week: 5, user_ids: ["deal"] },
+    { season: 2026, week: 6, user_ids: ["deal"] },
+  ],
+  moves: [
+    { season: 2026, week: 5, type: "free_agent", roster_ids: [1], adds: { "1": 1 } },
+    { season: 2026, week: 6, type: "waiver", roster_ids: [1], adds: { "2": 1 } },
+    { season: 2026, week: 6, type: "free_agent", roster_ids: [1], adds: { "3": 1 } },
+  ],
+  ownerByRoster: { 1: "deal", 2: "quiet" },
+  season: 2026,
+  week: 6,
+  window: 3,
+});
+// Quiet seat must be present so league z/score has a floor (single-seat → 0.5).
+heatRaw["2"] = { trade_n: 0, fa_n: 0, heat: 0 };
+const heatRows = scoreHeatLeague(heatRaw);
+assert.ok(heatRows["1"].heat > heatRows["2"].heat);
+assert.ok((heatRows["1"].trade_n || 0) >= 2);
+assert.ok((heatRows["1"].fa_n || 0) >= 3);
+assert.ok(heatRows["1"].heat_score > heatRows["2"].heat_score);
+
+const heatBook = projectFinishBook({
+  rosters: [
+    {
+      roster_id: 1,
+      owner_id: "deal",
+      settings: { wins: 3, losses: 3, fpts: 880, fpts_against: 900 },
+    },
+    {
+      roster_id: 2,
+      owner_id: "quiet",
+      settings: { wins: 3, losses: 3, fpts: 900, fpts_against: 880 },
+    },
+  ],
+  ownerByRoster: { 1: "deal", 2: "quiet" },
+  nameByUser: { deal: "DealMaker", quiet: "QuietBag" },
+  remainingPairs: [[1, 2], [1, 2], [1, 2], [1, 2], [1, 2], [1, 2]],
+  teams: 2,
+  season: 2026,
+  week: 6,
+  playoffWeekStart: 15,
+  heatByRoster: heatRows,
+});
+const heatBy = Object.fromEntries(heatBook.seats.map((s) => [s.name, s]));
+assert.ok(heatBy.DealMaker.heat != null && heatBy.DealMaker.heat > 0);
+assert.equal(heatBy.QuietBag.trade_n, 0);
+assert.ok(
+  heatBy.DealMaker.trend_score > heatBy.QuietBag.trend_score,
+  "heat should lift DealMaker trend_score vs quiet seat",
+);
+
 console.log("projected-finish.test.mjs ok", {
   lead: byName.LeadNow.proj_finish,
   chase: byName.ChaseArc.proj_finish,
@@ -211,5 +270,10 @@ console.log("projected-finish.test.mjs ok", {
     hot: trendBy.HotStart.proj_finish,
     rise: trendBy.LateRise.proj_finish,
     deltas: [trendBy.HotStart.trend_delta, trendBy.LateRise.trend_delta],
+  },
+  heat: {
+    deal: heatBy.DealMaker.heat,
+    dealTrend: heatBy.DealMaker.trend_score,
+    quietTrend: heatBy.QuietBag.trend_score,
   },
 });

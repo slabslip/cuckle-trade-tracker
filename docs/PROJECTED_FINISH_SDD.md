@@ -36,7 +36,9 @@ homepage “who to target” journeys.
 
 v1 double-counted banked wins. v2 forecasts movement. v3 adds actual-vs-proj
 form. **v4** downweights noisy weeks 1–4 (unset NFL starters / rookies) and
-adds a live **playoff-trend** signal from league-relative PPW:
+adds a live **playoff-trend** signal from league-relative PPW. The 2025 W6
+retrospective added **form slope** (late residual vs early) and **transaction
+heat** (recent trades + FA adds folded into trend):
 
 ```text
 week_weight(w) = soft for w≤4, full mid-season, heaviest near playoffs
@@ -44,26 +46,31 @@ talent_ppw     = weighted mean weekly PF (early soft)
 talent_PF      = 0.30×season_ppw + 0.70×talent_ppw   × games
 pythag         = talent_PF^1.8 / (talent_PF^1.8 + PA^1.8)
 form_delta     = weighted mean(actual − starter_proj)   ← early soft
+form_slope     = recent residual − early residual       ← W4–6 vs W1–3
 trend_delta    = league-rel PPW (post-early − early)      ← display
 trend_signal   = 0.40×trend_delta + 0.60×recent_rel      ← must score well lately
-adj_pythag     = clamp(pythag + FORM_LEAN × blend(form_z, recent_z, trend_z))
+heat           = 2×trades + 0.35×FA adds in last 3 scored weeks
+adj_pythag     = clamp(pythag + FORM_LEAN × blend(form_z, recent_z, trend_z+0.25×heat_z, slope_z))
 P(A beats B)   = adj_pythag_A / (adj_pythag_A + adj_pythag_B)
 expected_remaining_wins = Σ P(win)                       ← SoS + form + trend
 race_score = 0.65×standings_pts_norm + 0.35×talent_PF_norm
 path / ease / arc as before (arcs = career late climb)
-form_score  = normalize(0.35×form_z + 0.65×recent_z)
-trend_score = normalize(0.80×trend_signal_z + 0.20×slope_z)
+form_score  = normalize(0.30×form_z + 0.50×recent_z + 0.20×slope_z)
+trend_score = 0.75×normalize(0.80×trend_signal_z + 0.20×slope_z) + 0.25×heat_score
 proj_score  = 0.28×race + 0.28×path + 0.10×ease
             + 0.10×arc + 0.12×form + 0.12×trend
 ```
 
 Historical check (Cuckle tape): mid+late PF rank correlates with final place
 (~0.84) better than weeks 1–4 alone (~0.71). Career climbers show positive
-late-minus-early league-relative PPW; faders the opposite.
+late-minus-early league-relative PPW; faders the opposite. 2025 W6 grade vs
+actual: MAE **2.0** places, corr **0.661** — see
+[`PROJECTED_FINISH_W6_2025_RETRO.md`](./PROJECTED_FINISH_W6_2025_RETRO.md).
 
 - **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.
 - Trend from `raw/weekly_scores.json` for the live season.
 - Form from Sleeper weekly starter projections vs actuals.
+- Heat from `raw/trades.json` + `raw/moves.json` (last 3 scored weeks).
 - Soft playoff bracket in expand stays opinion chrome.
 
 Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs).

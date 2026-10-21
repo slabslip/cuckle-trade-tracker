@@ -17,8 +17,10 @@ import {
 import {
   projectFinishBook,
   scoreFormLeague,
+  scoreHeatLeague,
   scoreTrendLeague,
   summarizeFormByRoster,
+  summarizeHeatByRoster,
   summarizeScoringTrend,
 } from "./lib/projected-finish.mjs";
 
@@ -210,11 +212,18 @@ async function main() {
     }
   }
 
-  const trendByRoster = scoringTrendByRoster(
-    Number(live.season) || live.season,
-    lastScored,
+  const season = Number(live.season) || live.season;
+  const trendByRoster = scoringTrendByRoster(season, lastScored, ownerByRoster);
+  const tradesRaw = readJson("trades.json", []) || [];
+  const movesRaw = readJson("moves.json", []) || [];
+  const heatByRoster = scoreHeatLeague(summarizeHeatByRoster({
+    trades: Array.isArray(tradesRaw) ? tradesRaw : Object.values(tradesRaw),
+    moves: Array.isArray(movesRaw) ? movesRaw : Object.values(movesRaw),
     ownerByRoster,
-  );
+    season,
+    week: lastScored,
+    window: 3,
+  }));
 
   const book = projectFinishBook({
     rosters: rosters || [],
@@ -222,12 +231,13 @@ async function main() {
     nameByUser,
     remainingPairs: rem.pairs,
     teams,
-    season: Number(live.season),
+    season,
     week: lastScored,
     playoffWeekStart: playoffStart,
     arcByUser: arcByUser(),
     formByRoster,
     trendByRoster,
+    heatByRoster,
   });
 
   book.as_of = today;

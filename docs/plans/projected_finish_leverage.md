@@ -64,12 +64,12 @@ Calculator
 Full sequence (icons, arcs, archetypes, proxy-first incentive):
 [`manager_intel_spine.md`](./manager_intel_spine.md).
 
-Phase A (no new book):
+Phase A–C (shipping on manager-intel build):
 
 1. **Race movers on overnight letter** when `|delta_place| ≥ 1`
-2. **Team Ideas** lines that name Early origins + holders
-3. **Who has firsts** sorted by projected slot
-4. Optional: show SoS ease on the Teams list row (subtle)
+2. **Team Ideas** weighted by proj band + archetype (proxy / bubble / tank)
+3. **Who has firsts** sorted by projected slot (holder · origin · proxy tag)
+4. **Season arcs** + **Manager type** doors + team-home archetype caption
 
 ### Do not
 

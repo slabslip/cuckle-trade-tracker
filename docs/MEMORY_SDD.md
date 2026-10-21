@@ -54,6 +54,8 @@ the same paint. Do not invent a 17th kind for each argument.
 | `profit_loss` | Profit / Loss |
 | `season_place` / `season_title` | Manager avg finish |
 | `projected_finish` | Projected finish (this season) |
+| `season_arcs` | Season arcs (slow burn / bubble / proxy) |
+| `manager_archetypes` | Manager type |
 
 Share chips (same tape, not board tiles): `trade_mark` (Trade ticket),
 `pick_print` (What my pick became). Saved boards that still store
@@ -158,11 +160,11 @@ filters by a Team dropdown, not a type-in.
 7. Manager avg finish (`season_place`)
 7b. Projected finish (`projected_finish`) — this season’s race + SoS → pick band
 8. Me vs them (`vs_you`)
-9. Who has firsts (`firsts_held`)
+9. Who has firsts (`firsts_held`) — sorted by projected slot
 10. Week scores (`week_scores`) — highest five and lowest five team weeks ever
-11. Passed around (`passed_around`)
-12. Draft hits (`seat_draft`)
-13. No backup (`uninsured`)
+11. Draft hits (`seat_draft`)
+12. Season arcs (`season_arcs`) — slow start → finish strong
+13. Manager type (`manager_archetypes`) is catalog + team-home caption (pin via Edit)
 
 **Hold, then drag** is how they reorder. Mouse can drag without a long
 press. The first four doors wear a gold ring — that is the top 4, and
@@ -257,6 +259,8 @@ says so. Do not add a catalog id `realized`.
 - Past champions: year · seat rows. Tap → the crown list.
 - Manager avg finish: ranked career average finish, season count under the name, every year · place.
 - Projected finish: place now, record, PF/PA, expected wins, proj place, Early / Mid / Late.
+- Season arcs: week-4 PF rank vs final place, bubble-trade rate, proxy-first motive.
+- Manager type: one archetype label per seat (proxy contender, slow burn, bubble trader, …).
 
 A door’s list is the **catalog**, not one lead example. Tap a row → that
 object’s ticket. Share lives on the ticket.

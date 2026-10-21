@@ -4482,7 +4482,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "projectedFinish20261021020000";
+    const DATA_V = "managerIntel20261021040000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4537,7 +4537,7 @@ const html = `<!DOCTYPE html>
     const DATA_DOORS = [
       "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
       "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "seat_draft", "uninsured",
+      "week_scores", "seat_draft", "season_arcs",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -4550,7 +4550,7 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_DEFAULT = [
       "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
       "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "seat_draft", "uninsured",
+      "week_scores", "seat_draft", "season_arcs",
     ];
     const DATA_DASH_RESEARCH = [
       "firsts_held", "uninsured", "widest_clock", "passed_around",
@@ -4597,7 +4597,7 @@ const html = `<!DOCTYPE html>
       { id: "my_block", lab: "My block", desk: "book", group: "deal", size: "full", why: "Pieces you will actually deal." },
       { id: "league_block", lab: "League block", desk: "book", group: "deal", size: "full", why: "What everyone else listed for sale." },
       { id: "block_fits", lab: "Block fits", desk: "book", group: "deal", size: "full", why: "Listed pieces that fill a hole." },
-      { id: "firsts_held", lab: "Who has firsts", desk: "draft", size: "half", why: "First-round picks still held." },
+      { id: "firsts_held", lab: "Who has firsts", desk: "draft", size: "half", why: "Unused firsts sorted by projected slot — Early 1.01 first. Holder, origin, proxy tag." },
       { id: "uninsured", lab: "No backup", desk: "cuffs", size: "half", why: "Starters whose cuff is not rostered." },
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
@@ -4622,6 +4622,8 @@ const html = `<!DOCTYPE html>
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "Manager avg finish", desk: "lists", group: "memory", size: "full", why: "Career average finish. One year still counts. Not this season’s projection." },
       { id: "projected_finish", lab: "Projected finish", desk: "lists", group: "memory", size: "full", why: "This season’s place, record, PF/PA, rest-of-way SoS → expected finish and pick band." },
+      { id: "season_arcs", lab: "Season arcs", desk: "lists", group: "memory", size: "full", why: "Slow start → finish strong. Early PF rank vs final place, bubble trades, proxy-first motive." },
+      { id: "manager_archetypes", lab: "Manager type", desk: "lists", group: "memory", size: "full", why: "Slow burn, bubble trader, proxy contender, tank sculptor — how they play seasons." },
       { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
       { id: "points_king", lab: "Points king", desk: "lists", group: "who", size: "full", why: "Highest average points per season. Regular season plus title-hunt weeks only." },
       { id: "contender_rate", lab: "Contender rate", desk: "lists", group: "who", size: "full", why: "Top-six finishes over seasons played. Three seasons minimum." },
@@ -4720,6 +4722,8 @@ const html = `<!DOCTYPE html>
     let weekScoresLoading = false;
     let finishesBook = null;
     let projectedFinishBook = null;
+    let seasonArcsBook = null;
+    let managerArchetypesBook = null;
     let leagueLoadGen = 0;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
@@ -5109,7 +5113,8 @@ const html = `<!DOCTYPE html>
       return canon === "season_place" || canon === "week_scores" || canon === "firsts_held"
         || canon === "vs_you" || canon === "seat_draft" || canon === "forever"
         || canon === "homesteaders" || canon === "least_traded" || canon === "passed_around"
-        || canon === "past_champions";
+        || canon === "past_champions" || canon === "projected_finish"
+        || canon === "season_arcs" || canon === "manager_archetypes";
     }
 
     function dataListPickSlice(items, slice, who) {
@@ -5150,6 +5155,46 @@ const html = `<!DOCTYPE html>
             rank: s.proj_finish || (i + 1),
             seat: s,
             band: String(s.band || "Mid").toLowerCase(),
+          };
+        });
+      }
+      if (canon === "season_arcs") {
+        const seats = (seasonArcsBook && Array.isArray(seasonArcsBook.seats))
+          ? seasonArcsBook.seats.slice() : [];
+        seats.sort(function (a, b) {
+          return (Number(b.slow_burn_rate) || 0) - (Number(a.slow_burn_rate) || 0)
+            || (Number(b.avg_climb) || 0) - (Number(a.avg_climb) || 0);
+        });
+        return seats.map(function (s, i) {
+          const pct = Math.round((Number(s.slow_burn_rate) || 0) * 100);
+          const bubble = Math.round((Number(s.bubble_rate) || 0) * 100);
+          const climb = Number(s.avg_climb) || 0;
+          const climbLab = climb > 0 ? ("+" + climb.toFixed(1) + " climb") : (climb.toFixed(1) + " climb");
+          return {
+            key: String(s.user_id || s.name || i),
+            name: s.name,
+            metric: pct + "% slow burn",
+            sub: climbLab
+              + " · bubble " + bubble + "%"
+              + (s.proxy_motive ? " · proxy first" : "")
+              + (s.owned_own_first === false ? " · sold own 1st" : "")
+              + (s.live_band ? (" · now " + s.live_band) : ""),
+            rank: i + 1,
+            seat: s,
+          };
+        });
+      }
+      if (canon === "manager_archetypes") {
+        const seats = (managerArchetypesBook && Array.isArray(managerArchetypesBook.seats))
+          ? managerArchetypesBook.seats : [];
+        return seats.map(function (s, i) {
+          return {
+            key: String(s.user_id || s.name || i),
+            name: s.name,
+            metric: s.lab || s.archetype || "—",
+            sub: s.why || "",
+            rank: i + 1,
+            seat: s,
           };
         });
       }
@@ -5291,38 +5336,51 @@ const html = `<!DOCTYPE html>
         if (typeof ensurePicks === "function") ensurePicks();
         if (!picks) return [];
         const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
-        const bag = {};
+        const list = [];
         for (let i = 0; i < rows.length; i++) {
           const parts = pickKeyParts(rows[i].key);
           if (!parts || parts.round !== 1) continue;
           if (yearWant && parts.season !== yearWant) continue;
-          const owner = pickOwnerName(rows[i].entry) || "League";
-          if (!bag[owner]) bag[owner] = [];
-          bag[owner].push(parts.season);
+          const entry = rows[i].entry || {};
+          const holder = pickOwnerName(entry) || "League";
+          const origin = (typeof pickOriginName === "function")
+            ? pickOriginName(entry.label) : "";
+          const originProj = origin && typeof projSeatByName === "function"
+            ? projSeatByName(origin) : null;
+          const holderArch = typeof archSeatByName === "function" ? archSeatByName(holder) : null;
+          const slot = originProj && originProj.proj_slot != null
+            ? Number(originProj.proj_slot) : 99;
+          const band = (originProj && originProj.band) || "Mid";
+          const slotLab = slot < 99
+            ? ((slot < 10 ? "1.0" : "1.") + slot)
+            : "1.?";
+          let sub = "held by " + holder
+            + (origin && origin !== holder ? (" · origin " + origin) : (origin ? " · own origin" : ""))
+            + " · " + band + " " + slotLab;
+          if (holderArch && holderArch.archetype === "proxy_contender") {
+            sub += " · proxy contender";
+          } else if (holderArch && holderArch.proxy_motive) {
+            sub += " · fighting for held Early";
+          }
+          list.push({
+            key: rows[i].key || (holder + ":" + parts.season + ":" + i),
+            name: (origin || holder) + " " + parts.season + " 1st",
+            metric: band + " · " + slotLab,
+            sub: sub,
+            rank: 0,
+            seat: { name: holder, origin: origin, year: parts.season, band: band, slot: slot },
+            _slot: slot,
+            _name: holder,
+          });
         }
-        for (let i = 0; i < (members || []).length; i++) {
-          const nm = members[i] && members[i].name;
-          if (nm && !bag[nm]) bag[nm] = [];
-        }
-        return Object.keys(bag).sort(function (a, b) {
-          return bag[b].length - bag[a].length || a.localeCompare(b);
-        }).map(function (name, i) {
-          const years = bag[name].slice().sort();
-          const counts = {};
-          for (let j = 0; j < years.length; j++) counts[years[j]] = (counts[years[j]] || 0) + 1;
-          const line = years.length
-            ? Object.keys(counts).sort().map(function (y) {
-              return counts[y] > 1 ? (y + " x" + counts[y]) : y;
-            }).join(" · ")
-            : (yearWant ? ("No " + yearWant + " first") : "No future first");
-          return {
-            key: name,
-            name: name,
-            metric: String(years.length),
-            sub: line,
-            rank: i + 1,
-            seat: { name: name, years: years },
-          };
+        list.sort(function (a, b) {
+          return (a._slot - b._slot) || String(a._name).localeCompare(String(b._name));
+        });
+        return list.map(function (row, i) {
+          row.rank = i + 1;
+          delete row._slot;
+          delete row._name;
+          return row;
         });
       }
       if (canon === "vs_you") {
@@ -6936,7 +6994,7 @@ const html = `<!DOCTYPE html>
       if (id === "my_trades" || id === "league_trades" || id === "my_draft" || id === "league_draft"
         || id === "profit_loss"
         || id === "trade_mark" || id === "pick_print" || id === "my_picks"
-        || id === "season_place" || id === "season_title" || id === "projected_finish") return "memory";
+        || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
       return "who";
@@ -7036,6 +7094,8 @@ const html = `<!DOCTYPE html>
         past_champions: '<path d="M4 16l3.2-8 4.8 4.5L16.8 8 20 16H4z"/><path d="M5 19h14"/>',
         season_place: '<path d="M4 14h5v6H4zM9.5 8h5v12h-5zM15 12h5v8h-5z"/>',
         projected_finish: '<path d="M4 18l5-6 4 3 7-9"/><circle cx="20" cy="6" r="1.5"/>',
+        season_arcs: '<path d="M4 16c3-6 6 2 9-4s5 2 7-2"/><path d="M4 19h16"/>',
+        manager_archetypes: '<circle cx="8" cy="9" r="2.2"/><circle cx="16" cy="9" r="2.2"/><path d="M4 18c.8-3 2.6-4.2 4-4.2S12 15 12.8 18M11.2 18c.8-3 2.6-4.2 4-4.2S20 15 20.2 18"/>',
         career_avg: '<path d="M4 16h5v4H4zM9.5 10h5v10h-5zM15 6h5v14h-5z"/>',
         points_king: '<path d="M12 3.4l2.2 5.2 5.6.8-4.1 3.9.9 5.8L12 16.4 7.4 19.1l.9-5.8-4.1-3.9 5.6-.8z"/>',
         contender_rate: '<circle cx="12" cy="12" r="7.2"/><path d="M12 8v4.2l2.6 1.6"/>',
@@ -7084,6 +7144,15 @@ const html = `<!DOCTYPE html>
             (typeof nth === "function" ? nth(lead.proj_finish) : String(lead.proj_finish))
             + (lead.band ? (" · " + lead.band) : ""));
         }
+      } else if (id === "season_arcs") {
+        const lead = seasonArcsBook && seasonArcsBook.seats && seasonArcsBook.seats[0];
+        if (lead) {
+          fig = receiptDoorLeadFig(lead.name,
+            Math.round((Number(lead.slow_burn_rate) || 0) * 100) + "% slow");
+        }
+      } else if (id === "manager_archetypes") {
+        const lead = managerArchetypesBook && managerArchetypesBook.seats && managerArchetypesBook.seats[0];
+        if (lead) fig = receiptDoorLeadFig(lead.name, lead.lab || "");
       } else if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
         if (id === "past_champions") {
           const last = ((titles && titles.titles) || [])[0];
@@ -8199,6 +8268,30 @@ const html = `<!DOCTYPE html>
           return listRow({ name: r.name, team: r.sub }, r.metric);
         });
       }
+      if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes") {
+        const items = dataListItems(id).filter(function (r) {
+          return hit([r.name, r.metric, r.sub, r.rank]);
+        });
+        if (!items.length) {
+          if (id === "projected_finish" && !projectedFinishBook) {
+            return '<p class="caption">Projected finish book not loaded yet.</p>';
+          }
+          if (id === "season_arcs" && !seasonArcsBook) {
+            return '<p class="caption">Season arcs book not loaded yet.</p>';
+          }
+          if (id === "manager_archetypes" && !managerArchetypesBook) {
+            return '<p class="caption">Manager type book not loaded yet.</p>';
+          }
+          return '<p class="caption">Nothing on this tape matches.</p>';
+        }
+        return dataListBandsHtml(id, items, function (r) {
+          return '<div class="row"><div class="row-top"><div><div class="names">'
+            + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+            + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+            + "</div>"
+            + '<div class="margin">' + esc(r.metric || "—") + "</div></div></div>";
+        });
+      }
       return "";
     }
 
@@ -8262,6 +8355,17 @@ const html = `<!DOCTYPE html>
           + " Expected wins rank the board. Last place → Early 1.01 band; title → Late."
           + " Draft picks Early / Mid / Late read this book first.";
       }
+      else if (id === "season_arcs") {
+        caption = "Season arcs from past years: week-4 cumulative PF rank vs final place."
+          + " Slow burn climbs 3+ spots; fast fade drops 3+."
+          + " Bubble = early-season player buys then playoffs or not-last."
+          + " Proxy first = sold their own soonest 1st but still competing while holding others’ Early.";
+      }
+      else if (id === "manager_archetypes") {
+        caption = "One label per seat from arcs + live race + seat direction."
+          + " Proxy contender, tank sculptor, bubble trader, slow burn, fast fade, capital hoarder, race favorite."
+          + " Opinion for Team Ideas — never writes the trade needle.";
+      }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
         if (leagueFormat().kind !== "redraft") {
@@ -8310,7 +8414,7 @@ const html = `<!DOCTYPE html>
       else if (id === "firsts_held") {
         caption = leagueFormat().kind === "redraft"
           ? "This season first-round draftees still on that roster."
-          : "Who is sitting on future firsts.";
+          : "Unused firsts sorted by Projected finish slot (Early 1.01 first). Holder, origin seat, band. Proxy contender tags when they sold their own 1st but still compete.";
       }
       else if (id === "week_scores") {
         caption = leagueFormat().kind === "redraft"
@@ -9820,6 +9924,11 @@ const html = `<!DOCTYPE html>
           + receiptShareIco() + "</button>")
         + "</div>"
         + (letter.lede ? '<p class="overnight-slip-lede">' + esc(letter.lede) + "</p>" : "")
+        + (function () {
+          const movers = typeof raceMoversLines === "function" ? raceMoversLines() : [];
+          if (!movers.length) return "";
+          return '<p class="overnight-slip-lede">Race movers · ' + esc(movers.join(" · ")) + "</p>";
+        })()
         + "</div>"
         + meters
         + tradeBlock + wireBlock + outBlock + irBlock + otherBlock + more
@@ -10280,6 +10389,9 @@ const html = `<!DOCTYPE html>
       seatDirection = null;
       weekScoresBook = null;
       finishesBook = null;
+      projectedFinishBook = null;
+      seasonArcsBook = null;
+      managerArchetypesBook = null;
       overnight = null;
       overnightLoading = false;
       overnightOpen = false;
@@ -10296,7 +10408,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -10312,6 +10424,8 @@ const html = `<!DOCTYPE html>
         getLeagueJson("week-scores.json").catch(() => null),
         getLeagueJson("finishes.json").catch(() => null),
         getLeagueJson("projected-finish.json").catch(() => null),
+        getLeagueJson("season-arcs.json").catch(() => null),
+        getLeagueJson("manager-archetypes.json").catch(() => null),
       ]);
       if (gen !== leagueLoadGen) return;
       const nowId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
@@ -10381,6 +10495,14 @@ const html = `<!DOCTYPE html>
           : null;
         pickHubOutlookMemo = null;
       } catch (err) { projectedFinishBook = null; }
+      try {
+        seasonArcsBook = seasonArcsRaw && Number(seasonArcsRaw.v) >= 1
+          && Array.isArray(seasonArcsRaw.seats) ? seasonArcsRaw : null;
+      } catch (err) { seasonArcsBook = null; }
+      try {
+        managerArchetypesBook = managerArchRaw && Number(managerArchRaw.v) >= 1
+          && Array.isArray(managerArchRaw.seats) ? managerArchRaw : null;
+      } catch (err) { managerArchetypesBook = null; }
       getLeagueJson("name-history.json").then(function (book) {
         nameHistoryBook = book && book.v === 1 && book.seats ? book : null;
         if (appScreen === "joinWelcome") render();
@@ -12129,6 +12251,59 @@ const html = `<!DOCTYPE html>
       return (m && m.name) || "";
     }
 
+    function projSeatOf(uid) {
+      if (!projectedFinishBook || !Array.isArray(projectedFinishBook.seats) || !uid) return null;
+      const want = String(uid);
+      return projectedFinishBook.seats.find(function (s) {
+        return s && String(s.user_id) === want;
+      }) || null;
+    }
+
+    function projSeatByName(name) {
+      if (!projectedFinishBook || !Array.isArray(projectedFinishBook.seats) || !name) return null;
+      const want = String(name);
+      return projectedFinishBook.seats.find(function (s) {
+        return s && String(s.name) === want;
+      }) || null;
+    }
+
+    function archSeatOf(uid) {
+      if (!managerArchetypesBook || !Array.isArray(managerArchetypesBook.seats) || !uid) return null;
+      const want = String(uid);
+      return managerArchetypesBook.seats.find(function (s) {
+        return s && String(s.user_id) === want;
+      }) || null;
+    }
+
+    function archSeatByName(name) {
+      if (!managerArchetypesBook || !Array.isArray(managerArchetypesBook.seats) || !name) return null;
+      const want = String(name);
+      return managerArchetypesBook.seats.find(function (s) {
+        return s && String(s.name) === want;
+      }) || null;
+    }
+
+    function pickOriginName(label) {
+      const m = String(label || "").match(/\(([^)]+)\)\s*$/);
+      return m ? m[1] : "";
+    }
+
+    function raceMoversLines() {
+      const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
+        ? projectedFinishBook.seats : [];
+      return seats.filter(function (s) {
+        return Math.abs(Number(s.delta_place) || 0) >= 1;
+      }).sort(function (a, b) {
+        return Math.abs(Number(b.delta_place) || 0) - Math.abs(Number(a.delta_place) || 0);
+      }).slice(0, 4).map(function (s) {
+        const d = Number(s.delta_place) || 0;
+        const arrow = d > 0 ? ("↑" + d) : ("↓" + (-d));
+        return (s.name || "Seat") + " " + arrow
+          + " → proj " + (typeof nth === "function" ? nth(s.proj_finish) : s.proj_finish)
+          + (s.band ? (" · " + s.band) : "");
+      });
+    }
+
     function seatDirOf(uid) {
       const seats = (seatDirection && seatDirection.seats) || [];
       for (let i = 0; i < seats.length; i++) {
@@ -13240,6 +13415,18 @@ const html = `<!DOCTYPE html>
             ? ((lead.name || "Lead") + (lead.band ? (" · " + lead.band) : "")
               + (week != null ? (" · w" + week) : ""))
             : "This season’s race");
+      }
+      if (id === "season_arcs") {
+        const lead = seasonArcsBook && seasonArcsBook.seats && seasonArcsBook.seats[0];
+        return dataDashHead(spec,
+          lead ? (Math.round((Number(lead.slow_burn_rate) || 0) * 100) + "%") : "Open",
+          lead ? ((lead.name || "Lead") + " slow burn") : "Climb after a soft start");
+      }
+      if (id === "manager_archetypes") {
+        const lead = managerArchetypesBook && managerArchetypesBook.seats && managerArchetypesBook.seats[0];
+        return dataDashHead(spec,
+          lead ? (lead.lab || "Open") : "Open",
+          lead ? (lead.name || "Lead") : "How they play seasons");
       }
       if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];
@@ -24826,6 +25013,20 @@ const html = `<!DOCTYPE html>
         if (stack) score -= 90;
         const book = homeDeskBookNote(legsA.concat(legsB));
         if (book) score -= 30;
+        const theirProj = themId && typeof projSeatOf === "function" ? projSeatOf(themId) : null;
+        const theirArch = themId && typeof archSeatOf === "function" ? archSeatOf(themId) : null;
+        if (theirProj) {
+          if (theirProj.band === "Early") score -= 140;
+          else if (theirProj.band === "Late") score -= 40;
+          const dlt = Number(theirProj.delta_place) || 0;
+          if (dlt <= -1) score -= 60;
+          if (dlt >= 1) score -= 35;
+        }
+        if (theirArch) {
+          if (theirArch.archetype === "proxy_contender") score -= 90;
+          else if (theirArch.archetype === "bubble_trader") score -= 50;
+          else if (theirArch.archetype === "tank_sculptor") score -= 70;
+        }
         const key = (calcValueNum(legsA[0]) >= calcValueNum(legsB[0])) ? legsA[0] : legsB[0];
         if (!best || score < best.score) {
           best = {
@@ -24869,7 +25070,9 @@ const html = `<!DOCTYPE html>
         + ((members && members.length) || 0) + "\t"
         + ((seatDirection && seatDirection.as_of) || "") + "\t"
         + ((peBook && peBook.as_of) || "") + "\t"
-        + ((cuffs && cuffs.as_of) || "");
+        + ((cuffs && cuffs.as_of) || "") + "\t"
+        + ((projectedFinishBook && projectedFinishBook.as_of) || "") + "\t"
+        + ((managerArchetypesBook && managerArchetypesBook.as_of) || "");
       if (homeDeskCardMemo && homeDeskCardKey === key) return homeDeskCardMemo;
       const seats = (members || []).filter(function (m) { return m && m.user_id; });
       if (seats.length < 2) {
@@ -27970,6 +28173,13 @@ const html = `<!DOCTYPE html>
           ? ('<p class="caption">' + esc(projLine)
             + ' <button type="button" class="chip" data-dash-open="projected_finish">League board</button></p>')
           : "")
+        + (function () {
+          const arch = me && typeof archSeatOf === "function" ? archSeatOf(me.user_id) : null;
+          if (!arch || !arch.lab) return "";
+          return '<p class="caption">' + esc(arch.lab)
+            + (arch.why ? (" — " + esc(arch.why)) : "")
+            + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Manager types</button></p>';
+        })()
         + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button>'
         + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button>'
         + awardsChip + "</p>"
@@ -32411,7 +32621,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v290-projected-finish")
+  || !swSrc.includes("chuckle-shell-v291-manager-intel")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -33792,13 +34002,14 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 41 || uniq.size !== 41) {
-    throw new Error("DATA_REPORTS must hold exactly 41 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 43 || uniq.size !== 43) {
+    throw new Error("DATA_REPORTS must hold exactly 43 unique reports, found " + reportIds.length);
   }
   if (!uniq.has("career_avg") || !uniq.has("points_king") || !uniq.has("contender_rate") || !uniq.has("sacko")
     || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
-    || !uniq.has("pot_net") || !uniq.has("projected_finish") || !uniq.has("season_place")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, and Projected finish");
+    || !uniq.has("pot_net") || !uniq.has("projected_finish") || !uniq.has("season_place")
+    || !uniq.has("season_arcs") || !uniq.has("manager_archetypes")) {
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, and Manager type");
   }
   const needIds = ["fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -34020,6 +34231,8 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataListItems").includes(" seasons")
     || !inline.includes('getLeagueJson("finishes.json")')
     || !inline.includes('getLeagueJson("projected-finish.json")')
+    || !inline.includes('getLeagueJson("season-arcs.json")')
+    || !inline.includes('getLeagueJson("manager-archetypes.json")')
     || !inline.includes("Manager avg finish")
     || !inline.includes("Career average")
     || !inline.includes("function finishYearBoard(")
@@ -34065,8 +34278,9 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-tile-share")
     || inline.includes("exactly like")) {
     // Temporarily soft-fail: pre-existing assert flake while projected-finish ships.
-    if (!inline.includes("Manager avg finish") || !inline.includes('id: "projected_finish"')) {
-      throw new Error("Receipt tiles must ship Manager avg finish + projected_finish");
+    if (!inline.includes("Manager avg finish") || !inline.includes('id: "projected_finish"')
+      || !inline.includes('id: "season_arcs"') || !inline.includes('id: "manager_archetypes"')) {
+      throw new Error("Receipt tiles must ship Manager avg finish + projected finish + season arcs + manager type");
     }
   }
   {

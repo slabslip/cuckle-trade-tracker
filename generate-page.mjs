@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021035000";
+    const DATA_V = "dashHomeOs20261021043000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -26997,7 +26997,8 @@ const html = `<!DOCTYPE html>
         const entry = rows[i].entry || {};
         const holder = (typeof pickOwnerName === "function" ? pickOwnerName(entry) : "") || "";
         const origin = (typeof pickOriginName === "function" ? pickOriginName(entry) : "") || "";
-        if (!origin || origin === mine) continue;
+        // Skip own origin and anything already in this seat's bag.
+        if (!origin || origin === mine || holder === mine) continue;
         const originProj = typeof projSeatByName === "function" ? projSeatByName(origin) : null;
         if (!originProj || originProj.band !== "Early") continue;
         const slot = originProj.proj_slot != null ? Number(originProj.proj_slot) : 99;
@@ -27019,6 +27020,24 @@ const html = `<!DOCTYPE html>
       return out;
     }
 
+    function homeCapitalStackLab(held) {
+      if (!held || !held.length) return "";
+      let early = 0;
+      let mid = 0;
+      let late = 0;
+      for (let i = 0; i < held.length; i++) {
+        const b = held[i].band;
+        if (b === "Early") early += 1;
+        else if (b === "Late") late += 1;
+        else mid += 1;
+      }
+      const bits = [held.length + " first" + (held.length === 1 ? "" : "s")];
+      if (early) bits.push(early + " Early");
+      if (mid) bits.push(mid + " Mid");
+      if (late) bits.push(late + " Late");
+      return bits.join(" · ");
+    }
+
     function homeCapitalStripHtml() {
       if (!authSession || !authSeatId()) return "";
       const bag = homeCapitalHeldRows();
@@ -27030,9 +27049,16 @@ const html = `<!DOCTYPE html>
           + "</section>";
       }
       const bits = bag.held.map(function (r) { return r.lab; });
-      let line = bits.length
-        ? bits.slice(0, 4).join(" · ") + (bits.length > 4 ? (" · +" + (bits.length - 4)) : "")
-        : "No " + (bag.year || "future") + " first held";
+      const stack = homeCapitalStackLab(bag.held);
+      let line = "";
+      if (bits.length) {
+        // Stack summary first so hoarders see 4 firsts · 1 Early · 3 Mid in one glance.
+        line = (stack ? stack + " · " : "")
+          + bits.slice(0, 3).join(" · ")
+          + (bits.length > 3 ? (" · +" + (bits.length - 3)) : "");
+      } else {
+        line = "No " + (bag.year || "future") + " first held";
+      }
       if (bag.ownSold) line += " · own 1st sold";
       if (!bits.length) {
         const shop = homeEarlyShopBits(2);
@@ -27053,6 +27079,10 @@ const html = `<!DOCTYPE html>
       const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
       const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
       const shop = homeEarlyShopBits(2);
+      const heldBag = homeCapitalHeldRows();
+      const heldEarly = heldBag && heldBag.held
+        ? heldBag.held.filter(function (r) { return r.band === "Early"; }).length
+        : 0;
       if (arch && arch.archetype === "proxy_contender") {
         return "Defend held Early — keep competing";
       }
@@ -27063,6 +27093,12 @@ const html = `<!DOCTYPE html>
         return "Ask for a stud; pay with picks";
       }
       if (arch && arch.archetype === "capital_hoarder") {
+        if (heldEarly >= 1 && shop.length) {
+          return "Upgrade Mid→Early — " + shop.join(" · ");
+        }
+        if (heldEarly >= 1) {
+          return "Mid race — don't panic-tank your Early";
+        }
         return shop.length
           ? ("Swap for Early — " + shop.join(" · "))
           : "Swap Mid origins for Early ones";
@@ -34164,7 +34200,12 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes("function homePulseHtml(")
     || !inline.includes("function homeChaseTip(")
     || !inline.includes("function homeEarlyShopBits(")
+    || !inline.includes("function homeCapitalStackLab(")
     || !fnSrc("homeChaseTip").includes("win_now_race")
+    || !fnSrc("homeChaseTip").includes("capital_hoarder")
+    || !fnSrc("homeChaseTip").includes("Upgrade Mid")
+    || !fnSrc("homeEarlyShopBits").includes("holder === mine")
+    || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
     || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")
     || !fnSrc("homeChaseTip").includes("Buy Early — ")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")

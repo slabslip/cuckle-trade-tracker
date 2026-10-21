@@ -59,6 +59,7 @@ const steps = [
   ["build-calculator.mjs", leagueId],
   ["build-overnight.mjs", leagueId],
   ["build-seat-direction.mjs", leagueId],
+  ["build-projected-finish.mjs", leagueId],
   ["build-cosmetics.mjs", leagueId],
 ];
 

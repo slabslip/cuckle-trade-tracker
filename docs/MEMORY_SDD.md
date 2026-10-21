@@ -52,7 +52,8 @@ the same paint. Do not invent a 17th kind for each argument.
 | `my_draft` | Draft picks |
 | `league_draft` | League Draft Picks |
 | `profit_loss` | Profit / Loss |
-| `season_place` / `season_title` | How I finished |
+| `season_place` / `season_title` | Manager avg finish |
+| `projected_finish` | Projected finish (this season) |
 
 Share chips (same tape, not board tiles): `trade_mark` (Trade ticket),
 `pick_print` (What my pick became). Saved boards that still store
@@ -154,7 +155,8 @@ filters by a Team dropdown, not a type-in.
 4. League Draft Picks (`league_draft`) — pick a seat, then the same three buckets
 5. Profit / Loss (`profit_loss`) — Held vs Sold rooms at the top, sort only
 6. Past champions (`past_champions`)
-7. How I finished (`season_place`)
+7. Manager avg finish (`season_place`)
+7b. Projected finish (`projected_finish`) — this season’s race + SoS → pick band
 8. Me vs them (`vs_you`)
 9. Who has firsts (`firsts_held`)
 10. Week scores (`week_scores`) — highest five and lowest five team weeks ever
@@ -207,11 +209,12 @@ overlapping tiles.
   used row grades the player vs the slot (Star / Hit / Even / Miss /
   Bust). The section prints a **Hit rate**.
 
-Early / Mid / Late is the **origin seat's 2026 outlook**, not the
-Sleeper roster slot. Blend: analyzer now (desk strength today) 62%,
-window kind (win-now vs tank) 24%, seat-direction 14%. 2028 uses later
-+ now; 2029+ leans later. Tap a row for a 2-way calc (get it back / ask
-for the early). If the 2-way is stuck, a 3-way line names a third seat.
+Early / Mid / Late for the **soonest draft year** follows
+[`PROJECTED_FINISH_SDD.md`](PROJECTED_FINISH_SDD.md) when that book is live
+(race + remaining SoS → projected place → slot). 2028+ still uses the bag
+outlook blend: analyzer now 62%, window kind 24%, seat-direction 14%.
+Tap a row for a 2-way calc (get it back / ask for the early). If the 2-way
+is stuck, a 3-way line names a third seat.
 
 Year + Picks dropdowns stay. No claimed seat: the door says so.
 
@@ -252,7 +255,8 @@ says so. Do not add a catalog id `realized`.
 **Season / finish portal**
 
 - Past champions: year · seat rows. Tap → the crown list.
-- How I finished: ranked average finish, season count under the name, every year · place.
+- Manager avg finish: ranked career average finish, season count under the name, every year · place.
+- Projected finish: place now, record, PF/PA, expected wins, proj place, Early / Mid / Late.
 
 A door’s list is the **catalog**, not one lead example. Tap a row → that
 object’s ticket. Share lives on the ticket.
@@ -346,7 +350,7 @@ the URL** if we add one later.
 Data-tile shares are **member views**, not public receipts. Do not reuse
 `?r=trade`. A small gold share icon sits bottom-right on every data-set
 door (home top 4 + Your board) and beside the open-tile title — icon only,
-no “Share” word. Team lists (Career net, How I finished, week scores, and
+no “Share” word. Team lists (Career net, Manager avg finish, Projected finish, week scores, and
 the other door lists) break into **Top 5 / Also / Bottom 5**. Each band
 and each row has its own share chip so a group text can send the whole
 list, just the top 5, just the bottom 5, or one seat. Week scores use

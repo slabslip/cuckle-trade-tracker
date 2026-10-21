@@ -22,7 +22,7 @@ const weekScores = read("week-scores.json");
 
 const DOORS = [
   "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-  "past_champions", "season_place", "vs_you", "firsts_held", "week_scores",
+  "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held", "week_scores",
   "passed_around", "seat_draft", "uninsured",
 ];
 const PARKED_DEAL = [

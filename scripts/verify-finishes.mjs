@@ -34,7 +34,7 @@ async function openFinishDoor(url) {
   await page.waitForSelector('[data-dash-open="season_place"], .door-lab', { timeout: 15000 });
   await page.waitForTimeout(400);
   const door = page.locator('[data-dash-open="season_place"]');
-  if (!(await door.count())) fail("How I finished door missing at " + url);
+  if (!(await door.count())) fail("Manager avg finish door missing at " + url);
   await door.first().click();
   await page.waitForSelector(".receipt-portal-list .row, .receipt-portal-list .names", { timeout: 10000 });
   await page.waitForTimeout(400);

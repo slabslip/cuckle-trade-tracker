@@ -4605,7 +4605,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeWireBar20261021110000";
+    const DATA_V = "projFinishMove20261021114500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4710,7 +4710,7 @@ const html = `<!DOCTYPE html>
       pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest team weeks still hunting the title or playing for 3rd." },
       season_place: { lab: "Manager avg finish", why: "Career average, three seasons minimum. Pick a year for that 1–12 board." },
-      projected_finish: { lab: "Projected finish", why: "This season’s race + strength of schedule → expected place and Early / Mid / Late pick band." },
+      projected_finish: { lab: "Projected finish", why: "Race path + rest-of-way SoS + late-season arcs → projected place (can move vs now) and Early / Mid / Late pick band." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
@@ -4746,7 +4746,7 @@ const html = `<!DOCTYPE html>
       { id: "my_draft", lab: "Draft picks", desk: "lists", group: "memory", size: "full", why: "Unused 2027+ · who holds yours · early / mid / late from the 2026 window." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "Manager avg finish", desk: "lists", group: "memory", size: "full", why: "Career average finish. One year still counts. Not this season’s projection." },
-      { id: "projected_finish", lab: "Projected finish", desk: "lists", group: "memory", size: "full", why: "This season’s place, record, PF/PA, rest-of-way SoS → expected finish and pick band." },
+      { id: "projected_finish", lab: "Projected finish", desk: "lists", group: "memory", size: "full", why: "Place now is the race; projection blends remaining path, schedule ease, and late-season climb history." },
       { id: "season_arcs", lab: "Season arcs", desk: "lists", group: "memory", size: "full", why: "Slow start → finish strong. Early PF rank vs final place, bubble trades, proxy-first motive." },
       { id: "manager_archetypes", lab: "Manager type", desk: "lists", group: "memory", size: "full", why: "Slow burn, bubble trader, proxy contender, tank sculptor — how they play seasons." },
       { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
@@ -5266,15 +5266,25 @@ const html = `<!DOCTYPE html>
         return seats.map(function (s, i) {
           const delta = Number(s.delta_place) || 0;
           const climb = delta > 0 ? ("↑" + delta) : (delta < 0 ? ("↓" + (-delta)) : "flat");
+          const ease = Number(s.sos_ease);
+          const sosBit = Number.isFinite(ease)
+            ? (" · SoS " + (ease >= 0.51 ? "soft" : (ease <= 0.49 ? "hard" : "avg")))
+            : "";
+          const arcBit = (Number(s.avg_climb) || 0) !== 0
+            ? (" · hist " + ((Number(s.avg_climb) > 0 ? "+" : "") + Number(s.avg_climb).toFixed(1)))
+            : "";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
             metric: (typeof nth === "function" ? nth(s.proj_finish) : String(s.proj_finish))
-              + " · " + (s.band || "Mid"),
+              + " · " + (s.band || "Mid")
+              + (delta ? (" · " + climb) : ""),
             sub: "#" + s.place_now + " now · " + (s.record || "")
               + " · PF " + Math.round(Number(s.pf) || 0)
               + " · PA " + Math.round(Number(s.pa) || 0)
-              + " · exp " + (Number(s.expected_wins) || 0).toFixed(1) + "W"
+              + " · path " + (Number(s.expected_remaining_wins) || 0).toFixed(1) + "W left"
+              + sosBit
+              + arcBit
               + " · " + climb
               + " · pick " + (s.proj_slot < 10 ? "0" : "") + s.proj_slot,
             rank: s.proj_finish || (i + 1),
@@ -8477,8 +8487,10 @@ const html = `<!DOCTYPE html>
           + " finish through the regular season"
           + (week != null ? (" (after week " + week + ")") : "")
           + (left != null ? (" · " + left + " weeks left") : "")
-          + ". Place now, record, points for / against, then rest-of-way strength of schedule."
-          + " Expected wins rank the board. Last place → Early 1.01 band; title → Late."
+          + ". Place now is the live race. Projection blends remaining win path (SoS inside),"
+          + " schedule soft/hard vs the league, and each seat’s late-season climb history"
+          + " — so finish can move off today’s place."
+          + " Last place → Early 1.01 band; title → Late."
           + " Draft picks Early / Mid / Late read this book first.";
       }
       else if (id === "season_arcs") {

@@ -4793,7 +4793,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperBoard20261021";
+    const DATA_V = "tradeHelperVisible20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4849,8 +4849,8 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "firsts_held", "season_arcs",
-      "my_trades", "league_trades", "league_draft", "profit_loss",
-      "past_champions", "season_place", "trade_helper",
+      "my_trades", "trade_helper", "league_trades", "league_draft",
+      "profit_loss", "past_champions", "season_place",
       "week_scores", "manager_archetypes",
     ];
     const DATA_BLOCK_MAX = 8;
@@ -4863,8 +4863,8 @@ const html = `<!DOCTYPE html>
     ];
     const DATA_DASH_DEFAULT = [
       "projected_finish", "my_draft", "firsts_held", "season_arcs",
-      "my_trades", "league_trades", "league_draft", "profit_loss",
-      "past_champions", "season_place", "trade_helper",
+      "my_trades", "trade_helper", "league_trades", "league_draft",
+      "profit_loss", "past_champions", "season_place",
       "week_scores", "manager_archetypes",
     ];
     const DATA_DASH_RESEARCH = [
@@ -12618,10 +12618,30 @@ const html = `<!DOCTYPE html>
         const i = src.indexOf("book_top");
         if (i >= 0) src[i] = "profit_loss";
       }
-      // Trade helper replaces Me vs them on the default board — migrate saved seats.
-      if (src.indexOf("trade_helper") < 0) {
-        const i = src.indexOf("vs_you");
-        if (i >= 0) src[i] = "trade_helper";
+      // Dynasty: always pin Trade helper on Your board (saved seats often lack vs_you).
+      const dynasty = !(typeof isRedraftLeague === "function" && isRedraftLeague());
+      if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
+        const vs = src.indexOf("vs_you");
+        if (vs >= 0) {
+          src[vs] = "trade_helper";
+        } else if (src.length < DATA_DASH_MAX) {
+          // Sit just after My Trade History when present; else append.
+          const after = src.indexOf("my_trades");
+          if (after >= 0) src.splice(after + 1, 0, "trade_helper");
+          else src.push("trade_helper");
+        } else {
+          const dropOrder = ["past_champions", "season_place", "league_draft", "league_trades"];
+          let dropped = false;
+          for (let d = 0; d < dropOrder.length; d++) {
+            const at = src.indexOf(dropOrder[d]);
+            if (at >= 4) {
+              src[at] = "trade_helper";
+              dropped = true;
+              break;
+            }
+          }
+          if (!dropped) src[src.length - 1] = "trade_helper";
+        }
       }
       return dataDashCanon(src);
     }
@@ -12689,6 +12709,8 @@ const html = `<!DOCTYPE html>
             dataDashWriteLocal(fresh);
             return fresh;
           }
+          // Persist migrate pins (Trade helper) so the next paint / device sees them.
+          if (next.join(",") !== dataDashCanon(parsed).join(",")) dataDashWriteLocal(next);
           return next;
         }
       } catch (err) { /* private mode */ }
@@ -15959,10 +15981,18 @@ const html = `<!DOCTYPE html>
       const editBtn = dataDashCanEdit()
         ? '<button type="button" class="chip" data-dash-edit="1">' + (dataDashEdit ? "Done" : "Edit") + "</button>"
         : "";
+      const tradeChip = (!dataDashEdit
+        && !(typeof isRedraftLeague === "function" && isRedraftLeague())
+        && dataDashById("trade_helper"))
+        ? ('<p class="caption">'
+          + '<button type="button" class="chip" data-dash-open="trade_helper">Trade helper</button>'
+          + " Search a player · build an offer · see better options</p>")
+        : "";
       return '<section class="data-dash" aria-label="Your board">'
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
         + '<p class="data-dash-sub">Votes never enter these numbers. '
         + editBtn + "</p>"
+        + tradeChip
         + (dataDashEdit
           ? '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
           : "")
@@ -26198,7 +26228,10 @@ const html = `<!DOCTYPE html>
             ? dataDashCanon(dataDashDefaultTiles())
             : dataDashMigrateMyPicks(next);
           dataDashWriteLocal(dataDashTiles);
-          if (stale) saveSeatDataDash(dataDashTiles);
+          // Persist when legacy/redraft reset OR when migrate pinned Trade helper.
+          if (stale || dataDashTiles.join(",") !== next.join(",")) {
+            saveSeatDataDash(dataDashTiles);
+          }
         }
       } catch (err) {
         console.error(err);
@@ -35191,7 +35224,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v333-trade-helper-board")
+  || !swSrc.includes("chuckle-shell-v334-trade-helper-visible")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36666,8 +36699,12 @@ if (!inline.includes("function dataDashHtml(")
   if (!uniq.has("week_scores") || defIds[11] !== "week_scores") {
     throw new Error("Week scores must be a catalog door and default board tile 12");
   }
-  if (!uniq.has("trade_helper") || defIds[10] !== "trade_helper") {
-    throw new Error("Trade helper must be default board tile 11 (Your board — not Moves)");
+  if (!uniq.has("trade_helper") || defIds[5] !== "trade_helper") {
+    throw new Error("Trade helper must be default board tile 6 (right after My Trade History)");
+  }
+  if (!fnSrc("dataDashHtml").includes('data-dash-open="trade_helper"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_helper")')) {
+    throw new Error("Your board must surface Trade helper chip and migrate saved dynasty boards");
   }
   if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
     throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");
@@ -36739,7 +36776,8 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes('id: "trade_helper"')
     || !inline.includes("data-trade-helper-q")
     || !fnSrc("dataDashOpenReport").includes("dataDashIsHunt(id)")
-    || !fnSrc("dataDashMigrateMyPicks").includes('src[i] = "trade_helper"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src[vs] = "trade_helper"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_helper")')
     || fnSrc("dataDashHuntPeekHtml").includes("calcFmt(")
     || fnSrc("dataDashHuntPeekHtml").includes("calcValueNum(")) {
     throw new Error("Deal hunts must peek player + reason and open calc first-person");
@@ -36751,7 +36789,7 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function dataDashIsLegacyBoard(")
     || !inline.includes("function receiptDoorLeadFig(")
     || !inline.includes("function receiptDoorWhoName(")
-    || !inline.includes("if (stale) saveSeatDataDash(dataDashTiles)")
+    || !inline.includes("if (stale || dataDashTiles.join(\",\") !== next.join(\",\"))")
     || !fnSrc("dataDashReadLocal").includes("dataDashWriteLocal")
     || !fnSrc("dataDashPresetHtml").includes("dataDashDefaultTiles")
     || !fnSrc("dataDashPresetHtml").includes("Career")

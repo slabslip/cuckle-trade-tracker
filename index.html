@@ -4785,7 +4785,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperBoard20261021";
+    const DATA_V = "tradeHelperVisible20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4841,8 +4841,8 @@
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "firsts_held", "season_arcs",
-      "my_trades", "league_trades", "league_draft", "profit_loss",
-      "past_champions", "season_place", "trade_helper",
+      "my_trades", "trade_helper", "league_trades", "league_draft",
+      "profit_loss", "past_champions", "season_place",
       "week_scores", "manager_archetypes",
     ];
     const DATA_BLOCK_MAX = 8;
@@ -4855,8 +4855,8 @@
     ];
     const DATA_DASH_DEFAULT = [
       "projected_finish", "my_draft", "firsts_held", "season_arcs",
-      "my_trades", "league_trades", "league_draft", "profit_loss",
-      "past_champions", "season_place", "trade_helper",
+      "my_trades", "trade_helper", "league_trades", "league_draft",
+      "profit_loss", "past_champions", "season_place",
       "week_scores", "manager_archetypes",
     ];
     const DATA_DASH_RESEARCH = [
@@ -12610,10 +12610,30 @@
         const i = src.indexOf("book_top");
         if (i >= 0) src[i] = "profit_loss";
       }
-      // Trade helper replaces Me vs them on the default board — migrate saved seats.
-      if (src.indexOf("trade_helper") < 0) {
-        const i = src.indexOf("vs_you");
-        if (i >= 0) src[i] = "trade_helper";
+      // Dynasty: always pin Trade helper on Your board (saved seats often lack vs_you).
+      const dynasty = !(typeof isRedraftLeague === "function" && isRedraftLeague());
+      if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
+        const vs = src.indexOf("vs_you");
+        if (vs >= 0) {
+          src[vs] = "trade_helper";
+        } else if (src.length < DATA_DASH_MAX) {
+          // Sit just after My Trade History when present; else append.
+          const after = src.indexOf("my_trades");
+          if (after >= 0) src.splice(after + 1, 0, "trade_helper");
+          else src.push("trade_helper");
+        } else {
+          const dropOrder = ["past_champions", "season_place", "league_draft", "league_trades"];
+          let dropped = false;
+          for (let d = 0; d < dropOrder.length; d++) {
+            const at = src.indexOf(dropOrder[d]);
+            if (at >= 4) {
+              src[at] = "trade_helper";
+              dropped = true;
+              break;
+            }
+          }
+          if (!dropped) src[src.length - 1] = "trade_helper";
+        }
       }
       return dataDashCanon(src);
     }
@@ -12681,6 +12701,8 @@
             dataDashWriteLocal(fresh);
             return fresh;
           }
+          // Persist migrate pins (Trade helper) so the next paint / device sees them.
+          if (next.join(",") !== dataDashCanon(parsed).join(",")) dataDashWriteLocal(next);
           return next;
         }
       } catch (err) { /* private mode */ }
@@ -15951,10 +15973,18 @@
       const editBtn = dataDashCanEdit()
         ? '<button type="button" class="chip" data-dash-edit="1">' + (dataDashEdit ? "Done" : "Edit") + "</button>"
         : "";
+      const tradeChip = (!dataDashEdit
+        && !(typeof isRedraftLeague === "function" && isRedraftLeague())
+        && dataDashById("trade_helper"))
+        ? ('<p class="caption">'
+          + '<button type="button" class="chip" data-dash-open="trade_helper">Trade helper</button>'
+          + " Search a player · build an offer · see better options</p>")
+        : "";
       return '<section class="data-dash" aria-label="Your board">'
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
         + '<p class="data-dash-sub">Votes never enter these numbers. '
         + editBtn + "</p>"
+        + tradeChip
         + (dataDashEdit
           ? '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
           : "")
@@ -26190,7 +26220,10 @@
             ? dataDashCanon(dataDashDefaultTiles())
             : dataDashMigrateMyPicks(next);
           dataDashWriteLocal(dataDashTiles);
-          if (stale) saveSeatDataDash(dataDashTiles);
+          // Persist when legacy/redraft reset OR when migrate pinned Trade helper.
+          if (stale || dataDashTiles.join(",") !== next.join(",")) {
+            saveSeatDataDash(dataDashTiles);
+          }
         }
       } catch (err) {
         console.error(err);

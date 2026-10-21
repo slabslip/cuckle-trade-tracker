@@ -38,7 +38,7 @@ This is the deepest dynasty *manager + team makeup* tool — not another KTC boa
 | 1 | Calling card | Name · last-season place · **race hero** (proj · record · band · type · bag) |
 | 2 | Capital strip | Your soonest-year firsts one line (band · slot · origin) · own-1st-sold tag |
 | 3 | Chase pulse | Archetype chase tip · self Δplace · race movers (top 3) |
-| 4 | Overnight | Letter (+ movers when tape moves) |
+| 4 | Wire bar | Compact icons: Wire · Out · Watch · Deals · News (seat-scoped; full letter on share) |
 | 5 | Team Ideas ≤3 | Up before doors — race/archetype tip in meta |
 | 6 | Top-4 doors | **Projected finish · Draft picks · Who has firsts · Season arcs** |
 | 7 | Calc door | Unchanged — last |

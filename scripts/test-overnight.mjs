@@ -42,39 +42,49 @@ need(page.includes("function overnightEnabled(") && page.includes("isRedraftLeag
   && page.includes("isGmLeague()"),
   "overnight must stay off GM / redraft Home");
 need(fnSrc(page, "overnightSlipHtml").includes("overnightEnabled()")
-  && fnSrc(page, "ensureOvernight").includes("overnightEnabled()"),
-  "dynasty Home paints the letter; redraft Home must not");
-need(page.includes("function overnightSlipHtml(") && page.includes('q.set("r", "overnight")'),
-  "Home must paint the letter and share ?r=overnight");
+  && fnSrc(page, "ensureOvernight").includes("overnightEnabled()")
+  && fnSrc(page, "homeWireBarHtml").includes("overnightEnabled()"),
+  "dynasty Home paints the wire bar; redraft Home must not");
+need(page.includes("function overnightSlipHtml(") && page.includes('q.set("r", "overnight")')
+  && page.includes("function homeWireBarHtml(") && page.includes('data-home-wire="'),
+  "Home wire bar + shareable ?r=overnight letter must both ship");
 need(page.includes("data-overnight-share") && page.includes("overnightShareText("),
   "share chip must send league summary text + link");
 need(page.includes("overnight-slip-lede") && page.includes("letter.lede")
   && page.includes("overnightPrettyDate(")
   && page.includes("function overnightCuffNote(")
   && page.includes("cuff unowned"),
-  "card must paint the league lede and a short last-deal date");
+  "overnight ticket must paint the league lede and a short last-deal date");
 need(page.includes("data-overnight-more") && page.includes("overnight-slip-band")
   && page.includes('overnightBandHtml("out"'),
-  "Out / IR must be titled lists with an expandable Show all");
+  "Out / IR ticket lists keep titled bands with expandable Show all");
 need(fnSrc(page, "overnightSlipHtml").includes("schematicSettingsHtml") === false,
-  "Home summary must not paint the QB/RB/WR/TE settings grid");
-need(fnSrc(page, "overnightSlipHtml").includes("if (overnightOpen)")
-  && fnSrc(page, "overnightSlipHtml").includes("Show all")
-  && fnSrc(page, "overnightSlipHtml").includes('overnightBandHtml("out"'),
-  "collapsed Home letter shows Out / IR; trades and wire wait on Show all");
-need(fnSrc(gen, "overnightSlipHtml").includes("if (overnightOpen)")
+  "overnight ticket must not paint the QB/RB/WR/TE settings grid");
+need(fnSrc(page, "leagueInProgress").includes("homeWireBarHtml()")
+  && !fnSrc(page, "leagueInProgress").includes("overnightSlipHtml()"),
+  "Home digest mounts the icon wire bar, not the full overnight letter");
+need(fnSrc(page, "homeWireBarHtml").includes("homeWirePanelHtml")
+  && page.includes('data-home-wire="')
+  && page.includes('id: "waivers"')
+  && page.includes('id: "watch"')
+  && page.includes("monitor · set lineup"),
+  "wire bar icons cover waivers, outs, watch decisions, deals, news");
+need(fnSrc(gen, "leagueInProgress").includes("homeWireBarHtml()")
+  && !fnSrc(gen, "leagueInProgress").includes("overnightSlipHtml()")
   && fnSrc(gen, "overnightSlipHtml").includes("schematicSettingsHtml") === false,
-  "generate-page.mjs Home summary must stay in sync");
+  "generate-page.mjs Home wire bar must stay in sync");
 need(fnSrc(page, "overnightShareText").includes('catLines("Out"')
   && fnSrc(page, "overnightShareText").includes("const open = true"),
   "share must send the full Out and IR lists");
 need(page.includes('q.kind === "overnight"') && page.includes('view === "overnight"'),
   "unsigned share link must open the overnight ticket");
 need(gen.includes("function overnightSlipHtml(") && gen.includes('q.set("r", "overnight")')
-  && gen.includes("overnight-slip-lede") && gen.includes("function overnightEnabled("),
+  && gen.includes("overnight-slip-lede") && gen.includes("function overnightEnabled(")
+  && gen.includes("function homeWireBarHtml("),
   "generate-page.mjs must stay in sync (do not execute it)");
 need(fnSrc(page, "overnightSlipHtml").includes("Text this") === false
-  && fnSrc(page, "overnightShareText").includes("Text this") === false,
+  && fnSrc(page, "overnightShareText").includes("Text this") === false
+  && fnSrc(page, "homeWireBarHtml").includes("Text this") === false,
   "Home overnight functions must not say Text this");
 need(letter.v === 1 && letter.dateline && letter.lede && Array.isArray(letter.out) && Array.isArray(letter.ir),
   "Cuckle overnight.json must exist with a dateline, lede, and Out / IR lists");

@@ -1691,6 +1691,92 @@
     .home-pulse-movers {
       margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.35;
     }
+    .home-wire {
+      margin: 0 0 14px;
+      background: #121214;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .home-wire-row {
+      display: flex; align-items: stretch; gap: 0;
+      border-bottom: 1px solid transparent;
+    }
+    .home-wire.is-open .home-wire-row { border-bottom-color: var(--line); }
+    button.home-wire-ico {
+      appearance: none; font: inherit; color: var(--text);
+      flex: 1 1 0; min-width: 0; min-height: 52px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 8px 4px 7px;
+      background: transparent; border: 0; border-right: 1px solid var(--line);
+      cursor: pointer; position: relative;
+    }
+    button.home-wire-ico:last-child { border-right: 0; }
+    button.home-wire-ico:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
+    button.home-wire-ico[aria-pressed="true"] { background: #1a1a1e; }
+    button.home-wire-ico .home-wire-mark {
+      display: block; width: 22px; height: 22px; line-height: 22px; text-align: center;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+      border-radius: 7px; border: 1px solid var(--line); color: var(--muted);
+      background: #161618;
+    }
+    button.home-wire-ico.waivers .home-wire-mark { color: #34d399; border-color: rgba(52, 211, 153, 0.45); }
+    button.home-wire-ico.out .home-wire-mark { color: #ff6b3d; border-color: rgba(255, 107, 61, 0.45); }
+    button.home-wire-ico.watch .home-wire-mark { color: #e0b44c; border-color: rgba(224, 180, 76, 0.5); }
+    button.home-wire-ico.trades .home-wire-mark { color: var(--text); }
+    button.home-wire-ico.news .home-wire-mark { color: #7aa2ff; border-color: rgba(122, 162, 255, 0.45); }
+    button.home-wire-ico .home-wire-lab {
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    button.home-wire-ico[aria-pressed="true"] .home-wire-lab { color: var(--muted); }
+    button.home-wire-ico .home-wire-n {
+      position: absolute; top: 4px; right: 6px;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      border-radius: 8px; font-size: 0.58rem; font-weight: 800;
+      line-height: 16px; text-align: center;
+      color: #121214; background: var(--lh-gold, #e0b44c);
+      font-variant-numeric: tabular-nums;
+    }
+    button.home-wire-ico .home-wire-n.is-zero {
+      background: #2a2a2e; color: var(--dim);
+    }
+    .home-wire-panel { padding: 10px 12px 12px; }
+    .home-wire-panel-h {
+      margin: 0 0 8px; font-size: 0.68rem; font-weight: 800;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+    }
+    .home-wire-line {
+      margin: 0 0 6px; font-size: 0.84rem; font-weight: 650;
+      color: var(--text); line-height: 1.35;
+    }
+    .home-wire-line:last-child { margin-bottom: 0; }
+    .home-wire-line i {
+      font-style: normal; color: var(--muted); font-weight: 650;
+    }
+    .home-wire-line b { font-weight: 750; }
+    .home-wire-line.watch b { color: #e0b44c; }
+    .home-wire-line.out b { color: #ff6b3d; }
+    .home-wire-line.waivers b { color: #34d399; }
+    .home-wire-empty {
+      margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted);
+    }
+    .home-wire-foot {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line);
+    }
+    .home-wire-foot p {
+      margin: 0; font-size: 0.68rem; font-weight: 650; color: var(--dim);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    button.home-wire-more {
+      appearance: none; font: inherit; cursor: pointer;
+      background: transparent; border: 0; padding: 0;
+      color: var(--lh-gold, #e0b44c);
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; min-height: 32px;
+    }
+    button.home-wire-more:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .team-story-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
       letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
@@ -4485,6 +4571,10 @@
     let overnightLoading = false;
     let overnightOpen = false;
     let overnightOpenPlayer = "";
+    // Home wire bar: which icon panel is open (waivers|out|watch|trades|news|"").
+    let homeWireOpen = "";
+    // Optional expand of the full overnight ticket under the bar (off by default).
+    let homeWireFullLetter = false;
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -9983,6 +10073,319 @@
       }
     }
 
+    function homeWireSeatName() {
+      return (typeof authSeatCanonName === "function" && authSeatCanonName())
+        || (typeof authSeatName === "function" && authSeatName())
+        || "";
+    }
+
+    function homeWireMineBoard(letter) {
+      const seat = homeWireSeatName();
+      const empty = { out: [], ir: [], other: [], starters: [] };
+      if (!seat || !letter) return empty;
+      const mine = function (list) {
+        return (list || []).filter(function (p) { return p && p.owner === seat; });
+      };
+      const out = mine(letter.out);
+      const ir = mine(letter.ir);
+      const other = mine(letter.other);
+      const starters = [].concat(out, ir, other).filter(function (p) {
+        return p && p.slot === "starter";
+      });
+      return { out: out, ir: ir, other: other, starters: starters };
+    }
+
+    function homeWireWatchRows() {
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const seat = homeWireSeatName();
+      if (!seat) return [];
+      return ((cuffs && cuffs.rows) || []).filter(function (r) {
+        if (!r || r.owner !== seat) return false;
+        const s = String(r.starter_injury || "").toLowerCase();
+        return s === "questionable" || s === "doubtful";
+      });
+    }
+
+    function homeWireWaiverBits(letter) {
+      const seat = homeWireSeatName();
+      const bits = [];
+      const seen = {};
+      const push = function (key, line, tone) {
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        bits.push({ key: key, line: line, tone: tone || "waivers" });
+      };
+      const board = homeWireMineBoard(letter);
+      [].concat(board.out, board.ir, board.other).forEach(function (p) {
+        if (!p) return;
+        if (p.cuff_owned === false && p.cuff) {
+          push("cuff:" + p.cuff, "Claim " + p.cuff + " · " + p.name + " " + (p.status || "Out"), "waivers");
+        } else if (p.cuff_owned === false && p.slot === "starter") {
+          push("bare:" + (p.id || p.name), p.name + " cuff unowned · check wire", "waivers");
+        }
+      });
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      if (seat) {
+        ((cuffs && cuffs.rows) || []).forEach(function (r) {
+          if (!r || r.owner !== seat || r.cuff_owned || !r.cuff) return;
+          const st = String(r.starter_injury || "").toLowerCase();
+          const hurt = st === "out" || st === "ir" || st === "pup" || st === "nfi"
+            || st === "questionable" || st === "doubtful" || st.indexOf("injur") >= 0;
+          if (!hurt) return;
+          push("cuff:" + r.cuff, "Claim " + r.cuff + " · " + r.starter + " "
+            + (r.starter_injury || "Out"), "waivers");
+        });
+      }
+      ((letter && letter.wire) || []).slice(0, 4).forEach(function (row, i) {
+        if (!row || !row.line) return;
+        push("wire:" + i + ":" + row.line, row.line, "waivers");
+      });
+      return bits;
+    }
+
+    function homeWireTradeBits(letter) {
+      const bits = [];
+      ((letter && letter.trades) || []).forEach(function (row, i) {
+        if (!row) return;
+        if (row.legs && row.legs.length) {
+          row.legs.forEach(function (leg, j) {
+            bits.push({
+              key: "t:" + i + ":" + j,
+              line: (leg.name || "Seat") + " sent " + (leg.sent || "—"),
+              tone: "trades",
+            });
+          });
+        } else if (row.line) {
+          bits.push({ key: "t:" + i, line: row.line, tone: "trades" });
+        }
+      });
+      if (!bits.length && letter && letter.latest) {
+        const legs = letter.latest.legs || [];
+        if (legs.length) {
+          legs.forEach(function (leg, j) {
+            bits.push({
+              key: "latest:" + j,
+              line: (leg.name || "Seat") + " sent " + (leg.sent || "—"),
+              tone: "trades",
+            });
+          });
+        } else if (letter.latest.line) {
+          bits.push({ key: "latest", line: letter.latest.line, tone: "trades" });
+        }
+        if (letter.latest.date) {
+          bits.push({
+            key: "latest-date",
+            line: "Last deal · " + overnightPrettyDate(letter.latest.date),
+            tone: "trades",
+          });
+        }
+      }
+      return bits;
+    }
+
+    function homeWireNewsBits() {
+      const seat = homeWireSeatName();
+      const items = (news && news.items) || [];
+      if (!items.length) return [];
+      const mineIds = {};
+      const mineNames = {};
+      const letter = overnight;
+      const board = homeWireMineBoard(letter);
+      [].concat(board.out, board.ir, board.other).forEach(function (p) {
+        if (!p) return;
+        if (p.id) mineIds[String(p.id)] = true;
+        if (p.name) mineNames[String(p.name).toLowerCase()] = true;
+      });
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      ((cuffs && cuffs.rows) || []).forEach(function (r) {
+        if (!r || (seat && r.owner !== seat)) return;
+        if (r.starter_id) mineIds[String(r.starter_id)] = true;
+        if (r.starter) mineNames[String(r.starter).toLowerCase()] = true;
+      });
+      const mine = [];
+      const leagueBits = [];
+      for (let i = 0; i < items.length && (mine.length < 4 || leagueBits.length < 3); i++) {
+        const it = items[i];
+        if (!it || (it.id && newsGone.has(it.id))) continue;
+        const players = it.players || (it.player_id || it.player
+          ? [{ player_id: it.player_id, player: it.player }]
+          : []);
+        let hit = false;
+        for (let j = 0; j < players.length; j++) {
+          const pl = players[j] || {};
+          if ((pl.player_id && mineIds[String(pl.player_id)])
+            || (pl.player && mineNames[String(pl.player).toLowerCase()])) {
+            hit = true;
+            break;
+          }
+        }
+        const title = it.title || it.text || it.player || "League note";
+        const bit = {
+          key: String(it.id || i),
+          line: title,
+          tone: "news",
+          mine: hit,
+        };
+        if (hit) mine.push(bit);
+        else if (leagueBits.length < 3) leagueBits.push(bit);
+      }
+      return mine.length ? mine.slice(0, 4) : leagueBits.slice(0, 3);
+    }
+
+    function homeWireOutBits(letter) {
+      const board = homeWireMineBoard(letter);
+      const bits = [];
+      const push = function (p) {
+        if (!p || !p.name) return;
+        const meta = [p.status || "Out", p.pos, p.slot === "starter" ? "starter" : p.slot]
+          .filter(Boolean).join(" · ");
+        bits.push({
+          key: String(p.id || p.name),
+          line: p.name,
+          meta: meta,
+          tone: "out",
+        });
+      };
+      board.starters.forEach(push);
+      [].concat(board.out, board.ir, board.other).forEach(function (p) {
+        if (p && p.slot !== "starter") push(p);
+      });
+      return bits.slice(0, 6);
+    }
+
+    function homeWireWatchBits() {
+      return homeWireWatchRows().map(function (r) {
+        const tag = String(r.starter_injury || "Q");
+        const likely = /questionable/i.test(tag);
+        return {
+          key: String(r.starter_id || r.starter),
+          line: r.starter,
+          meta: tag + (likely
+            ? " · monitor · set lineup if cleared"
+            : " · doubtful · have a backup ready"),
+          tone: "watch",
+        };
+      });
+    }
+
+    function homeWirePanelHtml(kind, letter) {
+      const seat = homeWireSeatName();
+      let title = "";
+      let bits = [];
+      if (kind === "waivers") {
+        title = seat ? "Waiver suggestions" : "Wire";
+        bits = homeWireWaiverBits(letter);
+      } else if (kind === "out") {
+        title = seat ? "Your outs this week" : "League outs";
+        bits = seat ? homeWireOutBits(letter) : [];
+        if (!seat) {
+          const cats = overnightCats(letter);
+          [].concat(cats.out, cats.ir).slice(0, 5).forEach(function (p) {
+            bits.push({
+              key: String(p.id || p.name),
+              line: p.name,
+              meta: [p.status, p.owner, p.slot].filter(Boolean).join(" · "),
+              tone: "out",
+            });
+          });
+        }
+      } else if (kind === "watch") {
+        title = "Play decisions";
+        bits = homeWireWatchBits();
+      } else if (kind === "trades") {
+        title = "League trades";
+        bits = homeWireTradeBits(letter);
+      } else if (kind === "news") {
+        title = seat ? "News on your bag" : "League news";
+        bits = homeWireNewsBits();
+      }
+      const body = bits.length
+        ? bits.map(function (b) {
+          return '<p class="home-wire-line ' + esc(b.tone || "") + '"><b>'
+            + esc(b.line) + "</b>"
+            + (b.meta ? " <i>" + esc(b.meta) + "</i>" : "")
+            + "</p>";
+        }).join("")
+        : '<p class="home-wire-empty">'
+          + esc(kind === "watch"
+            ? "No Questionable / Doubtful starters on your roster"
+            : kind === "waivers"
+              ? "No waiver cues right now"
+              : kind === "trades"
+                ? "No fresh trades on the letter"
+                : kind === "news"
+                  ? "No news matched yet"
+                  : "Nobody on your roster is Out / IR on the letter")
+          + "</p>";
+      const lede = (letter && letter.lede) ? letter.lede : "";
+      return '<div class="home-wire-panel" data-home-wire-panel="' + esc(kind) + '">'
+        + '<p class="home-wire-panel-h">' + esc(title) + "</p>"
+        + body
+        + '<div class="home-wire-foot">'
+        + "<p>" + esc(lede || (letter && letter.dateline) || "Overnight") + "</p>"
+        + '<button type="button" class="home-wire-more" data-home-wire-full="1"'
+        + ' aria-label="' + (homeWireFullLetter ? "Hide full league overnight" : "Show full league overnight") + '">'
+        + (homeWireFullLetter ? "Hide letter" : "Full letter") + "</button>"
+        + "</div></div>";
+    }
+
+    function homeWireBarHtml() {
+      if (!overnightEnabled()) return "";
+      ensureOvernight();
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const letter = overnight;
+      if (!letter && overnightLoading) {
+        return '<section class="home-wire" aria-label="League pulse">'
+          + '<p class="home-wire-empty" style="padding:12px">Loading pulse…</p></section>';
+      }
+      if (!letter) return "";
+      const waivers = homeWireWaiverBits(letter);
+      const outs = homeWireSeatName()
+        ? homeWireOutBits(letter)
+        : [].concat((letter.out || []).slice(0, 1), (letter.ir || []).slice(0, 1));
+      const watch = homeWireWatchBits();
+      const trades = homeWireTradeBits(letter);
+      const newsBits = homeWireNewsBits();
+      const icons = [
+        { id: "waivers", lab: "Wire", mark: "WA", n: waivers.length },
+        { id: "out", lab: "Out", mark: "OUT", n: outs.length },
+        { id: "watch", lab: "Watch", mark: "Q", n: watch.length },
+        { id: "trades", lab: "Deals", mark: "TR", n: trades.filter(function (b) {
+          return b.key.indexOf("latest-date") !== 0;
+        }).length },
+        { id: "news", lab: "News", mark: "N", n: newsBits.length },
+      ];
+      const open = homeWireOpen && icons.some(function (ic) { return ic.id === homeWireOpen; })
+        ? homeWireOpen
+        : "";
+      const row = icons.map(function (ic) {
+        const pressed = open === ic.id;
+        const nClass = ic.n > 0 ? "" : " is-zero";
+        return '<button type="button" class="home-wire-ico ' + ic.id + '"'
+          + ' data-home-wire="' + ic.id + '"'
+          + ' aria-pressed="' + (pressed ? "true" : "false") + '"'
+          + ' aria-label="' + esc(ic.lab + (ic.n ? (", " + ic.n) : "")) + '">'
+          + '<span class="home-wire-mark" aria-hidden="true">' + esc(ic.mark) + "</span>"
+          + '<span class="home-wire-lab">' + esc(ic.lab) + "</span>"
+          + '<span class="home-wire-n' + nClass + '">' + ic.n + "</span>"
+          + "</button>";
+      }).join("");
+      const foot = '<div class="home-wire-foot" style="padding:8px 12px'
+        + (open || homeWireFullLetter ? "" : ";border-top:1px solid var(--line)") + '">'
+        + "<p>" + esc(letter.dateline || "Overnight") + "</p>"
+        + '<button type="button" class="home-wire-more" data-home-wire-full="1"'
+        + ' aria-label="' + (homeWireFullLetter ? "Hide full league overnight" : "Show full league overnight") + '">'
+        + (homeWireFullLetter ? "Hide letter" : "Full letter") + "</button></div>";
+      return '<section class="home-wire' + (open || homeWireFullLetter ? " is-open" : "") + '" aria-label="League pulse">'
+        + '<div class="home-wire-row" role="toolbar" aria-label="Wire, outs, watch, deals, news">'
+        + row
+        + "</div>"
+        + (open ? homeWirePanelHtml(open, letter) : "")
+        + (open ? "" : foot)
+        + (homeWireFullLetter ? overnightSlipHtml({ share: true }) : "")
+        + "</section>";
+    }
+
     function ensureCuffs() {
       if (cuffs || cuffsLoading) return;
       cuffsLoading = true;
@@ -10428,6 +10831,8 @@
       overnightLoading = false;
       overnightOpen = false;
       overnightOpenPlayer = "";
+      homeWireOpen = "";
+      homeWireFullLetter = false;
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -27263,7 +27668,8 @@
 
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
-      // Manager OS: race → capital → chase pulse → overnight → Ideas → doors → calc.
+      // Manager OS: race → capital → chase pulse → wire bar → Ideas → doors → calc.
+      // Full overnight letter stays on ?r=overnight / share — Home only gets the icon bar.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="' + esc(calcDoorLabel()) + ', click here">'
         + '<img class="lh-calc-banner" src="' + esc(calcDoorSrc()) + '"'
@@ -27273,7 +27679,7 @@
       return homeYouHtml()
         + homeCapitalStripHtml()
         + homePulseHtml()
-        + overnightSlipHtml()
+        + homeWireBarHtml()
         + leagueTapeHtml()
         + homeDeskHtml()
         + homeTopDoorsHtml()
@@ -30757,6 +31163,28 @@
         e.stopPropagation();
         const id = overnightPlayerBtn.getAttribute("data-overnight-player") || "";
         overnightOpenPlayer = (String(overnightOpenPlayer) === String(id)) ? "" : id;
+        if (typeof render === "function") render();
+        return;
+      }
+      const homeWireBtn = e.target.closest("[data-home-wire]");
+      if (homeWireBtn && homeWireBtn.closest(".home-wire")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = homeWireBtn.getAttribute("data-home-wire") || "";
+        homeWireOpen = (String(homeWireOpen) === String(id)) ? "" : id;
+        if (homeWireOpen) homeWireFullLetter = false;
+        if (typeof render === "function") render();
+        return;
+      }
+      const homeWireFullBtn = e.target.closest("[data-home-wire-full]");
+      if (homeWireFullBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        homeWireFullLetter = !homeWireFullLetter;
+        if (homeWireFullLetter) {
+          homeWireOpen = "";
+          overnightOpen = true;
+        }
         if (typeof render === "function") render();
         return;
       }

@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021043000";
+    const DATA_V = "dashHomeOs20261021044000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27053,9 +27053,10 @@ const html = `<!DOCTYPE html>
       let line = "";
       if (bits.length) {
         // Stack summary first so hoarders see 4 firsts · 1 Early · 3 Mid in one glance.
+        // Keep up to 4 slot lines (a full 10-team first round) before +N.
         line = (stack ? stack + " · " : "")
-          + bits.slice(0, 3).join(" · ")
-          + (bits.length > 3 ? (" · +" + (bits.length - 3)) : "");
+          + bits.slice(0, 4).join(" · ")
+          + (bits.length > 4 ? (" · +" + (bits.length - 4)) : "");
       } else {
         line = "No " + (bag.year || "future") + " first held";
       }

@@ -4515,7 +4515,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "dashHomeOs20261021090000";
+    const DATA_V = "dashHomeOs20261021094500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -27060,7 +27060,12 @@ const html = `<!DOCTYPE html>
       } else {
         line = "No " + (bag.year || "future") + " first held";
       }
-      if (bag.ownSold) line += " · own 1st sold";
+      if (bag.ownSold) {
+        const own = homeOwnFirstStatus();
+        if (own && own.band === "Late") line += " · own Late 1st sold";
+        else if (own && own.band === "Early") line += " · own Early 1st sold";
+        else line += " · own 1st sold";
+      }
       if (!bits.length) {
         // Slow burn / proxy: empty bag is not a shopping cue — hold the race.
         const arch = typeof archSeatOf === "function" ? archSeatOf(authSeatId()) : null;
@@ -34304,6 +34309,7 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
     || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")
     || !fnSrc("homeCapitalStripHtml").includes("slow_burn")
+    || !fnSrc("homeCapitalStripHtml").includes("own Late 1st sold")
     || !fnSrc("homeChaseTip").includes("Buy Early — ")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")
     || !fnSrc("homeYouHtml").includes("data-home-awards")

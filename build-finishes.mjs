@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Career finishes for How I finished. Complete Sleeper seasons plus remapped
- * ESPN standings when cookies have unlocked them. In-progress years stay out.
+ * Career finishes for Manager avg finish. Complete Sleeper seasons plus remapped
+ * ESPN standings when cookies have unlocked them. In-progress years stay out
+ * (live race → build-projected-finish.mjs).
  */
 import {
   LEAGUE_ID,

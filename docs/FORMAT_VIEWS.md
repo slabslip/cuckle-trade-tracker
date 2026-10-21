@@ -46,7 +46,7 @@ Same layout. Different doors, copy, and cuts.
 - Week scores, place, and crowns stay that season’s native facts.
 - VA stays on complete two-team deals. 0 on N-ways / incomplete.
 - TEP is a flag. Consolation weeks do not set the low.
-- Incomplete current season is out of How I finished.
+- Incomplete current season is out of Manager avg finish. Use **Projected finish** for the live race.
 
 ### Your board (13 doors)
 
@@ -59,7 +59,8 @@ Parked on redraft (hidden from the library): `stash_young`, `draft_board`,
 
 | Door | Redraft meaning |
 | --- | --- |
-| How I finished | Completed imported years they played. Average of those. |
+| Manager avg finish | Completed imported years they played. Average of those. |
+| Projected finish | Live W-L / PF / PA + rest-of-way SoS → expected place + pick band. |
 | Week scores | Native points. Hunt weeks only. Year named on the row. |
 | Past champions | Real crowns only. Host year tagged. |
 | Firsts still here | This season’s first-round **players** still on that roster. |

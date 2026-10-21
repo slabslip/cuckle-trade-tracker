@@ -33,6 +33,8 @@ build-calculator.mjs
   → data/ui/calculator.json          (rostered players + still-held picks, Sleeper roster_ord, today / even)
 build-seat-direction.mjs
   → data/ui/seat-direction.json      (last-window tape review per seat; captions only)
+build-projected-finish.mjs
+  → data/ui/projected-finish.json    (in-season race + SoS → proj place + Early/Mid/Late)
 build-cosmetics.mjs
   → data/ui/cosmetics.json           (136 catalog (68 pairs) + computed unlocks; award ladder → docs/plans/awards_titles_emblems.md)
 generate-page.mjs
@@ -133,7 +135,7 @@ only and never reaches the value book.
 
 ### `data/ui/finishes.json`
 
-Career finishes for How I finished. `build-finishes.mjs` walks every completed
+Career finishes for Manager avg finish. `build-finishes.mjs` walks every completed
 Sleeper season (winners-bracket, then record — the same rule as `members.place`)
 and remaps ESPN standings onto those seats when cookies unlock 2010–2024. In-progress
 years and parked joiners stay out.

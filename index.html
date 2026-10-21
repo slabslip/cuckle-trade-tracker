@@ -4474,7 +4474,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "nightly20261021003937";
+    const DATA_V = "projectedFinish20261021020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4528,8 +4528,8 @@
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
       "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-      "past_champions", "season_place", "vs_you", "firsts_held", "week_scores",
-      "passed_around", "seat_draft", "uninsured",
+      "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
+      "week_scores", "seat_draft", "uninsured",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -4541,8 +4541,8 @@
     ];
     const DATA_DASH_DEFAULT = [
       "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-      "past_champions", "season_place", "vs_you", "firsts_held", "week_scores",
-      "passed_around", "seat_draft", "uninsured",
+      "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
+      "week_scores", "seat_draft", "uninsured",
     ];
     const DATA_DASH_RESEARCH = [
       "firsts_held", "uninsured", "widest_clock", "passed_around",
@@ -4576,7 +4576,8 @@
       playoff_avg: { lab: "Playoff average", why: "Average of each year's real playoff finish. 1st/2nd from the championship game, 3rd/4th from the 3rd-place game. First-round outs are 5th/6th by regular season. Leftover scores do not move this number." },
       pot_net: { lab: "Career net", why: "Winnings minus $300 entry each year. Last place pays $200 extra into the pot. 1st $2,300 · 2nd $900 · 3rd $300 · most regular-season points $300. Tap a seat for year by year." },
       week_scores: { lab: "Week scores", why: "Highest and lowest team weeks still hunting the title or playing for 3rd." },
-      season_place: { lab: "How I finished", why: "Career average, three seasons minimum. Pick a year for that 1–12 board." },
+      season_place: { lab: "Manager avg finish", why: "Career average, three seasons minimum. Pick a year for that 1–12 board." },
+      projected_finish: { lab: "Projected finish", why: "This season’s race + strength of schedule → expected place and Early / Mid / Late pick band." },
       my_draft: { lab: "My snake", why: "This season's draft — used, traded away, traded in." },
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
@@ -4611,7 +4612,8 @@
       { id: "league_trades", lab: "League Trade History", desk: "lists", group: "memory", size: "full", why: "Every pairing, most deals first." },
       { id: "my_draft", lab: "Draft picks", desk: "lists", group: "memory", size: "full", why: "Unused 2027+ · who holds yours · early / mid / late from the 2026 window." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
-      { id: "season_place", lab: "How I finished", desk: "lists", group: "memory", size: "full", why: "Average finish with no season floor. One year still counts." },
+      { id: "season_place", lab: "Manager avg finish", desk: "lists", group: "memory", size: "full", why: "Career average finish. One year still counts. Not this season’s projection." },
+      { id: "projected_finish", lab: "Projected finish", desk: "lists", group: "memory", size: "full", why: "This season’s place, record, PF/PA, rest-of-way SoS → expected finish and pick band." },
       { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
       { id: "points_king", lab: "Points king", desk: "lists", group: "who", size: "full", why: "Highest average points per season. Regular season plus title-hunt weeks only." },
       { id: "contender_rate", lab: "Contender rate", desk: "lists", group: "who", size: "full", why: "Top-six finishes over seasons played. Three seasons minimum." },
@@ -4709,6 +4711,7 @@
     let weekScoresBook = null;
     let weekScoresLoading = false;
     let finishesBook = null;
+    let projectedFinishBook = null;
     let leagueLoadGen = 0;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
@@ -5021,6 +5024,13 @@
         if (row) {
           lead = String(row.name || "") + (row.avg != null ? " · " + Number(row.avg).toFixed(1) : "");
         }
+      } else if (id === "projected_finish") {
+        const row = projectedFinishBook && projectedFinishBook.seats && projectedFinishBook.seats[0];
+        if (row) {
+          lead = String(row.name || "") + " · proj "
+            + (typeof nth === "function" ? nth(row.proj_finish) : row.proj_finish)
+            + (row.band ? " · " + row.band : "");
+        }
       } else if (id === "week_scores") {
         const high = weekScoresBook && weekScoresBook.all && weekScoresBook.all.high && weekScoresBook.all.high[0];
         if (high) {
@@ -5112,6 +5122,29 @@
 
     function dataListItems(id) {
       const canon = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
+      if (canon === "projected_finish") {
+        const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
+          ? projectedFinishBook.seats : [];
+        return seats.map(function (s, i) {
+          const delta = Number(s.delta_place) || 0;
+          const climb = delta > 0 ? ("↑" + delta) : (delta < 0 ? ("↓" + (-delta)) : "flat");
+          return {
+            key: String(s.user_id || s.name || i),
+            name: s.name,
+            metric: (typeof nth === "function" ? nth(s.proj_finish) : String(s.proj_finish))
+              + " · " + (s.band || "Mid"),
+            sub: "#" + s.place_now + " now · " + (s.record || "")
+              + " · PF " + Math.round(Number(s.pf) || 0)
+              + " · PA " + Math.round(Number(s.pa) || 0)
+              + " · exp " + (Number(s.expected_wins) || 0).toFixed(1) + "W"
+              + " · " + climb
+              + " · pick " + (s.proj_slot < 10 ? "0" : "") + s.proj_slot,
+            rank: s.proj_finish || (i + 1),
+            seat: s,
+            band: String(s.band || "Mid").toLowerCase(),
+          };
+        });
+      }
       if (canon === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
         if (yearWant && typeof finishYearBoard === "function") {
@@ -6360,7 +6393,7 @@
 
     function finishMoney(n) {
       const v = Math.round(Number(n) || 0);
-      return (v < 0 ? "-" : "") + "$" + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      return (v < 0 ? "-" : "") + "$" + String(Math.abs(v)).replace(/B(?=(d{3})+(?!d))/g, ",");
     }
 
     function finishPlayoffFloorN() {
@@ -6895,7 +6928,7 @@
       if (id === "my_trades" || id === "league_trades" || id === "my_draft" || id === "league_draft"
         || id === "profit_loss"
         || id === "trade_mark" || id === "pick_print" || id === "my_picks"
-        || id === "season_place" || id === "season_title") return "memory";
+        || id === "season_place" || id === "season_title" || id === "projected_finish") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
       return "who";
@@ -6994,6 +7027,7 @@
         my_picks: '<path d="M6 20V5h8l3 3v12H6z"/><path d="M9 10h6M9 14h4M9 18h5"/>',
         past_champions: '<path d="M4 16l3.2-8 4.8 4.5L16.8 8 20 16H4z"/><path d="M5 19h14"/>',
         season_place: '<path d="M4 14h5v6H4zM9.5 8h5v12h-5zM15 12h5v8h-5z"/>',
+        projected_finish: '<path d="M4 18l5-6 4 3 7-9"/><circle cx="20" cy="6" r="1.5"/>',
         career_avg: '<path d="M4 16h5v4H4zM9.5 10h5v10h-5zM15 6h5v14h-5z"/>',
         points_king: '<path d="M12 3.4l2.2 5.2 5.6.8-4.1 3.9.9 5.8L12 16.4 7.4 19.1l.9-5.8-4.1-3.9 5.6-.8z"/>',
         contender_rate: '<circle cx="12" cy="12" r="7.2"/><path d="M12 8v4.2l2.6 1.6"/>',
@@ -7035,7 +7069,14 @@
       const spec = dataDashById(id);
       if (!spec) return "";
       let fig = "";
-      if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
+      if (id === "projected_finish") {
+        const lead = projectedFinishBook && projectedFinishBook.seats && projectedFinishBook.seats[0];
+        if (lead) {
+          fig = receiptDoorLeadFig(lead.name,
+            (typeof nth === "function" ? nth(lead.proj_finish) : String(lead.proj_finish))
+            + (lead.band ? (" · " + lead.band) : ""));
+        }
+      } else if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
         if (id === "past_champions") {
           const last = ((titles && titles.titles) || [])[0];
           if (last) fig = receiptDoorLeadFig(last.name, last.season);
@@ -8178,7 +8219,7 @@
           : "Every pairing in the league. Pick a team to see their partners.";
       }
       else if (id === "my_draft" && pickHubIsDynasty() && pickHubScope !== "tape") {
-        caption = "Unused 2027+ first. Mine is who holds the picks that started here. League is every leftover pick that year, firsts first. Early / Mid / Late is whose 2026 season looks last, middle, or first — last place is the 1.01.";
+        caption = "Unused 2027+ first. Mine is who holds the picks that started here. League is every leftover pick that year, firsts first. Early / Mid / Late follows Projected finish (this season’s race + strength of schedule) — last place is the 1.01.";
       }
       else if (id === "my_draft") caption = "Used is a player this seat drafted. Traded away started here and left. Traded in came from another seat. Grade is Star / Hit / Even / Miss / Bust vs the slot.";
       else if (id === "league_draft" && receiptDraftSeat) caption = "Same three buckets for " + receiptDraftSeat + ".";
@@ -8202,14 +8243,25 @@
           caption += " ESPN years sit next to Sleeper.";
         }
       }
+      else if (id === "projected_finish") {
+        const week = projectedFinishBook && projectedFinishBook.week;
+        const left = projectedFinishBook && projectedFinishBook.remaining_week_count;
+        caption = "Cuckle projected " + ((projectedFinishBook && projectedFinishBook.season) || "this")
+          + " finish through the regular season"
+          + (week != null ? (" (after week " + week + ")") : "")
+          + (left != null ? (" · " + left + " weeks left") : "")
+          + ". Place now, record, points for / against, then rest-of-way strength of schedule."
+          + " Expected wins rank the board. Last place → Early 1.01 band; title → Late."
+          + " Draft picks Early / Mid / Late read this book first.";
+      }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
         if (leagueFormat().kind !== "redraft") {
-          caption = "Average finish with no season floor. One year still counts. Winners bracket, then record.";
+          caption = "Manager avg finish — career average with no season floor. One year still counts. Winners bracket, then record. For this season’s race open Projected finish.";
         } else {
           caption = yearWant
             ? (yearWant + " final standings. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order, last place worst record.")
-            : "Career average. Three completed seasons minimum so a one-year 2nd does not beat a six-year 4.7. Pick a year for that board. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order.";
+            : "Manager avg finish — career average. Three completed seasons minimum so a one-year 2nd does not beat a six-year 4.7. Pick a year for that board. Top six from the playoff bracket — championship, 3rd-place game, first round. Bottom six stay regular-season order.";
         }
         if (league && league.providers && league.providers.espn_authorized) {
           caption += " Imported ESPN years count.";
@@ -8646,6 +8698,21 @@
         }
         return byName;
       };
+      // Prefer the committed SoS race book for the soonest draft year.
+      let rank2027 = rank("score2027");
+      if (projectedFinishBook && Array.isArray(projectedFinishBook.seats)) {
+        const live = {};
+        projectedFinishBook.seats.forEach(function (s) {
+          if (!s || !s.name) return;
+          live[s.name] = {
+            finish: Number(s.proj_finish) || Math.ceil(n / 2),
+            slot: Number(s.proj_slot) || Math.ceil(n / 2),
+            band: s.band || "",
+            from: "projected-finish",
+          };
+        });
+        if (Object.keys(live).length) rank2027 = live;
+      }
       pickHubOutlookMemo = {
         seats: seats,
         byName: (function () {
@@ -8653,7 +8720,7 @@
           seats.forEach(function (s) { map[s.name] = s; });
           return map;
         }()),
-        rank2027: rank("score2027"),
+        rank2027: rank2027,
         rank2028: rank("score2028"),
         rankLater: rank("scoreLater"),
       };
@@ -8678,17 +8745,22 @@
       const table = y <= soon ? book.rank2027 : (y === soon + 1 ? book.rank2028 : book.rankLater);
       const ranked = table[originName] || { finish: Math.ceil(pickHubTeamsN() / 2), slot: Math.ceil(pickHubTeamsN() / 2) };
       const band = pickHubTier(ranked.slot, pickHubTeamsN());
-      const why = seat
-        ? (seat.kindLab + " · 2026 look ranks " + ranked.finish + " of " + pickHubTeamsN())
-        : "No roster read yet";
+      const fromLive = ranked.from === "projected-finish";
+      const why = fromLive
+        ? ("Projected finish ranks " + ranked.finish + " of " + pickHubTeamsN()
+          + " (race + SoS)")
+        : (seat
+          ? (seat.kindLab + " · 2026 look ranks " + ranked.finish + " of " + pickHubTeamsN())
+          : "No roster read yet");
       return {
         origin: originName || "",
         year: String(year || soon),
         finish: ranked.finish,
         slot: ranked.slot,
         band: band,
-        kindLab: seat ? seat.kindLab : "Reload",
+        kindLab: fromLive ? "Projected" : (seat ? seat.kindLab : "Reload"),
         why: why,
+        from: fromLive ? "projected-finish" : "bag-window",
       };
     }
 
@@ -8921,7 +8993,7 @@
       let html = '<p class="caption">' + esc(head) + ". "
         + n + " still unused"
         + (mine ? (" · " + held + " you hold · " + gone + " of yours sit elsewhere") : "")
-        + ". Early / Mid / Late is the origin seat's 2026 window — last place is 1.01, the title is 1."
+        + ". Early / Mid / Late follows Projected finish (race + SoS) when that book is live — last place is 1.01, the title is 1."
         + pickHubTeamsN() + ".</p>";
       if (pickHubScope === "league" && (rd === "1" || rd === "all")) html += pickHubBoardHtml(rows);
       if (!rows.length) return html + '<p class="caption">No unused future picks match.</p>';
@@ -10216,7 +10288,7 @@
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -10231,6 +10303,7 @@
         getLeagueJson("seat-direction.json").catch(() => null),
         getLeagueJson("week-scores.json").catch(() => null),
         getLeagueJson("finishes.json").catch(() => null),
+        getLeagueJson("projected-finish.json").catch(() => null),
       ]);
       if (gen !== leagueLoadGen) return;
       const nowId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
@@ -10293,6 +10366,13 @@
           ? finishesRaw
           : null;
       } catch (err) { finishesBook = null; }
+      try {
+        projectedFinishBook = projFinishRaw && Number(projFinishRaw.v) >= 1
+          && Array.isArray(projFinishRaw.seats) && projFinishRaw.seats.length
+          ? projFinishRaw
+          : null;
+        pickHubOutlookMemo = null;
+      } catch (err) { projectedFinishBook = null; }
       getLeagueJson("name-history.json").then(function (book) {
         nameHistoryBook = book && book.v === 1 && book.seats ? book : null;
         if (appScreen === "joinWelcome") render();
@@ -13141,7 +13221,17 @@
         const seats = (typeof finishPlaceSeats === "function") ? finishPlaceSeats() : (finishesBook && finishesBook.seats) || [];
         const lead = seats[0] || (finishesBook && finishesBook.seats && finishesBook.seats[0]);
         return dataDashHead(spec, lead && lead.avg != null ? String(lead.avg) : (n ? (n + " yrs") : "Open"),
-          lead ? ((lead.name || "Lead") + " career avg") : "Average finish");
+          lead ? ((lead.name || "Lead") + " career avg") : "Manager avg finish");
+      }
+      if (id === "projected_finish") {
+        const lead = projectedFinishBook && projectedFinishBook.seats && projectedFinishBook.seats[0];
+        const week = projectedFinishBook && projectedFinishBook.week;
+        return dataDashHead(spec,
+          lead ? ("proj " + (typeof nth === "function" ? nth(lead.proj_finish) : lead.proj_finish)) : "Open",
+          lead
+            ? ((lead.name || "Lead") + (lead.band ? (" · " + lead.band) : "")
+              + (week != null ? (" · w" + week) : ""))
+            : "This season’s race");
       }
       if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];
@@ -19888,14 +19978,14 @@
       const league = gateInviteLeague || claimLeagueName || "this league";
       const team = gateInviteTeam || "";
       if (team) {
-        return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
+        return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
           + "</b>. Claim your team <b>" + esc(team) + "</b>.</p>";
       }
       if (typeof shareAccessPending === "function" && shareAccessPending()) {
         return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
           + "</b>. Create a username and password, then claim a remaining team to open it.</p>";
       }
-      return '<p class="join-land-hero">You\'ve been invited to join <b>' + esc(league)
+      return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
         + "</b>. After you set a username and password, pick your team.</p>";
     }
 
@@ -27333,19 +27423,19 @@
       const years = ["YR1", "YR2", "YR3"];
       return '<section class="team-schematic" aria-label="Team analyzer">'
         + '<div class="team-sch-hero">'
-        + "<div><div class=\"overnight-slip-top\">"
+        + '<div><div class="overnight-slip-top">'
         + '<p class="overnight-slip-date">Team analyzer</p>'
         + '<button type="button" class="tile-share" data-analyzer-share="' + esc(String(uid)) + '" aria-label="Save team analyzer image">'
         + receiptShareIco() + "</button></div>"
-        + "<p class=\"team-sch-name\">" + esc(card.name) + "</p></div>"
+        + '<p class="team-sch-name">' + esc(card.name) + "</p></div>"
         + '<div class="team-sch-arch"><b>Team grade</b><span>' + card.overall + " / 10</span>"
-        + "<b style=\"margin-top:8px\">Archetype</b><span>" + esc(card.arch) + "</span></div>"
+        + '<b style="margin-top:8px">Archetype</b><span>' + esc(card.arch) + "</span></div>"
         + "</div>"
         + '<div class="team-sch-grid">'
         + '<div class="team-sch-box"><div class="team-sch-h">Now</div>'
         + '<div class="team-sch-score">' + card.now + "<em>/10</em></div>"
         + '<div class="team-sch-bar"><i style="width:' + (card.now * 10) + '%"></i></div>'
-        + '<p class="team-sch-note">this year\'s desk'
+        + '<p class="team-sch-note">this year desk'
         + (card.rooms && card.rooms.strength && card.rooms.strength !== "—"
           ? " · Strength " + esc(card.rooms.strength) : "")
         + "</p></div>"
@@ -27415,7 +27505,7 @@
     }
 
     function teamAnalyzerShareWrap(ctx, text, maxW) {
-      const words = String(text || "").split(/\s+/).filter(Boolean);
+      const words = String(text || "").split(/s+/).filter(Boolean);
       const lines = [];
       let cur = "";
       words.forEach(function (w) {
@@ -27581,7 +27671,7 @@
       pushBox(true, boxPad + head + lineup.length * lineH + 10, function (x, top, w) {
         heading("Starting lineup", x, top + px(head - 4));
         lineup.forEach(function (p, i) {
-          const meta = ((p.injury ? p.injury + " · " : "") + (p.team || "")).replace(/\s+$/, "");
+          const meta = ((p.injury ? p.injury + " · " : "") + (p.team || "")).replace(/s+$/, "");
           row(p.pos, p.name, meta, x, top + px(head + 14 + i * lineH), w);
         });
       });
@@ -27823,6 +27913,20 @@
         return row && me && String(row.user_id) === String(me.user_id);
       });
       const place = mem && mem.place && typeof nth === "function" ? nth(mem.place) : "";
+      const projSeat = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
+        ? projectedFinishBook.seats.find(function (s) {
+          return s && me && String(s.user_id) === String(me.user_id);
+        })
+        : null;
+      const projLine = projSeat
+        ? ("Projected " + (typeof nth === "function" ? nth(projSeat.proj_finish) : projSeat.proj_finish)
+          + " · " + (projSeat.record || "")
+          + " · PF " + Math.round(Number(projSeat.pf) || 0)
+          + " / PA " + Math.round(Number(projSeat.pa) || 0)
+          + " · " + (projSeat.band || "Mid") + " pick band"
+          + (Number(projSeat.delta_place) > 0 ? (" · ↑" + projSeat.delta_place + " from now") : "")
+          + (Number(projSeat.delta_place) < 0 ? (" · ↓" + (-projSeat.delta_place) + " from now") : ""))
+        : "";
       const awardsChip = mine
         ? ' <button type="button" class="chip" data-home-awards="1">Titles and Emblems</button>'
         : "";
@@ -27854,6 +27958,10 @@
           ? '<div class="chip-lens-bar">' + chipLensHtml({ inline: true }) + "</div>"
           : "")
         + (place ? '<p class="caption">' + esc(place) + " last season.</p>" : "")
+        + (projLine
+          ? ('<p class="caption">' + esc(projLine)
+            + ' <button type="button" class="chip" data-dash-open="projected_finish">League board</button></p>')
+          : "")
         + '<p class="caption"><button type="button" class="chip" data-calc-from-team="' + esc(me.user_id) + '">Price a deal</button>'
         + ' <button type="button" class="chip" data-open-ledger="1">Open Ledger</button>'
         + awardsChip + "</p>"
@@ -28848,7 +28956,7 @@
       }).join("");
       const hero = (typeof shareAccessPending === "function" && shareAccessPending())
         ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim one of the remaining teams to open it.")
-        : ("You've been invited to join <b>" + esc(league) + "</b>. Pick the team that is yours.");
+        : ("You have been invited to join <b>" + esc(league) + "</b>. Pick the team that is yours.");
       const hint = !claimSeats.length
         ? "Could not load teams yet. Ask your commissioner for an invite link."
         : (!remaining.length
@@ -28899,9 +29007,9 @@
       const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
       return '<div class="app-shell">'
         + joinStepsHtml("land")
-        + '<h2 class="screen-h" tabindex="-1">You\'re in</h2>'
+        + '<h2 class="screen-h" tabindex="-1">You are in</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">You\'ve joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
+        + '<p class="join-land-hero">You have joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
         + '<p class="caption">League added. Team claimed.'
         + (L.auto ? " This invite linked the seat for you." : " You picked this team.")
         + "</p></div>"

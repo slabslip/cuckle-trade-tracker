@@ -107,7 +107,7 @@ loop(5, fnSrc(page, "dataDashPresetHtml").includes("dataDashDefaultTiles")
   "Career / Research presets light against the redraft lists");
 
 // 6 Dynasty default board and Cuckle cosmetics stay put
-loop(6, defIds.join(",") === "my_trades,league_trades,my_draft,league_draft,profit_loss,past_champions,season_place,vs_you,firsts_held,week_scores,passed_around,seat_draft,uninsured"
+loop(6, defIds.join(",") === "my_trades,league_trades,my_draft,league_draft,profit_loss,past_champions,season_place,projected_finish,vs_you,firsts_held,week_scores,seat_draft,uninsured"
   && sha(`${ROOT}data/ui/cosmetics.json`) === "ef5d357636402f73d479925c5434a10e9bcd1a54ad679c189c4aab72955f650d"
   && page.includes("Cuckle trade calculator")
   && page.includes("data/ui/calc-door.png"),

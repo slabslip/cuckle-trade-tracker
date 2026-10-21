@@ -1769,14 +1769,6 @@
       margin: 0; font-size: 0.68rem; font-weight: 650; color: var(--dim);
       letter-spacing: 0.04em; text-transform: uppercase;
     }
-    button.home-wire-more {
-      appearance: none; font: inherit; cursor: pointer;
-      background: transparent; border: 0; padding: 0;
-      color: var(--lh-gold, #e0b44c);
-      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em;
-      text-transform: uppercase; min-height: 32px;
-    }
-    button.home-wire-more:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .team-story-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
       letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
@@ -4573,8 +4565,6 @@
     let overnightOpenPlayer = "";
     // Home wire bar: which icon panel is open (waivers|out|watch|trades|news|"").
     let homeWireOpen = "";
-    // Optional expand of the full overnight ticket under the bar (off by default).
-    let homeWireFullLetter = false;
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -4597,7 +4587,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "projFinishMove20261021114500";
+    const DATA_V = "projFinishV2Wire17720261021115000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -10333,12 +10323,10 @@
       return '<div class="home-wire-panel" data-home-wire-panel="' + esc(kind) + '">'
         + '<p class="home-wire-panel-h">' + esc(title) + "</p>"
         + body
-        + '<div class="home-wire-foot">'
-        + "<p>" + esc(lede || (letter && letter.dateline) || "Overnight") + "</p>"
-        + '<button type="button" class="home-wire-more" data-home-wire-full="1"'
-        + ' aria-label="' + (homeWireFullLetter ? "Hide full league overnight" : "Show full league overnight") + '">'
-        + (homeWireFullLetter ? "Hide letter" : "Full letter") + "</button>"
-        + "</div></div>";
+        + (lede
+          ? '<div class="home-wire-foot"><p>' + esc(lede) + "</p></div>"
+          : "")
+        + "</div>";
     }
 
     function homeWireBarHtml() {
@@ -10382,19 +10370,16 @@
           + '<span class="home-wire-n' + nClass + '">' + ic.n + "</span>"
           + "</button>";
       }).join("");
-      const foot = '<div class="home-wire-foot" style="padding:8px 12px'
-        + (open || homeWireFullLetter ? "" : ";border-top:1px solid var(--line)") + '">'
-        + "<p>" + esc(letter.dateline || "Overnight") + "</p>"
-        + '<button type="button" class="home-wire-more" data-home-wire-full="1"'
-        + ' aria-label="' + (homeWireFullLetter ? "Hide full league overnight" : "Show full league overnight") + '">'
-        + (homeWireFullLetter ? "Hide letter" : "Full letter") + "</button></div>";
-      return '<section class="home-wire' + (open || homeWireFullLetter ? " is-open" : "") + '" aria-label="League pulse">'
+      const foot = open
+        ? ""
+        : '<div class="home-wire-foot" style="padding:8px 12px;border-top:1px solid var(--line)">'
+          + "<p>" + esc(letter.dateline || "Overnight") + "</p></div>";
+      return '<section class="home-wire' + (open ? " is-open" : "") + '" aria-label="League pulse">'
         + '<div class="home-wire-row" role="toolbar" aria-label="Wire, outs, watch, deals, news">'
         + row
         + "</div>"
         + (open ? homeWirePanelHtml(open, letter) : "")
-        + (open ? "" : foot)
-        + (homeWireFullLetter ? overnightSlipHtml({ share: true }) : "")
+        + foot
         + "</section>";
     }
 
@@ -10844,7 +10829,6 @@
       overnightOpen = false;
       overnightOpenPlayer = "";
       homeWireOpen = "";
-      homeWireFullLetter = false;
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -31184,19 +31168,6 @@
         e.stopPropagation();
         const id = homeWireBtn.getAttribute("data-home-wire") || "";
         homeWireOpen = (String(homeWireOpen) === String(id)) ? "" : id;
-        if (homeWireOpen) homeWireFullLetter = false;
-        if (typeof render === "function") render();
-        return;
-      }
-      const homeWireFullBtn = e.target.closest("[data-home-wire-full]");
-      if (homeWireFullBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        homeWireFullLetter = !homeWireFullLetter;
-        if (homeWireFullLetter) {
-          homeWireOpen = "";
-          overnightOpen = true;
-        }
         if (typeof render === "function") render();
         return;
       }

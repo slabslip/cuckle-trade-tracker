@@ -14,7 +14,11 @@ import {
   sleeperGet,
   writeUi,
 } from "./lib.mjs";
-import { projectFinishBook } from "./lib/projected-finish.mjs";
+import {
+  projectFinishBook,
+  scoreFormLeague,
+  summarizeFormByRoster,
+} from "./lib/projected-finish.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -67,6 +71,62 @@ async function remainingPairs(leagueId, lastScored, playoffStart) {
   return { pairs, weeks };
 }
 
+function ptsKeyFromLeague(live) {
+  const rec = live && live.scoring_settings && Number(live.scoring_settings.rec);
+  if (rec === 1) return "pts_ppr";
+  if (rec === 0.5) return "pts_half_ppr";
+  return "pts_std";
+}
+
+async function fetchWeekProjections(season, week, ptsKey) {
+  const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+  const qs = positions.map((p) => "position[]=" + p).join("&");
+  const url = "https://api.sleeper.app/projections/nfl/" + season + "/" + week
+    + "?season_type=regular&" + qs;
+  const projs = await fetch(url).then((r) => (r.ok ? r.json() : []));
+  const projBy = Object.create(null);
+  for (const p of projs || []) {
+    const st = p.stats || {};
+    projBy[p.player_id] = Number(st[ptsKey] || st.pts_ppr || st.pts_std || 0);
+  }
+  return projBy;
+}
+
+/**
+ * Starter actual vs Sleeper weekly projection for each scored week.
+ * Feeds form into remaining P(win) so persistent over/under-performers move.
+ */
+async function scoredFormByRoster(leagueId, season, lastScored, ptsKey) {
+  const end = Number(lastScored) || 0;
+  if (end < 1) return {};
+  const weekDeltas = Object.create(null);
+  for (let w = 1; w <= end; w++) {
+    const [rows, projBy] = await Promise.all([
+      sleeperGet(`/league/${leagueId}/matchups/${w}`),
+      fetchWeekProjections(season, w, ptsKey),
+    ]);
+    for (const row of rows || []) {
+      const rid = Number(row.roster_id);
+      if (!Number.isFinite(rid)) continue;
+      const actual = Number(row.points);
+      if (!Number.isFinite(actual) || actual <= 0) continue;
+      const starters = row.starters || [];
+      let proj = 0;
+      for (const id of starters) proj += Number(projBy[id]) || 0;
+      if (proj < 30) continue;
+      const key = String(rid);
+      if (!weekDeltas[key]) weekDeltas[key] = [];
+      weekDeltas[key].push({
+        week: w,
+        actual: Math.round(actual * 10) / 10,
+        proj: Math.round(proj * 10) / 10,
+        delta: Math.round((actual - proj) * 10) / 10,
+      });
+    }
+  }
+  return scoreFormLeague(summarizeFormByRoster(weekDeltas));
+}
+
 async function main() {
   const leagueId = LEAGUE_ID;
   const live = (await sleeperGet(`/league/${leagueId}`)) || null;
@@ -92,10 +152,16 @@ async function main() {
   const playoffStart = Number(settings.playoff_week_start) || 15;
   const teams = Number(live.total_rosters) || Number(settings.num_teams) || 10;
 
-  const [rosters, users, rem] = await Promise.all([
+  const [rosters, users, rem, formByRoster] = await Promise.all([
     sleeperGet(`/league/${leagueId}/rosters`),
     sleeperGet(`/league/${leagueId}/users`),
     remainingPairs(leagueId, lastScored, playoffStart),
+    scoredFormByRoster(
+      leagueId,
+      Number(live.season) || live.season,
+      lastScored,
+      ptsKeyFromLeague(live),
+    ),
   ]);
 
   const ownerByRoster = {};
@@ -121,6 +187,7 @@ async function main() {
     week: lastScored,
     playoffWeekStart: playoffStart,
     arcByUser: arcByUser(),
+    formByRoster,
   });
 
   book.as_of = today;

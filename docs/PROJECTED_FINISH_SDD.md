@@ -32,30 +32,38 @@ homepage “who to target” journeys.
 
 ---
 
-## 2. Calculus (v2 — movement)
+## 2. Calculus (v3 — movement + form)
 
 v1 double-counted banked wins (race + full expected_wins), so every seat’s
-projected finish matched place now. v2 forecasts **movement**:
+projected finish matched place now. v2 forecasts **movement**. v3 also
+credits seats that beat (or miss) weekly starter projections:
 
 ```text
 pythag = PF^1.8 / (PF^1.8 + PA^1.8)
-P(A beats B) = pythag_A / (pythag_A + pythag_B)
-expected_remaining_wins = Σ P(win) over remaining RS weeks   ← SoS lives here
-sos = mean(opponent pythag); sos_ease = 1 − sos
+form_delta = weighted mean(actual − starter_proj) over scored weeks
+form_z / form_recent_z = league z-scores (recent 3 weeks separate)
+adj_pythag = clamp(pythag + FORM_LEAN × blended form_z)
+P(A beats B) = adj_pythag_A / (adj_pythag_A + adj_pythag_B)
+expected_remaining_wins = Σ P(win) over remaining RS weeks   ← SoS + form
+sos = mean(opponent adj_pythag); sos_ease = 1 − sos
 race_score = 0.70 × standings_pts_norm + 0.30 × PF_norm
 path_score = normalize(expected_remaining_wins)              ← remaining path only
 ease_score = normalize(sos_ease)                             ← soft vs hard slate
 arc_score  = normalize(avg_climb) × season-left scale
              − 0.25 × fast_fade_rate                         ← season-arcs prior
-proj_score = 0.30×race + 0.40×path + 0.15×ease + 0.15×arc
+form_score = normalize(blended form_z)                       ← outscore / underscore
+proj_score = 0.28×race + 0.34×path + 0.13×ease + 0.12×arc + 0.13×form
 ```
 
 - **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.
 - Arcs from `season-arcs.json` (`avg_climb`, fade rates). Early season trusts
   history more (`arc_scale = weeks_left / season_weeks`).
+- Form uses Sleeper weekly projections summed over each week’s starters vs
+  actual points. Recent weeks weigh more; last-3-week residual can flip a seat
+  that has “begun” to clear proj.
 - Regular-season projection only (no Monte Carlo). Expand UI may paint a
-  **soft** playoff bracket from projected seeds + PF/PA edges — opinion, not
-  a scored sim, and it does not write Draft picks or the trade needle.
+  **soft** playoff bracket from projected seeds + form-adjusted edges —
+  opinion, not a scored sim, and it does not write Draft picks or the trade needle.
 - Incomplete season stays out of Manager avg finish (unchanged).
 
 Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs).

@@ -4,8 +4,12 @@ import {
   winProb,
   pickSlotFromFinish,
   projectFinishBook,
+  formAdjPyth,
+  summarizeFormByRoster,
+  scoreFormLeague,
   PATH_WEIGHT,
   ARC_WEIGHT,
+  FORM_WEIGHT,
 } from "./lib/projected-finish.mjs";
 
 assert.ok(pythagWinPct(1000, 800) > 0.5);
@@ -14,8 +18,11 @@ assert.equal(Math.round(winProb(0.6, 0.4) * 100), 60);
 assert.equal(pickSlotFromFinish(10, 10), 1);
 assert.equal(pickSlotFromFinish(1, 10), 10);
 assert.equal(pickSlotFromFinish(5, 10), 6);
-assert.ok(PATH_WEIGHT >= 0.35);
+assert.ok(PATH_WEIGHT >= 0.30);
 assert.ok(ARC_WEIGHT >= 0.1);
+assert.ok(FORM_WEIGHT >= 0.1);
+assert.ok(formAdjPyth(0.5, 1.5, 1.5) > 0.5);
+assert.ok(formAdjPyth(0.5, -1.5, -1.5) < 0.5);
 
 const book = projectFinishBook({
   rosters: [
@@ -31,7 +38,7 @@ const book = projectFinishBook({
   playoffWeekStart: 15,
 });
 
-assert.equal(book.v, 2);
+assert.equal(book.v, 3);
 assert.equal(book.seats[0].name, "Alpha");
 assert.equal(book.seats[0].proj_finish, 1);
 assert.equal(book.seats[0].proj_slot, 2);
@@ -93,8 +100,67 @@ assert.ok(
 assert.ok(byName.ChaseArc.delta_place > 0, "ChaseArc climbs vs place now");
 assert.ok(movers.seats.some((s) => s.delta_place !== 0), "v2 book must move at least one seat");
 
+// Form: same race + slate, but Over clears proj every week and Under misses.
+// Projection / remaining leans must favor Over — not raw PF/PA alone.
+const formRows = scoreFormLeague(summarizeFormByRoster({
+  1: [
+    { week: 1, actual: 120, proj: 100, delta: 20 },
+    { week: 2, actual: 125, proj: 100, delta: 25 },
+    { week: 3, actual: 130, proj: 105, delta: 25 },
+    { week: 4, actual: 128, proj: 102, delta: 26 },
+  ],
+  2: [
+    { week: 1, actual: 90, proj: 110, delta: -20 },
+    { week: 2, actual: 88, proj: 112, delta: -24 },
+    { week: 3, actual: 85, proj: 108, delta: -23 },
+    { week: 4, actual: 92, proj: 115, delta: -23 },
+  ],
+}));
+assert.ok(formRows["1"].form_delta > 0);
+assert.ok(formRows["2"].form_delta < 0);
+
+const formBook = projectFinishBook({
+  rosters: [
+    {
+      roster_id: 1,
+      owner_id: "over",
+      settings: { wins: 3, losses: 3, fpts: 900, fpts_against: 900 },
+    },
+    {
+      roster_id: 2,
+      owner_id: "under",
+      settings: { wins: 3, losses: 3, fpts: 900, fpts_against: 900 },
+    },
+  ],
+  ownerByRoster: { 1: "over", 2: "under" },
+  nameByUser: { over: "OverProj", under: "UnderProj" },
+  remainingPairs: [[1, 2], [1, 2], [1, 2], [1, 2]],
+  teams: 2,
+  season: 2026,
+  week: 4,
+  playoffWeekStart: 15,
+  formByRoster: formRows,
+});
+const formBy = Object.fromEntries(formBook.seats.map((s) => [s.name, s]));
+assert.ok(formBy.OverProj.proj_finish < formBy.UnderProj.proj_finish, "over-proj seat ranks ahead");
+assert.ok(
+  formBy.OverProj.expected_remaining_wins > formBy.UnderProj.expected_remaining_wins,
+  "over-proj seat gets better remaining leans",
+);
+assert.ok(formBy.OverProj.form_delta > 0);
+assert.ok(formBy.UnderProj.form_delta < 0);
+assert.ok(
+  formBy.OverProj.remaining[0].p_win > 0.55,
+  "matchup lean must credit form, not sit at coin-flip",
+);
+
 console.log("projected-finish.test.mjs ok", {
   lead: byName.LeadNow.proj_finish,
   chase: byName.ChaseArc.proj_finish,
   deltas: movers.seats.map((s) => s.name + ":" + s.delta_place),
+  form: {
+    over: formBy.OverProj.proj_finish,
+    under: formBy.UnderProj.proj_finish,
+    lean: formBy.OverProj.remaining[0].p_win,
+  },
 });

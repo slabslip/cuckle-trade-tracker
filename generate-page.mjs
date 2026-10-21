@@ -4784,7 +4784,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "projFinishBracketUi20261021";
+    const DATA_V = "projFinishFormLean20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -12974,11 +12974,48 @@ const html = `<!DOCTYPE html>
       return den ? (num / den) : 0.5;
     }
 
+    /**
+     * Form-adjusted strength: season PF/PA pythag nudged by actual-vs-proj
+     * residuals (form_z / form_recent_z from the projected-finish book).
+     */
+    function projectedFinishAdjPyth(seat) {
+      const base = projectedFinishPyth(seat);
+      const season = Number(seat && seat.form_z);
+      const recent = Number(seat && seat.form_recent_z);
+      const signal = (Number.isFinite(season) ? 0.55 * season : 0)
+        + (Number.isFinite(recent) ? 0.45 * recent : 0);
+      const lean = 0.14;
+      const bump = Math.max(-0.18, Math.min(0.18, signal * lean));
+      return Math.min(0.95, Math.max(0.05, base + bump));
+    }
+
     function projectedFinishMatchupP(a, b) {
-      const pa = Math.min(0.95, Math.max(0.05, projectedFinishPyth(a)));
-      const pb = Math.min(0.95, Math.max(0.05, projectedFinishPyth(b)));
+      const pa = projectedFinishAdjPyth(a);
+      const pb = projectedFinishAdjPyth(b);
       const sum = pa + pb;
       return sum > 0 ? (pa / sum) : 0.5;
+    }
+
+    function projectedFinishFormLine(seat) {
+      if (!seat) return "";
+      const n = Number(seat.form_n) || 0;
+      if (n < 1 || seat.form_delta == null) {
+        return "Form · waiting on starter actual-vs-proj weeks.";
+      }
+      const delta = Number(seat.form_delta) || 0;
+      const recent = seat.form_recent != null ? Number(seat.form_recent) : delta;
+      const sign = delta >= 0 ? "+" : "";
+      const rSign = recent >= 0 ? "+" : "";
+      let tone = "tracking projection";
+      if (delta >= 6 && recent >= 3) tone = "beating proj weekly";
+      else if (delta >= 3) tone = "usually clears proj";
+      else if (delta <= -6 && recent <= -3) tone = "missing proj weekly";
+      else if (delta <= -3) tone = "usually under proj";
+      else if (recent - delta >= 5) tone = "started clearing proj lately";
+      else if (delta - recent >= 5) tone = "cooling vs earlier overscores";
+      return "Form · " + tone + " — " + sign + delta.toFixed(1) + " pts/wk vs starter proj"
+        + " · last " + Math.min(3, n) + " " + rSign + recent.toFixed(1)
+        + " (" + n + " wk).";
     }
 
     function projectedFinishMoveLine(seat) {
@@ -13159,6 +13196,14 @@ const html = `<!DOCTYPE html>
         : (ranks.sosRank === ranks.n
           ? "absolute hardest remaining strength of schedule"
           : "league rank for rest-of-way ease");
+      const formLine = projectedFinishFormLine(seat);
+      const formDelta = seat.form_delta != null ? Number(seat.form_delta) : null;
+      const formNum = formDelta == null
+        ? "—"
+        : ((formDelta >= 0 ? "+" : "") + formDelta.toFixed(1));
+      const formLab = formDelta == null
+        ? "vs proj"
+        : (formDelta >= 3 ? "clears proj" : (formDelta <= -3 ? "under proj" : "near proj"));
       return {
         name: seat.name || "Seat",
         headline: "Projected " + projLab + " · " + (seat.band || "Mid") + " pick · "
@@ -13186,6 +13231,13 @@ const html = `<!DOCTYPE html>
             num: ranks.sosScore10 + "/10",
             lab: ranks.sosLab,
             note: "#" + ranks.sosRank + " easiest of " + ranks.n + " · " + sosTip,
+          },
+          {
+            key: "form",
+            tag: "Form",
+            num: formNum,
+            lab: formLab,
+            note: formLine.replace(/^Form · /, ""),
           },
           {
             key: "history",
@@ -13270,7 +13322,7 @@ const html = `<!DOCTYPE html>
     /**
      * Soft projected playoff bracket from projected seeds (proj_finish).
      * Top six (league law): 1–2 bye, 3v6 / 4v5, then semis, final + 3rd.
-     * Matchup edges use PF/PA pythag — opinion only, not a Monte Carlo.
+     * Matchup edges use form-adjusted PF/PA pythag — opinion only, not a Monte Carlo.
      */
     function projectedPlayoffBracket(focusSeat) {
       const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
@@ -13555,7 +13607,8 @@ const html = `<!DOCTYPE html>
       if (bracket) {
         html += '<p class="pf-why-h">Projected playoff bracket</p>';
         html += "<p>" + esc(dig.playoff)
-          + " · seeds from this board · matchup edges from PF/PA (opinion, not a sim).</p>";
+          + " · seeds from this board · matchup edges from form-adjusted PF/PA"
+          + " (opinion, not a sim).</p>";
         html += projectedPlayoffBracketBoardHtml(bracket);
       }
       html += "</div>";
@@ -34607,7 +34660,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v327-proj-bracket")
+  || !swSrc.includes("chuckle-shell-v328-proj-form")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36833,11 +36886,15 @@ if (!inline.includes("function projectedFinishDetailHtml(")
   || !inline.includes("Share this finish")
   || !inline.includes("Projected playoff bracket")
   || !inline.includes("function projectedPlayoffBracketBoardHtml(")
+  || !inline.includes("function projectedFinishFormLine(")
+  || !inline.includes("function projectedFinishAdjPyth(")
+  || !inline.includes("form-adjusted PF/PA")
+  || !inline.includes('tag: "Form"')
   || !inline.includes("pf-brack-board")
   || !inline.includes("Championship")
   || !inline.includes("Rest of regular season")
   || !inline.includes("pf-scorecard")) {
-  throw new Error("Projected finish expand must ship scorecard digest, Cupcake→Hellscape SoS, share, weeks, bracket");
+  throw new Error("Projected finish expand must ship scorecard digest, Cupcake→Hellscape SoS, form, share, weeks, bracket");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

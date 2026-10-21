@@ -28,8 +28,12 @@ need(script.includes("function ledeFor(trades, wire, out, ir)")
   "overnight lede must see Out / IR for the injury morning paper");
 need(script.includes('p.slot === "starter"') && script.includes(" starters"),
   "injury lede must prefer Sunday starters and +N starters");
-need(script.includes("wireLine") && script.includes("claimed"),
-  "wire lines must name who claimed whom");
+need(script.includes("wireLine") && script.includes("claimed")
+  && script.includes("nameByPid") && script.includes("draft_picks.json"),
+  "wire lines must name who claimed whom (draft-label fallback when NFL dict missing)");
+need(!page.includes("data-home-wire-full") && !page.includes("Full letter")
+  && !gen.includes("homeWireFullLetter") && !gen.includes("data-home-wire-full"),
+  "Home wire bar must not expand the full overnight letter");
 need(script.includes("irScore") && script.includes("readUi") && script.includes("calculator.json")
   && script.includes("cuffs.json") && script.includes("attachCuff")
   && script.includes("cuff_owned === false")

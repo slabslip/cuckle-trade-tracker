@@ -91,8 +91,8 @@ if (!page.includes("if (e.target && e.target.closest && e.target.closest(\"[data
 }
 
 if (page.includes('const DATA_V = "finishone20260918171000"')
-  || !page.includes('const DATA_V = "ledgerpicks20261020214500"')
-  || !sw.includes("chuckle-shell-v320-ledger-picks")) {
+  || !page.includes('const DATA_V = "pickhub20261020232000"')
+  || !sw.includes("chuckle-shell-v322-pick-hub")) {
   throw new Error("tile share must bust DATA_V and the shell cache");
 }
 

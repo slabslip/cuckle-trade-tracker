@@ -35,7 +35,7 @@ const need = [
   "function receiptPickBecameLine(",
   "My Trade History",
   "League Trade History",
-  "My Draft Picks",
+  "Draft picks",
   "League Draft Picks",
   "Profit / Loss",
   "function receiptPlRowsForSeat(",
@@ -123,7 +123,7 @@ if (!gen.includes("# Receipt tiles") && !fs.readFileSync(path.join(ROOT, "docs/M
 }
 
 const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
-for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "My Trade History", "League Trade History", "My Draft Picks", "League Draft Picks", "Profit / Loss", "Traded away", "Traded in", "Hit rate", "What my pick became", "League year", "top 4"]) {
+for (const s of ["Day they traded", "From then to now", "Your board", "Get this for your league", "shareProofNow", "My Trade History", "League Trade History", "Draft picks", "League Draft Picks", "Profit / Loss", "Traded away", "Traded in", "Hit rate", "What my pick became", "League year", "top 4"]) {
   if (!mem.includes(s)) throw new Error("MEMORY_SDD missing " + s);
 }
 

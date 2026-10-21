@@ -1638,7 +1638,7 @@ const html = `<!DOCTYPE html>
     .home-desk-sub {
       margin: 0 0 8px; font-size: 0.75rem; line-height: 1.35; color: var(--muted);
     }
-    .home-you { margin: 0 0 14px; }
+    .home-you { margin: 0 0 12px; }
     .home-you-stack { display: flex; flex-direction: column; align-items: flex-start; }
     button.home-you-plate {
       appearance: none; font: inherit; color: inherit;
@@ -1666,6 +1666,125 @@ const html = `<!DOCTYPE html>
     }
     button.home-you-name b { font-size: 1.64rem; font-weight: 750; }
     button.home-you-name span { color: var(--dim); font-size: 1.44rem; font-weight: 650; }
+    .home-you-race {
+      margin: 10px 0 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 8px;
+    }
+    .home-you-race-main {
+      font-size: 1.05rem; font-weight: 750; letter-spacing: -0.02em; color: var(--text);
+      line-height: 1.25;
+    }
+    .home-you-race-sub {
+      font-size: 0.8125rem; font-weight: 600; color: var(--muted); line-height: 1.3;
+    }
+    .home-capital {
+      margin: 0 0 12px; padding: 10px 12px;
+      border: 1px solid var(--line); border-radius: 12px;
+      background: linear-gradient(180deg, rgba(224,180,76,0.08), transparent 70%);
+    }
+    .home-capital-h {
+      margin: 0 0 4px; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+    }
+    .home-capital-line {
+      margin: 0; font-size: 0.9rem; font-weight: 650; color: var(--text); line-height: 1.35;
+    }
+    .home-capital-line .chip { margin-left: 4px; vertical-align: baseline; }
+    .home-pulse {
+      margin: 0 0 14px; padding: 0 2px;
+    }
+    .home-pulse-chase {
+      margin: 0 0 4px; font-size: 1.02rem; font-weight: 750;
+      letter-spacing: -0.02em; color: var(--text); line-height: 1.3;
+    }
+    .home-pulse-movers {
+      margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.35;
+    }
+    .home-wire {
+      margin: 0 0 14px;
+      background: #121214;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .home-wire-row {
+      display: flex; align-items: stretch; gap: 0;
+      border-bottom: 1px solid transparent;
+    }
+    .home-wire.is-open .home-wire-row { border-bottom-color: var(--line); }
+    button.home-wire-ico {
+      appearance: none; font: inherit; color: var(--text);
+      flex: 1 1 0; min-width: 0; min-height: 52px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 3px; padding: 8px 4px 7px;
+      background: transparent; border: 0; border-right: 1px solid var(--line);
+      cursor: pointer; position: relative;
+    }
+    button.home-wire-ico:last-child { border-right: 0; }
+    button.home-wire-ico:focus-visible { outline: 2px solid #c8c8d0; outline-offset: -2px; }
+    button.home-wire-ico[aria-pressed="true"] { background: #1a1a1e; }
+    button.home-wire-ico .home-wire-mark {
+      display: block; width: 22px; height: 22px; line-height: 22px; text-align: center;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.04em;
+      border-radius: 7px; border: 1px solid var(--line); color: var(--muted);
+      background: #161618;
+    }
+    button.home-wire-ico.waivers .home-wire-mark { color: #34d399; border-color: rgba(52, 211, 153, 0.45); }
+    button.home-wire-ico.out .home-wire-mark { color: #ff6b3d; border-color: rgba(255, 107, 61, 0.45); }
+    button.home-wire-ico.watch .home-wire-mark { color: #e0b44c; border-color: rgba(224, 180, 76, 0.5); }
+    button.home-wire-ico.trades .home-wire-mark { color: var(--text); }
+    button.home-wire-ico.news .home-wire-mark { color: #7aa2ff; border-color: rgba(122, 162, 255, 0.45); }
+    button.home-wire-ico .home-wire-lab {
+      font-size: 0.58rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--dim);
+    }
+    button.home-wire-ico[aria-pressed="true"] .home-wire-lab { color: var(--muted); }
+    button.home-wire-ico .home-wire-n {
+      position: absolute; top: 4px; right: 6px;
+      min-width: 16px; height: 16px; padding: 0 4px;
+      border-radius: 8px; font-size: 0.58rem; font-weight: 800;
+      line-height: 16px; text-align: center;
+      color: #121214; background: var(--lh-gold, #e0b44c);
+      font-variant-numeric: tabular-nums;
+    }
+    button.home-wire-ico .home-wire-n.is-zero {
+      background: #2a2a2e; color: var(--dim);
+    }
+    .home-wire-panel { padding: 10px 12px 12px; }
+    .home-wire-panel-h {
+      margin: 0 0 8px; font-size: 0.68rem; font-weight: 800;
+      letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim);
+    }
+    .home-wire-line {
+      margin: 0 0 6px; font-size: 0.84rem; font-weight: 650;
+      color: var(--text); line-height: 1.35;
+    }
+    .home-wire-line:last-child { margin-bottom: 0; }
+    .home-wire-line i {
+      font-style: normal; color: var(--muted); font-weight: 650;
+    }
+    .home-wire-line b { font-weight: 750; }
+    .home-wire-line.watch b { color: #e0b44c; }
+    .home-wire-line.out b { color: #ff6b3d; }
+    .home-wire-line.waivers b { color: #34d399; }
+    .home-wire-empty {
+      margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted);
+    }
+    .home-wire-foot {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--line);
+    }
+    .home-wire-foot p {
+      margin: 0; font-size: 0.68rem; font-weight: 650; color: var(--dim);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    button.home-wire-more {
+      appearance: none; font: inherit; cursor: pointer;
+      background: transparent; border: 0; padding: 0;
+      color: var(--lh-gold, #e0b44c);
+      font-size: 0.68rem; font-weight: 800; letter-spacing: 0.06em;
+      text-transform: uppercase; min-height: 32px;
+    }
+    button.home-wire-more:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     .team-story-h {
       margin: 16px 0 8px; font-size: 0.75rem; font-weight: 650;
       letter-spacing: 0.04em; text-transform: uppercase; color: var(--dim);
@@ -4460,6 +4579,10 @@ const html = `<!DOCTYPE html>
     let overnightLoading = false;
     let overnightOpen = false;
     let overnightOpenPlayer = "";
+    // Home wire bar: which icon panel is open (waivers|out|watch|trades|news|"").
+    let homeWireOpen = "";
+    // Optional expand of the full overnight ticket under the bar (off by default).
+    let homeWireFullLetter = false;
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -4482,7 +4605,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261021063952";
+    const DATA_V = "homeWireBar20261021110000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4535,9 +4658,10 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
-      "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-      "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "manager_archetypes", "season_arcs",
+      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "my_trades", "league_trades", "league_draft", "profit_loss",
+      "past_champions", "season_place", "vs_you",
+      "week_scores", "manager_archetypes",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -4548,9 +4672,10 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-      "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "manager_archetypes", "season_arcs",
+      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "my_trades", "league_trades", "league_draft", "profit_loss",
+      "past_champions", "season_place", "vs_you",
+      "week_scores", "manager_archetypes",
     ];
     const DATA_DASH_RESEARCH = [
       "firsts_held", "manager_archetypes", "season_arcs", "passed_around",
@@ -5345,7 +5470,7 @@ const html = `<!DOCTYPE html>
           const entry = rows[i].entry || {};
           const holder = pickOwnerName(entry) || "League";
           const origin = (typeof pickOriginName === "function")
-            ? pickOriginName(entry.label) : "";
+            ? pickOriginName(entry) : "";
           const originProj = origin && typeof projSeatByName === "function"
             ? projSeatByName(origin) : null;
           const holderArch = typeof archSeatByName === "function" ? archSeatByName(holder) : null;
@@ -8669,14 +8794,18 @@ const html = `<!DOCTYPE html>
         applyPicksBook(book);
         picksLoading = false;
         picksFailed = false;
-        if (receiptWhoList || view === "calc") render();
-        else if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
+        if (receiptWhoList || view === "calc"
+          || (appScreen === "dash" && view === "home" && homeTabCanon(homeTab) === "home")) {
+          render();
+        } else if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
       }).catch((err) => {
         console.error(err);
         picksLoading = false;
         picksFailed = true;
-        if (receiptWhoList || view === "calc") render();
-        else if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
+        if (receiptWhoList || view === "calc"
+          || (appScreen === "dash" && view === "home" && homeTabCanon(homeTab) === "home")) {
+          render();
+        } else if (typeof ledgerMaybeRender === "function") ledgerMaybeRender();
       });
     }
 
@@ -9952,6 +10081,319 @@ const html = `<!DOCTYPE html>
       }
     }
 
+    function homeWireSeatName() {
+      return (typeof authSeatCanonName === "function" && authSeatCanonName())
+        || (typeof authSeatName === "function" && authSeatName())
+        || "";
+    }
+
+    function homeWireMineBoard(letter) {
+      const seat = homeWireSeatName();
+      const empty = { out: [], ir: [], other: [], starters: [] };
+      if (!seat || !letter) return empty;
+      const mine = function (list) {
+        return (list || []).filter(function (p) { return p && p.owner === seat; });
+      };
+      const out = mine(letter.out);
+      const ir = mine(letter.ir);
+      const other = mine(letter.other);
+      const starters = [].concat(out, ir, other).filter(function (p) {
+        return p && p.slot === "starter";
+      });
+      return { out: out, ir: ir, other: other, starters: starters };
+    }
+
+    function homeWireWatchRows() {
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const seat = homeWireSeatName();
+      if (!seat) return [];
+      return ((cuffs && cuffs.rows) || []).filter(function (r) {
+        if (!r || r.owner !== seat) return false;
+        const s = String(r.starter_injury || "").toLowerCase();
+        return s === "questionable" || s === "doubtful";
+      });
+    }
+
+    function homeWireWaiverBits(letter) {
+      const seat = homeWireSeatName();
+      const bits = [];
+      const seen = {};
+      const push = function (key, line, tone) {
+        if (!key || seen[key]) return;
+        seen[key] = true;
+        bits.push({ key: key, line: line, tone: tone || "waivers" });
+      };
+      const board = homeWireMineBoard(letter);
+      [].concat(board.out, board.ir, board.other).forEach(function (p) {
+        if (!p) return;
+        if (p.cuff_owned === false && p.cuff) {
+          push("cuff:" + p.cuff, "Claim " + p.cuff + " · " + p.name + " " + (p.status || "Out"), "waivers");
+        } else if (p.cuff_owned === false && p.slot === "starter") {
+          push("bare:" + (p.id || p.name), p.name + " cuff unowned · check wire", "waivers");
+        }
+      });
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      if (seat) {
+        ((cuffs && cuffs.rows) || []).forEach(function (r) {
+          if (!r || r.owner !== seat || r.cuff_owned || !r.cuff) return;
+          const st = String(r.starter_injury || "").toLowerCase();
+          const hurt = st === "out" || st === "ir" || st === "pup" || st === "nfi"
+            || st === "questionable" || st === "doubtful" || st.indexOf("injur") >= 0;
+          if (!hurt) return;
+          push("cuff:" + r.cuff, "Claim " + r.cuff + " · " + r.starter + " "
+            + (r.starter_injury || "Out"), "waivers");
+        });
+      }
+      ((letter && letter.wire) || []).slice(0, 4).forEach(function (row, i) {
+        if (!row || !row.line) return;
+        push("wire:" + i + ":" + row.line, row.line, "waivers");
+      });
+      return bits;
+    }
+
+    function homeWireTradeBits(letter) {
+      const bits = [];
+      ((letter && letter.trades) || []).forEach(function (row, i) {
+        if (!row) return;
+        if (row.legs && row.legs.length) {
+          row.legs.forEach(function (leg, j) {
+            bits.push({
+              key: "t:" + i + ":" + j,
+              line: (leg.name || "Seat") + " sent " + (leg.sent || "—"),
+              tone: "trades",
+            });
+          });
+        } else if (row.line) {
+          bits.push({ key: "t:" + i, line: row.line, tone: "trades" });
+        }
+      });
+      if (!bits.length && letter && letter.latest) {
+        const legs = letter.latest.legs || [];
+        if (legs.length) {
+          legs.forEach(function (leg, j) {
+            bits.push({
+              key: "latest:" + j,
+              line: (leg.name || "Seat") + " sent " + (leg.sent || "—"),
+              tone: "trades",
+            });
+          });
+        } else if (letter.latest.line) {
+          bits.push({ key: "latest", line: letter.latest.line, tone: "trades" });
+        }
+        if (letter.latest.date) {
+          bits.push({
+            key: "latest-date",
+            line: "Last deal · " + overnightPrettyDate(letter.latest.date),
+            tone: "trades",
+          });
+        }
+      }
+      return bits;
+    }
+
+    function homeWireNewsBits() {
+      const seat = homeWireSeatName();
+      const items = (news && news.items) || [];
+      if (!items.length) return [];
+      const mineIds = {};
+      const mineNames = {};
+      const letter = overnight;
+      const board = homeWireMineBoard(letter);
+      [].concat(board.out, board.ir, board.other).forEach(function (p) {
+        if (!p) return;
+        if (p.id) mineIds[String(p.id)] = true;
+        if (p.name) mineNames[String(p.name).toLowerCase()] = true;
+      });
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      ((cuffs && cuffs.rows) || []).forEach(function (r) {
+        if (!r || (seat && r.owner !== seat)) return;
+        if (r.starter_id) mineIds[String(r.starter_id)] = true;
+        if (r.starter) mineNames[String(r.starter).toLowerCase()] = true;
+      });
+      const mine = [];
+      const leagueBits = [];
+      for (let i = 0; i < items.length && (mine.length < 4 || leagueBits.length < 3); i++) {
+        const it = items[i];
+        if (!it || (it.id && newsGone.has(it.id))) continue;
+        const players = it.players || (it.player_id || it.player
+          ? [{ player_id: it.player_id, player: it.player }]
+          : []);
+        let hit = false;
+        for (let j = 0; j < players.length; j++) {
+          const pl = players[j] || {};
+          if ((pl.player_id && mineIds[String(pl.player_id)])
+            || (pl.player && mineNames[String(pl.player).toLowerCase()])) {
+            hit = true;
+            break;
+          }
+        }
+        const title = it.title || it.text || it.player || "League note";
+        const bit = {
+          key: String(it.id || i),
+          line: title,
+          tone: "news",
+          mine: hit,
+        };
+        if (hit) mine.push(bit);
+        else if (leagueBits.length < 3) leagueBits.push(bit);
+      }
+      return mine.length ? mine.slice(0, 4) : leagueBits.slice(0, 3);
+    }
+
+    function homeWireOutBits(letter) {
+      const board = homeWireMineBoard(letter);
+      const bits = [];
+      const push = function (p) {
+        if (!p || !p.name) return;
+        const meta = [p.status || "Out", p.pos, p.slot === "starter" ? "starter" : p.slot]
+          .filter(Boolean).join(" · ");
+        bits.push({
+          key: String(p.id || p.name),
+          line: p.name,
+          meta: meta,
+          tone: "out",
+        });
+      };
+      board.starters.forEach(push);
+      [].concat(board.out, board.ir, board.other).forEach(function (p) {
+        if (p && p.slot !== "starter") push(p);
+      });
+      return bits.slice(0, 6);
+    }
+
+    function homeWireWatchBits() {
+      return homeWireWatchRows().map(function (r) {
+        const tag = String(r.starter_injury || "Q");
+        const likely = /questionable/i.test(tag);
+        return {
+          key: String(r.starter_id || r.starter),
+          line: r.starter,
+          meta: tag + (likely
+            ? " · monitor · set lineup if cleared"
+            : " · doubtful · have a backup ready"),
+          tone: "watch",
+        };
+      });
+    }
+
+    function homeWirePanelHtml(kind, letter) {
+      const seat = homeWireSeatName();
+      let title = "";
+      let bits = [];
+      if (kind === "waivers") {
+        title = seat ? "Waiver suggestions" : "Wire";
+        bits = homeWireWaiverBits(letter);
+      } else if (kind === "out") {
+        title = seat ? "Your outs this week" : "League outs";
+        bits = seat ? homeWireOutBits(letter) : [];
+        if (!seat) {
+          const cats = overnightCats(letter);
+          [].concat(cats.out, cats.ir).slice(0, 5).forEach(function (p) {
+            bits.push({
+              key: String(p.id || p.name),
+              line: p.name,
+              meta: [p.status, p.owner, p.slot].filter(Boolean).join(" · "),
+              tone: "out",
+            });
+          });
+        }
+      } else if (kind === "watch") {
+        title = "Play decisions";
+        bits = homeWireWatchBits();
+      } else if (kind === "trades") {
+        title = "League trades";
+        bits = homeWireTradeBits(letter);
+      } else if (kind === "news") {
+        title = seat ? "News on your bag" : "League news";
+        bits = homeWireNewsBits();
+      }
+      const body = bits.length
+        ? bits.map(function (b) {
+          return '<p class="home-wire-line ' + esc(b.tone || "") + '"><b>'
+            + esc(b.line) + "</b>"
+            + (b.meta ? " <i>" + esc(b.meta) + "</i>" : "")
+            + "</p>";
+        }).join("")
+        : '<p class="home-wire-empty">'
+          + esc(kind === "watch"
+            ? "No Questionable / Doubtful starters on your roster"
+            : kind === "waivers"
+              ? "No waiver cues right now"
+              : kind === "trades"
+                ? "No fresh trades on the letter"
+                : kind === "news"
+                  ? "No news matched yet"
+                  : "Nobody on your roster is Out / IR on the letter")
+          + "</p>";
+      const lede = (letter && letter.lede) ? letter.lede : "";
+      return '<div class="home-wire-panel" data-home-wire-panel="' + esc(kind) + '">'
+        + '<p class="home-wire-panel-h">' + esc(title) + "</p>"
+        + body
+        + '<div class="home-wire-foot">'
+        + "<p>" + esc(lede || (letter && letter.dateline) || "Overnight") + "</p>"
+        + '<button type="button" class="home-wire-more" data-home-wire-full="1"'
+        + ' aria-label="' + (homeWireFullLetter ? "Hide full league overnight" : "Show full league overnight") + '">'
+        + (homeWireFullLetter ? "Hide letter" : "Full letter") + "</button>"
+        + "</div></div>";
+    }
+
+    function homeWireBarHtml() {
+      if (!overnightEnabled()) return "";
+      ensureOvernight();
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const letter = overnight;
+      if (!letter && overnightLoading) {
+        return '<section class="home-wire" aria-label="League pulse">'
+          + '<p class="home-wire-empty" style="padding:12px">Loading pulse…</p></section>';
+      }
+      if (!letter) return "";
+      const waivers = homeWireWaiverBits(letter);
+      const outs = homeWireSeatName()
+        ? homeWireOutBits(letter)
+        : [].concat((letter.out || []).slice(0, 1), (letter.ir || []).slice(0, 1));
+      const watch = homeWireWatchBits();
+      const trades = homeWireTradeBits(letter);
+      const newsBits = homeWireNewsBits();
+      const icons = [
+        { id: "waivers", lab: "Wire", mark: "WA", n: waivers.length },
+        { id: "out", lab: "Out", mark: "OUT", n: outs.length },
+        { id: "watch", lab: "Watch", mark: "Q", n: watch.length },
+        { id: "trades", lab: "Deals", mark: "TR", n: trades.filter(function (b) {
+          return b.key.indexOf("latest-date") !== 0;
+        }).length },
+        { id: "news", lab: "News", mark: "N", n: newsBits.length },
+      ];
+      const open = homeWireOpen && icons.some(function (ic) { return ic.id === homeWireOpen; })
+        ? homeWireOpen
+        : "";
+      const row = icons.map(function (ic) {
+        const pressed = open === ic.id;
+        const nClass = ic.n > 0 ? "" : " is-zero";
+        return '<button type="button" class="home-wire-ico ' + ic.id + '"'
+          + ' data-home-wire="' + ic.id + '"'
+          + ' aria-pressed="' + (pressed ? "true" : "false") + '"'
+          + ' aria-label="' + esc(ic.lab + (ic.n ? (", " + ic.n) : "")) + '">'
+          + '<span class="home-wire-mark" aria-hidden="true">' + esc(ic.mark) + "</span>"
+          + '<span class="home-wire-lab">' + esc(ic.lab) + "</span>"
+          + '<span class="home-wire-n' + nClass + '">' + ic.n + "</span>"
+          + "</button>";
+      }).join("");
+      const foot = '<div class="home-wire-foot" style="padding:8px 12px'
+        + (open || homeWireFullLetter ? "" : ";border-top:1px solid var(--line)") + '">'
+        + "<p>" + esc(letter.dateline || "Overnight") + "</p>"
+        + '<button type="button" class="home-wire-more" data-home-wire-full="1"'
+        + ' aria-label="' + (homeWireFullLetter ? "Hide full league overnight" : "Show full league overnight") + '">'
+        + (homeWireFullLetter ? "Hide letter" : "Full letter") + "</button></div>";
+      return '<section class="home-wire' + (open || homeWireFullLetter ? " is-open" : "") + '" aria-label="League pulse">'
+        + '<div class="home-wire-row" role="toolbar" aria-label="Wire, outs, watch, deals, news">'
+        + row
+        + "</div>"
+        + (open ? homeWirePanelHtml(open, letter) : "")
+        + (open ? "" : foot)
+        + (homeWireFullLetter ? overnightSlipHtml({ share: true }) : "")
+        + "</section>";
+    }
+
     function ensureCuffs() {
       if (cuffs || cuffsLoading) return;
       cuffsLoading = true;
@@ -10397,6 +10839,8 @@ const html = `<!DOCTYPE html>
       overnightLoading = false;
       overnightOpen = false;
       overnightOpenPlayer = "";
+      homeWireOpen = "";
+      homeWireFullLetter = false;
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -12282,11 +12726,6 @@ const html = `<!DOCTYPE html>
       return managerArchetypesBook.seats.find(function (s) {
         return s && String(s.name) === want;
       }) || null;
-    }
-
-    function pickOriginName(label) {
-      const m = String(label || "").match(/\(([^)]+)\)\s*$/);
-      return m ? m[1] : "";
     }
 
     function raceMoversLines() {
@@ -24915,7 +25354,41 @@ const html = `<!DOCTYPE html>
       return "value-adjacent swap";
     }
 
-    function homeDeskMeta(talk, job, themName) {
+    function homeDeskRaceTip(themUid) {
+      if (!themUid) return "";
+      const proj = typeof projSeatOf === "function" ? projSeatOf(themUid) : null;
+      const arch = typeof archSeatOf === "function" ? archSeatOf(themUid) : null;
+      if (arch && arch.archetype === "proxy_contender") {
+        return "Proxy — fighting keeps their held Early Early";
+      }
+      if (arch && arch.archetype === "tank_sculptor") {
+        return "Tank sculptor — their 1st is Early; buy leftovers";
+      }
+      if (arch && arch.archetype === "reload_on_early") {
+        return "Reload on Early — flip them a stud for picks";
+      }
+      if (arch && arch.archetype === "capital_hoarder") {
+        return "Capital hoarder — they have firsts to deal";
+      }
+      if (arch && arch.archetype === "slow_burn") {
+        return "Slow burn — they climb; price Mid pieces higher later";
+      }
+      if (arch && arch.archetype === "fast_fade") {
+        if (proj && proj.band === "Early") {
+          return "Fast fade Early — buy their studs before the slide";
+        }
+        return "Fast fade — do not sell them your Early for a push";
+      }
+      if (proj && proj.band === "Early") {
+        return "Proj Early — origin firsts read 1.0x";
+      }
+      if (proj && proj.band === "Late") {
+        return "Race favorite — sell them aging for Late capital";
+      }
+      return "";
+    }
+
+    function homeDeskMeta(talk, job, themName, themUid) {
       if (!talk) return "Pick the sides";
       const bits = [];
       if (talk.pace) bits.push(talk.pace);
@@ -24924,6 +25397,8 @@ const html = `<!DOCTYPE html>
         if (talk.stack) bits.push(talk.stack);
         if (talk.cuff) bits.push(talk.cuff);
       }
+      const raceTip = homeDeskRaceTip(themUid);
+      if (raceTip) bits.push(raceTip);
       const partner = homeDeskPartnerNote(themName);
       if (partner) bits.push(partner);
       if (talk.book) bits.push(talk.book);
@@ -25159,7 +25634,7 @@ const html = `<!DOCTYPE html>
             + row.talk.legsB.map(homeDeskShortName).join(" + ");
           const job = homeDeskJobLabel(row.job);
           const them = row.nameB || "them";
-          const meta = homeDeskMeta(row.talk, row.job, them);
+          const meta = homeDeskMeta(row.talk, row.job, them, row.b);
           return '<button type="button" class="home-desk-row" data-desk-a="' + esc(row.a) + '"'
             + ' data-desk-b="' + esc(row.b) + '"'
             + (sendA ? ' data-desk-send-a="' + esc(sendA) + '"' : "")
@@ -26847,6 +27322,332 @@ const html = `<!DOCTYPE html>
       return "";
     }
 
+    function homeYouRaceLine() {
+      const uid = authSeatId();
+      if (!uid) return "";
+      const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
+      const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
+      const dir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
+      const main = [];
+      const sub = [];
+      if (proj) {
+        main.push("Projected "
+          + (typeof nth === "function" ? nth(proj.proj_finish) : proj.proj_finish));
+        if (proj.record) main.push(proj.record);
+        main.push(proj.band || "Mid");
+      }
+      if (arch && arch.lab) sub.push(arch.lab);
+      if (dir && dir.label) sub.push("Bag " + dir.label);
+      if (!main.length && !sub.length) return "";
+      return '<div class="home-you-race">'
+        + (main.length ? '<span class="home-you-race-main">' + esc(main.join(" · ")) + "</span>" : "")
+        + (sub.length ? '<span class="home-you-race-sub">' + esc(sub.join(" · ")) + "</span>" : "")
+        + ' <button type="button" class="chip" data-dash-open="projected_finish">Race</button>'
+        + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Type</button>'
+        + "</div>";
+    }
+
+    function homeCapitalHeldRows() {
+      if (!authSeatId()) return null;
+      if (typeof leagueFormat === "function" && leagueFormat().kind === "redraft") return null;
+      if (typeof ensurePicks === "function") ensurePicks();
+      if (!picks) return picksLoading ? { loading: true } : null;
+      const mine = authSeatCanonName() || authSeatName() || "";
+      if (!mine) return null;
+      const year = typeof pickHubSoonestYear === "function" ? pickHubSoonestYear() : "";
+      const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
+      const held = [];
+      let ownSold = false;
+      for (let i = 0; i < rows.length; i++) {
+        const parts = typeof pickKeyParts === "function" ? pickKeyParts(rows[i].key) : null;
+        if (!parts || parts.round !== 1) continue;
+        if (year && parts.season !== year) continue;
+        const entry = rows[i].entry || {};
+        const holder = (typeof pickOwnerName === "function" ? pickOwnerName(entry) : "") || "";
+        const origin = (typeof pickOriginName === "function")
+          ? (pickOriginName(entry) || "") : "";
+        if (origin === mine && holder && holder !== mine) ownSold = true;
+        if (holder !== mine) continue;
+        const originProj = origin && typeof projSeatByName === "function"
+          ? projSeatByName(origin) : null;
+        const slot = originProj && originProj.proj_slot != null
+          ? Number(originProj.proj_slot) : 99;
+        const band = (originProj && originProj.band) || "Mid";
+        const slotLab = slot < 99
+          ? ((slot < 10 ? "1.0" : "1.") + slot)
+          : "1.?";
+        const own = !origin || origin === mine;
+        held.push({
+          band: band,
+          slot: slot,
+          lab: band + " " + slotLab + (own ? " own" : (" " + origin)),
+        });
+      }
+      held.sort(function (a, b) {
+        return (a.slot - b.slot) || String(a.lab).localeCompare(String(b.lab));
+      });
+      return { year: year, held: held, ownSold: ownSold };
+    }
+
+    function homeEarlyShopBits(limit) {
+      const cap = limit || 2;
+      if (typeof leagueFormat === "function" && leagueFormat().kind === "redraft") return [];
+      if (typeof ensurePicks === "function") ensurePicks();
+      if (!picks) return [];
+      const mine = authSeatCanonName() || authSeatName() || "";
+      const year = typeof pickHubSoonestYear === "function" ? pickHubSoonestYear() : "";
+      const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
+      const shop = [];
+      for (let i = 0; i < rows.length; i++) {
+        const parts = typeof pickKeyParts === "function" ? pickKeyParts(rows[i].key) : null;
+        if (!parts || parts.round !== 1) continue;
+        if (year && parts.season !== year) continue;
+        const entry = rows[i].entry || {};
+        const holder = (typeof pickOwnerName === "function" ? pickOwnerName(entry) : "") || "";
+        const origin = (typeof pickOriginName === "function" ? pickOriginName(entry) : "") || "";
+        // Skip own origin and anything already in this seat's bag.
+        if (!origin || origin === mine || holder === mine) continue;
+        const originProj = typeof projSeatByName === "function" ? projSeatByName(origin) : null;
+        if (!originProj || originProj.band !== "Early") continue;
+        const slot = originProj.proj_slot != null ? Number(originProj.proj_slot) : 99;
+        if (slot >= 99) continue;
+        const slotLab = (slot < 10 ? "1.0" : "1.") + slot;
+        const who = holder && holder !== origin ? (origin + "/" + holder) : origin;
+        shop.push({ slot: slot, lab: slotLab + " " + who });
+      }
+      shop.sort(function (a, b) {
+        return (a.slot - b.slot) || String(a.lab).localeCompare(String(b.lab));
+      });
+      const out = [];
+      const seen = {};
+      for (let i = 0; i < shop.length && out.length < cap; i++) {
+        if (seen[shop[i].lab]) continue;
+        seen[shop[i].lab] = 1;
+        out.push(shop[i].lab);
+      }
+      return out;
+    }
+
+    function homeCapitalStackLab(held) {
+      if (!held || !held.length) return "";
+      let early = 0;
+      let mid = 0;
+      let late = 0;
+      for (let i = 0; i < held.length; i++) {
+        const b = held[i].band;
+        if (b === "Early") early += 1;
+        else if (b === "Late") late += 1;
+        else mid += 1;
+      }
+      const bits = [held.length + " first" + (held.length === 1 ? "" : "s")];
+      if (early) bits.push(early + " Early");
+      if (mid) bits.push(mid + " Mid");
+      if (late) bits.push(late + " Late");
+      return bits.join(" · ");
+    }
+
+    function homeCapitalStripHtml() {
+      if (!authSession || !authSeatId()) return "";
+      const bag = homeCapitalHeldRows();
+      if (!bag) return "";
+      if (bag.loading) {
+        return '<section class="home-capital" aria-label="Your firsts">'
+          + '<p class="home-capital-h">Your firsts</p>'
+          + '<p class="home-capital-line">Loading firsts…</p>'
+          + "</section>";
+      }
+      const bits = bag.held.map(function (r) { return r.lab; });
+      const stack = homeCapitalStackLab(bag.held);
+      let line = "";
+      if (bits.length) {
+        // Stack summary first so hoarders see 4 firsts · 1 Early · 3 Mid in one glance.
+        // Keep up to 4 slot lines (a full 10-team first round) before +N.
+        line = (stack ? stack + " · " : "")
+          + bits.slice(0, 4).join(" · ")
+          + (bits.length > 4 ? (" · +" + (bits.length - 4)) : "");
+      } else {
+        line = "No " + (bag.year || "future") + " first held";
+      }
+      if (bag.ownSold) {
+        const own = homeOwnFirstStatus();
+        if (own && own.band === "Late") line += " · own Late 1st sold";
+        else if (own && own.band === "Early") line += " · own Early 1st sold";
+        else line += " · own 1st sold";
+      }
+      if (!bits.length) {
+        // Slow burn / proxy: empty bag is not a shopping cue — hold the race.
+        const arch = typeof archSeatOf === "function" ? archSeatOf(authSeatId()) : null;
+        const skipShop = arch && (arch.archetype === "slow_burn"
+          || arch.archetype === "proxy_contender");
+        if (!skipShop) {
+          const shop = homeEarlyShopBits(2);
+          if (shop.length) line += " · shop " + shop.join(" · ");
+        }
+      }
+      return '<section class="home-capital" aria-label="Your firsts">'
+        + '<p class="home-capital-h">Your firsts'
+        + (bag.year ? (" · " + esc(bag.year)) : "")
+        + "</p>"
+        + '<p class="home-capital-line">' + esc(line)
+        + ' <button type="button" class="chip" data-dash-open="firsts_held">Firsts</button>'
+        + "</p></section>";
+    }
+
+    function homeLateBuyerBits(limit) {
+      const cap = limit || 2;
+      const mine = authSeatCanonName() || authSeatName() || "";
+      const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
+        ? projectedFinishBook.seats : [];
+      return seats.filter(function (s) {
+        return s && s.band === "Late" && s.name && s.name !== mine;
+      }).sort(function (a, b) {
+        return (Number(a.proj_finish) || 99) - (Number(b.proj_finish) || 99);
+      }).slice(0, cap).map(function (s) { return s.name; });
+    }
+
+    function homeOwnFirstStatus() {
+      if (typeof leagueFormat === "function" && leagueFormat().kind === "redraft") return null;
+      if (typeof ensurePicks === "function") ensurePicks();
+      if (!picks) return null;
+      const mine = authSeatCanonName() || authSeatName() || "";
+      if (!mine) return null;
+      const year = typeof pickHubSoonestYear === "function" ? pickHubSoonestYear() : "";
+      const rows = (typeof stillPickEntries === "function") ? stillPickEntries() : [];
+      for (let i = 0; i < rows.length; i++) {
+        const parts = typeof pickKeyParts === "function" ? pickKeyParts(rows[i].key) : null;
+        if (!parts || parts.round !== 1) continue;
+        if (year && parts.season !== year) continue;
+        const entry = rows[i].entry || {};
+        const origin = (typeof pickOriginName === "function" ? pickOriginName(entry) : "") || "";
+        if (origin !== mine) continue;
+        const holder = (typeof pickOwnerName === "function" ? pickOwnerName(entry) : "") || "";
+        const originProj = typeof projSeatByName === "function" ? projSeatByName(origin) : null;
+        const slot = originProj && originProj.proj_slot != null
+          ? Number(originProj.proj_slot) : 99;
+        const slotLab = slot < 99
+          ? ((slot < 10 ? "1.0" : "1.") + slot)
+          : "1.?";
+        return {
+          own: holder === mine,
+          holder: holder,
+          slot: slot,
+          slotLab: slotLab,
+          band: (originProj && originProj.band) || "Mid",
+        };
+      }
+      return null;
+    }
+
+    function homeChaseTip() {
+      const uid = authSeatId();
+      if (!uid) return "";
+      const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
+      const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
+      const shop = homeEarlyShopBits(2);
+      const buyers = homeLateBuyerBits(2);
+      const heldBag = homeCapitalHeldRows();
+      const heldEarly = heldBag && heldBag.held
+        ? heldBag.held.filter(function (r) { return r.band === "Early"; }).length
+        : 0;
+      if (arch && arch.archetype === "proxy_contender") {
+        return "Defend held Early — keep competing";
+      }
+      if (arch && arch.archetype === "tank_sculptor") {
+        const lock = homeOwnFirstStatus();
+        if (lock && lock.own && lock.slot === 1) {
+          return buyers.length
+            ? ("1.01 locked — sell studs to " + buyers.join(" · "))
+            : "1.01 locked — sell win-now to Late seats";
+        }
+        if (lock && !lock.own && lock.holder) {
+          return "Reclaim " + lock.slotLab + " — held by " + lock.holder;
+        }
+        if (lock && lock.own) {
+          return buyers.length
+            ? (lock.slotLab + " locked — sell studs to " + buyers.join(" · "))
+            : (lock.slotLab + " locked — sell win-now to Late seats");
+        }
+        return buyers.length
+          ? ("Lock Early — sell win-now to " + buyers.join(" · "))
+          : "Lock 1.01 — sell win-now to Late seats";
+      }
+      if (arch && arch.archetype === "reload_on_early") {
+        return buyers.length
+          ? ("Flip a stud to " + buyers.join(" · ") + " — keep Early")
+          : "Ask for a stud; pay with picks";
+      }
+      if (arch && arch.archetype === "capital_hoarder") {
+        if (heldEarly >= 1 && shop.length) {
+          return "Upgrade Mid→Early — " + shop.join(" · ");
+        }
+        if (heldEarly >= 1) {
+          return "Mid race — don't panic-tank your Early";
+        }
+        return shop.length
+          ? ("Swap for Early — " + shop.join(" · "))
+          : "Swap Mid origins for Early ones";
+      }
+      if (arch && arch.archetype === "slow_burn") {
+        const pct = Math.round((Number(arch.slow_burn_rate) || 0) * 100);
+        const climb = Number(arch.avg_climb);
+        if (pct >= 30) {
+          return pct + "% slow burn — do not sell Mid on .500 vibe";
+        }
+        if (climb > 0) {
+          return "You climb — hold Mid pieces through the cut";
+        }
+        return "Hold Mid pieces — price climbs later";
+      }
+      if (arch && arch.archetype === "fast_fade") {
+        if (proj && proj.band === "Early") {
+          return "Fade history — sell studs before the slide locks";
+        }
+        const fadePct = Math.round((Number(arch.fast_fade_rate) || 0) * 100);
+        const fadeLead = fadePct >= 30 ? (fadePct + "% fade — ") : "";
+        if (shop.length) {
+          return fadeLead + "Buy a first — " + shop.join(" · ");
+        }
+        return fadeLead
+          ? (fadeLead + "buy a first before week 8")
+          : "Buy a first before week 8";
+      }
+      if (arch && arch.archetype === "win_now_race") {
+        return shop.length
+          ? ("Buy Early — " + shop.join(" · "))
+          : "Buy Early origins — sell aging for Late capital";
+      }
+      if (proj && proj.band === "Late") {
+        return shop.length
+          ? ("Buy Early — " + shop.join(" · "))
+          : "Buy Early origins from tanks";
+      }
+      if (proj && proj.band === "Early") {
+        return "Origin firsts read 1.0x — shop leftovers";
+      }
+      return "Open Who has firsts for Early slots";
+    }
+
+    function homePulseHtml() {
+      if (!authSession || !authSeatId()) return "";
+      const proj = typeof projSeatOf === "function" ? projSeatOf(authSeatId()) : null;
+      const chase = homeChaseTip();
+      const movers = typeof raceMoversLines === "function" ? raceMoversLines().slice(0, 3) : [];
+      const selfBits = [];
+      if (proj && Math.abs(Number(proj.delta_place) || 0) >= 1) {
+        const d = Number(proj.delta_place) || 0;
+        selfBits.push(d > 0 ? ("You climbed " + d) : ("You slipped " + (-d)));
+      }
+      if (!chase && !movers.length && !selfBits.length) return "";
+      return '<section class="home-pulse" aria-label="Race pulse">'
+        + (chase ? '<p class="home-pulse-chase">' + esc(chase) + "</p>" : "")
+        + ((selfBits.length || movers.length)
+          ? '<p class="home-pulse-movers">'
+            + esc([].concat(selfBits, movers.length ? ["Race movers · " + movers.join(" · ")] : []).join(" · "))
+            + "</p>"
+          : "")
+        + "</section>";
+    }
+
     function homeYouHtml() {
       if (!authSession || !authSeatId()) return "";
       const name = authSeatCanonName() || authSeatName() || "Your team";
@@ -26868,11 +27669,15 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="home-you-plate" data-home-awards="1" aria-label="Titles and Emblems">'
         + plate
         + "</button>"
-        + "</div></section>";
+        + "</div>"
+        + homeYouRaceLine()
+        + "</section>";
     }
 
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
+      // Manager OS: race → capital → chase pulse → wire bar → Ideas → doors → calc.
+      // Full overnight letter stays on ?r=overnight / share — Home only gets the icon bar.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="' + esc(calcDoorLabel()) + ', click here">'
         + '<img class="lh-calc-banner" src="' + esc(calcDoorSrc()) + '"'
@@ -26880,11 +27685,13 @@ const html = `<!DOCTYPE html>
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">' + esc(calcDoorLabel()) + "</span></button>";
       return homeYouHtml()
-        + overnightSlipHtml()
+        + homeCapitalStripHtml()
+        + homePulseHtml()
+        + homeWireBarHtml()
         + leagueTapeHtml()
+        + homeDeskHtml()
         + homeTopDoorsHtml()
-        + '<div class="lh-calc-slot">' + door + "</div>"
-        + homeDeskHtml();
+        + '<div class="lh-calc-slot">' + door + "</div>";
     }
 
     function homeTopDoorsHtml() {
@@ -28176,8 +28983,10 @@ const html = `<!DOCTYPE html>
           : "")
         + (function () {
           const arch = me && typeof archSeatOf === "function" ? archSeatOf(me.user_id) : null;
+          const dir = me && typeof seatDirOf === "function" ? seatDirOf(me.user_id) : null;
           if (!arch || !arch.lab) return "";
-          return '<p class="caption">' + esc(arch.lab)
+          const bag = dir && dir.label ? (" · Bag " + dir.label) : "";
+          return '<p class="caption">' + esc(arch.lab) + esc(bag)
             + (arch.why ? (" — " + esc(arch.why)) : "")
             + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Manager types</button></p>';
         })()
@@ -30362,6 +31171,28 @@ const html = `<!DOCTYPE html>
         e.stopPropagation();
         const id = overnightPlayerBtn.getAttribute("data-overnight-player") || "";
         overnightOpenPlayer = (String(overnightOpenPlayer) === String(id)) ? "" : id;
+        if (typeof render === "function") render();
+        return;
+      }
+      const homeWireBtn = e.target.closest("[data-home-wire]");
+      if (homeWireBtn && homeWireBtn.closest(".home-wire")) {
+        e.preventDefault();
+        e.stopPropagation();
+        const id = homeWireBtn.getAttribute("data-home-wire") || "";
+        homeWireOpen = (String(homeWireOpen) === String(id)) ? "" : id;
+        if (homeWireOpen) homeWireFullLetter = false;
+        if (typeof render === "function") render();
+        return;
+      }
+      const homeWireFullBtn = e.target.closest("[data-home-wire-full]");
+      if (homeWireFullBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        homeWireFullLetter = !homeWireFullLetter;
+        if (homeWireFullLetter) {
+          homeWireOpen = "";
+          overnightOpen = true;
+        }
         if (typeof render === "function") render();
         return;
       }
@@ -32622,7 +33453,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v291-manager-intel")
+  || !swSrc.includes("chuckle-shell-v293-home-os")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -32690,14 +33521,22 @@ if (inline.includes('day-alert-h">Champions Path')) {
     throw new Error("Home digest must not mount Alerts or the News door — the News tab owns them");
   }
   if (!prog.includes("lh-calc-door") || !prog.includes("homeDeskHtml()")
-    || !prog.includes("homeTopDoorsHtml()") || !prog.includes("lh-calc-slot")) {
-    throw new Error("Home digest is top 4 doors + centered Cuckle calculator + Team Ideas");
+    || !prog.includes("homeTopDoorsHtml()") || !prog.includes("lh-calc-slot")
+    || !prog.includes("homeCapitalStripHtml()") || !prog.includes("homePulseHtml()")
+    || !prog.includes("homeWireBarHtml()")) {
+    throw new Error("Home digest is race + capital + pulse + wire bar + Ideas + top 4 + calc");
+  }
+  if (prog.includes("overnightSlipHtml()")) {
+    throw new Error("Home digest must not mount the full overnight letter — wire bar owns the pulse");
+  }
+  if (prog.indexOf("homeDeskHtml()") > prog.indexOf("homeTopDoorsHtml()")) {
+    throw new Error("Team Ideas must sit above top 4 on Home");
+  }
+  if (prog.indexOf("homeCapitalStripHtml()") > prog.indexOf("homePulseHtml()")) {
+    throw new Error("capital strip must sit above race pulse on Home");
   }
   if (prog.indexOf("homeTopDoorsHtml()") > prog.indexOf("lh-calc-slot")) {
     throw new Error("home calc must sit below top 4");
-  }
-  if (prog.indexOf("lh-calc-slot") > prog.indexOf("homeDeskHtml()")) {
-    throw new Error("home calc must sit above trade desk");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -33881,6 +34720,32 @@ if (!inline.includes('"cosmetics", "news"')) {
   }
   if (!fnSrc("leagueInProgress").includes("homeYouHtml()")
     || !fnSrc("leagueInProgress").includes("homeTopDoorsHtml()")
+    || !fnSrc("leagueInProgress").includes("homeCapitalStripHtml()")
+    || !fnSrc("leagueInProgress").includes("homePulseHtml()")
+    || !fnSrc("leagueInProgress").includes("homeDeskHtml()")
+    || !inline.includes("function homeCapitalStripHtml(")
+    || !inline.includes("function homePulseHtml(")
+    || !inline.includes("function homeChaseTip(")
+    || !inline.includes("function homeEarlyShopBits(")
+    || !inline.includes("function homeCapitalStackLab(")
+    || !inline.includes("function homeLateBuyerBits(")
+    || !inline.includes("function homeOwnFirstStatus(")
+    || !fnSrc("homeChaseTip").includes("win_now_race")
+    || !fnSrc("homeChaseTip").includes("capital_hoarder")
+    || !fnSrc("homeChaseTip").includes("Upgrade Mid")
+    || !fnSrc("homeChaseTip").includes("1.01 locked")
+    || !fnSrc("homeChaseTip").includes("sell studs to")
+    || !fnSrc("homeChaseTip").includes("Flip a stud to")
+    || !fnSrc("homeChaseTip").includes("slow_burn_rate")
+    || !fnSrc("homeChaseTip").includes("do not sell Mid on .500 vibe")
+    || !fnSrc("homeChaseTip").includes("Fade history")
+    || !fnSrc("homeChaseTip").includes("fast_fade_rate")
+    || !fnSrc("homeEarlyShopBits").includes("holder === mine")
+    || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
+    || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")
+    || !fnSrc("homeCapitalStripHtml").includes("slow_burn")
+    || !fnSrc("homeCapitalStripHtml").includes("own Late 1st sold")
+    || !fnSrc("homeChaseTip").includes("Buy Early — ")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")
     || !fnSrc("homeYouHtml").includes("data-home-awards")
     || !fnSrc("homeYouHtml").includes("home-you-name")
@@ -33893,6 +34758,10 @@ if (!inline.includes('"cosmetics", "news"')) {
     || fnSrc("homeYouHtml").includes("homeYouTapeLine")
     || fnSrc("homeYouHtml").includes("calcFmt(")
     || fnSrc("homeYouHtml").includes("calcValueNum(")
+    || fnSrc("homeCapitalStripHtml").includes("calcFmt(")
+    || fnSrc("homeCapitalStripHtml").includes("calcValueNum(")
+    || fnSrc("homePulseHtml").includes("calcFmt(")
+    || fnSrc("homePulseHtml").includes("calcValueNum(")
     || !inline.includes('cuckle.team.home.layout.v1')
     || !inline.includes("Format page")
     || !inline.includes("Show off")
@@ -34025,10 +34894,10 @@ if (!inline.includes("function dataDashHtml(")
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   if (defIds.length !== 13 || defIds.some((id) => !uniq.has(id))
-    || defIds[0] !== "my_trades" || defIds[1] !== "league_trades"
-    || defIds[2] !== "my_draft" || defIds[3] !== "league_draft"
-    || defIds[4] !== "profit_loss") {
-    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles");
+    || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
+    || defIds[2] !== "firsts_held" || defIds[3] !== "season_arcs"
+    || defIds[4] !== "my_trades") {
+    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles (race/capital top-4)");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
@@ -34046,11 +34915,11 @@ if (!inline.includes("function dataDashHtml(")
   if (reportIds.some((id) => banned.includes(id))) {
     throw new Error("Data library must not include bag totals or Best/Worst 10");
   }
-  if (!uniq.has("week_scores") || defIds[10] !== "week_scores") {
-    throw new Error("Week scores must be a catalog door and default board tile 11");
+  if (!uniq.has("week_scores") || defIds[11] !== "week_scores") {
+    throw new Error("Week scores must be a catalog door and default board tile 12");
   }
-  if (!uniq.has("projected_finish") || defIds[7] !== "projected_finish") {
-    throw new Error("Projected finish must be a catalog door and default board tile 8");
+  if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
+    throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");
   }
   if (!inline.includes("function weekScoreRows(")
     || !inline.includes("function ensureWeekScores(")
@@ -34742,6 +35611,16 @@ if (!inline.includes("function augmentUntradedPicks(") || !inline.includes("func
 if (!inline.includes("/\\(([^)]+)\\)\\s*$/")) {
   throw new Error("pickOriginName regex must escape parens through the HTML template literal");
 }
+{
+  const originFns = inline.match(/function pickOriginName\(/g) || [];
+  if (originFns.length !== 1) {
+    throw new Error("exactly one pickOriginName(entry) must exist — a label-only shadow breaks firsts bands");
+  }
+  if (fnSrc("homeCapitalHeldRows").includes("pickOriginName(entry.label)")
+    || fnSrc("dataListItems").includes("pickOriginName(entry.label)")) {
+    throw new Error("firsts / capital strip must call pickOriginName(entry), not entry.label");
+  }
+}
 if (!fnSrc("pickOwnerName").includes("entry.holder")) {
   throw new Error("pickOwnerName must prefer live Sleeper holder over a stale hop");
 }
@@ -34751,9 +35630,10 @@ if (!fnSrc("calcMeta").includes("a.injury") || !fnSrc("calcMeta").includes("a.ro
 if (!inline.includes("function overnightSlipHtml(") || !inline.includes('q.set("r", "overnight")')
   || !inline.includes("data-overnight-share") || !inline.includes("function overnightEnabled(")
   || !inline.includes("data-overnight-more")
+  || !inline.includes("function homeWireBarHtml(") || !inline.includes('data-home-wire="')
   || !inline.includes("function teamAnalyzerHtml(") || !inline.includes("function teamAnalyzerEnabled(")
   || !inline.includes("function teamAnalyzerNow(") || !inline.includes("function teamAnalyzerLater(")) {
-  throw new Error("Home overnight must be a shareable dynasty report; team home must paint the analyzer");
+  throw new Error("overnight letter stays shareable; Home wire bar + team analyzer must ship");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

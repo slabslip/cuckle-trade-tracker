@@ -23,7 +23,8 @@ Never let opinion (votes, news, ledger) write the book.
 
 | # | Work | Why | Spec / source |
 | --- | --- | --- | --- |
-| 1 | **Manager intel Phase A** — wire Projected finish into firsts / Team Ideas / overnight race movers | Race spine already shipped (#172); highest leverage without new books | [`manager_intel_spine.md`](./manager_intel_spine.md), [`projected_finish_leverage.md`](./projected_finish_leverage.md) |
+| 1 | **Dashboard strategy overnight** — Home race pulse, intel top-4, archetype v2, Ideas tips | Persona IA from overnight review | [`DASHBOARD_STRATEGY.md`](./DASHBOARD_STRATEGY.md) |
+| 1b | **Manager intel Phase A** (shipped #174/#175) | Race spine + arcs + archetypes | [`manager_intel_spine.md`](./manager_intel_spine.md) |
 | 2 | **Overnight lede: yesterday’s injury / tape delta** | Plan’s explicit next cut; makes the letter a morning habit | [`dynasty_daily_habit.md`](./dynasty_daily_habit.md) |
 | 3 | **Public memory receipts** (`shareProofNow`, `?r=trade&t=`) | Group-text proof without Sign-in wall | [`MEMORY_SDD.md`](../MEMORY_SDD.md), OPEN Q17 |
 | 4 | **Book integrity after any value touch** | Standing checks in PRODUCT §5 | `check-value-feed.mjs`, `apply-value-adjust.mjs` |

@@ -26,8 +26,9 @@ Product laws (do not "fix" these):
 - Five-tab law: `homeChips()` must not include `lhSeatStatsAction(` or `mystats`.
 - Menu must keep `"Calculator"`, `"League Data"`, `"Settings"`, and the literal
   `slot + slot + slot`.
-- `leagueInProgress()` order: `homeYouHtml()` + `homeTopDoorsHtml()` +
-  `lh-calc-slot` + `homeDeskHtml()`.
+- `leagueInProgress()` order: `homeYouHtml()` + `homeCapitalStripHtml()` +
+  `homePulseHtml()` + overnight + `homeDeskHtml()` + `homeTopDoorsHtml()` +
+  `lh-calc-slot` (Ideas above doors; calc last).
 - Home must not mount `your3Html()`, Recent Trade, or `data-board-open`.
 - HIG-23: filters are labeled `<select>` via `receiptLookSelect`. Held/Sold rooms
   and Format toggles are not filters.

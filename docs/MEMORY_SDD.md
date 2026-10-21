@@ -432,7 +432,7 @@ demo. That is the point.
 
 | Surface | Proof job |
 |---------|-----------|
-| **Home** | No personal bag hero. Calling card + flair/name/place tab only — no tape line. Team Ideas / calc stay *today’s* deal. The top 4 doors from Your board sit here with no heading. Hero title/emblem/calc-door load eager; barracks thumbs warm on idle. A proof chip does not remount News. |
+| **Home** | No personal bag hero. Calling card + flair/name/place + **race pulse** (proj · band · manager type · bag window) — no trade-tape line. Team Ideas / calc stay *today’s* deal (Ideas meta may name race/archetype tips). Default top 4: Projected finish · Draft picks · Who has firsts · Season arcs. Hero title/emblem/calc-door load eager; barracks thumbs warm on idle. A proof chip does not remount News. |
 | **Teams** | Seat place + titles already argue “historically good.” L3 sheet is a peek, not a bag-total page. |
 | **History / Data** | Home of **Your board**. Cold load is the doors only. Still one Data cell. |
 | **Open trade** | Long receipt. Share proof. `Remember it differently?` → same L1 ticket. |

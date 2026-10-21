@@ -9,6 +9,7 @@ sends per-seat invites; members redeem a code and set username/password.
 **→ New agent:** [`docs/AGENT_HANDOFF.md`](docs/AGENT_HANDOFF.md) · plan [`docs/plans/MASTER_PLAN.md`](docs/plans/MASTER_PLAN.md) · catalog [`docs/AGENT_CATALOG.md`](docs/AGENT_CATALOG.md)  
 **→ Projected finish:** [`docs/PROJECTED_FINISH_SDD.md`](docs/PROJECTED_FINISH_SDD.md) (race + SoS → pick bands)  
 **→ Manager intel next:** [`docs/plans/manager_intel_spine.md`](docs/plans/manager_intel_spine.md) (arcs, archetypes, Home targeting)  
+**→ Dashboard strategy:** [`docs/plans/DASHBOARD_STRATEGY.md`](docs/plans/DASHBOARD_STRATEGY.md) (Home IA, personas, formulas)  
 Spec: [`docs/APP_SDD.md`](docs/APP_SDD.md). Custom domain: [`docs/CUSTOM_DOMAIN.md`](docs/CUSTOM_DOMAIN.md).
 
 **Default:** a pick that has already been drafted is the player it became, priced today.

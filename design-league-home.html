@@ -20,21 +20,37 @@
   <p>Opening PSA league home for Design Mode…</p>
   <script>
     (function () {
+      // Optional ?seat= for persona walks (default Truman / proxy).
+      var seats = {
+        truman: { id: "458342725222133760", name: "TrumanCooper" },
+        kinghenry: { id: "458715702119886848", name: "KingHenryXXVI" },
+        arae: { id: "458004578168729600", name: "ARae" },
+        chief: { id: "457945712932417536", name: "ChiefGumby" },
+        tipsup: { id: "457784547094818816", name: "TipsUp" },
+        bubba: { id: "458723431387492352", name: "BubbaCuckShremp" },
+        darkwing: { id: "458766127967760384", name: "DarkWingDucks2023" },
+        bigjberg: { id: "458315051980288000", name: "bigjberg" },
+        ted: { id: "470311990468800512", name: "TedCumberbatch" },
+        sf: { id: "457779824002330624", name: "SF69erss" }
+      };
+      var key = String(new URLSearchParams(location.search).get("seat") || "truman")
+        .toLowerCase().replace(/[^a-z0-9]/g, "");
+      var seat = seats[key] || seats.truman;
       var user = {
         access_token: "design-mode",
         refresh_token: "",
         expires_at: Math.floor(Date.now() / 1000) + 86400,
         user_id: "design-user",
         username: "designer",
-        seat_user_id: "458342725222133760",
-        seat_name: "TrumanCooper"
+        seat_user_id: seat.id,
+        seat_name: seat.name
       };
       var league = {
         sleeper_league_id: "1315431339301806080",
         name: "CuckleChunckle",
         status: "ready",
-        sleeper_user_id: "458342725222133760",
-        team_name: "TrumanCooper"
+        sleeper_user_id: seat.id,
+        team_name: seat.name
       };
       try {
         localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
@@ -43,6 +59,7 @@
         // Sticky for the tab: boot + openLeagueDashboard keep reading this after syncUrl
         // strips ?design= (otherwise soft-delete sync / Your leagues can blank Design Mode).
         sessionStorage.setItem("cuckle.design.league_home", "1");
+        sessionStorage.setItem("cuckle.design.seat", key);
       } catch (err) {
         document.querySelector("p").textContent =
           "Allow localStorage on this origin, then reload.";

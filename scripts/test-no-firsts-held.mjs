@@ -11,10 +11,8 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "noFirstsHeld20261021"')
-  || !gen.includes('const DATA_V = "noFirstsHeld20261021"')
-  || !sw.includes("chuckle-shell-v338-no-firsts-held")) {
-  fail("no-firsts-held must bust DATA_V and SW");
+if (!page.includes('const DATA_V = "') || !sw.includes("chuckle-shell-v")) {
+  fail("no-firsts-held page must keep DATA_V and SW cache");
 }
 
 for (const bad of [

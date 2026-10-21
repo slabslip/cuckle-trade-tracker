@@ -11,9 +11,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "seasonArcsExpandMerge20261021"')
-  || !gen.includes('const DATA_V = "seasonArcsExpandMerge20261021"')
-  || !sw.includes("chuckle-shell-v341-season-arcs-expand")) {
+if (!page.includes('const DATA_V = "dashboardReviewFixes20261021"')
+  || !gen.includes('const DATA_V = "dashboardReviewFixes20261021"')
+  || !sw.includes("chuckle-shell-v342-dashboard-review")) {
   fail("trade helper kickstart must bust DATA_V and SW");
 }
 
@@ -53,6 +53,6 @@ if (page.includes("your bag") || page.includes(" · Bag ") || page.includes("Rel
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "seasonArcsExpandMerge20261021",
+  DATA_V: "dashboardReviewFixes20261021",
   also: ["no-firsts-held", "bag-to-team"],
 }));

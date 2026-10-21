@@ -4801,7 +4801,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "seasonArcsExpandMerge20261021";
+    const DATA_V = "dashboardReviewFixes20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -11145,7 +11145,8 @@ const html = `<!DOCTYPE html>
       if (gen !== leagueLoadGen) return;
       const nowId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       if (String(nowId) !== String(wantId)) return;
-      members = membersRaw;
+      // Malformed members.json must not throw before the dashboard paints.
+      members = Array.isArray(membersRaw) ? membersRaw : [];
       // Last season's finishing order, derived by title-path.mjs. The file already ships in
       // this order; sorting again is what keeps the picker right if anything ever reorders it,
       // and a build with no places sorts to a no-op and keeps the file's own order.
@@ -12530,7 +12531,7 @@ const html = `<!DOCTYPE html>
       const rows = (cuffs && cuffs.rows) || [];
       let n = 0;
       for (let i = 0; i < rows.length; i++) {
-        if (!rows[i].cuff_owned) n += 1;
+        if (rows[i] && !rows[i].cuff_owned) n += 1;
       }
       return n;
     }
@@ -12652,62 +12653,63 @@ const html = `<!DOCTYPE html>
       while (src.indexOf("firsts_held") >= 0) {
         src.splice(src.indexOf("firsts_held"), 1);
       }
-      // Dynasty: force critical doors onto saved boards (remote seat_data_dash often
-      // predates Season arcs / Trade helper — Home top-4 and Your board stayed blank).
+      // Dynasty: pin Trade helper then Season arcs onto saved boards that predate them.
+      // Trade helper first so inserting after my_trades cannot shove Season arcs out of
+      // Home top-4 slot 3. Never clobber keep-top doors or an unknown last tile — only
+      // soft-drop slots (or vs_you) are fair game.
       const dynasty = !(typeof isRedraftLeague === "function" && isRedraftLeague());
-      if (dynasty && dataDashById("season_arcs")) {
-        const arcsAt = src.indexOf("season_arcs");
-        if (arcsAt < 0) {
-          // Default board puts Season arcs in slot 3 (Home top-4).
-          if (src.length < DATA_DASH_MAX) {
-            src.splice(Math.min(3, src.length), 0, "season_arcs");
-          } else {
-            const keepTop = { projected_finish: 1, my_draft: 1, manager_archetypes: 1 };
-            if (src.length > 3 && !keepTop[src[3]]) {
-              src[3] = "season_arcs";
-            } else {
-              const dropOrder = ["past_champions", "season_place", "league_draft",
-                "league_trades", "week_scores", "manager_archetypes"];
-              let dropped = false;
-              for (let d = 0; d < dropOrder.length; d++) {
-                const di = src.indexOf(dropOrder[d]);
-                if (di >= 4) {
-                  src.splice(di, 1);
-                  src.splice(3, 0, "season_arcs");
-                  dropped = true;
-                  break;
-                }
-              }
-              if (!dropped) src[3] = "season_arcs";
-            }
-          }
-        } else if (arcsAt >= 4) {
-          src.splice(arcsAt, 1);
-          src.splice(3, 0, "season_arcs");
+      const keepTop = {
+        projected_finish: 1, my_draft: 1, manager_archetypes: 1, season_arcs: 1,
+      };
+      const softDrop = ["past_champions", "season_place", "league_draft",
+        "league_trades", "week_scores"];
+      const softDropAt = function (fromIdx) {
+        for (let d = 0; d < softDrop.length; d++) {
+          const at = src.indexOf(softDrop[d]);
+          if (at >= fromIdx) return at;
         }
-      }
-      // Dynasty: always pin Trade helper on Your board (saved seats often lack vs_you).
+        return -1;
+      };
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
         if (vs >= 0) {
           src[vs] = "trade_helper";
         } else if (src.length < DATA_DASH_MAX) {
-          // Sit just after My Trade History when present; else append.
           const after = src.indexOf("my_trades");
           if (after >= 0) src.splice(after + 1, 0, "trade_helper");
           else src.push("trade_helper");
         } else {
-          const dropOrder = ["past_champions", "season_place", "league_draft", "league_trades"];
-          let dropped = false;
-          for (let d = 0; d < dropOrder.length; d++) {
-            const at = src.indexOf(dropOrder[d]);
-            if (at >= 4) {
-              src[at] = "trade_helper";
-              dropped = true;
-              break;
+          const at = softDropAt(4);
+          if (at >= 0) src[at] = "trade_helper";
+          // else skip — do not overwrite the user's last door
+        }
+      }
+      if (dynasty && dataDashById("season_arcs")) {
+        const arcsAt = src.indexOf("season_arcs");
+        if (arcsAt < 0) {
+          if (src.length < DATA_DASH_MAX) {
+            src.splice(Math.min(3, src.length), 0, "season_arcs");
+          } else {
+            const di = softDropAt(4);
+            if (di >= 0) {
+              src.splice(di, 1);
+              src.splice(Math.min(3, src.length), 0, "season_arcs");
+            } else if (src.length > 3 && softDrop.indexOf(src[3]) >= 0) {
+              src[3] = "season_arcs";
             }
+            // else skip — full board of keep-top / user doors stays put
           }
-          if (!dropped) src[src.length - 1] = "trade_helper";
+        } else if (arcsAt >= 4) {
+          // Lift only when a soft-drop sits in top-4 (or slot 3 is soft-drop).
+          let softTop = -1;
+          for (let i = 0; i < 4; i++) {
+            if (softDrop.indexOf(src[i]) >= 0) { softTop = i; break; }
+          }
+          if (softTop < 0 && src[3] && !keepTop[src[3]]) softTop = 3;
+          if (softTop >= 0) {
+            src.splice(arcsAt, 1);
+            src.splice(softTop, 0, "season_arcs");
+          }
         }
       }
       return dataDashCanon(src);
@@ -14009,7 +14011,7 @@ const html = `<!DOCTYPE html>
           const d = Number(y.delta) || 0;
           const dLab = (d > 0 ? "+" : "") + d;
           const buy = Number(y.bought_players_early) || 0;
-          const buyLab = buy > 0 ? ("bought +" + buy) : (buy < 0 ? ("sold " + Math.abs(buy)) : "flat bag");
+          const buyLab = buy > 0 ? ("bought +" + buy) : (buy < 0 ? ("sold " + Math.abs(buy)) : "flat team");
           const end = y.made_playoffs ? "playoffs" : (y.avoided_last ? "missed, not last" : "finished last");
           html += '<p class="pf-week"><b>' + esc(y.season) + "</b> · "
             + esc(seasonArcsArcLab(y.arc))
@@ -14376,15 +14378,27 @@ const html = `<!DOCTYPE html>
       }).catch(function (err) { console.error(err); });
     }
 
+    let dataDashBandHitsCache = { stem: "", give: null, get: null };
+
     function dataDashBandHits(side) {
+      const want = side === "get" ? "get" : "give";
       const mine = authSeatId() ? String(authSeatId()) : "";
       if (!mine) return [];
+      const stem = mine + "\t"
+        + ((calcBook && calcBook.as_of) || "") + "\t"
+        + ((members && members.length) || 0) + "\t"
+        + ((seatDirection && seatDirection.as_of) || "") + "\t"
+        + ((cuffs && cuffs.as_of) || "");
+      if (dataDashBandHitsCache.stem !== stem) {
+        dataDashBandHitsCache = { stem: stem, give: null, get: null };
+      }
+      if (dataDashBandHitsCache[want]) return dataDashBandHitsCache[want];
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
       const myBag = bags.get(mine) || [];
       const myProf = (typeof homeDeskProfile === "function")
         ? homeDeskProfile(myBag)
         : { holes: [], thin: [], surplus: [], deep: [], route: "Reload" };
-      const jobs = side === "get" ? dataDashImproveJobs(myBag, myProf) : [];
+      const jobs = want === "get" ? dataDashImproveJobs(myBag, myProf) : [];
       const agingPos = {};
       for (let i = 0; i < myBag.length; i++) {
         const p = homeDeskAssetPos(myBag[i]);
@@ -14402,18 +14416,18 @@ const html = `<!DOCTYPE html>
           pos: homeDeskAssetPos(a),
           why: why,
           why2: "",
-          sendA: side === "give" ? a.id : "",
-          sendB: side === "get" ? a.id : "",
+          sendA: want === "give" ? a.id : "",
+          sendB: want === "get" ? a.id : "",
           score: score,
           band: spec.id,
           bandLab: spec.lab,
           bandRank: spec.rank,
           size: spec.id,
           color: spec.color,
-          side: side,
+          side: want,
         });
       };
-      if (side === "give") {
+      if (want === "give") {
         const pickSeats = [];
         (members || []).forEach(function (m) {
           const uid = String(m.user_id);
@@ -14481,6 +14495,7 @@ const html = `<!DOCTYPE html>
       rows.sort(function (a, b) {
         return (a.bandRank - b.bandRank) || ((b.score || 0) - (a.score || 0));
       });
+      dataDashBandHitsCache[want] = rows;
       return rows;
     }
 
@@ -15207,64 +15222,14 @@ const html = `<!DOCTYPE html>
     }
 
     function tradeHelperKickstartCards() {
-      if (!authSeatId() || !authSession) return [];
-      if (typeof ensureCuffs === "function") ensureCuffs();
-      const mine = String(authSeatId());
-      const seats = (members || []).filter(function (m) { return m && m.user_id; });
-      if (seats.length < 2) return [];
-      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
-      const myBag = bags.get(mine) || [];
-      if (!myBag.length) return [];
-      const nameOf = function (uid) {
-        const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
-        return (hit && hit.name) || uid;
-      };
-      const profA = typeof homeDeskProfile === "function" ? homeDeskProfile(myBag) : null;
-      const wants = typeof homeDeskWants === "function" ? homeDeskWants(mine, profA) : [];
-      const scored = [];
-      for (let i = 0; i < seats.length; i++) {
-        const uid = String(seats[i].user_id);
-        if (uid === mine) continue;
-        const theirBag = bags.get(uid) || [];
-        if (!theirBag.length) continue;
-        const profB = typeof homeDeskProfile === "function" ? homeDeskProfile(theirBag) : null;
-        for (let w = 0; w < wants.length; w++) {
-          const want = wants[w];
-          const talk = typeof homeDeskTalk === "function" ? homeDeskTalk(myBag, theirBag, want) : null;
-          if (!talk) continue;
-          const job = typeof homeDeskJob === "function" ? homeDeskJob(talk, profA, profB) : "";
-          if (job !== want) continue;
-          scored.push({
-            a: mine,
-            b: uid,
-            nameA: "You",
-            nameB: seats[i].name || nameOf(uid) || "them",
-            talk: talk,
-            job: job,
-            score: talk.score,
-          });
-        }
-        // Also score an open swap vs this seat so the kickstart list stays full.
-        const open = typeof homeDeskTalk === "function" ? homeDeskTalk(myBag, theirBag, "") : null;
-        if (open) {
-          const job = typeof homeDeskJob === "function" ? homeDeskJob(open, profA, profB) : "swap";
-          scored.push({
-            a: mine,
-            b: uid,
-            nameA: "You",
-            nameB: seats[i].name || nameOf(uid) || "them",
-            talk: open,
-            job: job,
-            score: open.score + 40,
-          });
-        }
-      }
-      scored.sort(function (x, y) { return x.score - y.score; });
+      // Reuse the memoized Team Ideas score matrix — no second homeDeskTalk pass.
+      const scored = typeof homeDeskScoredRows === "function" ? homeDeskScoredRows() : [];
       const usedKey = {};
       const partnerN = {};
       const picks = [];
       for (let i = 0; i < scored.length && picks.length < 8; i++) {
         const row = scored[i];
+        if (!row || !row.talk) continue;
         const pack = [(row.talk.legsA || []).map(function (a) { return a && a.id; }).join(","),
           (row.talk.legsB || []).map(function (a) { return a && a.id; }).join(",")].join("|");
         if (usedKey[pack]) continue;
@@ -15570,7 +15535,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashHead(spec, fig, sub) {
-      return "<span>" + esc(spec.lab) + "</span><b>" + fig + "</b>"
+      return "<span>" + esc(spec.lab) + "</span><b>" + esc(String(fig == null ? "" : fig)) + "</b>"
         + (sub ? '<span class="data-tile-sub">' + esc(sub) + "</span>" : "");
     }
 
@@ -15585,10 +15550,7 @@ const html = `<!DOCTYPE html>
         return dataDashHead(spec, dataDashTapeCount() + " deals", "Complete two-way tape");
       }
       if (id === "book_asof") {
-        return dataDashHead(spec, esc(dataDashAsOf()), "Today book");
-      }
-      if (id === "firsts_held") {
-        return dataDashHead(spec, String(dataDashFirstsHeld()), "Firsts still in the book");
+        return dataDashHead(spec, dataDashAsOf(), "Today book");
       }
       if (id === "uninsured") {
         return dataDashHead(spec, dataDashUninsured() + " starters", "Cuff not rostered");
@@ -16099,10 +16061,10 @@ const html = `<!DOCTYPE html>
 
     function dataDashSnapHtml() {
       return '<div class="data-snap" aria-label="League snapshots">'
-        + '<div class="data-tile"><span>Tape</span><b>' + dataDashTapeCount() + " deals</b></div>"
+        + '<div class="data-tile"><span>Tape</span><b>' + esc(String(dataDashTapeCount())) + " deals</b></div>"
         + '<div class="data-tile"><span>Book as of</span><b>' + esc(dataDashAsOf()) + "</b></div>"
-        + '<div class="data-tile"><span>Firsts held</span><b>' + dataDashFirstsHeld() + "</b></div>"
-        + '<div class="data-tile"><span>Uninsured</span><b>' + dataDashUninsured() + " starters</b></div>"
+        + '<div class="data-tile"><span>1st picks</span><b>' + esc(String(dataDashFirstsHeld())) + "</b></div>"
+        + '<div class="data-tile"><span>Uninsured</span><b>' + esc(String(dataDashUninsured())) + " starters</b></div>"
         + "</div>";
     }
 
@@ -27488,6 +27450,8 @@ const html = `<!DOCTYPE html>
 
     let homeDeskBagMemo = null;
     let homeDeskBagKey = "";
+    let homeDeskScoredMemo = null;
+    let homeDeskScoredMemoKey = "";
     let homeDeskCardMemo = null;
     let homeDeskCardKey = "";
 
@@ -27618,30 +27582,35 @@ const html = `<!DOCTYPE html>
       return best;
     }
 
-    function homeDeskCards() {
-      if (!authSeatId() || !authSession) return [];
-      if (typeof ensureCuffs === "function") ensureCuffs();
-      const mine = String(authSeatId());
-      const key = mine + "\t" + ((calcBook && calcBook.as_of) || "") + "\t"
+    function homeDeskIdeaCacheKey() {
+      const mine = String(authSeatId() || "");
+      return mine + "\t" + ((calcBook && calcBook.as_of) || "") + "\t"
         + ((members && members.length) || 0) + "\t"
         + ((seatDirection && seatDirection.as_of) || "") + "\t"
         + ((peBook && peBook.as_of) || "") + "\t"
         + ((cuffs && cuffs.as_of) || "") + "\t"
         + ((projectedFinishBook && projectedFinishBook.as_of) || "") + "\t"
         + ((managerArchetypesBook && managerArchetypesBook.as_of) || "");
-      if (homeDeskCardMemo && homeDeskCardKey === key) return homeDeskCardMemo;
+    }
+
+    function homeDeskScoredRows() {
+      if (!authSeatId() || !authSession) return [];
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const key = homeDeskIdeaCacheKey();
+      if (homeDeskScoredMemo && homeDeskScoredMemoKey === key) return homeDeskScoredMemo;
+      const mine = String(authSeatId());
       const seats = (members || []).filter(function (m) { return m && m.user_id; });
       if (seats.length < 2) {
-        homeDeskCardMemo = [];
-        homeDeskCardKey = key;
-        return homeDeskCardMemo;
+        homeDeskScoredMemo = [];
+        homeDeskScoredMemoKey = key;
+        return homeDeskScoredMemo;
       }
       const bags = homeDeskBags();
       const myBag = bags.get(mine) || [];
       if (!myBag.length) {
-        homeDeskCardMemo = [];
-        homeDeskCardKey = key;
-        return homeDeskCardMemo;
+        homeDeskScoredMemo = [];
+        homeDeskScoredMemoKey = key;
+        return homeDeskScoredMemo;
       }
       const nameOf = function (uid) {
         const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
@@ -27674,15 +27643,27 @@ const html = `<!DOCTYPE html>
         }
       }
       scored.sort(function (x, y) { return x.score - y.score; });
+      homeDeskScoredMemo = scored;
+      homeDeskScoredMemoKey = key;
+      return homeDeskScoredMemo;
+    }
+
+    function homeDeskCards() {
+      if (!authSeatId() || !authSession) return [];
+      const key = homeDeskIdeaCacheKey();
+      if (homeDeskCardMemo && homeDeskCardKey === key) return homeDeskCardMemo;
+      const scored = homeDeskScoredRows();
+      const mine = String(authSeatId());
+      const bags = homeDeskBags();
+      const myBag = bags.get(mine) || [];
+      const wants = myBag.length ? homeDeskWants(mine, homeDeskProfile(myBag)) : [];
       const usedB = {};
-      const usedJob = {};
       const picks = [];
       const takeJob = function (want) {
         for (let i = 0; i < scored.length; i++) {
           const row = scored[i];
           if (row.job !== want || usedB[row.b]) continue;
           usedB[row.b] = 1;
-          usedJob[row.job] = 1;
           picks.push(row);
           return;
         }
@@ -33769,17 +33750,7 @@ const html = `<!DOCTYPE html>
       }
       const paneBtn = e.target.closest("[data-data-pane]");
       if (paneBtn) {
-        dataPane = dataDashPaneCanon(paneBtn.getAttribute("data-data-pane"));
-        dataRoom = "overview";
-        dataSet = null;
-        dataHunt = "";
-        dataHuntPos = "";
-        dataSeat = "";
-        dataBlockAddOpen = false;
-        dataDashEdit = false;
-        dataDashLibOpen = false;
-        focusNext = ".screen-h";
-        render();
+        // Moves / League / More panes are retired — ignore leftover markup.
         return;
       }
       const dirSeatBtn = e.target.closest("[data-dir-seat]");
@@ -35649,7 +35620,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v341-season-arcs-expand")
+  || !swSrc.includes("chuckle-shell-v342-dashboard-review")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -37134,9 +37105,11 @@ if (!inline.includes("function dataDashHtml(")
   }
   if (!fnSrc("dataDashHtml").includes('data-dash-open="trade_helper"')
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_helper")')
-    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(3, 0, "season_arcs")')
-    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(Math.min(3, src.length), 0, "season_arcs")')) {
-    throw new Error("Your board must surface Trade helper + force-pin Season arcs on saved dynasty boards");
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(softTop, 0, "season_arcs")')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(Math.min(3, src.length), 0, "season_arcs")')
+    || !fnSrc("dataDashMigrateMyPicks").includes("softDrop")
+    || fnSrc("dataDashMigrateMyPicks").includes('src[src.length - 1] = "trade_helper"')) {
+    throw new Error("Your board must surface Trade helper + soft-pin Season arcs on saved dynasty boards");
   }
   if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
     throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");
@@ -37221,7 +37194,16 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes('placeholder="Search for player or trade partner"')
     || inline.includes("Travis Etienne or TipsUp")
     || !inline.includes('data-trade-helper-seed="')
-    || !inline.includes('closest("[data-trade-helper-seed]")')) {
+    || !inline.includes('closest("[data-trade-helper-seed]")')
+    || !inline.includes("function homeDeskScoredRows(")
+    || !fnSrc("tradeHelperKickstartCards").includes("homeDeskScoredRows(")
+    || fnSrc("tradeHelperKickstartCards").includes('homeDeskTalk(myBag, theirBag, "")')
+    || !fnSrc("dataDashMigrateMyPicks").includes("softDrop")
+    || fnSrc("dataDashMigrateMyPicks").includes("src[src.length - 1] = \"trade_helper\"")
+    || !inline.includes("Array.isArray(membersRaw)")
+    || !fnSrc("dataDashUninsured").includes("rows[i] && !rows[i].cuff_owned")
+    || !fnSrc("dataDashHead").includes("esc(String(fig")
+    || !inline.includes("dataDashBandHitsCache")) {
     throw new Error("Trade helper must ship kickstart ideas and a plain search placeholder");
   }
   if (!inline.includes("function loadSeatDataDash(")
@@ -38971,9 +38953,11 @@ if (!inline.includes("function homeDeskProfile(") || !inline.includes("function 
   || fnSrc("homeDeskHtml").includes("Open the calculator")
   || !fnSrc("homeDeskHtml").includes("authSession")
   || !fnSrc("homeDeskCards").includes("authSession")
-  || !fnSrc("homeDeskCards").includes("homeDeskTalk(myBag, theirBag, want")
+  || !fnSrc("homeDeskScoredRows").includes("homeDeskTalk(myBag, theirBag, want")
+  || !fnSrc("homeDeskScoredRows").includes("homeDeskWants(")
+  || !fnSrc("homeDeskCards").includes("homeDeskScoredRows(")
   || !fnSrc("homeDeskCards").includes("homeDeskWants(")
-  || fnSrc("homeDeskCards").includes("for (let j = i + 1")) {
+  || fnSrc("homeDeskScoredRows").includes("for (let j = i + 1")) {
   throw new Error("Team Ideas must be first-person; dashboard copy says team, not bag");
 }
 if (!inline.includes("async function openLeagueDashboard(")

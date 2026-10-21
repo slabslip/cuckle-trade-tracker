@@ -4482,7 +4482,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "managerIntel20261021030000";
+    const DATA_V = "managerIntel20261021040000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5113,7 +5113,8 @@ const html = `<!DOCTYPE html>
       return canon === "season_place" || canon === "week_scores" || canon === "firsts_held"
         || canon === "vs_you" || canon === "seat_draft" || canon === "forever"
         || canon === "homesteaders" || canon === "least_traded" || canon === "passed_around"
-        || canon === "past_champions";
+        || canon === "past_champions" || canon === "projected_finish"
+        || canon === "season_arcs" || canon === "manager_archetypes";
     }
 
     function dataListPickSlice(items, slice, who) {
@@ -8288,7 +8289,7 @@ const html = `<!DOCTYPE html>
             + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
             + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
             + "</div>"
-            + '<div class="margin">' + esc(r.metric || "—") + "</div></div></div>';
+            + '<div class="margin">' + esc(r.metric || "—") + "</div></div></div>";
         });
       }
       return "";

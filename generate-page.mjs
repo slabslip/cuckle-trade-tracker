@@ -3244,6 +3244,15 @@ const html = `<!DOCTYPE html>
     }
     .cuffs-intel select.cuffs-team-sel:focus-visible,
     .cuffs-intel input.cuffs-q:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .trade-helper-search { display: grid; gap: 6px; margin: 0 0 10px; }
+    .trade-helper-search .cuffs-q { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px;
+      color: var(--text); background: var(--card); border: 1px solid var(--line);
+      border-radius: 10px; min-height: 36px; padding: 6px 10px; }
+    .trade-helper-search .cuffs-q:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .trade-helper-target { margin: 0 0 10px; }
+    .trade-helper-verdict { margin: 6px 0 0; font-size: 0.9rem; }
+    .trade-helper-flags { margin: 0 0 12px; padding-left: 1.1rem; color: var(--muted); font-size: 0.8125rem; }
+    .trade-helper-flags li { margin: 0 0 4px; }
     .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
     .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
     button.pick-intel-row {
@@ -4784,7 +4793,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "projFinishMcDash20261021";
+    const DATA_V = "tradeHelper20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4830,6 +4839,8 @@ const html = `<!DOCTYPE html>
     let dataHuntPos = "";
     let dataSeat = "";
     let dataBlockAddOpen = false;
+    let tradeHelperQ = "";
+    let tradeHelperTargetId = "";
     let teamHomeEdit = false;
     let teamHomeLayout = null;
     let seatDirection = null;
@@ -4874,7 +4885,7 @@ const html = `<!DOCTYPE html>
       "stash_young", "draft_board", "held_picks", "widest_clock", "seat_aging", "seat_run",
       "firsts_held", "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
-      "fill_holes", "move_extras", "my_block", "league_block", "block_fits",
+      "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -4894,6 +4905,7 @@ const html = `<!DOCTYPE html>
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
     const DATA_REPORTS = [
+      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player you want. Build an offer, or see better / more tradeable options." },
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Get book, Dart to Star by color." },
       { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Give book, Dart to Star by color." },
       { id: "poach_cuffs", lab: "Poach cuffs", desk: "cuffs", group: "deal", size: "full", why: "Cuffs you own that insure another starter." },
@@ -12446,6 +12458,8 @@ const html = `<!DOCTYPE html>
       dataHuntPos = "";
       dataSeat = "";
       dataBlockAddOpen = false;
+      tradeHelperQ = "";
+      tradeHelperTargetId = "";
     }
 
     function dataDashRoomCanon(id) {
@@ -12913,7 +12927,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashIsHunt(id) {
-      return id === "fill_holes" || id === "move_extras" || id === "poach_cuffs"
+      return id === "trade_helper" || id === "fill_holes" || id === "move_extras" || id === "poach_cuffs"
         || id === "stash_young" || id === "available_cuffs" || id === "my_block"
         || id === "league_block" || id === "block_fits";
     }
@@ -14416,10 +14430,11 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashHuntEmpty(id) {
-      if (!authSeatId() && (id === "fill_holes" || id === "move_extras" || id === "poach_cuffs"
-        || id === "my_block" || id === "block_fits")) {
+      if (!authSeatId() && (id === "trade_helper" || id === "fill_holes" || id === "move_extras"
+        || id === "poach_cuffs" || id === "my_block" || id === "block_fits")) {
         return "Claim your team to see this";
       }
+      if (id === "trade_helper") return "Search a player you want — build an offer or see better options";
       if (id === "fill_holes") return "No Get that both sides will take";
       if (id === "move_extras") return "No Give that both sides will take";
       if (id === "poach_cuffs") return "You hold no cuff on another starter";
@@ -14466,6 +14481,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashHuntRows(id) {
+      if (id === "trade_helper") return [];
       const mine = authSeatId() ? String(authSeatId()) : "";
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
       const myBag = mine ? (bags.get(mine) || []) : [];
@@ -14654,12 +14670,16 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashHuntPeekRows(id) {
+      if (id === "trade_helper") return [];
       if (id === "move_extras") return dataDashBookRows("give", 8);
       if (id === "fill_holes") return dataDashBookRows("get", 8);
       return dataDashHuntRows(id).slice(0, 3);
     }
 
     function dataDashHuntPeekHtml(id) {
+      if (id === "trade_helper") {
+        return '<span class="data-tile-sub">Search a target · offer + alternatives</span>';
+      }
       const rows = dataDashHuntPeekRows(id);
       if (!rows.length) return '<span class="data-tile-sub">' + esc(dataDashHuntEmpty(id)) + "</span>";
       return '<div class="data-tile-peek">' + rows.map(function (r) {
@@ -14668,6 +14688,326 @@ const html = `<!DOCTYPE html>
           + '<span class="data-xrow-meta">' + esc((r.themName || "") + " · " + (r.why || "")) + "</span>"
           + "</div></div>";
       }).join("") + "</div>";
+    }
+
+    function tradeHelperAssetById(id) {
+      if (!id || !calcBook) return null;
+      const all = (calcBook.players || []).concat(calcBook.picks || []);
+      for (let i = 0; i < all.length; i++) {
+        if (all[i] && String(all[i].id) === String(id)) return all[i];
+      }
+      return null;
+    }
+
+    function tradeHelperSearchHits(q, limit) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const needle = String(q || "").trim().toLowerCase();
+      if (needle.length < 2) return [];
+      const book = calcBook || { players: [], picks: [] };
+      const pool = (book.players || []).filter(function (a) {
+        if (!a || !a.id || a.value == null) return false;
+        if (mine && String(a.owner_id) === mine) return false;
+        if (typeof calcAssetNeedle === "function") return calcAssetNeedle(a, needle);
+        const blob = [a.name, a.pos, a.team, a.owner].join(" ").toLowerCase();
+        return blob.indexOf(needle) >= 0;
+      });
+      pool.sort(function (a, b) {
+        const an = String(a.name || "").toLowerCase();
+        const bn = String(b.name || "").toLowerCase();
+        const ap = an.indexOf(needle) === 0 ? 0 : 1;
+        const bp = bn.indexOf(needle) === 0 ? 0 : 1;
+        return ap - bp || calcValueNum(b) - calcValueNum(a);
+      });
+      return pool.slice(0, limit || 12);
+    }
+
+    function tradeHelperLegNames(legs) {
+      return (legs || []).map(function (a) {
+        return (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name || "?";
+      }).join(" + ");
+    }
+
+    function tradeHelperPackages(target) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      if (!mine || !target || !target.owner_id) return [];
+      const them = String(target.owner_id);
+      if (them === mine) return [];
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = (bags.get(mine) || []).slice();
+      const theirDir = typeof seatDirOf === "function" ? seatDirOf(them) : null;
+      const tv = calcValueNum(target);
+      if (tv <= 0) return [];
+      const out = [];
+      const pushOffer = function (legsA, kind, note) {
+        if (!legsA || !legsA.length) return;
+        if (typeof homeDeskTheyAccept === "function" && !homeDeskTheyAccept(theirDir, legsA, myBag)) return;
+        const legsB = [target];
+        const rec = (typeof calcReceiveTotals === "function")
+          ? calcReceiveTotals(legsA, legsB, mine, them)
+          : { gap: Math.abs(legsA.reduce(function (s, x) { return s + calcValueNum(x); }, 0) - tv), rel: 0 };
+        const send = legsA.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
+        if (send < 900) return;
+        const gap = Number(rec.gap) || 0;
+        const rel = Number(rec.rel) || 0;
+        if (rel > 0.22 && gap > 900) return;
+        out.push({
+          kind: kind,
+          legsA: legsA,
+          legsB: legsB,
+          sendA: legsA.map(function (x) { return x.id; }).join(","),
+          sendB: target.id,
+          themId: them,
+          gap: gap,
+          rel: rel,
+          note: note || "",
+          title: tradeHelperLegNames(legsA) + "  →  " + tradeHelperLegNames(legsB),
+          score: gap + (kind === "2for1" ? 40 : 0),
+        });
+      };
+      // 1-for-1 near value
+      for (let i = 0; i < myBag.length; i++) {
+        const a = myBag[i];
+        const v = calcValueNum(a);
+        if (v < 900) continue;
+        const ratio = v / tv;
+        if (ratio < 0.72 || ratio > 1.35) continue;
+        pushOffer([a], "1for1", ratio >= 0.95 && ratio <= 1.05
+          ? "Near even on the book"
+          : (v > tv ? "Slight overpay — may get it done" : "Slight under — may need a sweetener"));
+      }
+      // 2-for-1: two of mine ≈ target
+      const pool = myBag.filter(function (a) { return calcValueNum(a) >= 700; }).slice(0, 10);
+      for (let i = 0; i < pool.length; i++) {
+        for (let j = i + 1; j < pool.length; j++) {
+          const sum = calcValueNum(pool[i]) + calcValueNum(pool[j]);
+          const ratio = sum / tv;
+          if (ratio < 0.85 || ratio > 1.28) continue;
+          pushOffer([pool[i], pool[j]], "2for1", "Two-for-one package near book value");
+        }
+      }
+      out.sort(function (a, b) { return a.score - b.score; });
+      const seen = {};
+      const uniq = [];
+      for (let i = 0; i < out.length; i++) {
+        const k = out[i].sendA + "|" + out[i].kind;
+        if (seen[k]) continue;
+        seen[k] = true;
+        uniq.push(out[i]);
+        if (uniq.length >= 5) break;
+      }
+      return uniq;
+    }
+
+    function tradeHelperAlternatives(target) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      if (!target) return [];
+      const pos = String(target.pos || "").toUpperCase();
+      if (!pos || pos === "PICK") return [];
+      const tv = calcValueNum(target);
+      const book = calcBook || { players: [] };
+      const rows = [];
+      for (let i = 0; i < (book.players || []).length; i++) {
+        const a = book.players[i];
+        if (!a || !a.id || a.id === target.id) continue;
+        if (String(a.pos || "").toUpperCase() !== pos) continue;
+        if (mine && String(a.owner_id) === mine) continue;
+        const v = calcValueNum(a);
+        if (v < 900) continue;
+        const ratio = v / Math.max(1, tv);
+        if (ratio < 0.62 || ratio > 1.45) continue;
+        const ownerId = String(a.owner_id || "");
+        const dir = ownerId && typeof seatDirOf === "function" ? seatDirOf(ownerId) : null;
+        const proj = ownerId && typeof projSeatOf === "function" ? projSeatOf(ownerId) : null;
+        let score = Math.abs(v - tv);
+        const why = [];
+        if (a.injury) {
+          score += 180;
+          why.push("hurt (" + a.injury + ")");
+        }
+        if (target.injury && !a.injury) {
+          score -= 220;
+          why.push("healthier than " + (target.name || "target"));
+        }
+        const age = Number(a.age);
+        const tAge = Number(target.age);
+        if (Number.isFinite(age) && Number.isFinite(tAge) && age + 1.5 < tAge) {
+          score -= 120;
+          why.push("younger");
+        }
+        if (proj && proj.band === "Early") {
+          score -= 160;
+          why.push((a.owner || "them") + " projects Early — more seller");
+        } else if (proj && proj.band === "Late") {
+          score += 80;
+          why.push((a.owner || "them") + " is win-now — tighter");
+        }
+        if (dir && (dir.label === "Rebuild" || dir.label === "Hard rebuild")) {
+          score -= 100;
+          why.push(dir.label.toLowerCase() + " seat");
+        }
+        if (dir && dir.label === "Win-now" && String(a.roster_slot || "") === "starter") {
+          score += 90;
+        }
+        if (!why.length) why.push("same pos · near book value");
+        rows.push({
+          asset: a,
+          score: score,
+          why: why.slice(0, 2).join(" · "),
+          themId: ownerId,
+          themName: a.owner || "",
+        });
+      }
+      rows.sort(function (a, b) { return a.score - b.score; });
+      return rows.slice(0, 6);
+    }
+
+    function tradeHelperAnalysis(target) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = mine ? (bags.get(mine) || []) : [];
+      const myProf = typeof homeDeskProfile === "function" ? homeDeskProfile(myBag) : null;
+      const themId = target ? String(target.owner_id || "") : "";
+      const theirDir = themId && typeof seatDirOf === "function" ? seatDirOf(themId) : null;
+      const theirProj = themId && typeof projSeatOf === "function" ? projSeatOf(themId) : null;
+      const theirArch = themId && typeof archSeatOf === "function" ? archSeatOf(themId) : null;
+      const pos = String((target && target.pos) || "").toUpperCase();
+      const needPos = !!(myProf && myProf.holes && myProf.holes.indexOf(pos) >= 0);
+      const thinPos = !!(myProf && myProf.thin && myProf.thin.indexOf(pos) >= 0);
+      const flags = [];
+      if (needPos) flags.push("You look thin at " + pos + " — fair hunt.");
+      else if (thinPos) flags.push("You could use " + pos + " depth.");
+      else if (pos) flags.push("Not a clear " + pos + " hole on your bag — upgrade only if the price is right.");
+      if (target && target.injury) {
+        flags.push((target.name || "Target") + " is on " + target.injury
+          + " — price the downtime or pivot.");
+      }
+      if (theirDir && theirDir.label) {
+        const sell = (theirDir.sell || []).join("/");
+        flags.push((target.owner || "Them") + " is " + theirDir.label
+          + (sell ? (" · sells " + sell) : "")
+          + ((theirDir.buy && theirDir.buy.length) ? (" · buys " + theirDir.buy.join("/")) : ""));
+      }
+      if (theirProj) {
+        flags.push((target.owner || "Them") + " expected "
+          + (typeof nth === "function" ? nth(theirProj.proj_finish) : ("#" + theirProj.proj_finish))
+          + (theirProj.band ? (" · " + theirProj.band + " pick") : ""));
+      }
+      if (theirArch && theirArch.lab) flags.push("Manager type: " + theirArch.lab);
+      const packages = tradeHelperPackages(target);
+      const alts = tradeHelperAlternatives(target);
+      let verdict = "Build an offer if the path band fits; otherwise pivot.";
+      if (target && target.injury && alts.length) {
+        verdict = "Hurt target — weigh healthier same-pos options before you pay full freight.";
+      } else if (!packages.length && alts.length) {
+        verdict = "Hard to even this on your bag — look at alternatives first.";
+      } else if (packages.length && needPos) {
+        verdict = "Solid need fit — lead with the closest even package.";
+      } else if (theirProj && theirProj.band === "Late" && target && !target.injury) {
+        verdict = "Win-now seller will want a real piece — don’t lowball.";
+      }
+      return {
+        target: target,
+        flags: flags,
+        verdict: verdict,
+        packages: packages,
+        alts: alts,
+        needPos: needPos,
+      };
+    }
+
+    function dataDashTradeHelperHtml() {
+      const spec = dataDashById("trade_helper");
+      if (!spec) return "";
+      if (!authSeatId()) {
+        return '<section class="data-dash trade-helper" aria-label="Trade helper">'
+          + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
+          + '<div class="tile-share-row"><h2 class="screen-h" tabindex="-1">Trade helper</h2></div>'
+          + '<p class="data-hint">Claim your team to search targets and build offers.</p>'
+          + "</section>";
+      }
+      const target = tradeHelperTargetId ? tradeHelperAssetById(tradeHelperTargetId) : null;
+      const hits = (!target && tradeHelperQ.trim().length >= 2)
+        ? tradeHelperSearchHits(tradeHelperQ, 12)
+        : [];
+      let body = "";
+      if (!target) {
+        body += '<label class="trade-helper-search">'
+          + '<span class="data-dash-sub">Player you want</span>'
+          + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="e.g. Travis Etienne or TipsUp RB…"'
+          + ' value="' + esc(tradeHelperQ) + '" autocomplete="off" /></label>';
+        if (tradeHelperQ.trim().length >= 2 && !hits.length) {
+          body += '<p class="data-hint">No other-seat players match that search.</p>';
+        } else if (hits.length) {
+          body += hits.map(function (a) {
+            const name = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
+            const bits = [a.pos, a.team, a.owner, a.injury ? ("hurt " + a.injury) : ""]
+              .filter(Boolean).join(" · ");
+            return '<button type="button" class="data-xrow" data-trade-helper-pick="' + esc(a.id) + '">'
+              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name) + "</span>"
+              + '<span class="data-xrow-meta">' + esc(bits) + "</span></div></button>";
+          }).join("");
+        } else {
+          body += '<p class="data-hint">' + esc(dataDashHuntEmpty("trade_helper")) + "</p>";
+        }
+      } else {
+        const name = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name) || target.name;
+        const anal = tradeHelperAnalysis(target);
+        const bits = [target.pos, target.team, target.owner,
+          target.injury ? ("hurt " + target.injury) : "",
+          target.roster_slot || ""].filter(Boolean).join(" · ");
+        body += '<p class="caption"><button type="button" class="chip" data-trade-helper-clear="1">← Other player</button></p>'
+          + '<div class="trade-helper-target">'
+          + '<h3 class="ds-lists-h">' + esc(name) + "</h3>"
+          + '<p class="data-dash-sub">' + esc(bits) + "</p>"
+          + '<p class="trade-helper-verdict">' + esc(anal.verdict) + "</p>"
+          + "</div>";
+        if (anal.flags.length) {
+          body += '<ul class="trade-helper-flags">'
+            + anal.flags.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("")
+            + "</ul>";
+        }
+        body += '<h3 class="ds-lists-h">Offer ideas</h3>';
+        if (!anal.packages.length) {
+          body += '<p class="data-hint">No clean package on your bag that both sides are likely to take. Check alternatives.</p>';
+        } else {
+          body += anal.packages.map(function (p) {
+            return '<button type="button" class="data-xrow" data-dash-fit="1"'
+              + ' data-fit-them="' + esc(p.themId) + '"'
+              + ' data-fit-a="' + esc(p.sendA) + '"'
+              + ' data-fit-b="' + esc(p.sendB) + '">'
+              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(p.title) + "</span>"
+              + '<span class="data-xrow-meta">' + esc(p.kind === "2for1" ? "2-for-1" : "1-for-1")
+              + (p.note ? (" · " + p.note) : "") + "</span>"
+              + '<span class="data-hunt-why">Open in calc to tweak the needle</span>'
+              + "</div></button>";
+          }).join("");
+        }
+        body += '<h3 class="ds-lists-h">Maybe look here instead</h3>';
+        if (!anal.alts.length) {
+          body += '<p class="data-hint">No close same-pos alternatives on other seats right now.</p>';
+        } else {
+          body += anal.alts.map(function (row) {
+            const a = row.asset;
+            const an = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
+            const meta = [a.pos, a.team, row.themName, a.injury ? ("hurt " + a.injury) : ""]
+              .filter(Boolean).join(" · ");
+            return '<button type="button" class="data-xrow" data-trade-helper-pick="' + esc(a.id) + '">'
+              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(an) + "</span>"
+              + '<span class="data-xrow-meta">' + esc(meta) + "</span>"
+              + '<span class="data-hunt-why">' + esc(row.why) + "</span>"
+              + "</div></button>";
+          }).join("");
+        }
+      }
+      return '<section class="data-dash trade-helper" aria-label="Trade helper">'
+        + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
+        + '<div class="tile-share-row">'
+        + '<h2 class="screen-h" tabindex="-1">Trade helper</h2>'
+        + dataTileShareBtn("trade_helper")
+        + "</div>"
+        + '<p class="data-dash-sub">' + esc(spec.why) + "</p>"
+        + body
+        + "</section>";
     }
 
     function dataDashHuntRowHtml(r) {
@@ -14768,10 +15108,18 @@ const html = `<!DOCTYPE html>
       if (typeof calcWipe === "function") calcWipe();
       const mine = authSeatId() ? String(authSeatId()) : "";
       const toLegs = function (raw) {
-        const id = String(raw || "");
-        if (!id || typeof calcLegFromAsset !== "function") return [];
-        const leg = calcLegFromAsset(calcAssetById(id) || dataDashAssetByPid(id));
-        return leg ? [leg] : [];
+        if (typeof calcLegFromAsset !== "function") return [];
+        const parts = String(raw || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+        const legs = [];
+        const seen = {};
+        for (let i = 0; i < parts.length; i++) {
+          const id = parts[i];
+          if (seen[id]) continue;
+          seen[id] = true;
+          const leg = calcLegFromAsset(calcAssetById(id) || dataDashAssetByPid(id));
+          if (leg) legs.push(leg);
+        }
+        return legs;
       };
       calcSeatA = mine;
       calcSeatB = String(themId || "");
@@ -15093,7 +15441,13 @@ const html = `<!DOCTYPE html>
       if (dataDashIsHunt(id)) {
         dataHunt = id;
         dataRoom = "overview";
-        focusNext = ".screen-h";
+        if (id === "trade_helper") {
+          tradeHelperQ = "";
+          tradeHelperTargetId = "";
+          focusNext = "[data-trade-helper-q]";
+        } else {
+          focusNext = ".screen-h";
+        }
         syncUrl();
         render();
         return;
@@ -15515,14 +15869,19 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashPingHtml() {
+      const helperChip = '<p class="caption">'
+        + '<button type="button" class="chip" data-dash-open="trade_helper">Trade helper</button>'
+        + ' Search a player · build an offer · see better options</p>';
       if (!authSeatId()) {
         return '<div class="data-ping">'
+          + helperChip
           + '<div class="data-sec"><div class="data-sec-h">Give</div>'
           + '<p class="data-sec-sub">Pieces you can move, by color.</p></div>'
           + '<div class="data-sec"><div class="data-sec-h">Get</div>'
           + '<p class="data-sec-sub">Pieces they will sell, by color.</p></div></div>';
       }
       return '<div class="data-ping">'
+        + helperChip
         + dataDashPingList("move_extras", "Give", "Pieces you can move, by color.")
         + dataDashPingList("fill_holes", "Get", "Pieces they will sell, by color.")
         + "</div>";
@@ -15555,6 +15914,7 @@ const html = `<!DOCTYPE html>
           + renderReceiptPickTicket(receiptPickKey)
           + "</section>";
       }
+      if (dataHunt === "trade_helper") return dataDashTradeHelperHtml();
       if (dataHunt && dataDashById(dataHunt)) return dataDashHuntPageHtml(dataHunt);
       if (dataSeat) return dataDashSeatPageHtml(dataSeat);
       if (receiptWhoList) return receiptWhoListHtml(receiptWhoList);
@@ -32896,9 +33256,26 @@ const html = `<!DOCTYPE html>
         dataHuntPos = "";
         dataSeat = "";
         dataBlockAddOpen = false;
+        tradeHelperQ = "";
+        tradeHelperTargetId = "";
         dataRoom = "overview";
         dataPane = "ping";
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const tradeHelperClear = e.target.closest("[data-trade-helper-clear]");
+      if (tradeHelperClear) {
+        tradeHelperTargetId = "";
+        focusNext = "[data-trade-helper-q]";
+        render();
+        return;
+      }
+      const tradeHelperPick = e.target.closest("[data-trade-helper-pick]");
+      if (tradeHelperPick) {
+        tradeHelperTargetId = tradeHelperPick.getAttribute("data-trade-helper-pick") || "";
+        tradeHelperQ = "";
+        focusNext = ".trade-helper-target .ds-lists-h, .screen-h";
         render();
         return;
       }
@@ -34477,6 +34854,20 @@ const html = `<!DOCTYPE html>
         }
         return;
       }
+      const tradeHelperQBox = e.target.closest("[data-trade-helper-q]");
+      if (tradeHelperQBox) {
+        tradeHelperQ = tradeHelperQBox.value;
+        tradeHelperTargetId = "";
+        const start = tradeHelperQBox.selectionStart;
+        const end = tradeHelperQBox.selectionEnd;
+        render();
+        const back = document.querySelector("#app [data-trade-helper-q]");
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
+        return;
+      }
       const tapePlayerBox = e.target.closest("[data-tape-player-q]");
       if (!tapePlayerBox) return;
       tapePlayerQ = tapePlayerBox.value;
@@ -34781,7 +35172,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v331-mc-dash")
+  || !swSrc.includes("chuckle-shell-v332-trade-helper")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36210,16 +36601,16 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 43 || uniq.size !== 43) {
-    throw new Error("DATA_REPORTS must hold exactly 43 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 44 || uniq.size !== 44) {
+    throw new Error("DATA_REPORTS must hold exactly 44 unique reports, found " + reportIds.length);
   }
   if (!uniq.has("career_avg") || !uniq.has("points_king") || !uniq.has("contender_rate") || !uniq.has("sacko")
     || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
     || !uniq.has("pot_net") || !uniq.has("projected_finish") || !uniq.has("season_place")
-    || !uniq.has("season_arcs") || !uniq.has("manager_archetypes")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, and Manager type");
+    || !uniq.has("season_arcs") || !uniq.has("manager_archetypes") || !uniq.has("trade_helper")) {
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, and Trade helper");
   }
-  const needIds = ["fill_holes", "move_extras", "poach_cuffs", "stash_young",
+  const needIds = ["trade_helper", "fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
   if (needIds.some((id) => !uniq.has(id))) {
     throw new Error("DATA_REPORTS must include Deal hunts and the trade block");
@@ -36321,6 +36712,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function dataDashHuntPeekHtml(")
     || !inline.includes("function dataDashOpenCalc(")
     || !inline.includes("function dataDashHuntPageHtml(")
+    || !inline.includes("function dataDashTradeHelperHtml(")
+    || !inline.includes("function tradeHelperAnalysis(")
+    || !inline.includes('id: "trade_helper"')
+    || !inline.includes("data-trade-helper-q")
     || fnSrc("dataDashHuntPeekHtml").includes("calcFmt(")
     || fnSrc("dataDashHuntPeekHtml").includes("calcValueNum(")) {
     throw new Error("Deal hunts must peek player + reason and open calc first-person");

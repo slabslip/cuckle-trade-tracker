@@ -66,9 +66,23 @@ function dateline(asOf, leagueName) {
   return days[d.getUTCDay()] + " " + months[d.getUTCMonth()] + " " + d.getUTCDate() + " · " + name;
 }
 
-function ledeFor(trades, wire) {
-  const nT = trades.length;
-  const nW = wire.length;
+function ledeFor(trades, wire, out, ir) {
+  const nT = (trades || []).length;
+  const nW = (wire || []).length;
+  // Morning paper: name Sunday starters who flipped Out / IR when the tape is quiet.
+  const hurt = []
+    .concat(out || [])
+    .concat(ir || [])
+    .filter(function (p) { return p && p.slot === "starter" && p.name; });
+  if (!nT && hurt.length) {
+    const bits = hurt.slice(0, 2).map(function (p) {
+      return p.name + (p.status === "IR" ? " IR" : " Out");
+    });
+    const more = hurt.length > 2 ? (" · +" + (hurt.length - 2) + " starters") : "";
+    const core = bits.join(" · ") + more;
+    if (nW) return core + " · wire moved";
+    return core;
+  }
   if (nT === 1 && nW) return "1 trade · wire moved";
   if (nT > 1 && nW) return nT + " trades · wire moved";
   if (nT === 1) return "1 trade last night";
@@ -432,7 +446,7 @@ function main() {
     league_id: String(leagueId),
     league_name: leagueName,
     dateline: dateline(asOf, leagueName),
-    lede: ledeFor(trades, wire),
+    lede: ledeFor(trades, wire, out, ir),
     trades,
     latest: trades.length ? null : latest,
     wire,

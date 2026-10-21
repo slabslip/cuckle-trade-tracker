@@ -133,7 +133,7 @@ Insight: every win taxes their own Early.
 | Tank 1.01 locked + Late buyers | Shipped |
 | Slow-burn rate chase (no Early shop) | Shipped |
 | `delta_place` movers when race moves | Wired; needs weekly refresh ≠0 |
-| Injury lede on overnight | Next (daily habit plan) |
+| Injury lede on overnight | Shipped — starter Out/IR names when no trades |
 | Manager dossier panel | Phase D |
 | Matchup W-L week ranks (vs PF proxy) | Later if tape lands |
 | Implied pick band on calc | Caption only; never value book |

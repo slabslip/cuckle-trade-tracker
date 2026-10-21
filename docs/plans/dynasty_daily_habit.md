@@ -96,6 +96,8 @@ card is Out / IR only. Trades, wire, meters, and PUP wait on Show all.
 - `1 trade last night`
 - `2 trades last night`
 - `Wire moved · no trades`
+- `Lamar Jackson Out · Tyler Warren Out · +5 starters` (no trades; Sunday starters Out/IR)
+- `… · wire moved` when waivers also fired
 
 **Trades** — named both sides (`A sent X · B sent Y`). If the night is quiet,
 say so, then **Last deal** from the tape so the letter is never empty.

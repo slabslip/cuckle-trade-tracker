@@ -28,7 +28,7 @@ try {
   await page.waitForTimeout(600);
   const home = await page.locator(".overnight-slip").innerText();
   console.log("HOME LETTER\n" + home);
-  if (!/Quiet night|trade last night|Wire moved/i.test(home)) fail("Home letter missing lede");
+  if (!/Quiet night|trade last night|Wire moved|\bOut\b|\bIR\b/i.test(home)) fail("Home letter missing lede");
   if (/Last deal|No trades last night/i.test(home)) fail("Collapsed letter must hide trades / last deal");
   if (!/^OUT\b/m.test(home) || !/^IR\b/m.test(home)) fail("Home letter missing Out / IR bands");
   if (!/DJ Moore/i.test(home) || !/Michael Pittman/i.test(home)) fail("Collapsed Out must lead with Sunday starters");
@@ -141,7 +141,7 @@ try {
   await guestPage.waitForTimeout(600);
   const ticket = await guestPage.locator(".overnight-slip").innerText();
   console.log("PUBLIC LETTER\n" + ticket);
-  if (!/Quiet night|trade last night|Wire moved/i.test(ticket)) fail("Public letter missing lede");
+  if (!/Quiet night|trade last night|Wire moved|\bOut\b|\bIR\b/i.test(ticket)) fail("Public letter missing lede");
   if (/Last deal|No trades last night/i.test(ticket)) fail("Public collapsed letter must hide last deal");
   if (!/^OUT\b/m.test(ticket) || !/^IR\b/m.test(ticket)) fail("Public letter missing Out / IR bands");
   if (!(await guestPage.locator(".receipt-cta").count())) fail("Unsigned overnight ticket missing claim CTA");

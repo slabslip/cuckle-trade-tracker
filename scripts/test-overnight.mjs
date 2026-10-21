@@ -23,6 +23,11 @@ function fnSrc(src, name) {
 need(build.includes("build-overnight.mjs"), "build.mjs must write the overnight letter");
 need(script.includes("trade_tape.json") && script.includes("injury_now.json"),
   "overnight builder must read tape + IR");
+need(script.includes("function ledeFor(trades, wire, out, ir)")
+  || script.includes("function ledeFor(trades, wire, out"),
+  "overnight lede must see Out / IR for the injury morning paper");
+need(script.includes('p.slot === "starter"') && script.includes(" starters"),
+  "injury lede must prefer Sunday starters and +N starters");
 need(script.includes("wireLine") && script.includes("claimed"),
   "wire lines must name who claimed whom");
 need(script.includes("irScore") && script.includes("readUi") && script.includes("calculator.json")

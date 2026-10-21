@@ -4793,7 +4793,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelper20261021";
+    const DATA_V = "tradeHelperBoard20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4850,7 +4850,7 @@ const html = `<!DOCTYPE html>
     const DATA_DOORS = [
       "projected_finish", "my_draft", "firsts_held", "season_arcs",
       "my_trades", "league_trades", "league_draft", "profit_loss",
-      "past_champions", "season_place", "vs_you",
+      "past_champions", "season_place", "trade_helper",
       "week_scores", "manager_archetypes",
     ];
     const DATA_BLOCK_MAX = 8;
@@ -4864,7 +4864,7 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_DEFAULT = [
       "projected_finish", "my_draft", "firsts_held", "season_arcs",
       "my_trades", "league_trades", "league_draft", "profit_loss",
-      "past_champions", "season_place", "vs_you",
+      "past_champions", "season_place", "trade_helper",
       "week_scores", "manager_archetypes",
     ];
     const DATA_DASH_RESEARCH = [
@@ -7434,6 +7434,7 @@ const html = `<!DOCTYPE html>
         playoff_avg: '<path d="M5 18V8l4 3 4-5 4 4v8z"/>',
         pot_net: '<path d="M12 4v16M8 8.5c1.2-1.4 6-1.8 6 1.6 0 3.6-8 2.2-8 5.8 0 3.2 4.6 3.8 8 1.6"/><path d="M4 12h3M17 12h3"/>',
         vs_you: '<circle cx="8" cy="8" r="2.4"/><circle cx="16" cy="8" r="2.4"/><path d="M3.8 18c.8-3 2.8-4.2 4.2-4.2S12 15 12.8 18M11.2 18c.8-3 2.8-4.2 4.2-4.2S20 15 20.2 18"/>',
+        trade_helper: '<path d="M4 8h10l-3-3M14 8l-3 3"/><path d="M20 16H10l3 3M10 16l3-3"/>',
         firsts_held: '<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M8.5 7v10M12 10.5h5"/>',
         week_scores: '<path d="M7 15V7M4.8 9.4L7 7l2.2 2.4"/><path d="M17 9v8M14.8 14.6L17 17l2.2-2.4"/>',
         forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
@@ -12617,6 +12618,11 @@ const html = `<!DOCTYPE html>
         const i = src.indexOf("book_top");
         if (i >= 0) src[i] = "profit_loss";
       }
+      // Trade helper replaces Me vs them on the default board — migrate saved seats.
+      if (src.indexOf("trade_helper") < 0) {
+        const i = src.indexOf("vs_you");
+        if (i >= 0) src[i] = "trade_helper";
+      }
       return dataDashCanon(src);
     }
 
@@ -15382,6 +15388,32 @@ const html = `<!DOCTYPE html>
         openTrade(tx, null, { solo: true });
         return;
       }
+      // Hunts (Trade helper, Give/Get, …) before receipt doors — a hunt can also
+      // sit on DATA_DOORS / Your board without opening as a memory list.
+      if (dataDashIsHunt(id) && dataDashById(id)) {
+        dataDashEdit = false;
+        dataDashLibOpen = false;
+        dataDashSwapId = "";
+        dataSet = null;
+        dataHunt = id;
+        dataHuntPos = "";
+        dataSeat = "";
+        dataBlockAddOpen = false;
+        dataRoom = "overview";
+        receiptWhoList = "";
+        receiptTicket = false;
+        receiptPickKey = "";
+        if (id === "trade_helper") {
+          tradeHelperQ = "";
+          tradeHelperTargetId = "";
+          focusNext = "[data-trade-helper-q]";
+        } else {
+          focusNext = ".screen-h";
+        }
+        syncUrl();
+        render();
+        return;
+      }
       if (receiptIsDoor(id)) {
         receiptWhoList = receiptDoorCanon(id);
         receiptQ = "";
@@ -15438,20 +15470,6 @@ const html = `<!DOCTYPE html>
       dataHuntPos = "";
       dataSeat = "";
       dataBlockAddOpen = false;
-      if (dataDashIsHunt(id)) {
-        dataHunt = id;
-        dataRoom = "overview";
-        if (id === "trade_helper") {
-          tradeHelperQ = "";
-          tradeHelperTargetId = "";
-          focusNext = "[data-trade-helper-q]";
-        } else {
-          focusNext = ".screen-h";
-        }
-        syncUrl();
-        render();
-        return;
-      }
       if (id === "held_picks") {
         if (!authSeatId()) return;
         openDraftDataPage("held");
@@ -33233,9 +33251,10 @@ const html = `<!DOCTYPE html>
         if (dataDashDragDid) { dataDashDragDid = false; return; }
         const dashId = dashOpenBtn.getAttribute("data-dash-open") || "";
         // From league Home, board doors must switch onto League Data or the
-        // portal list never paints (receiptWhoList set while homeTab stays Home).
-        if (!me && typeof receiptIsDoor === "function" && receiptIsDoor(dashId)
-          && homeTabCanon(homeTab) !== "history") {
+        // portal list never paints (receiptWhoList / hunt set while homeTab stays Home).
+        const opensData = (typeof dataDashIsHunt === "function" && dataDashIsHunt(dashId))
+          || (typeof receiptIsDoor === "function" && receiptIsDoor(dashId));
+        if (!me && opensData && homeTabCanon(homeTab) !== "history") {
           setHomeTab("history", { force: true });
         }
         dataDashOpenReport(dashId);
@@ -35172,7 +35191,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v332-trade-helper")
+  || !swSrc.includes("chuckle-shell-v333-trade-helper-board")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36647,6 +36666,9 @@ if (!inline.includes("function dataDashHtml(")
   if (!uniq.has("week_scores") || defIds[11] !== "week_scores") {
     throw new Error("Week scores must be a catalog door and default board tile 12");
   }
+  if (!uniq.has("trade_helper") || defIds[10] !== "trade_helper") {
+    throw new Error("Trade helper must be default board tile 11 (Your board — not Moves)");
+  }
   if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
     throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");
   }
@@ -36716,6 +36738,8 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function tradeHelperAnalysis(")
     || !inline.includes('id: "trade_helper"')
     || !inline.includes("data-trade-helper-q")
+    || !fnSrc("dataDashOpenReport").includes("dataDashIsHunt(id)")
+    || !fnSrc("dataDashMigrateMyPicks").includes('src[i] = "trade_helper"')
     || fnSrc("dataDashHuntPeekHtml").includes("calcFmt(")
     || fnSrc("dataDashHuntPeekHtml").includes("calcValueNum(")) {
     throw new Error("Deal hunts must peek player + reason and open calc first-person");

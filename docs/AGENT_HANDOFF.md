@@ -118,7 +118,8 @@ an explicit Truman ruling that overrides `UI_SDD.md` / `STORE_LAW.md`.
 | — | Title paint on every byline | OPEN Q14 | Parked until Truman looks at 390 |
 
 Full agent + PR inventory: [`AGENT_CATALOG.md`](AGENT_CATALOG.md).  
-Build order detail: [`plans/MASTER_PLAN.md`](plans/MASTER_PLAN.md).
+Build order detail: [`plans/MASTER_PLAN.md`](plans/MASTER_PLAN.md).  
+Manager race + arcs + archetypes spine: [`plans/manager_intel_spine.md`](plans/manager_intel_spine.md).
 
 ---
 

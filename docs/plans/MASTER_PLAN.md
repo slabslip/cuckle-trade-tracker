@@ -23,31 +23,36 @@ Never let opinion (votes, news, ledger) write the book.
 
 | # | Work | Why | Spec / source |
 | --- | --- | --- | --- |
-| 1 | **Overnight lede: yesterday’s injury / tape delta** | Plan’s explicit next cut; makes the letter a morning habit | [`dynasty_daily_habit.md`](./dynasty_daily_habit.md) |
-| 2 | **Public memory receipts** (`shareProofNow`, `?r=trade&t=`) | Group-text proof without Sign-in wall | [`MEMORY_SDD.md`](../MEMORY_SDD.md), OPEN Q17 |
-| 3 | **Book integrity after any value touch** | Standing checks in PRODUCT §5 | `check-value-feed.mjs`, `apply-value-adjust.mjs` |
+| 1 | **Manager intel Phase A** — wire Projected finish into firsts / Team Ideas / overnight race movers | Race spine already shipped (#172); highest leverage without new books | [`manager_intel_spine.md`](./manager_intel_spine.md), [`projected_finish_leverage.md`](./projected_finish_leverage.md) |
+| 2 | **Overnight lede: yesterday’s injury / tape delta** | Plan’s explicit next cut; makes the letter a morning habit | [`dynasty_daily_habit.md`](./dynasty_daily_habit.md) |
+| 3 | **Public memory receipts** (`shareProofNow`, `?r=trade&t=`) | Group-text proof without Sign-in wall | [`MEMORY_SDD.md`](../MEMORY_SDD.md), OPEN Q17 |
+| 4 | **Book integrity after any value touch** | Standing checks in PRODUCT §5 | `check-value-feed.mjs`, `apply-value-adjust.mjs` |
 
-### Next (port or finish agent leftovers)
+### Next (manager spine + agent leftovers)
 
 | # | Work | Why | Caution |
 | --- | --- | --- | --- |
-| 4 | **Home “Needs you” / pulse / standings peek** | Best IA idea from PR #108 | Re-implement on **Home**, not four top tabs. Close or rewrite #108. |
-| 5 | **High↔low sort toggle** | Built on `cursor/high-low-sort-toggle-8d2b` | Rebase onto `main`; open a fresh PR |
-| 6 | **Reconcile draft PR #43** (seat auth) | Early phase-1; most of app path is on `main` | Diff vs `main`, close if superseded |
-| 7 | **Vote persistence docs PR #14** | Recently touched | Confirm not duplicate of `db/` + `SUPABASE_SETUP.md` on `main` |
+| 5 | **Season arcs book + door** (slow start → finish strong; early bubble trades) | Past-season PF weeks + trades already on disk | Keep out of value book; RS arcs only |
+| 6 | **Manager archetypes + Proxy contender** | Incentive: compete so someone else’s first you own stays Early | 3-season floor when possible |
+| 7 | **Home “Needs you” / pulse / standings peek** | Best IA idea from PR #108 | Re-implement on **Home**, not four top tabs. Close or rewrite #108. |
+| 8 | **High↔low sort toggle** | Built on `cursor/high-low-sort-toggle-8d2b` | Rebase onto `main`; open a fresh PR |
+| 9 | **Reconcile draft PR #43** (seat auth) | Early phase-1; most of app path is on `main` | Diff vs `main`, close if superseded |
+| 10 | **Vote persistence docs PR #14** | Recently touched | Confirm not duplicate of `db/` + `SUPABASE_SETUP.md` on `main` |
 
 ### Later (planned, locked, or seasonal)
 
 | # | Work | Spec |
 | --- | --- | --- |
-| 8 | Ledger join / more exposure (v1.1) | [`ledger_join_exposure.md`](./ledger_join_exposure.md) |
-| 9 | Note → Finish → Send (Shortcut drafts + SMS) | [`ledger_compose_and_alerts.md`](./ledger_compose_and_alerts.md) — locked, do not reopen decisions |
-| 10 | Week-score award bands → Fresh 15 grind | [`awards_titles_emblems.md`](./awards_titles_emblems.md) |
-| 11 | Comeback Dynasty (last → chip in 3y) | Needs multi-year place history |
-| 12 | Title paint on every byline | OPEN Q14 — wait for Truman on 390 |
-| 13 | GM/redraft career cluster | Open PRs #137, #147, #149, #142 (stale) |
-| 14 | Store / TestFlight polish | [`STORE_LAW.md`](../STORE_LAW.md), [`STORE_OPS.md`](../STORE_OPS.md) |
-| 15 | Custom domain cutover | [`CUSTOM_DOMAIN.md`](../CUSTOM_DOMAIN.md) |
+| 11 | Manager dossier on team home (Phase D) | [`manager_intel_spine.md`](./manager_intel_spine.md) |
+| 12 | Optional intel-agent copy over books (Phase E) | Eval-gated; never writes needle |
+| 13 | Ledger join / more exposure (v1.1) | [`ledger_join_exposure.md`](./ledger_join_exposure.md) |
+| 14 | Note → Finish → Send (Shortcut drafts + SMS) | [`ledger_compose_and_alerts.md`](./ledger_compose_and_alerts.md) — locked, do not reopen decisions |
+| 15 | Week-score award bands → Fresh 15 grind | [`awards_titles_emblems.md`](./awards_titles_emblems.md) |
+| 16 | Comeback Dynasty (last → chip in 3y) | Needs multi-year place history; pairs with season-arcs |
+| 17 | Title paint on every byline | OPEN Q14 — wait for Truman on 390 |
+| 18 | GM/redraft career cluster | Open PRs #137, #147, #149, #142 (stale) |
+| 19 | Store / TestFlight polish | [`STORE_LAW.md`](../STORE_LAW.md), [`STORE_OPS.md`](../STORE_OPS.md) |
+| 20 | Custom domain cutover | [`CUSTOM_DOMAIN.md`](../CUSTOM_DOMAIN.md) |
 
 ### Parked (do not start)
 
@@ -61,10 +66,13 @@ sixth tab, Chart.js, flooring today with `MIN_ACTIVE`, Unicode emoji emblems.
 
 Unless Truman names a different slice:
 
-1. Read [`dynasty_daily_habit.md`](./dynasty_daily_habit.md) §6 “next need cut.”
-2. Implement **yesterday’s injury snap on the overnight letter lede** (delta, not
-   an IR museum), Cuckle dynasty only (`overnightEnabled()`).
-3. Regenerate, bump cache, Design Mode verify, ship loop.
+1. **Manager intel Phase A** — wire `projected-finish.json` into Who has firsts
+   sort/captions, Team Ideas partner weights, and overnight race movers.
+   Spec: [`manager_intel_spine.md`](./manager_intel_spine.md).
+2. Then **Season arcs** book from `weekly_scores` + trades + finishes (slow
+   burn / bubble trader / proxy first).
+3. Overnight injury lede remains the parallel morning-paper cut
+   ([`dynasty_daily_habit.md`](./dynasty_daily_habit.md)).
 4. Only then consider porting PR #108’s “Needs you” content onto Home.
 
 If Truman wants nav/IA instead: start with a written proposal that **keeps**

@@ -11,9 +11,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "tradeHelperKick20261021"')
-  || !gen.includes('const DATA_V = "tradeHelperKick20261021"')
-  || !sw.includes("chuckle-shell-v339-trade-helper-kick")) {
+if (!page.includes('const DATA_V = "tradeHelperSearchTop20261021"')
+  || !gen.includes('const DATA_V = "tradeHelperSearchTop20261021"')
+  || !sw.includes("chuckle-shell-v340-trade-helper-search-top")) {
   fail("trade helper kickstart must bust DATA_V and SW");
 }
 
@@ -34,6 +34,15 @@ for (const need of [
   if (!page.includes(need)) fail("missing: " + need);
 }
 
+const fn = page.indexOf("function dataDashTradeHelperHtml(");
+const next = page.indexOf("\n    function ", fn + 10);
+const body = fn >= 0 ? page.slice(fn, next > fn ? next : fn + 8000) : "";
+const searchAt = body.indexOf('data-trade-helper-q="1"');
+const kickAt = body.indexOf("tradeHelperKickstartHtml()");
+if (searchAt < 0 || kickAt < 0 || searchAt > kickAt) {
+  fail("Trade helper must render search before kickstart ideas");
+}
+
 // Cumulative: prior queue items still present on this branch.
 if (page.includes('lab: "Who has firsts"') || page.includes('data-dash-open="firsts_held"')) {
   fail("Who has firsts must stay off Data");
@@ -44,6 +53,6 @@ if (page.includes("your bag") || page.includes(" · Bag ") || page.includes("Rel
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "tradeHelperKick20261021",
+  DATA_V: "tradeHelperSearchTop20261021",
   also: ["no-firsts-held", "bag-to-team"],
 }));

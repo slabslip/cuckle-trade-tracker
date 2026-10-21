@@ -4482,7 +4482,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "managerIntel20261021060000";
+    const DATA_V = "dashStrategy20261021080000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4535,9 +4535,10 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_MIN = 6;
     const DATA_DASH_MAX = 13;
     const DATA_DOORS = [
-      "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-      "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "manager_archetypes", "season_arcs",
+      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "my_trades", "league_trades", "league_draft", "profit_loss",
+      "past_champions", "season_place", "vs_you",
+      "week_scores", "manager_archetypes",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -4548,9 +4549,10 @@ const html = `<!DOCTYPE html>
       { id: "mega", lab: "Star", color: "red", rank: 4 },
     ];
     const DATA_DASH_DEFAULT = [
-      "my_trades", "league_trades", "my_draft", "league_draft", "profit_loss",
-      "past_champions", "season_place", "projected_finish", "vs_you", "firsts_held",
-      "week_scores", "manager_archetypes", "season_arcs",
+      "projected_finish", "my_draft", "firsts_held", "season_arcs",
+      "my_trades", "league_trades", "league_draft", "profit_loss",
+      "past_champions", "season_place", "vs_you",
+      "week_scores", "manager_archetypes",
     ];
     const DATA_DASH_RESEARCH = [
       "firsts_held", "manager_archetypes", "season_arcs", "passed_around",
@@ -24915,7 +24917,38 @@ const html = `<!DOCTYPE html>
       return "value-adjacent swap";
     }
 
-    function homeDeskMeta(talk, job, themName) {
+    function homeDeskRaceTip(themUid) {
+      if (!themUid) return "";
+      const proj = typeof projSeatOf === "function" ? projSeatOf(themUid) : null;
+      const arch = typeof archSeatOf === "function" ? archSeatOf(themUid) : null;
+      if (arch && arch.archetype === "proxy_contender") {
+        return "Proxy — fighting keeps their held Early Early";
+      }
+      if (arch && arch.archetype === "tank_sculptor") {
+        return "Tank sculptor — their 1st is Early; buy leftovers";
+      }
+      if (arch && arch.archetype === "reload_on_early") {
+        return "Reload on Early — ask for a stud, pay with picks";
+      }
+      if (arch && arch.archetype === "capital_hoarder") {
+        return "Capital hoarder — they have firsts to deal";
+      }
+      if (arch && arch.archetype === "slow_burn") {
+        return "Slow burn — they climb; price Mid pieces higher later";
+      }
+      if (arch && arch.archetype === "fast_fade") {
+        return "Fast fade — do not sell them your Early for a push";
+      }
+      if (proj && proj.band === "Early") {
+        return "Proj Early — origin firsts read 1.0x";
+      }
+      if (proj && proj.band === "Late") {
+        return "Race favorite — sell them aging for Late capital";
+      }
+      return "";
+    }
+
+    function homeDeskMeta(talk, job, themName, themUid) {
       if (!talk) return "Pick the sides";
       const bits = [];
       if (talk.pace) bits.push(talk.pace);
@@ -24924,6 +24957,8 @@ const html = `<!DOCTYPE html>
         if (talk.stack) bits.push(talk.stack);
         if (talk.cuff) bits.push(talk.cuff);
       }
+      const raceTip = homeDeskRaceTip(themUid);
+      if (raceTip) bits.push(raceTip);
       const partner = homeDeskPartnerNote(themName);
       if (partner) bits.push(partner);
       if (talk.book) bits.push(talk.book);
@@ -25159,7 +25194,7 @@ const html = `<!DOCTYPE html>
             + row.talk.legsB.map(homeDeskShortName).join(" + ");
           const job = homeDeskJobLabel(row.job);
           const them = row.nameB || "them";
-          const meta = homeDeskMeta(row.talk, row.job, them);
+          const meta = homeDeskMeta(row.talk, row.job, them, row.b);
           return '<button type="button" class="home-desk-row" data-desk-a="' + esc(row.a) + '"'
             + ' data-desk-b="' + esc(row.b) + '"'
             + (sendA ? ' data-desk-send-a="' + esc(sendA) + '"' : "")
@@ -26847,6 +26882,29 @@ const html = `<!DOCTYPE html>
       return "";
     }
 
+    function homeYouRaceLine() {
+      const uid = authSeatId();
+      if (!uid) return "";
+      const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
+      const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
+      const dir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
+      const bits = [];
+      if (proj) {
+        bits.push("Projected "
+          + (typeof nth === "function" ? nth(proj.proj_finish) : proj.proj_finish)
+          + " · " + (proj.record || "")
+          + " · " + (proj.band || "Mid"));
+      }
+      if (arch && arch.lab) bits.push(arch.lab);
+      if (dir && dir.label) bits.push("Bag " + dir.label);
+      if (!bits.length) return "";
+      return '<p class="caption home-you-race">'
+        + esc(bits.join(" · "))
+        + ' <button type="button" class="chip" data-dash-open="projected_finish">Race</button>'
+        + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Type</button>'
+        + "</p>";
+    }
+
     function homeYouHtml() {
       if (!authSession || !authSeatId()) return "";
       const name = authSeatCanonName() || authSeatName() || "Your team";
@@ -26868,7 +26926,9 @@ const html = `<!DOCTYPE html>
         + '<button type="button" class="home-you-plate" data-home-awards="1" aria-label="Titles and Emblems">'
         + plate
         + "</button>"
-        + "</div></section>";
+        + "</div>"
+        + homeYouRaceLine()
+        + "</section>";
     }
 
     function leagueInProgress() {
@@ -28176,8 +28236,10 @@ const html = `<!DOCTYPE html>
           : "")
         + (function () {
           const arch = me && typeof archSeatOf === "function" ? archSeatOf(me.user_id) : null;
+          const dir = me && typeof seatDirOf === "function" ? seatDirOf(me.user_id) : null;
           if (!arch || !arch.lab) return "";
-          return '<p class="caption">' + esc(arch.lab)
+          const bag = dir && dir.label ? (" · Bag " + dir.label) : "";
+          return '<p class="caption">' + esc(arch.lab) + esc(bag)
             + (arch.why ? (" — " + esc(arch.why)) : "")
             + ' <button type="button" class="chip" data-dash-open="manager_archetypes">Manager types</button></p>';
         })()
@@ -32622,7 +32684,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v291-manager-intel")
+  || !swSrc.includes("chuckle-shell-v292-dash-strategy")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -34025,10 +34087,10 @@ if (!inline.includes("function dataDashHtml(")
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   if (defIds.length !== 13 || defIds.some((id) => !uniq.has(id))
-    || defIds[0] !== "my_trades" || defIds[1] !== "league_trades"
-    || defIds[2] !== "my_draft" || defIds[3] !== "league_draft"
-    || defIds[4] !== "profit_loss") {
-    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles");
+    || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
+    || defIds[2] !== "firsts_held" || defIds[3] !== "season_arcs"
+    || defIds[4] !== "my_trades") {
+    throw new Error("DATA_DASH_DEFAULT must be the 13 door tiles (race/capital top-4)");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
@@ -34046,11 +34108,11 @@ if (!inline.includes("function dataDashHtml(")
   if (reportIds.some((id) => banned.includes(id))) {
     throw new Error("Data library must not include bag totals or Best/Worst 10");
   }
-  if (!uniq.has("week_scores") || defIds[10] !== "week_scores") {
-    throw new Error("Week scores must be a catalog door and default board tile 11");
+  if (!uniq.has("week_scores") || defIds[11] !== "week_scores") {
+    throw new Error("Week scores must be a catalog door and default board tile 12");
   }
-  if (!uniq.has("projected_finish") || defIds[7] !== "projected_finish") {
-    throw new Error("Projected finish must be a catalog door and default board tile 8");
+  if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
+    throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");
   }
   if (!inline.includes("function weekScoreRows(")
     || !inline.includes("function ensureWeekScores(")

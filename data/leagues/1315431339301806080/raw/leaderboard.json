@@ -17,6 +17,23 @@
     }
   },
   {
+    "user_id": "458715702119886848",
+    "name": "KingHenryXXVI",
+    "two_way": 26,
+    "incomplete": 0,
+    "pick_total": 11956,
+    "pick_per_trade": 459.84615384615387,
+    "even_total": 9989.959798310174,
+    "even_per_trade": 384.2292230119298,
+    "style": {
+      "label": "Balanced",
+      "now_share": 0.8228659211691762,
+      "horizon": 672.7307692307693,
+      "sold_picks_for_players": 10,
+      "sold_players_for_picks": 3
+    }
+  },
+  {
     "user_id": "457945712932417536",
     "name": "ChiefGumby",
     "two_way": 38,
@@ -34,31 +51,14 @@
     }
   },
   {
-    "user_id": "458715702119886848",
-    "name": "KingHenryXXVI",
-    "two_way": 26,
-    "incomplete": 0,
-    "pick_total": 11956,
-    "pick_per_trade": 459.84615384615387,
-    "even_total": 9228.959798310174,
-    "even_per_trade": 354.959992242699,
-    "style": {
-      "label": "Balanced",
-      "now_share": 0.8228659211691762,
-      "horizon": 672.7307692307693,
-      "sold_picks_for_players": 10,
-      "sold_players_for_picks": 3
-    }
-  },
-  {
     "user_id": "457779824002330624",
     "name": "SF69erss",
     "two_way": 132,
     "incomplete": 1,
     "pick_total": -5864,
     "pick_per_trade": -44.42424242424242,
-    "even_total": 40199.5464784804,
-    "even_per_trade": 304.54201877636666,
+    "even_total": 39438.5464784804,
+    "even_per_trade": 298.77686726121516,
     "style": {
       "label": "Balanced",
       "now_share": 0.8047290273673507,

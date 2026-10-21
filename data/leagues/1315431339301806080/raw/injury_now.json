@@ -1,11 +1,11 @@
 {
-  "as_of": "2026-10-20",
+  "as_of": "2026-10-21",
   "n": 101,
   "players": {
     "2133": {
       "name": "Davante Adams",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "LAR",
       "pos": "WR"
     },
@@ -264,7 +264,7 @@
     "9502": {
       "name": "Tank Dell",
       "injury_status": "IR",
-      "status": "Inactive",
+      "status": "Active",
       "team": "HOU",
       "pos": "WR"
     },

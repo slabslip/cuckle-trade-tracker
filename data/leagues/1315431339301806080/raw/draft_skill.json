@@ -4214,8 +4214,8 @@
       "drafted_by": "KingHenryXXVI",
       "startup": false,
       "pick_cost": 2238,
-      "player_today": 0,
-      "surplus": -2238,
+      "player_today": 761,
+      "surplus": -1477,
       "flag": null
     },
     {
@@ -7729,8 +7729,8 @@
       "drafted_by": "DarkWingDucks2023",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": 0,
-      "surplus": -1548,
+      "player_today": 345,
+      "surplus": -1203,
       "flag": "last_positive"
     },
     {
@@ -10601,8 +10601,8 @@
       "name": "KingHenryXXVI",
       "used": 24,
       "graded": 23,
-      "surplus": -23752,
-      "per_pick": -1032.695652173913,
+      "surplus": -22991,
+      "per_pick": -999.6086956521739,
       "best": {
         "player": "Justin Jefferson",
         "season": "2020",
@@ -10747,8 +10747,8 @@
       "name": "DarkWingDucks2023",
       "used": 27,
       "graded": 27,
-      "player_today": 12719,
-      "per_pick": 471.0740740740741,
+      "player_today": 13064,
+      "per_pick": 483.85185185185185,
       "best": {
         "player": "Kyler Murray",
         "season": "2019",

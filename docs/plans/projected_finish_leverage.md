@@ -61,6 +61,11 @@ Calculator
 
 ### Build next (from this spine)
 
+Full sequence (icons, arcs, archetypes, proxy-first incentive):
+[`manager_intel_spine.md`](./manager_intel_spine.md).
+
+Phase A (no new book):
+
 1. **Race movers on overnight letter** when `|delta_place| ≥ 1`
 2. **Team Ideas** lines that name Early origins + holders
 3. **Who has firsts** sorted by projected slot

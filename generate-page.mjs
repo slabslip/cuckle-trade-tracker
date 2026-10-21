@@ -4793,7 +4793,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperVisible20261021";
+    const DATA_V = "boardPinsForce20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -12618,8 +12618,41 @@ const html = `<!DOCTYPE html>
         const i = src.indexOf("book_top");
         if (i >= 0) src[i] = "profit_loss";
       }
-      // Dynasty: always pin Trade helper on Your board (saved seats often lack vs_you).
+      // Dynasty: force critical doors onto saved boards (remote seat_data_dash often
+      // predates Season arcs / Trade helper — Home top-4 and Your board stayed blank).
       const dynasty = !(typeof isRedraftLeague === "function" && isRedraftLeague());
+      if (dynasty && dataDashById("season_arcs")) {
+        const arcsAt = src.indexOf("season_arcs");
+        if (arcsAt < 0) {
+          // Default board puts Season arcs in slot 3 (Home top-4).
+          if (src.length < DATA_DASH_MAX) {
+            src.splice(Math.min(3, src.length), 0, "season_arcs");
+          } else {
+            const keepTop = { projected_finish: 1, my_draft: 1, firsts_held: 1 };
+            if (src.length > 3 && !keepTop[src[3]]) {
+              src[3] = "season_arcs";
+            } else {
+              const dropOrder = ["past_champions", "season_place", "league_draft",
+                "league_trades", "week_scores", "manager_archetypes"];
+              let dropped = false;
+              for (let d = 0; d < dropOrder.length; d++) {
+                const di = src.indexOf(dropOrder[d]);
+                if (di >= 4) {
+                  src.splice(di, 1);
+                  src.splice(3, 0, "season_arcs");
+                  dropped = true;
+                  break;
+                }
+              }
+              if (!dropped) src[3] = "season_arcs";
+            }
+          }
+        } else if (arcsAt >= 4) {
+          src.splice(arcsAt, 1);
+          src.splice(3, 0, "season_arcs");
+        }
+      }
+      // Dynasty: always pin Trade helper on Your board (saved seats often lack vs_you).
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
         if (vs >= 0) {
@@ -12709,7 +12742,7 @@ const html = `<!DOCTYPE html>
             dataDashWriteLocal(fresh);
             return fresh;
           }
-          // Persist migrate pins (Trade helper) so the next paint / device sees them.
+          // Persist migrate pins (Season arcs + Trade helper) so the next paint / device sees them.
           if (next.join(",") !== dataDashCanon(parsed).join(",")) dataDashWriteLocal(next);
           return next;
         }
@@ -26228,7 +26261,7 @@ const html = `<!DOCTYPE html>
             ? dataDashCanon(dataDashDefaultTiles())
             : dataDashMigrateMyPicks(next);
           dataDashWriteLocal(dataDashTiles);
-          // Persist when legacy/redraft reset OR when migrate pinned Trade helper.
+          // Persist when legacy/redraft reset OR when migrate pinned Season arcs / Trade helper.
           if (stale || dataDashTiles.join(",") !== next.join(",")) {
             saveSeatDataDash(dataDashTiles);
           }
@@ -35224,7 +35257,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v334-trade-helper-visible")
+  || !swSrc.includes("chuckle-shell-v335-board-pins-force")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -36703,8 +36736,10 @@ if (!inline.includes("function dataDashHtml(")
     throw new Error("Trade helper must be default board tile 6 (right after My Trade History)");
   }
   if (!fnSrc("dataDashHtml").includes('data-dash-open="trade_helper"')
-    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_helper")')) {
-    throw new Error("Your board must surface Trade helper chip and migrate saved dynasty boards");
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_helper")')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(3, 0, "season_arcs")')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(Math.min(3, src.length), 0, "season_arcs")')) {
+    throw new Error("Your board must surface Trade helper + force-pin Season arcs on saved dynasty boards");
   }
   if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
     throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");

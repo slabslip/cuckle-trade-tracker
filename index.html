@@ -3245,6 +3245,12 @@
     .trade-helper-verdict { margin: 6px 0 0; font-size: 0.9rem; }
     .trade-helper-flags { margin: 0 0 12px; padding-left: 1.1rem; color: var(--muted); font-size: 0.8125rem; }
     .trade-helper-flags li { margin: 0 0 4px; }
+    .trade-helper-kick { margin: 0 0 14px; }
+    .trade-helper-kick > .ds-lists-h { margin: 0 0 4px; }
+    .trade-helper-kick > .caption { margin: 0 0 10px; }
+    .trade-helper-kick .home-desk-row { margin-bottom: 8px; }
+    .trade-helper-kick .home-desk-row:last-child { margin-bottom: 0; }
+    .trade-helper-kick .home-desk-meta { white-space: normal; }
     .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
     .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
     button.pick-intel-row {
@@ -4785,7 +4791,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "noFirstsHeld20261021";
+    const DATA_V = "tradeHelperKick20261021";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4897,7 +4903,7 @@
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
     const DATA_REPORTS = [
-      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player you want. Build an offer, or see better / more tradeable options." },
+      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player or trade partner. Kickstart ideas load first — then build an offer or see better options." },
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Get book, Dart to Star by color." },
       { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Give book, Dart to Star by color." },
       { id: "poach_cuffs", lab: "Poach cuffs", desk: "cuffs", group: "deal", size: "full", why: "Cuffs you own that insure another starter." },
@@ -14490,7 +14496,7 @@
         || id === "poach_cuffs" || id === "my_block" || id === "block_fits")) {
         return "Claim your team to see this";
       }
-      if (id === "trade_helper") return "Search a player you want — build an offer or see better options";
+      if (id === "trade_helper") return "Search for player or trade partner — or tap a kickstart idea";
       if (id === "fill_holes") return "No Get that both sides will take";
       if (id === "move_extras") return "No Give that both sides will take";
       if (id === "poach_cuffs") return "You hold no cuff on another starter";
@@ -14971,6 +14977,152 @@
       };
     }
 
+    function tradeHelperKickstartCards() {
+      if (!authSeatId() || !authSession) return [];
+      if (typeof ensureCuffs === "function") ensureCuffs();
+      const mine = String(authSeatId());
+      const seats = (members || []).filter(function (m) { return m && m.user_id; });
+      if (seats.length < 2) return [];
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = bags.get(mine) || [];
+      if (!myBag.length) return [];
+      const nameOf = function (uid) {
+        const hit = seats.find(function (m) { return String(m.user_id) === String(uid); });
+        return (hit && hit.name) || uid;
+      };
+      const profA = typeof homeDeskProfile === "function" ? homeDeskProfile(myBag) : null;
+      const wants = typeof homeDeskWants === "function" ? homeDeskWants(mine, profA) : [];
+      const scored = [];
+      for (let i = 0; i < seats.length; i++) {
+        const uid = String(seats[i].user_id);
+        if (uid === mine) continue;
+        const theirBag = bags.get(uid) || [];
+        if (!theirBag.length) continue;
+        const profB = typeof homeDeskProfile === "function" ? homeDeskProfile(theirBag) : null;
+        for (let w = 0; w < wants.length; w++) {
+          const want = wants[w];
+          const talk = typeof homeDeskTalk === "function" ? homeDeskTalk(myBag, theirBag, want) : null;
+          if (!talk) continue;
+          const job = typeof homeDeskJob === "function" ? homeDeskJob(talk, profA, profB) : "";
+          if (job !== want) continue;
+          scored.push({
+            a: mine,
+            b: uid,
+            nameA: "You",
+            nameB: seats[i].name || nameOf(uid) || "them",
+            talk: talk,
+            job: job,
+            score: talk.score,
+          });
+        }
+        // Also score an open swap vs this seat so the kickstart list stays full.
+        const open = typeof homeDeskTalk === "function" ? homeDeskTalk(myBag, theirBag, "") : null;
+        if (open) {
+          const job = typeof homeDeskJob === "function" ? homeDeskJob(open, profA, profB) : "swap";
+          scored.push({
+            a: mine,
+            b: uid,
+            nameA: "You",
+            nameB: seats[i].name || nameOf(uid) || "them",
+            talk: open,
+            job: job,
+            score: open.score + 40,
+          });
+        }
+      }
+      scored.sort(function (x, y) { return x.score - y.score; });
+      const usedKey = {};
+      const partnerN = {};
+      const picks = [];
+      for (let i = 0; i < scored.length && picks.length < 8; i++) {
+        const row = scored[i];
+        const pack = [(row.talk.legsA || []).map(function (a) { return a && a.id; }).join(","),
+          (row.talk.legsB || []).map(function (a) { return a && a.id; }).join(",")].join("|");
+        if (usedKey[pack]) continue;
+        if ((partnerN[row.b] || 0) >= 2) continue;
+        usedKey[pack] = 1;
+        partnerN[row.b] = (partnerN[row.b] || 0) + 1;
+        picks.push(row);
+      }
+      return picks;
+    }
+
+    function tradeHelperIdeaLogic(row) {
+      if (!row || !row.talk) return "";
+      const bits = [];
+      const meta = typeof homeDeskMeta === "function"
+        ? homeDeskMeta(row.talk, row.job, row.nameB, row.b)
+        : "";
+      if (meta) bits.push(meta);
+      const dir = typeof seatDirOf === "function" ? seatDirOf(row.b) : null;
+      if (dir && dir.label) bits.push("Their seat reads " + dir.label + ".");
+      const arch = typeof archSeatOf === "function" ? archSeatOf(row.b) : null;
+      if (arch && (arch.lab || arch.why)) {
+        bits.push((arch.lab || "Manager type")
+          + (arch.why ? (": " + arch.why) : "."));
+      }
+      const proj = typeof projSeatOf === "function" ? projSeatOf(row.b) : null;
+      if (proj && (proj.band || proj.proj_finish != null)) {
+        bits.push("Live race: "
+          + (proj.band ? (proj.band + " pick band") : "band unset")
+          + (proj.proj_finish != null
+            ? (", projected " + (typeof nth === "function" ? nth(proj.proj_finish) : proj.proj_finish))
+            : "")
+          + ".");
+      }
+      const getPlay = (row.talk.legsB || []).filter(function (a) {
+        return a && a.id && !(typeof homeDeskIsPick === "function" && homeDeskIsPick(a));
+      });
+      const getName = getPlay[0]
+        ? ((typeof homeDeskShortName === "function" ? homeDeskShortName(getPlay[0]) : getPlay[0].name) || getPlay[0].name)
+        : "";
+      if (getName) {
+        bits.push("Tap to search " + getName
+          + (row.nameB ? (" (or type " + row.nameB + ").") : "."));
+      } else if (row.nameB) {
+        bits.push("Tap to search " + row.nameB + ".");
+      }
+      return bits.join(" ");
+    }
+
+    function tradeHelperKickstartHtml() {
+      const cards = tradeHelperKickstartCards();
+      if (!cards.length) return "";
+      let html = '<div class="trade-helper-kick" aria-label="Kickstart ideas">'
+        + '<h3 class="ds-lists-h">Kickstart ideas</h3>'
+        + '<p class="caption">Team Ideas with the longer why — tap one to start a search.</p>';
+      html += cards.map(function (row) {
+        const getPlay = (row.talk.legsB || []).filter(function (a) {
+          return a && a.id && !(typeof homeDeskIsPick === "function" && homeDeskIsPick(a));
+        });
+        const seedId = getPlay[0] ? getPlay[0].id : "";
+        const seedName = seedId
+          ? ""
+          : (row.nameB || ((row.talk.legsB || [])[0] && (row.talk.legsB || [])[0].name) || "");
+        const line = (row.talk.legsA || []).map(function (a) {
+          return typeof homeDeskShortName === "function" ? homeDeskShortName(a) : (a.name || "?");
+        }).join(" + ")
+          + " for "
+          + (row.talk.legsB || []).map(function (a) {
+            return typeof homeDeskShortName === "function" ? homeDeskShortName(a) : (a.name || "?");
+          }).join(" + ");
+        const job = typeof homeDeskJobLabel === "function" ? homeDeskJobLabel(row.job) : (row.job || "Swap");
+        const them = row.nameB || "them";
+        const logic = tradeHelperIdeaLogic(row);
+        return '<button type="button" class="home-desk-row"'
+          + (seedId
+            ? (' data-trade-helper-pick="' + esc(seedId) + '"')
+            : (' data-trade-helper-seed="' + esc(seedName) + '"'))
+          + ' aria-label="' + esc(job + ". You and " + them + " — " + line) + '">'
+          + '<div class="home-desk-pair"><span class="home-desk-job">' + esc(job) + "</span> You · "
+          + esc(them) + "</div>"
+          + '<p class="home-desk-line">' + esc(line) + "</p>"
+          + '<p class="home-desk-meta">' + esc(logic) + "</p>"
+          + "</button>";
+      }).join("");
+      return html + "</div>";
+    }
+
     function dataDashTradeHelperHtml() {
       const spec = dataDashById("trade_helper");
       if (!spec) return "";
@@ -14982,16 +15134,18 @@
           + "</section>";
       }
       const target = tradeHelperTargetId ? tradeHelperAssetById(tradeHelperTargetId) : null;
-      const hits = (!target && tradeHelperQ.trim().length >= 2)
+      const q = tradeHelperQ.trim();
+      const hits = (!target && q.length >= 2)
         ? tradeHelperSearchHits(tradeHelperQ, 12)
         : [];
       let body = "";
       if (!target) {
+        if (!q) body += tradeHelperKickstartHtml();
         body += '<label class="trade-helper-search">'
-          + '<span class="data-dash-sub">Player you want</span>'
-          + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="e.g. Travis Etienne or TipsUp RB…"'
+          + '<span class="data-dash-sub">Search</span>'
+          + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="Search for player or trade partner"'
           + ' value="' + esc(tradeHelperQ) + '" autocomplete="off" /></label>';
-        if (tradeHelperQ.trim().length >= 2 && !hits.length) {
+        if (q.length >= 2 && !hits.length) {
           body += '<p class="data-hint">No other-seat players match that search.</p>';
         } else if (hits.length) {
           body += hits.map(function (a) {
@@ -15002,8 +15156,6 @@
               + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name) + "</span>"
               + '<span class="data-xrow-meta">' + esc(bits) + "</span></div></button>";
           }).join("");
-        } else {
-          body += '<p class="data-hint">' + esc(dataDashHuntEmpty("trade_helper")) + "</p>";
         }
       } else {
         const name = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name) || target.name;
@@ -33354,6 +33506,14 @@
         tradeHelperTargetId = tradeHelperPick.getAttribute("data-trade-helper-pick") || "";
         tradeHelperQ = "";
         focusNext = ".trade-helper-target .ds-lists-h, .screen-h";
+        render();
+        return;
+      }
+      const tradeHelperSeed = e.target.closest("[data-trade-helper-seed]");
+      if (tradeHelperSeed) {
+        tradeHelperTargetId = "";
+        tradeHelperQ = tradeHelperSeed.getAttribute("data-trade-helper-seed") || "";
+        focusNext = "[data-trade-helper-q]";
         render();
         return;
       }

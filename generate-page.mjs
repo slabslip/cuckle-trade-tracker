@@ -4088,8 +4088,11 @@ const html = `<!DOCTYPE html>
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       margin: 0 0 8px; position: relative;
     }
-    .tile-share-row .screen-h { margin: 0; flex: 1; min-width: 0; padding-right: 28px; }
+    .tile-share-row .screen-h,
+    .tile-share-row .ds-lists-h { margin: 0; flex: 1; min-width: 0; padding-right: 4px; }
     .tile-share-row button.tile-share { position: static; }
+    .trade-helper-sec-h { margin: 14px 0 8px; }
+    .trade-helper-share-note { margin: 6px 0 0; color: var(--muted); font-size: 0.8125rem; }
     .list-band { margin: 12px 0 16px; }
     .list-band-h {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
@@ -4853,7 +4856,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperClearSpace20261022";
+    const DATA_V = "tradeHelperShareSec20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4906,6 +4909,7 @@ const html = `<!DOCTYPE html>
     let tradeHelperSellSeatQ = "";
     /** even | clear_space — shapes multi-piece vs 1-for-1 package bias. */
     let tradeHelperFactor = "even";
+    let tradeHelperShareNote = "";
     let teamHomeEdit = false;
     let teamHomeLayout = null;
     let seatDirection = null;
@@ -12608,6 +12612,7 @@ const html = `<!DOCTYPE html>
       tradeHelperSellSeats = [];
       tradeHelperSellSeatQ = "";
       tradeHelperFactor = "even";
+      tradeHelperShareNote = "";
     }
 
     function dataDashRoomCanon(id) {
@@ -16274,6 +16279,235 @@ const html = `<!DOCTYPE html>
       return html + "</div>";
     }
 
+    function tradeHelperShareSectionTitle(section, anal) {
+      const selling = !!(anal && anal.mode === "sell");
+      const clear = !!(anal && anal.factor === "clear_space");
+      if (section === "interest") return "Who might want him";
+      if (section === "alts") return selling ? "Maybe sell this instead" : "Maybe look here instead";
+      if (section === "packages") {
+        if (selling) return clear ? "Consolidate for a foundation" : "What they might give";
+        return clear ? "Clear-space offer ideas" : "Offer ideas";
+      }
+      return "Trade helper";
+    }
+
+    function tradeHelperShareSectionBtn(section, label) {
+      const lab = label || "Share section";
+      return '<button type="button" class="tile-share" data-trade-helper-share="'
+        + esc(section || "") + '" aria-label="' + esc(lab) + '">'
+        + receiptShareIco() + "</button>";
+    }
+
+    function tradeHelperShareSectionHead(section, anal) {
+      const title = tradeHelperShareSectionTitle(section, anal);
+      return '<div class="tile-share-row trade-helper-sec-h">'
+        + '<h3 class="ds-lists-h">' + esc(title) + "</h3>"
+        + tradeHelperShareSectionBtn(section, "Share " + title)
+        + "</div>";
+    }
+
+    function tradeHelperShareRows(section, anal, target) {
+      const rows = [];
+      if (section === "interest") {
+        (anal.interest || []).forEach(function (r) {
+          rows.push({
+            title: r.themName || "them",
+            meta: [r.depthLabel || r.depthBand || "", r.why || ""].filter(Boolean).join(" · "),
+            foot: "Interest signal",
+          });
+        });
+        return rows;
+      }
+      if (section === "alts") {
+        (anal.alts || []).forEach(function (row) {
+          const a = row.asset || {};
+          const an = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name || "Player";
+          const aClass = typeof tradeHelperClassOf === "function" ? tradeHelperClassOf(a) : {};
+          rows.push({
+            title: an,
+            meta: [a.pos, a.team,
+              anal.mode === "sell" ? "Your team" : (row.themName || a.owner),
+              aClass.foundational ? "foundational" : "",
+              aClass.riser ? "riser" : ""].filter(Boolean).join(" · "),
+            foot: row.why || "",
+          });
+        });
+        return rows;
+      }
+      (anal.packages || []).forEach(function (p) {
+        rows.push({
+          title: p.title || "",
+          meta: [(p.themName ? (p.themName + " · ") : "")
+            + (typeof tradeHelperKindLabel === "function" ? tradeHelperKindLabel(p.kind) : (p.kind || ""))
+            + (p.note ? (" · " + p.note) : "")].join(""),
+          foot: "Open in calc to tweak the needle",
+        });
+      });
+      return rows;
+    }
+
+    function tradeHelperShareFit(ctx, text, maxW) {
+      let t = String(text || "");
+      if (!t) return "";
+      if (ctx.measureText(t).width <= maxW) return t;
+      while (t.length > 1 && ctx.measureText(t + "…").width > maxW) t = t.slice(0, -1);
+      return t + "…";
+    }
+
+    function tradeHelperShareDraw(section, anal, target) {
+      const rows = tradeHelperShareRows(section, anal, target);
+      if (!rows.length) return null;
+      const name = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name)
+        || target.name || "Player";
+      const selling = anal.mode === "sell";
+      const secTitle = tradeHelperShareSectionTitle(section, anal);
+      const leagueName = (activeLeague && activeLeague.name) || (league && league.name) || "League";
+      const factorLab = anal.factor === "clear_space" ? "Clear space" : "Even book";
+      const W = 1080;
+      const PAD = 48;
+      const rowH = 92;
+      const H = Math.min(2200, 210 + rows.length * rowH + 72);
+      const canvas = document.createElement("canvas");
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return null;
+      const FONT = "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+      ctx.fillStyle = "#0b0b0d";
+      ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "#2a2a30";
+      ctx.lineWidth = 2;
+      if (typeof calcShareRound === "function") {
+        calcShareRound(ctx, 20, 20, W - 40, H - 40, 24);
+        ctx.stroke();
+      }
+      ctx.fillStyle = "#e0b44c";
+      ctx.font = "750 20px " + FONT;
+      ctx.textAlign = "left";
+      ctx.fillText("CUCKLE", PAD, 70);
+      ctx.fillStyle = "#f0f0f0";
+      ctx.font = "800 40px " + FONT;
+      ctx.fillText(tradeHelperShareFit(ctx, secTitle, W - PAD * 2), PAD, 118);
+      ctx.fillStyle = "#9a9aa3";
+      ctx.font = "600 22px " + FONT;
+      const sub = (selling ? "Sell" : "Buy") + " · " + name + " · " + factorLab + " · " + leagueName;
+      ctx.fillText(tradeHelperShareFit(ctx, sub, W - PAD * 2), PAD, 154);
+      let y = 186;
+      rows.forEach(function (r, i) {
+        if (i) {
+          ctx.strokeStyle = "#2a2a30";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(PAD, y);
+          ctx.lineTo(W - PAD, y);
+          ctx.stroke();
+        }
+        y += 34;
+        ctx.fillStyle = "#f0f0f0";
+        ctx.font = "750 26px " + FONT;
+        ctx.fillText(tradeHelperShareFit(ctx, r.title, W - PAD * 2), PAD, y);
+        y += 28;
+        if (r.meta) {
+          ctx.fillStyle = "#9a9aa3";
+          ctx.font = "600 20px " + FONT;
+          ctx.fillText(tradeHelperShareFit(ctx, r.meta, W - PAD * 2), PAD, y);
+          y += 24;
+        }
+        if (r.foot) {
+          ctx.fillStyle = "#6e6e76";
+          ctx.font = "500 18px " + FONT;
+          ctx.fillText(tradeHelperShareFit(ctx, r.foot, W - PAD * 2), PAD, y);
+          y += 22;
+        }
+        y += 8;
+      });
+      ctx.fillStyle = "#8a8a93";
+      ctx.font = "500 18px " + FONT;
+      ctx.fillText("Chuckle Fantasy · Trade helper", PAD, H - 40);
+      return canvas;
+    }
+
+    function tradeHelperShareNow(section) {
+      const sec = String(section || "packages");
+      const target = typeof tradeHelperAssetById === "function"
+        ? tradeHelperAssetById(tradeHelperTargetId)
+        : null;
+      if (!target) {
+        tradeHelperShareNote = "Pick a player first.";
+        render();
+        return;
+      }
+      const anal = typeof tradeHelperAnalysis === "function"
+        ? tradeHelperAnalysis(target)
+        : { mode: "buy", factor: "even", packages: [], interest: [], alts: [] };
+      const rows = tradeHelperShareRows(sec, anal, target);
+      if (!rows.length) {
+        tradeHelperShareNote = "Nothing to share in that section yet.";
+        render();
+        return;
+      }
+      const canvas = tradeHelperShareDraw(sec, anal, target);
+      if (!canvas) {
+        tradeHelperShareNote = "Could not build that image.";
+        render();
+        return;
+      }
+      const blob = typeof calcShareBlob === "function" ? calcShareBlob(canvas) : null;
+      if (!blob) {
+        tradeHelperShareNote = "Could not build that image.";
+        render();
+        return;
+      }
+      const title = tradeHelperShareSectionTitle(sec, anal);
+      const player = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name) || target.name || "player";
+      const slug = String(title + "-" + player).toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "trade-helper";
+      const fileName = "cuckle-" + slug + ".png";
+      const text = title + " · " + player;
+      function save() {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = fileName;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
+        tradeHelperShareNote = "Saved image — " + title;
+        render();
+      }
+      let file = null;
+      try {
+        if (typeof File === "function") file = new File([blob], fileName, { type: "image/png" });
+      } catch (err) { file = null; }
+      const payload = file
+        ? { files: [file], title: title, text: text }
+        : { title: title, text: text };
+      let canFiles = false;
+      try {
+        canFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+      } catch (err) { canFiles = false; }
+      if (canFiles) {
+        navigator.share(payload).then(function () {
+          tradeHelperShareNote = "Sent — " + title;
+          render();
+        }).catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          save();
+        });
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+        navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () {
+          tradeHelperShareNote = "Copied image — " + title;
+          render();
+        }).catch(function () { save(); });
+        return;
+      }
+      save();
+    }
+
     function dataDashTradeHelperHtml() {
       const spec = dataDashById("trade_helper");
       if (!spec) return "";
@@ -16352,7 +16586,7 @@ const html = `<!DOCTYPE html>
             + "</ul>";
         }
         if (selling) {
-          body += '<h3 class="ds-lists-h">Who might want him</h3>';
+          body += tradeHelperShareSectionHead("interest", anal);
           if (anal.interest && anal.interest.length) {
             body += anal.interest.map(function (r) {
               return '<div class="data-xrow">'
@@ -16374,11 +16608,10 @@ const html = `<!DOCTYPE html>
               + "</p>";
           }
         }
-        body += '<h3 class="ds-lists-h">'
-          + (selling
-            ? (clear ? "Consolidate for a foundation" : "What they might give")
-            : (clear ? "Clear-space offer ideas" : "Offer ideas"))
-          + "</h3>";
+        body += tradeHelperShareSectionHead("packages", anal);
+        if (tradeHelperShareNote) {
+          body += '<p class="trade-helper-share-note" role="status">' + esc(tradeHelperShareNote) + "</p>";
+        }
         if (!anal.packages.length) {
           body += '<p class="data-hint">' + (selling
             ? (clear
@@ -16405,8 +16638,7 @@ const html = `<!DOCTYPE html>
               + "</div></button>";
           }).join("");
         }
-        body += '<h3 class="ds-lists-h">'
-          + (selling ? "Maybe sell this instead" : "Maybe look here instead") + "</h3>";
+        body += tradeHelperShareSectionHead("alts", anal);
         if (!anal.alts.length) {
           body += '<p class="data-hint">' + (selling
             ? "No close same-pos alternatives on your team right now."
@@ -34430,6 +34662,15 @@ const html = `<!DOCTYPE html>
         teamAnalyzerShareNow(analyzerShareBtn.getAttribute("data-analyzer-share"));
         return;
       }
+      const tradeHelperShareBtn = e.target.closest("[data-trade-helper-share]");
+      if (tradeHelperShareBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        if (typeof tradeHelperShareNow === "function") {
+          tradeHelperShareNow(tradeHelperShareBtn.getAttribute("data-trade-helper-share") || "packages");
+        }
+        return;
+      }
       const overnightShareBtn = e.target.closest("[data-overnight-share]");
       if (overnightShareBtn) {
         e.preventDefault();
@@ -34800,6 +35041,7 @@ const html = `<!DOCTYPE html>
         tradeHelperSellSeats = [];
         tradeHelperSellSeatQ = "";
         tradeHelperFactor = "even";
+        tradeHelperShareNote = "";
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         dataRoom = "overview";
         dataPane = "ping";
@@ -34813,6 +35055,7 @@ const html = `<!DOCTYPE html>
         tradeHelperSellSeats = [];
         tradeHelperSellSeatQ = "";
         tradeHelperFactor = "even";
+        tradeHelperShareNote = "";
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = "[data-trade-helper-q]";
         render();
@@ -34823,6 +35066,7 @@ const html = `<!DOCTYPE html>
         tradeHelperFactor = tradeHelperFactorCanon(
           tradeHelperFactorBtn.getAttribute("data-trade-helper-factor") || "even",
         );
+        tradeHelperShareNote = "";
         focusNext = '[data-trade-helper-factor="' + tradeHelperFactor + '"]';
         render();
         return;
@@ -34860,6 +35104,7 @@ const html = `<!DOCTYPE html>
       if (tradeHelperPick) {
         tradeHelperTargetId = tradeHelperPick.getAttribute("data-trade-helper-pick") || "";
         tradeHelperQ = "";
+        tradeHelperShareNote = "";
         // Keep sell-seat filters when hopping to another of your players.
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = ".trade-helper-target .ds-lists-h, .screen-h";
@@ -34870,6 +35115,7 @@ const html = `<!DOCTYPE html>
       if (tradeHelperSeed) {
         tradeHelperTargetId = "";
         tradeHelperQ = tradeHelperSeed.getAttribute("data-trade-helper-seed") || "";
+        tradeHelperShareNote = "";
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = "[data-trade-helper-q]";
         render();
@@ -36782,7 +37028,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v348-trade-helper-clear-space")
+  || !swSrc.includes("chuckle-shell-v349-trade-helper-share-sec")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -38382,6 +38628,11 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("tradeHelperInterest").includes("tradeHelperSellSeatAllowed(")
     || !fnSrc("tradeHelperPackages").includes("3for1")
     || !fnSrc("tradeHelperConsolidatePackages").includes("2plusPick")
+    || !inline.includes("function tradeHelperShareNow(")
+    || !inline.includes("function tradeHelperShareDraw(")
+    || !inline.includes('data-trade-helper-share="')
+    || !fnSrc("dataDashTradeHelperHtml").includes("tradeHelperShareSectionHead(")
+    || !fnSrc("tradeHelperShareNow").includes("navigator.canShare")
     || inline.includes("Travis Etienne or TipsUp")
     || !inline.includes('data-trade-helper-seed="')
     || !inline.includes('closest("[data-trade-helper-seed]")')

@@ -76,10 +76,16 @@ If home voting says **Vote didn’t save**, run `db/wave9-vote-write-fix.sql`, h
 
 Authentication → Providers → Email → **Confirm email OFF**
 
+Authentication → Providers → **Apple** → enable (Services ID + secret key from
+Apple Developer). The **iPhone app** uses native Sign in with Apple (identity
+token → `/auth/v1/token?grant_type=id_token`). Safari uses web OAuth
+(`/authorize?provider=apple` + hash). Without Apple enabled, both fail.
+
 Authentication → URL Configuration:
 
 - **Site URL:** `https://slabslip.github.io/cuckle-trade-tracker`
 - **Redirect URLs:** `https://slabslip.github.io/cuckle-trade-tracker/**`
+  (include `?store=1` returns — the app keeps `store=1` on the OAuth redirect)
 
 ### 3. Deploy Edge Function `join-league`
 
@@ -104,10 +110,23 @@ supabase login
 
 Confirm: Supabase → **Edge Functions** → **`join-league`**.
 
-### 4. Dogfood
+### 4. Fresh-start wipe (friends beta / Apple login)
 
-1. **Commissioner:** live URL → Create account → Create league `1315431339301806080` → copy **TrumanCooper** invite link
-2. **Member (incognito / phone):** open `?invite=CF-…` → suggested username from team name → Create account → dashboard → Add to Home Screen
+When you want **every** prior web/dashboard login gone so people set up like
+new (Apple or username → Join a league):
+
+1. Supabase → **SQL Editor** → paste [`scripts/wipe-accounts-fresh-start.sql`](../scripts/wipe-accounts-fresh-start.sql) → **Run**
+2. Confirm the verify row shows `0` for auth_users / profiles / memberships / leagues
+3. Deploy the page with `AUTH_KEY = cuckle.auth.v2` and `VOTE_KEY = cuckle.votes.v5` (already on the Apple-join branch)
+4. Hard-refresh Safari / reinstall TestFlight so devices drop old `localStorage`
+
+This deletes Auth users, profiles, memberships, invites, registered leagues,
+votes, and ledger slips. News feed rows are kept. Sleeper itself is untouched.
+
+### 5. Dogfood
+
+1. **Commissioner:** live URL → Continue with Apple (or Create account) → join / create league `1315431339301806080` → copy **TrumanCooper** invite link
+2. **Member (incognito / phone):** Continue with Apple → Join a league with `?invite=CF-…` or the Sleeper ID → claim seat → Add to Home Screen
 
 ---
 

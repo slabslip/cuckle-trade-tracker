@@ -895,6 +895,30 @@ const html = `<!DOCTYPE html>
     @media (min-width: 420px) {
       .gate-brand img { width: 128px; height: 128px; }
     }
+    /* Sign in with Apple — primary CTA above username/password. */
+    .gate-apple {
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      width: 100%; min-height: 48px; margin: 0 0 12px; padding: 0 16px;
+      appearance: none; font: inherit; font-size: 1rem; font-weight: 600;
+      color: #0b0b0d; background: #f5f5f7; border: 1px solid #d2d2d7;
+      border-radius: 12px; cursor: pointer;
+    }
+    .gate-apple:disabled { opacity: 0.55; cursor: wait; }
+    .gate-apple:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .gate-apple-mark {
+      display: inline-block; width: 18px; height: 22px; flex: 0 0 auto;
+      background: currentColor;
+      -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 20'%3E%3Cpath fill='black' d='M12.8 10.6c0-1.8 1.5-2.7 1.5-2.7-.8-1.2-2.1-1.4-2.6-1.4-1.1-.1-2.1.6-2.7.6-.6 0-1.4-.6-2.4-.6-1.2 0-2.3.7-2.9 1.8-1.3 2.2-.3 5.5 0.9 7.3.6.9 1.3 1.9 2.2 1.9.9 0 1.2-.6 2.3-.6 1.1 0 1.4.6 2.3.6.9 0 1.5-.9 2.1-1.8.7-1 1-1.9 1-2 .0-.1-1.9-.7-1.9-3.1zM10.9 4.7c.5-.6.8-1.4.7-2.2-.7 0-1.5.5-2 .1 0 .0-.1.1-.1.1-.4.6-.8 1.4-.7 2.2.8.1 1.5-.4 2.1-.1z'/%3E%3C/svg%3E") center / contain no-repeat;
+      mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 20'%3E%3Cpath fill='black' d='M12.8 10.6c0-1.8 1.5-2.7 1.5-2.7-.8-1.2-2.1-1.4-2.6-1.4-1.1-.1-2.1.6-2.7.6-.6 0-1.4-.6-2.4-.6-1.2 0-2.3.7-2.9 1.8-1.3 2.2-.3 5.5 0.9 7.3.6.9 1.3 1.9 2.2 1.9.9 0 1.2-.6 2.3-.6 1.1 0 1.4.6 2.3.6.9 0 1.5-.9 2.1-1.8.7-1 1-1.9 1-2 .0-.1-1.9-.7-1.9-3.1zM10.9 4.7c.5-.6.8-1.4.7-2.2-.7 0-1.5.5-2 .1 0 .0-.1.1-.1.1-.4.6-.8 1.4-.7 2.2.8.1 1.5-.4 2.1-.1z'/%3E%3C/svg%3E") center / contain no-repeat;
+    }
+    .gate-or {
+      display: flex; align-items: center; gap: 10px;
+      margin: 4px 0 12px; color: var(--dim); font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .gate-or::before, .gate-or::after {
+      content: ""; flex: 1 1 auto; height: 1px; background: var(--line);
+    }
     .app-card {
       background: var(--card); border: 1px solid var(--line); border-radius: 12px;
       padding: 14px; margin: 0 0 12px;
@@ -4856,7 +4880,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261022212055";
+    const DATA_V = "signInAppleJoinNews20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22158,11 +22182,11 @@ const html = `<!DOCTYPE html>
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
     // Bump this when wiping Supabase trade_votes so heal cannot re-upload stale device ballots.
-    const VOTE_KEY = "cuckle.votes.v4";
+    const VOTE_KEY = "cuckle.votes.v5";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
-    const AUTH_KEY = "cuckle.auth.v1";
+    const AUTH_KEY = "cuckle.auth.v2";
     // localStorage throws in private mode and when a quota is full. Memory is the fallback so
     // voting still works for the session rather than breaking the render.
     let voteMemory = null;
@@ -22527,6 +22551,7 @@ const html = `<!DOCTYPE html>
     let nameHistoryBook = null;
     let gateSuggestedUser = null;
     let gateMode = "signin"; // signin | signup | forgot — returning users land on Sign in
+    let gatePassOpen = false; // username/password under Continue with Apple
     let settingsCopyNote = ""; // brief "Copied" feedback on settings/invites
     let transferPickId = ""; // selected new commissioner auth_user_id
     let settingsTab = "profile"; // profile | leagues — Settings screen default is Profile
@@ -22699,6 +22724,7 @@ const html = `<!DOCTYPE html>
       authError = "";
       appScreen = "gate";
       gateMode = "signin";
+      gatePassOpen = false;
       paintSettingsBtn();
       paintBrandHome();
       paintLeagueSub();
@@ -22750,7 +22776,7 @@ const html = `<!DOCTYPE html>
 
     /** Top-left Back: hide on the login gate / multi-league home. */
     function paintBrandHome() {
-      const hide = appScreen === "gate" || appScreen === "home"
+      const hide = appScreen === "gate" || appScreen === "home" || appScreen === "join"
         || appScreen === "claimTeam" || appScreen === "joinWelcome";
       const back = document.getElementById("goBack");
       if (back) back.hidden = hide;
@@ -23926,10 +23952,10 @@ const html = `<!DOCTYPE html>
       }
       if (typeof shareAccessPending === "function" && shareAccessPending()) {
         return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
-          + "</b>. Create a username and password, then claim a remaining team to open it.</p>";
+          + "</b>. Sign in with Apple (or a username), then claim a remaining team to open it.</p>";
       }
       return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
-        + "</b>. After you set a username and password, pick your team.</p>";
+        + "</b>. Sign in with Apple (or a username), then pick your team.</p>";
     }
 
     function joinLandSeat(uid) {
@@ -24416,6 +24442,339 @@ const html = `<!DOCTYPE html>
       paintBrandHome();
     }
 
+    /** Pages / store shell return URL for Supabase OAuth (Apple). */
+    function authOAuthRedirectUrl() {
+      try {
+        const u = new URL(location.href);
+        u.hash = "";
+        if (typeof isStoreShell === "function" && isStoreShell()) {
+          u.searchParams.set("store", "1");
+        }
+        // Invite / league survive via sessionStorage — strip from the return URL.
+        u.searchParams.delete("invite");
+        return u.origin + u.pathname + (u.searchParams.toString() ? "?" + u.searchParams.toString() : "");
+      } catch (err) {
+        return String(location.href || "").split("#")[0];
+      }
+    }
+
+    function authStashOAuthJoin() {
+      try {
+        sessionStorage.setItem("cuckle.oauth.invite", redeemCode || "");
+        sessionStorage.setItem("cuckle.oauth.league", claimLeagueId || "");
+        sessionStorage.setItem("cuckle.oauth.leagueName", claimLeagueName || "");
+      } catch (err) { /* private mode */ }
+    }
+
+    function authRestoreOAuthJoin() {
+      try {
+        const inv = sessionStorage.getItem("cuckle.oauth.invite") || "";
+        const lid = sessionStorage.getItem("cuckle.oauth.league") || "";
+        const lname = sessionStorage.getItem("cuckle.oauth.leagueName") || "";
+        sessionStorage.removeItem("cuckle.oauth.invite");
+        sessionStorage.removeItem("cuckle.oauth.league");
+        sessionStorage.removeItem("cuckle.oauth.leagueName");
+        if (inv) redeemCode = inv;
+        if (lid) {
+          claimLeagueId = lid;
+          if (lname) claimLeagueName = lname;
+        }
+      } catch (err) { /* ignore */ }
+    }
+
+    async function authFetchUser(accessToken) {
+      const res = await fetch(AUTH_API + "/user", {
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + accessToken,
+        },
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok) {
+        throw new Error(data.msg || data.message || ("Could not load Apple account (" + res.status + ")"));
+      }
+      return data;
+    }
+
+    function authSuggestOAuthUsername(user) {
+      const meta = (user && user.user_metadata) || {};
+      const email = (user && user.email) || meta.email || "";
+      const full = meta.full_name || meta.name || meta.preferred_username || "";
+      let base = "";
+      if (full) base = prepareUsername(full);
+      if ((!base || base.length < 3) && email && email.indexOf("@") > 0) {
+        base = prepareUsername(String(email).split("@")[0]);
+      }
+      if (!base || base.length < 3) {
+        const id = String((user && user.id) || "").replace(/-/g, "");
+        base = ("apple_" + id.slice(0, 12)).slice(0, 32);
+      }
+      try {
+        return validateUsername(base);
+      } catch (err) {
+        return ("apple_" + String(Date.now()).slice(-8)).slice(0, 32);
+      }
+    }
+
+    async function authLoadProfileUsername(accessToken, userId) {
+      try {
+        const pr = await fetch(
+          VOTE_API + "/app_profiles?select=username&auth_user_id=eq." + encodeURIComponent(userId),
+          {
+            headers: { apikey: VOTE_ANON, Authorization: "Bearer " + accessToken },
+            signal: voteAbort(),
+          },
+        );
+        if (!pr.ok) return null;
+        const rows = await pr.json();
+        return (rows[0] && rows[0].username) || null;
+      } catch (err) {
+        return null;
+      }
+    }
+
+    async function authEnsureProfile(accessToken, userId, preferred) {
+      let name = preferred || ("apple_" + String(Date.now()).slice(-8));
+      try { name = validateUsername(prepareUsername(name)); }
+      catch (err) { name = ("apple_" + String(Date.now()).slice(-8)).slice(0, 32); }
+      for (let i = 0; i < 8; i++) {
+        const tryName = i === 0 ? name : (name.slice(0, 28) + String(i + 1)).slice(0, 32);
+        const prof = await fetch(VOTE_API + "/app_profiles?on_conflict=auth_user_id", {
+          method: "POST",
+          headers: {
+            apikey: VOTE_ANON,
+            Authorization: "Bearer " + accessToken,
+            "Content-Type": "application/json",
+            Prefer: "resolution=merge-duplicates,return=minimal",
+          },
+          body: JSON.stringify({ auth_user_id: userId, username: tryName }),
+          signal: voteAbort(),
+        });
+        if (prof.ok) return tryName;
+        const t = await prof.text();
+        if (t.indexOf("app_profiles_username_key") >= 0) continue;
+        if (t.indexOf("app_profiles_platform_required") >= 0) {
+          throw new Error("Profile blocked: re-run commissioner-invites.sql (platform IDs optional).");
+        }
+        // Already has a row — read it.
+        const existing = await authLoadProfileUsername(accessToken, userId);
+        if (existing) return existing;
+        throw new Error("Could not save profile (" + prof.status + "): " + t.slice(0, 180));
+      }
+      throw new Error("Could not pick a free username for this Apple ID.");
+    }
+
+    /**
+     * Supabase Apple OAuth returns tokens in the URL hash. Capture once on boot,
+     * ensure app_profiles, then strip the hash so tokens are not left in history.
+     */
+    async function authCaptureOAuthSession() {
+      let hash = "";
+      try { hash = String(location.hash || "").replace(/^#/, ""); }
+      catch (err) { return false; }
+      if (!hash || hash.indexOf("access_token=") < 0) return false;
+      const hp = new URLSearchParams(hash);
+      const access = hp.get("access_token");
+      const refresh = hp.get("refresh_token") || "";
+      const expiresIn = Number(hp.get("expires_in") || 3600);
+      if (!access) return false;
+      try {
+        history.replaceState(history.state || {}, "", location.pathname + location.search);
+      } catch (err) { /* ignore */ }
+      authRestoreOAuthJoin();
+      const user = await authFetchUser(access);
+      const userId = user && user.id;
+      if (!userId) throw new Error("Apple sign-in did not return a user.");
+      let uname = await authLoadProfileUsername(access, userId);
+      if (!uname) uname = await authEnsureProfile(access, userId, authSuggestOAuthUsername(user));
+      authSave({
+        access_token: access,
+        refresh_token: refresh,
+        expires_at: Math.floor(Date.now() / 1000) + (expiresIn || 3600),
+        user_id: userId,
+        username: uname,
+        sleeper_user_id: null,
+        espn_user_id: null,
+        seat_user_id: null,
+        seat_name: null,
+      });
+      paintSettingsBtn();
+      paintBrandHome();
+      return true;
+    }
+
+    function authHasNativeApple() {
+      try {
+        return !!(window.chuckleNativeApple
+          && window.webkit
+          && window.webkit.messageHandlers
+          && window.webkit.messageHandlers.chuckleApple);
+      } catch (err) {
+        return false;
+      }
+    }
+
+    async function authExchangeAppleIdToken(idToken, nonce, meta) {
+      const body = { provider: "apple", id_token: idToken };
+      if (nonce) body.nonce = nonce;
+      const res = await fetch(AUTH_API + "/token?grant_type=id_token", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + VOTE_ANON,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok || !data.access_token) {
+        throw new Error(authErrorMessage(data, res.status, "Apple sign-in failed (" + res.status + ")"));
+      }
+      const user = data.user || (await authFetchUser(data.access_token));
+      const userId = user && user.id;
+      if (!userId) throw new Error("Apple sign-in did not return a user.");
+      let prefer = "";
+      if (meta && meta.full_name) prefer = authSuggestOAuthUsername({
+        id: userId,
+        email: (meta && meta.email) || (user && user.email) || "",
+        user_metadata: { full_name: meta.full_name },
+      });
+      else prefer = authSuggestOAuthUsername(user);
+      let uname = await authLoadProfileUsername(data.access_token, userId);
+      if (!uname) uname = await authEnsureProfile(data.access_token, userId, prefer);
+      authSave({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token || "",
+        expires_at: data.expires_at
+          || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
+        user_id: userId,
+        username: uname,
+        sleeper_user_id: null,
+        espn_user_id: null,
+        seat_user_id: null,
+        seat_name: null,
+      });
+      paintSettingsBtn();
+      paintBrandHome();
+      return data;
+    }
+
+    async function authFinishAppleCredential(payload) {
+      let handedOff = false;
+      try {
+        if (!payload || payload.error) {
+          const err = String((payload && payload.error) || "canceled");
+          if (err === "canceled" || /cancel/i.test(err)) {
+            authError = "";
+            return;
+          }
+          throw new Error(err);
+        }
+        if (!payload.id_token) throw new Error("Apple did not return an identity token.");
+        authRestoreOAuthJoin();
+        await authExchangeAppleIdToken(payload.id_token, payload.nonce, payload);
+        authBusy = false;
+        handedOff = !!(await routeAfterAuth());
+      } catch (err) {
+        authError = (err && err.message) || "Apple sign-in failed.";
+        console.error(err);
+      } finally {
+        authBusy = false;
+        if (!handedOff) render();
+      }
+    }
+
+    async function authSignInWithApple() {
+      if (authBusy) return;
+      authBusy = true;
+      authError = "";
+      render();
+      try {
+        authStashOAuthJoin();
+        // Store shell: native Apple sheet (one tap / Face ID). Safari: web OAuth.
+        if (authHasNativeApple()) {
+          window.webkit.messageHandlers.chuckleApple.postMessage({ action: "signIn" });
+          return;
+        }
+        const redirect = encodeURIComponent(authOAuthRedirectUrl());
+        location.assign(AUTH_API + "/authorize?provider=apple&redirect_to=" + redirect);
+      } catch (err) {
+        authBusy = false;
+        authError = (err && err.message) || "Could not start Apple sign-in.";
+        console.error(err);
+        render();
+      }
+    }
+
+    // Native iOS bridge entry — AppleSignIn.swift calls this with the identity token.
+    window.__chuckleAppleCredential = function (payload) {
+      authFinishAppleCredential(payload || {}).catch(function (err) {
+        console.error(err);
+        authBusy = false;
+        authError = (err && err.message) || "Apple sign-in failed.";
+        render();
+      });
+    };
+
+    /**
+     * Shared post-auth router for password + Apple. Returns true when another
+     * screen already rendered (redeem / claim / dashboard).
+     */
+    async function routeAfterAuth() {
+      await loadMemberships();
+      authError = "";
+      if (redeemCode && !gateInviteSeatId && !gateInviteClaimed) {
+        try { await loadInvitePreview(); } catch (err) { console.warn(err); }
+      }
+      if (redeemCode && gateInviteSeatId && !gateInviteClaimed) {
+        await onRedeemInvite();
+        return true;
+      }
+      if (claimLeagueId || gateInviteLeagueId) {
+        const lid = claimLeagueId || gateInviteLeagueId;
+        const already = (memberships || []).find(function (m) {
+          return m && m.sleeper_league_id === lid && m.sleeper_user_id;
+        });
+        if (already) {
+          await openLeagueDashboard({
+            sleeper_league_id: already.sleeper_league_id,
+            name: already.name || claimLeagueName || lid,
+            status: already.status || "ready",
+            sleeper_user_id: already.sleeper_user_id,
+            team_name: already.team_name,
+          });
+          return true;
+        }
+        await openClaimPick(lid, claimLeagueName || gateInviteLeague);
+        return true;
+      }
+      if (receiptImportPending) {
+        receiptImportPending = false;
+        receiptPublic = false;
+        receiptTicket = false;
+        appScreen = "create";
+        focusNext = ".screen-h";
+        return false;
+      }
+      if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) {
+        appScreen = "create";
+        focusNext = "[data-join-src-id]";
+        return false;
+      }
+      const hasMem = (memberships || []).some(function (m) { return m && m.sleeper_league_id; });
+      const hasOwn = (ownedLeagues || []).some(function (o) { return o && o.sleeper_league_id; });
+      if (!hasMem && !hasOwn) {
+        appScreen = "join";
+        focusNext = ".screen-h";
+        return false;
+      }
+      appScreen = "home";
+      focusNext = ".screen-h";
+      return false;
+    }
+
     async function loadMemberships() {
       if (!authSession || !authSession.access_token) {
         saveMemberships([]);
@@ -24487,53 +24846,66 @@ const html = `<!DOCTYPE html>
         const recover = emailEl && String(emailEl.value || "").trim();
         if (gateMode === "signup") await authSignUp(username, password, recover);
         else await authSignIn(username, password);
-        await loadMemberships();
-        authError = "";
         authBusy = false;
-        if (redeemCode && gateInviteSeatId && !gateInviteClaimed) {
-          handedOff = true;
-          await onRedeemInvite();
-          return;
-        }
-        if (claimLeagueId || gateInviteLeagueId) {
-          const lid = claimLeagueId || gateInviteLeagueId;
-          const already = (memberships || []).find(function (m) {
-            return m && m.sleeper_league_id === lid && m.sleeper_user_id;
-          });
-          if (already) {
-            handedOff = true;
-            await openLeagueDashboard({
-              sleeper_league_id: already.sleeper_league_id,
-              name: already.name || claimLeagueName || lid,
-              status: already.status || "ready",
-              sleeper_user_id: already.sleeper_user_id,
-              team_name: already.team_name,
-            });
-            return;
-          }
-          handedOff = true;
-          await openClaimPick(lid, claimLeagueName || gateInviteLeague);
-          return;
-        }
-        if (receiptImportPending) {
-          receiptImportPending = false;
-          receiptPublic = false;
-          receiptTicket = false;
-          appScreen = "create";
-          focusNext = ".screen-h";
-        } else if (pendingAddLeague && fillReadyLeague(pendingAddLeague)) {
-          appScreen = "create";
-          focusNext = "[data-join-src-id]";
-        } else {
-          appScreen = "home";
-          focusNext = ".screen-h";
-        }
+        handedOff = !!(await routeAfterAuth());
       } catch (err) {
         authError = (err && err.message) || "Could not sign in.";
         console.error(err);
       } finally {
         authBusy = false;
         if (!handedOff) render();
+      }
+    }
+
+    async function onJoinInviteGo() {
+      if (joinBusy) return;
+      const el = document.getElementById("joinInviteCode");
+      const code = el ? String(el.value || "").trim() : "";
+      if (!code) {
+        joinError = "Paste a CF- invite code from your commissioner.";
+        render();
+        return;
+      }
+      redeemCode = code.toUpperCase();
+      joinError = "";
+      await loadInvitePreview().catch(function (err) { console.warn(err); });
+      await onRedeemInvite();
+    }
+
+    async function onJoinLeagueIdGo() {
+      if (joinBusy) return;
+      const el = document.getElementById("joinLeagueIdInput");
+      const lid = el ? String(el.value || "").trim() : "";
+      if (!/^\\d{6,}$/.test(lid)) {
+        joinError = "Enter a Sleeper league ID (the long number in the Sleeper URL).";
+        render();
+        return;
+      }
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: lid });
+        claimLeagueId = lid;
+        claimLeagueName = data.league_name || lid;
+        joinBusy = false;
+        await openClaimPick(lid, claimLeagueName);
+      } catch (err) {
+        joinBusy = false;
+        const msg = (err && err.message) || "";
+        if (/unknown league/i.test(msg)) {
+          joinError = "That league is not on Chuckle yet. Create it as commissioner, then share invites.";
+          joinLeagueId = lid;
+          joinSources = [{ kind: "sleeper", id: lid }];
+          syncJoinIdsFromSources();
+          appScreen = "create";
+          focusNext = "[data-join-src-id]";
+          render();
+          return;
+        }
+        joinError = msg || "Could not load that league.";
+        console.error(err);
+        render();
       }
     }
 
@@ -32925,13 +33297,16 @@ const html = `<!DOCTYPE html>
       const invited = !!(redeemCode && String(redeemCode).trim());
       const shared = !invited && typeof shareAccessPending === "function" && shareAccessPending();
       const forgot = gateMode === "forgot";
+      const nativeApple = !forgot && authHasNativeApple();
+      // Apple is create + sign-in. Visible title always says create/get started so the
+      // store gate does not look like a password form is required.
       const title = forgot
         ? "Reset login"
         : invited
-          ? (gateMode === "signup" ? "Create account to join" : "Sign in to join")
+          ? "Create account to join"
           : shared
-            ? (gateMode === "signup" ? "Create account to open this view" : "Sign in to open this view")
-          : (gateMode === "signup" ? "Create account" : "Sign in");
+            ? "Create account to open this view"
+          : "Create your account";
       const go = forgot
         ? "Reclaim seat"
         : invited
@@ -32939,6 +33314,22 @@ const html = `<!DOCTYPE html>
           : shared
             ? (gateMode === "signup" ? "Create account & claim" : "Sign in & claim")
           : (gateMode === "signup" ? "Create account" : "Sign in");
+      const appleBtn = forgot ? ""
+        : ('<h3 style="margin:0 0 10px">' + esc(title) + "</h3>"
+          + '<button type="button" class="gate-apple" data-apple-go="1"'
+          + (authBusy ? " disabled" : "") + ">"
+          + '<span class="gate-apple-mark" aria-hidden="true"></span>'
+          + (authBusy ? "Connecting…" : "Sign in with Apple")
+          + "</button>"
+          + '<p class="caption" style="margin:0 0 8px">'
+          + (nativeApple
+            ? "One tap with your Apple ID — Face ID or your phone passcode. "
+              + "New here? That creates your account."
+            : "One tap with your Apple ID. New here? That creates your account. ")
+          + (invited
+            ? " Your seat invite stays ready."
+            : " Then join with an invite code or a Sleeper league ID.")
+          + "</p>");
       const forgotForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
         + '<p class="caption" style="margin:0 0 8px">Ask your commissioner to tap <b>Reset login</b> '
         + "on your seat and send you a new CF- ticket. Paste it here, pick a username and a new password, "
@@ -32991,9 +33382,30 @@ const html = `<!DOCTYPE html>
         + '<div class="app-actions">'
         + '<button type="submit" class="chip" data-gate-go="1"' + (authBusy ? " disabled" : "") + ">"
         + (authBusy ? "Working…" : go) + "</button>"
-        + (authError ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
+        + (authError && gatePassOpen ? '<p class="err" role="alert">' + esc(authError) + "</p>" : "")
         + (joinError && invited ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + "</div></form>";
+      const passBlock = forgot ? forgotForm
+        : (gatePassOpen
+          ? ('<div class="gate-or" aria-hidden="true">or username</div>'
+            + "<h3>" + esc(title) + "</h3>"
+            + signForm
+            + '<p class="caption" style="margin:12px 0 0">'
+            + (gateMode === "signup"
+              ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
+              : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>'
+                + ' · <button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>')
+            + ' · <button type="button" class="linkish" data-gate-pass="0">Hide</button>'
+            + "</p>")
+          : ('<div class="gate-or" aria-hidden="true">or</div>'
+            + '<button type="button" class="linkish" data-gate-pass="1">Use username and password</button>'
+            + (authError ? '<p class="err" role="alert" style="margin-top:8px">' + esc(authError) + "</p>" : "")
+            + (joinError && invited
+              ? '<p class="err" role="alert" style="margin-top:8px">' + esc(joinError) + "</p>"
+              : "")
+            + '<p class="caption" style="margin:12px 0 0">'
+            + '<button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>'
+            + "</p>"));
       return '<div class="app-shell gate-shell">'
         + '<div class="gate-brand">'
         + '<img src="data/ui/gate-logo.png?' + DATA_V + '" width="128" height="128"'
@@ -33006,24 +33418,56 @@ const html = `<!DOCTYPE html>
             + '<p class="caption">Seat invite <code style="user-select:all">'
             + esc(String(redeemCode).toUpperCase()) + "</code>"
             + " — this is your <b>seat ticket</b>, not your account password. "
-            + "Pick a username and a <b>new password</b> you will use to sign in later.</p>")
+            + "Sign in with Apple, or pick a username and a <b>new password</b>.</p>")
           : ((claimLeagueId || shared) && !forgot
             ? (joinStepsHtml("account") + joinInviteLeadHtml())
             : ""))
-        + (gateSuggestedUser && invited && !forgot
+        + (gateSuggestedUser && invited && !forgot && gatePassOpen
           ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
             + "</b> — change it if you like.</p>")
           : "")
-        + '<div class="app-card"><h3>' + title + "</h3>"
-        + (forgot ? forgotForm : signForm)
-        + '<p class="caption" style="margin:12px 0 0">'
-        + (forgot
-          ? '<button type="button" class="linkish" data-gate-mode="signin">Back to sign in</button>'
-          : (gateMode === "signup"
-            ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-            : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>'
-              + ' · <button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>'))
-        + "</p></div>"
+        + '<div class="app-card">'
+        + (forgot ? ("<h3>" + esc(title) + "</h3>") : "")
+        + appleBtn
+        + passBlock
+        + "</div>"
+        + "</div>";
+    }
+
+    function renderAppJoin() {
+      const uname = (authSession && authSession.username) || "you";
+      return '<div class="app-shell">'
+        + '<h2 class="screen-h" tabindex="-1">Join a league</h2>'
+        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
+        + "Paste a commissioner invite, or enter a Sleeper league ID to claim an open seat.</p>"
+        + '<div class="app-card"><h3>Invite code</h3>'
+        + '<div class="app-form">'
+        + '<label>CF- code<input id="joinInviteCode" name="invite" autocomplete="off"'
+        + ' autocapitalize="characters" spellcheck="false" placeholder="CF-XXXX-XXXX"'
+        + ' value="' + esc(redeemCode || "") + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-join-invite-go="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Joining…" : "Redeem invite") + "</button>"
+        + "</div></div></div>"
+        + '<div class="app-card"><h3>Sleeper league ID</h3>'
+        + '<p class="caption" style="margin:0 0 8px">From the Sleeper app URL. If the league is already '
+        + "on Chuckle, pick your team next. If not, create it as commissioner.</p>"
+        + '<div class="app-form">'
+        + '<label>League ID<input id="joinLeagueIdInput" name="league" inputmode="numeric"'
+        + ' autocomplete="off" placeholder="e.g. 1315431339301806080"'
+        + ' value="' + esc(claimLeagueId || joinLeagueId || "") + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-join-league-go="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Looking…" : "Find teams") + "</button>"
+        + '<button type="button" class="linkish" data-join-create-go="1"'
+        + (joinBusy ? " disabled" : "") + ">Create as commissioner</button>"
+        + "</div></div>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div>"
+        + '<p class="caption"><button type="button" class="linkish" data-app-home="1">Your leagues</button>'
+        + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
         + "</div>";
     }
 
@@ -33591,13 +34035,14 @@ const html = `<!DOCTYPE html>
         paintBottomNav();
         return;
       }
-      if (appScreen === "gate" || appScreen === "home" || appScreen === "create"
+      if (appScreen === "gate" || appScreen === "home" || appScreen === "join" || appScreen === "create"
           || appScreen === "invites" || appScreen === "redeem" || appScreen === "inviteConfirm"
           || appScreen === "claimTeam" || appScreen === "joinWelcome"
           || appScreen === "settings" || appScreen === "profile") {
         const keep = focusSelector(document.activeElement);
         const navigated = focusNext !== null;
         app.innerHTML = appScreen === "gate" ? renderAppGate()
+          : appScreen === "join" ? renderAppJoin()
           : appScreen === "create" ? renderCreateLeague()
           : appScreen === "invites" ? renderInvites()
           : appScreen === "redeem" ? renderRedeemInvite()
@@ -35553,8 +35998,50 @@ const html = `<!DOCTYPE html>
       if (gateModeBtn) {
         const next = gateModeBtn.dataset.gateMode;
         gateMode = next === "signup" || next === "forgot" ? next : "signin";
+        if (gateMode === "signup" || gateMode === "signin") gatePassOpen = true;
         authError = "";
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const gatePassBtn = e.target.closest("[data-gate-pass]");
+      if (gatePassBtn) {
+        gatePassOpen = gatePassBtn.getAttribute("data-gate-pass") !== "0";
+        authError = "";
+        focusNext = gatePassOpen ? "#gateUser" : ".screen-h";
+        render();
+        return;
+      }
+      const appleGo = e.target.closest("[data-apple-go]");
+      if (appleGo) {
+        e.preventDefault();
+        authSignInWithApple();
+        return;
+      }
+      const joinInviteGo = e.target.closest("[data-join-invite-go]");
+      if (joinInviteGo) {
+        e.preventDefault();
+        onJoinInviteGo();
+        return;
+      }
+      const joinLeagueGo = e.target.closest("[data-join-league-go]");
+      if (joinLeagueGo) {
+        e.preventDefault();
+        onJoinLeagueIdGo();
+        return;
+      }
+      const joinCreateGo = e.target.closest("[data-join-create-go]");
+      if (joinCreateGo) {
+        const el = document.getElementById("joinLeagueIdInput");
+        const lid = el ? String(el.value || "").trim() : "";
+        if (lid) {
+          joinLeagueId = lid;
+          joinSources = [{ kind: "sleeper", id: lid }];
+          if (typeof syncJoinIdsFromSources === "function") syncJoinIdsFromSources();
+        }
+        joinError = "";
+        appScreen = "create";
+        focusNext = "[data-join-src-id]";
         render();
         return;
       }
@@ -36795,15 +37282,34 @@ const html = `<!DOCTYPE html>
     (async () => {
       try {
         const receiptQboot = receiptQueryFrom(params);
+        let oauthLanded = false;
+        try {
+          oauthLanded = !!(await authCaptureOAuthSession());
+        } catch (oauthErr) {
+          authError = (oauthErr && oauthErr.message) || "Apple sign-in failed.";
+          console.error(oauthErr);
+          appScreen = "gate";
+          focusNext = ".screen-h";
+          render();
+          return;
+        }
         if (!authSession) {
           if (receiptQboot) {
             await openPublicReceipt(receiptQboot);
             return;
           }
           appScreen = "gate";
-          if (inviteParam || (leagueParam && !inviteParam)) gateMode = "signup";
+          if (inviteParam || (leagueParam && !inviteParam)) {
+            gateMode = "signup";
+            gatePassOpen = true;
+          }
           focusNext = ".screen-h";
           render();
+          return;
+        }
+        if (oauthLanded) {
+          const handed = await routeAfterAuth();
+          if (!handed) render();
           return;
         }
         await authRefreshIfNeeded();
@@ -36894,7 +37400,9 @@ const html = `<!DOCTYPE html>
             }
           }
         }
-        appScreen = "home";
+        const hasMem = (memberships || []).some(function (m) { return m && m.sleeper_league_id; });
+        const hasOwn = (ownedLeagues || []).some(function (o) { return o && o.sleeper_league_id; });
+        appScreen = (!hasMem && !hasOwn) ? "join" : "home";
         focusNext = ".screen-h";
         render();
       } catch (err) {
@@ -37028,7 +37536,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v349-trade-helper-share-sec")
+  || !swSrc.includes("chuckle-shell-v353-sign-in-apple-join")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -38057,8 +38565,11 @@ for (const ban of [
   if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
     throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
   }
-  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v4"')) {
-    throw new Error("VOTE_KEY must be cuckle.votes.v4 so local heal cannot re-upload ballots after a Supabase wipe");
+  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v5"')) {
+    throw new Error("VOTE_KEY must be cuckle.votes.v5 so local heal cannot re-upload ballots after a Supabase wipe");
+  }
+  if (!inline.includes('const AUTH_KEY = "cuckle.auth.v2"')) {
+    throw new Error("AUTH_KEY must be cuckle.auth.v2 so stale web logins are dropped after the account wipe");
   }
   if (!inline.includes("const VOTE_EDIT_MS = 24 * 60 * 60 * 1000")
     || !inline.includes("function voteIsLocked(")
@@ -39388,6 +39899,25 @@ if (!inline.includes('data-gate-mode="forgot"')
   || !inline.includes('if (gateMode === "forgot")')
   || !inline.includes("Email me a reset")) {
   throw new Error("gate must offer Forgot username or password and reclaim via a new seat ticket");
+}
+if (!inline.includes("Sign in with Apple")
+  || !inline.includes("Create your account")
+  || !inline.includes('data-apple-go="1"')
+  || !inline.includes("function authSignInWithApple(")
+  || !inline.includes("function authHasNativeApple(")
+  || !inline.includes("function authExchangeAppleIdToken(")
+  || !inline.includes("__chuckleAppleCredential")
+  || !inline.includes("chuckleApple")
+  || !inline.includes("function authCaptureOAuthSession(")
+  || !inline.includes("function routeAfterAuth(")
+  || !inline.includes('provider=apple')
+  || !inline.includes("function renderAppJoin(")
+  || !inline.includes('appScreen === "join"')
+  || !inline.includes('data-join-invite-go="1"')
+  || !inline.includes('data-join-league-go="1"')
+  || !inline.includes("Find teams")
+  || !inline.includes("Use username and password")) {
+  throw new Error("gate must offer Sign in with Apple (native + web) and a post-login join screen");
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");

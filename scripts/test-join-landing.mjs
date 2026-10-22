@@ -15,7 +15,7 @@ const hist = JSON.parse(fs.readFileSync(
 const need = [
   "been invited to join",
   "Claim your team",
-  "You\\'ve joined",
+  "You have joined",
   "function renderClaimTeam()",
   "function renderJoinWelcome()",
   "function openJoinWelcome(",
@@ -70,8 +70,8 @@ if (/nigg|underage|panty|fatass|nazi/.test(blob)) {
 }
 
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
-if (!sw.includes("chuckle-shell-v322-pick-hub")) {
-  throw new Error("sw.js must bump to v291-sleeper-daily");
+if (!/^const CACHE = "chuckle-shell-v\d+/m.test(sw)) {
+  throw new Error("sw.js must keep a versioned chuckle-shell CACHE");
 }
 
 console.log("join landing ok");

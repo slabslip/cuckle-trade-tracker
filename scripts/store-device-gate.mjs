@@ -15,14 +15,21 @@ import { extname, join } from "node:path";
 import { createRequire } from "node:module";
 
 const require = createRequire(join(process.cwd(), "package.json"));
-let puppeteer;
+let puppeteer = null;
 try {
   puppeteer = require("/tmp/node_modules/puppeteer-core");
 } catch {
-  puppeteer = require("puppeteer-core");
+  try {
+    puppeteer = require("puppeteer-core");
+  } catch {
+    puppeteer = null;
+  }
 }
 
-const CHROME = process.env.CHROME || "/usr/bin/google-chrome-stable";
+const CHROME = process.env.CHROME
+  || (existsSync("/usr/bin/google-chrome-stable") ? "/usr/bin/google-chrome-stable" : "")
+  || (existsSync("/usr/local/bin/google-chrome") ? "/usr/local/bin/google-chrome" : "")
+  || (existsSync("/usr/bin/google-chrome") ? "/usr/bin/google-chrome" : "");
 const MIME = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -81,18 +88,35 @@ function startLocalServer() {
   });
 }
 
-async function main() {
-  const remote = process.env.STORE_ORIGIN || "";
-  let server = null;
-  const origin = remote || (await startLocalServer().then((s) => {
-    server = s.server;
-    return s.origin;
-  }));
-  const url = `${origin.replace(/\/$/, "")}/?store=1`;
+async function runWithPlaywright(url) {
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({
+    headless: true,
+    args: ["--no-sandbox", "--disable-dev-shm-usage"],
+  });
+  const page = await browser.newPage({
+    viewport: { width: 390, height: 844 },
+    userAgent: "Mozilla/5.0 ChuckleStore/1 (iPhone; Chuckle Fantasy) store-device-gate",
+  });
+  await page.goto(url, { waitUntil: "networkidle", timeout: 60000 });
+  await page.waitForSelector("#app", { timeout: 20000 });
+  const html = await page.content();
+  const href = page.url();
+  const shot = "/opt/cursor/artifacts/store-device-gate.png";
+  try {
+    await page.screenshot({ path: shot, fullPage: false });
+  } catch {
+    await page.screenshot({ path: "/tmp/store-device-gate.png", fullPage: false });
+  }
+  await browser.close();
+  return { html, href, shot };
+}
+
+async function runWithPuppeteer(url) {
   const browser = await puppeteer.launch({
     executablePath: CHROME,
     headless: true,
-    args: ["--no-sandbox", "--disable-dev-shm-usage", `--window-size=390,844`],
+    args: ["--no-sandbox", "--disable-dev-shm-usage", "--window-size=390,844"],
   });
   const page = await browser.newPage();
   await page.setViewport({ width: 390, height: 844, deviceScaleFactor: 2, isMobile: true });
@@ -101,19 +125,36 @@ async function main() {
   await page.waitForSelector("#app", { timeout: 20000 });
   const html = await page.content();
   const href = page.url();
-  const failures = [];
-  for (const [name, fn] of CHECKS) {
-    if (!fn(html, href)) failures.push(name);
-  }
   const shot = "/tmp/store-device-gate.png";
   await page.screenshot({ path: shot, fullPage: false });
   await browser.close();
+  return { html, href, shot };
+}
+
+async function main() {
+  const remote = process.env.STORE_ORIGIN || "";
+  let server = null;
+  const origin = remote || (await startLocalServer().then((s) => {
+    server = s.server;
+    return s.origin;
+  }));
+  const url = `${origin.replace(/\/$/, "")}/?store=1`;
+  let result;
+  if (puppeteer && CHROME) {
+    result = await runWithPuppeteer(url);
+  } else {
+    result = await runWithPlaywright(url);
+  }
+  const failures = [];
+  for (const [name, fn] of CHECKS) {
+    if (!fn(result.html, result.href)) failures.push(name);
+  }
   if (server) server.close();
   if (failures.length) {
     console.error("FAIL", failures.join(", "));
     process.exit(1);
   }
-  console.log("PASS store-device-gate", url, shot);
+  console.log("PASS store-device-gate", url, result.shot);
 }
 
 main().catch((err) => {

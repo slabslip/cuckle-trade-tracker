@@ -4872,7 +4872,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "signInAppleJoin20261022";
+    const DATA_V = "signInAppleWipe20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22174,11 +22174,11 @@
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
     // Bump this when wiping Supabase trade_votes so heal cannot re-upload stale device ballots.
-    const VOTE_KEY = "cuckle.votes.v4";
+    const VOTE_KEY = "cuckle.votes.v5";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
-    const AUTH_KEY = "cuckle.auth.v1";
+    const AUTH_KEY = "cuckle.auth.v2";
     // localStorage throws in private mode and when a quota is full. Memory is the fallback so
     // voting still works for the session rather than breaking the render.
     let voteMemory = null;

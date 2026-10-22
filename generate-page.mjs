@@ -4880,7 +4880,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "signInAppleJoin20261022";
+    const DATA_V = "signInAppleWipe20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22182,11 +22182,11 @@ const html = `<!DOCTYPE html>
     // ranking. One identity per number — so votes get their own file, their own two doors
     // (readVotes / writeVote) and their own UI block, and nothing else may read them.
     // Bump this when wiping Supabase trade_votes so heal cannot re-upload stale device ballots.
-    const VOTE_KEY = "cuckle.votes.v4";
+    const VOTE_KEY = "cuckle.votes.v5";
     const VOTE_DEVICE_KEY = "cuckle.device.v1";
     const VOTE_SEAT_KEY = "cuckle.seat.v1";
     // Phase 1 claimed-seat session. Origin-scoped: a custom domain cutover means claim again.
-    const AUTH_KEY = "cuckle.auth.v1";
+    const AUTH_KEY = "cuckle.auth.v2";
     // localStorage throws in private mode and when a quota is full. Memory is the fallback so
     // voting still works for the session rather than breaking the render.
     let voteMemory = null;
@@ -37431,7 +37431,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v350-sign-in-apple-join")
+  || !swSrc.includes("chuckle-shell-v351-sign-in-apple-wipe")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -38460,8 +38460,11 @@ for (const ban of [
   if (!inline.includes("const FEED_VOTE_LIMIT = 20") || !inline.includes("function feedVoteTxSet(")) {
     throw new Error("FEED_VOTE_LIMIT / feedVoteTxSet must ship (vote the last 20 league trades)");
   }
-  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v4"')) {
-    throw new Error("VOTE_KEY must be cuckle.votes.v4 so local heal cannot re-upload ballots after a Supabase wipe");
+  if (!inline.includes('const VOTE_KEY = "cuckle.votes.v5"')) {
+    throw new Error("VOTE_KEY must be cuckle.votes.v5 so local heal cannot re-upload ballots after a Supabase wipe");
+  }
+  if (!inline.includes('const AUTH_KEY = "cuckle.auth.v2"')) {
+    throw new Error("AUTH_KEY must be cuckle.auth.v2 so stale web logins are dropped after the account wipe");
   }
   if (!inline.includes("const VOTE_EDIT_MS = 24 * 60 * 60 * 1000")
     || !inline.includes("function voteIsLocked(")

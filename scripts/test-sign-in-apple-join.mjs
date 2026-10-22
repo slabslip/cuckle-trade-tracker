@@ -35,11 +35,21 @@ for (const s of need) {
 if (!ents.includes("com.apple.developer.applesignin")) {
   throw new Error("ios entitlements must enable Sign in with Apple");
 }
-if (!sw.includes("sign-in-apple-join")) {
+if (!sw.includes("sign-in-apple-wipe") && !sw.includes("sign-in-apple-join")) {
   throw new Error("sw.js must bump cache for Apple join ship");
 }
-if (!page.includes("signInAppleJoin")) {
+if (!page.includes("signInAppleWipe") && !page.includes("signInAppleJoin")) {
   throw new Error("DATA_V must bump for Apple join ship");
+}
+if (!page.includes('cuckle.auth.v2') || !page.includes('cuckle.votes.v5')) {
+  throw new Error("client keys must bump after account wipe (auth.v2 / votes.v5)");
+}
+const wipe = fs.readFileSync(path.join(ROOT, "scripts/wipe-accounts-fresh-start.sql"), "utf8");
+if (!wipe.includes("delete from auth.users")
+  || !wipe.includes("'app_profiles'")
+  || !wipe.includes("'league_memberships'")
+  || !wipe.includes("'leagues'")) {
+  throw new Error("wipe-accounts-fresh-start.sql must clear auth users, profiles, memberships, leagues");
 }
 
 console.log("sign-in apple join ok");

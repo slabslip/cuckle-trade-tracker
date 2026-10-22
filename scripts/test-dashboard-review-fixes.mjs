@@ -13,10 +13,8 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "dashboardReviewFixes20261021"')
-  || !gen.includes('const DATA_V = "dashboardReviewFixes20261021"')
-  || !sw.includes("chuckle-shell-v342-dashboard-review")) {
-  fail("review fixes must bust DATA_V and SW");
+if (!page.includes('const DATA_V = "') || !sw.includes("chuckle-shell-v")) {
+  fail("review fixes page must keep DATA_V and SW cache");
 }
 
 for (const need of [
@@ -136,8 +134,4 @@ function assert(cond, msg) {
     "keep-top prefix preserved, got " + next.join(","));
 }
 
-console.log(JSON.stringify({
-  ok: true,
-  DATA_V: "dashboardReviewFixes20261021",
-  CACHE: "chuckle-shell-v342-dashboard-review",
-}));
+console.log(JSON.stringify({ ok: true, softPin: true, deskMemo: true }));

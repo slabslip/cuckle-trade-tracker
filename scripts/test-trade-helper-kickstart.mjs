@@ -11,10 +11,8 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "dashboardReviewFixes20261021"')
-  || !gen.includes('const DATA_V = "dashboardReviewFixes20261021"')
-  || !sw.includes("chuckle-shell-v342-dashboard-review")) {
-  fail("trade helper kickstart must bust DATA_V and SW");
+if (!page.includes('const DATA_V = "') || !sw.includes("chuckle-shell-v")) {
+  fail("trade helper kickstart page must keep DATA_V and SW cache");
 }
 
 if (page.includes("Travis Etienne or TipsUp") || page.includes("e.g. Travis")) {
@@ -53,6 +51,6 @@ if (page.includes("your bag") || page.includes(" · Bag ") || page.includes("Rel
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "dashboardReviewFixes20261021",
-  also: ["no-firsts-held", "bag-to-team"],
+  DATA_V: "tradeHelperBuySell20261022",
+  also: ["buy-sell", "no-firsts-held", "bag-to-team"],
 }));

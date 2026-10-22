@@ -11,9 +11,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "tradeHelperClearSpace20261022"')
-  || !gen.includes('const DATA_V = "tradeHelperClearSpace20261022"')
-  || !sw.includes("chuckle-shell-v348-trade-helper-clear-space")) {
+if (!page.includes('const DATA_V = "tradeHelperShareSec20261022"')
+  || !gen.includes('const DATA_V = "tradeHelperShareSec20261022"')
+  || !sw.includes("chuckle-shell-v349-trade-helper-share-sec")) {
   fail("factors ship must bust DATA_V and SW");
 }
 
@@ -73,6 +73,6 @@ if (!consol.includes("0.52") || !consol.includes("3plusPick")) {
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "tradeHelperClearSpace20261022",
-  CACHE: "chuckle-shell-v348-trade-helper-clear-space",
+  DATA_V: "tradeHelperShareSec20261022",
+  CACHE: "chuckle-shell-v349-trade-helper-share-sec",
 }));

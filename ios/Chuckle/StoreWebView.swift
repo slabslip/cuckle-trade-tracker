@@ -3,6 +3,7 @@ import WebKit
 
 /// Thin signed window onto the live Pages (or custom-domain) origin.
 /// Design Mode and preview documents are refused. See docs/STORE_LAW.md.
+/// Native Sign in with Apple: page → `chuckleApple` → Apple sheet → JS credential.
 struct StoreWebView: UIViewRepresentable {
     func makeCoordinator() -> Coordinator { Coordinator() }
 
@@ -10,11 +11,21 @@ struct StoreWebView: UIViewRepresentable {
         let config = WKWebViewConfiguration()
         config.defaultWebpagePreferences.allowsContentJavaScript = true
         config.allowsInlineMediaPlayback = true
+        // Advertise native Apple so the gate uses the system sheet (not web OAuth).
+        let boot = WKUserScript(
+            source: "window.chuckleNativeApple = true;",
+            injectionTime: .atDocumentStart,
+            forMainFrameOnly: true
+        )
+        config.userContentController.addUserScript(boot)
+        config.userContentController.add(context.coordinator, name: "chuckleApple")
         let view = WKWebView(frame: .zero, configuration: config)
         view.customUserAgent = StoreOrigin.userAgent
         view.navigationDelegate = context.coordinator
         view.scrollView.contentInsetAdjustmentBehavior = .never
         view.allowsBackForwardNavigationGestures = true
+        context.coordinator.appleSignIn.webView = view
+        context.coordinator.webView = view
         if let url = StoreOrigin.startURL {
             view.load(URLRequest(url: url))
         }
@@ -23,7 +34,30 @@ struct StoreWebView: UIViewRepresentable {
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 
-    final class Coordinator: NSObject, WKNavigationDelegate {
+    final class Coordinator: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+        let appleSignIn = AppleSignInController()
+        weak var webView: WKWebView?
+
+        func userContentController(
+            _ userContentController: WKUserContentController,
+            didReceive message: WKScriptMessage
+        ) {
+            guard message.name == "chuckleApple" else { return }
+            let action: String
+            if let body = message.body as? [String: Any] {
+                action = String(describing: body["action"] ?? "signIn")
+            } else if let raw = message.body as? String {
+                action = raw
+            } else {
+                action = "signIn"
+            }
+            if action == "signIn" || action == "1" {
+                DispatchQueue.main.async { [weak self] in
+                    self?.appleSignIn.startSignIn()
+                }
+            }
+        }
+
         func webView(
             _ webView: WKWebView,
             decidePolicyFor navigationAction: WKNavigationAction,
@@ -33,8 +67,7 @@ struct StoreWebView: UIViewRepresentable {
                 decisionHandler(.cancel)
                 return
             }
-            // Allow Apple ID + Supabase Auth hosts for Sign in with Apple (web OAuth).
-            // Design Mode / preview docs stay blocked.
+            // Allow Apple ID + Supabase Auth hosts. Design Mode / previews stay blocked.
             if StoreOrigin.isBlocked(url) {
                 decisionHandler(.cancel)
                 return

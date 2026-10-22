@@ -76,8 +76,13 @@ on the function. Add the same secret the news dispatcher already uses.
 2. Certificates → Apple Distribution + Development.
 3. Identifiers → App ID `com.chuckle.fantasy` → enable **Sign in with Apple**.
    Entitlements ship in [`ios/Chuckle/Chuckle.entitlements`](../ios/Chuckle/Chuckle.entitlements).
-4. Also create an Apple **Services ID** for Supabase Auth (web OAuth) and paste
-   it into Supabase → Authentication → Providers → Apple (plus the key).
+   The TestFlight / Xcode shell uses **native** Sign in with Apple
+   ([`ios/Chuckle/AppleSignIn.swift`](../ios/Chuckle/AppleSignIn.swift)) — the system
+   sheet / Face ID — not a Safari redirect.
+4. Also create an Apple **Services ID** for Supabase Auth (Safari / web OAuth) and
+   paste it into Supabase → Authentication → Providers → Apple (plus the key).
+   For the **native** iOS path, Supabase also needs the **App ID** client
+   (`com.chuckle.fantasy`) allowed for the Apple provider (same secret).
 5. Profiles → App Store + Development.
 6. App Store Connect → New app:
    - Name: **Chuckle Fantasy**

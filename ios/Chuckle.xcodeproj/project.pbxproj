@@ -11,6 +11,7 @@
 		A10000000000000000000002 /* StoreWebView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* StoreWebView.swift */; };
 		A10000000000000000000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000003 /* PrivacyInfo.xcprivacy */; };
 		A10000000000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000004 /* Assets.xcassets */; };
+		A10000000000000000000008 /* AppleSignIn.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* AppleSignIn.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		A20000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000006 /* Chuckle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Chuckle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000007 /* Chuckle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Chuckle.entitlements; sourceTree = "<group>"; };
+		A20000000000000000000008 /* AppleSignIn.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleSignIn.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -47,6 +49,7 @@
 			children = (
 				A20000000000000000000001 /* ChuckleApp.swift */,
 				A20000000000000000000002 /* StoreWebView.swift */,
+				A20000000000000000000008 /* AppleSignIn.swift */,
 				A20000000000000000000004 /* Assets.xcassets */,
 				A20000000000000000000005 /* Info.plist */,
 				A20000000000000000000007 /* Chuckle.entitlements */,
@@ -130,6 +133,7 @@
 			files = (
 				A10000000000000000000001 /* ChuckleApp.swift in Sources */,
 				A10000000000000000000002 /* StoreWebView.swift in Sources */,
+				A10000000000000000000008 /* AppleSignIn.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -10,9 +10,14 @@ const ents = fs.readFileSync(path.join(ROOT, "ios/Chuckle/Chuckle.entitlements")
 const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
 
 const need = [
-  "Continue with Apple",
+  "Sign in with Apple",
+  "Create your account",
   'data-apple-go="1"',
   "function authSignInWithApple(",
+  "function authHasNativeApple(",
+  "function authExchangeAppleIdToken(",
+  "__chuckleAppleCredential",
+  "chuckleApple",
   "function authCaptureOAuthSession(",
   "function routeAfterAuth(",
   "function renderAppJoin(",
@@ -25,6 +30,15 @@ const need = [
   "Join a league",
   "authEnsureProfile(",
 ];
+const appleSwift = fs.readFileSync(path.join(ROOT, "ios/Chuckle/AppleSignIn.swift"), "utf8");
+if (!appleSwift.includes("ASAuthorizationAppleIDProvider")
+  || !appleSwift.includes("__chuckleAppleCredential")) {
+  throw new Error("ios AppleSignIn.swift must run native SIWA and call __chuckleAppleCredential");
+}
+const storeWv = fs.readFileSync(path.join(ROOT, "ios/Chuckle/StoreWebView.swift"), "utf8");
+if (!storeWv.includes('name: "chuckleApple"') || !storeWv.includes("chuckleNativeApple")) {
+  throw new Error("StoreWebView must register chuckleApple and set chuckleNativeApple");
+}
 
 for (const s of need) {
   if (!page.includes(s) || !gen.includes(s)) {
@@ -35,10 +49,14 @@ for (const s of need) {
 if (!ents.includes("com.apple.developer.applesignin")) {
   throw new Error("ios entitlements must enable Sign in with Apple");
 }
-if (!sw.includes("sign-in-apple-wipe") && !sw.includes("sign-in-apple-join")) {
+if (!sw.includes("sign-in-apple-native")
+  && !sw.includes("sign-in-apple-wipe")
+  && !sw.includes("sign-in-apple-join")) {
   throw new Error("sw.js must bump cache for Apple join ship");
 }
-if (!page.includes("signInAppleWipe") && !page.includes("signInAppleJoin")) {
+if (!page.includes("signInAppleNative")
+  && !page.includes("signInAppleWipe")
+  && !page.includes("signInAppleJoin")) {
   throw new Error("DATA_V must bump for Apple join ship");
 }
 if (!page.includes('cuckle.auth.v2') || !page.includes('cuckle.votes.v5')) {

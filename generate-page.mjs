@@ -4880,7 +4880,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "signInAppleWipe20261022";
+    const DATA_V = "signInAppleNative20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -23952,10 +23952,10 @@ const html = `<!DOCTYPE html>
       }
       if (typeof shareAccessPending === "function" && shareAccessPending()) {
         return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
-          + "</b>. Continue with Apple (or a username), then claim a remaining team to open it.</p>";
+          + "</b>. Sign in with Apple (or a username), then claim a remaining team to open it.</p>";
       }
       return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
-        + "</b>. Continue with Apple (or a username), then pick your team.</p>";
+        + "</b>. Sign in with Apple (or a username), then pick your team.</p>";
     }
 
     function joinLandSeat(uid) {
@@ -24604,6 +24604,88 @@ const html = `<!DOCTYPE html>
       return true;
     }
 
+    function authHasNativeApple() {
+      try {
+        return !!(window.chuckleNativeApple
+          && window.webkit
+          && window.webkit.messageHandlers
+          && window.webkit.messageHandlers.chuckleApple);
+      } catch (err) {
+        return false;
+      }
+    }
+
+    async function authExchangeAppleIdToken(idToken, nonce, meta) {
+      const body = { provider: "apple", id_token: idToken };
+      if (nonce) body.nonce = nonce;
+      const res = await fetch(AUTH_API + "/token?grant_type=id_token", {
+        method: "POST",
+        headers: {
+          apikey: VOTE_ANON,
+          Authorization: "Bearer " + VOTE_ANON,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        signal: voteAbort(),
+      });
+      const data = await res.json().catch(function () { return {}; });
+      if (!res.ok || !data.access_token) {
+        throw new Error(authErrorMessage(data, res.status, "Apple sign-in failed (" + res.status + ")"));
+      }
+      const user = data.user || (await authFetchUser(data.access_token));
+      const userId = user && user.id;
+      if (!userId) throw new Error("Apple sign-in did not return a user.");
+      let prefer = "";
+      if (meta && meta.full_name) prefer = authSuggestOAuthUsername({
+        id: userId,
+        email: (meta && meta.email) || (user && user.email) || "",
+        user_metadata: { full_name: meta.full_name },
+      });
+      else prefer = authSuggestOAuthUsername(user);
+      let uname = await authLoadProfileUsername(data.access_token, userId);
+      if (!uname) uname = await authEnsureProfile(data.access_token, userId, prefer);
+      authSave({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token || "",
+        expires_at: data.expires_at
+          || Math.floor(Date.now() / 1000) + (Number(data.expires_in) || 3600),
+        user_id: userId,
+        username: uname,
+        sleeper_user_id: null,
+        espn_user_id: null,
+        seat_user_id: null,
+        seat_name: null,
+      });
+      paintSettingsBtn();
+      paintBrandHome();
+      return data;
+    }
+
+    async function authFinishAppleCredential(payload) {
+      let handedOff = false;
+      try {
+        if (!payload || payload.error) {
+          const err = String((payload && payload.error) || "canceled");
+          if (err === "canceled" || /cancel/i.test(err)) {
+            authError = "";
+            return;
+          }
+          throw new Error(err);
+        }
+        if (!payload.id_token) throw new Error("Apple did not return an identity token.");
+        authRestoreOAuthJoin();
+        await authExchangeAppleIdToken(payload.id_token, payload.nonce, payload);
+        authBusy = false;
+        handedOff = !!(await routeAfterAuth());
+      } catch (err) {
+        authError = (err && err.message) || "Apple sign-in failed.";
+        console.error(err);
+      } finally {
+        authBusy = false;
+        if (!handedOff) render();
+      }
+    }
+
     async function authSignInWithApple() {
       if (authBusy) return;
       authBusy = true;
@@ -24611,6 +24693,11 @@ const html = `<!DOCTYPE html>
       render();
       try {
         authStashOAuthJoin();
+        // Store shell: native Apple sheet (one tap / Face ID). Safari: web OAuth.
+        if (authHasNativeApple()) {
+          window.webkit.messageHandlers.chuckleApple.postMessage({ action: "signIn" });
+          return;
+        }
         const redirect = encodeURIComponent(authOAuthRedirectUrl());
         location.assign(AUTH_API + "/authorize?provider=apple&redirect_to=" + redirect);
       } catch (err) {
@@ -24620,6 +24707,16 @@ const html = `<!DOCTYPE html>
         render();
       }
     }
+
+    // Native iOS bridge entry — AppleSignIn.swift calls this with the identity token.
+    window.__chuckleAppleCredential = function (payload) {
+      authFinishAppleCredential(payload || {}).catch(function (err) {
+        console.error(err);
+        authBusy = false;
+        authError = (err && err.message) || "Apple sign-in failed.";
+        render();
+      });
+    };
 
     /**
      * Shared post-auth router for password + Apple. Returns true when another
@@ -33200,13 +33297,16 @@ const html = `<!DOCTYPE html>
       const invited = !!(redeemCode && String(redeemCode).trim());
       const shared = !invited && typeof shareAccessPending === "function" && shareAccessPending();
       const forgot = gateMode === "forgot";
+      const nativeApple = !forgot && authHasNativeApple();
+      // Apple is create + sign-in. Visible title always says create/get started so the
+      // store gate does not look like a password form is required.
       const title = forgot
         ? "Reset login"
         : invited
-          ? (gateMode === "signup" ? "Create account to join" : "Sign in to join")
+          ? "Create account to join"
           : shared
-            ? (gateMode === "signup" ? "Create account to open this view" : "Sign in to open this view")
-          : (gateMode === "signup" ? "Create account" : "Sign in");
+            ? "Create account to open this view"
+          : "Create your account";
       const go = forgot
         ? "Reclaim seat"
         : invited
@@ -33215,15 +33315,20 @@ const html = `<!DOCTYPE html>
             ? (gateMode === "signup" ? "Create account & claim" : "Sign in & claim")
           : (gateMode === "signup" ? "Create account" : "Sign in");
       const appleBtn = forgot ? ""
-        : ('<button type="button" class="gate-apple" data-apple-go="1"'
+        : ('<h3 style="margin:0 0 10px">' + esc(title) + "</h3>"
+          + '<button type="button" class="gate-apple" data-apple-go="1"'
           + (authBusy ? " disabled" : "") + ">"
           + '<span class="gate-apple-mark" aria-hidden="true"></span>'
-          + (authBusy ? "Connecting…" : "Continue with Apple")
+          + (authBusy ? "Connecting…" : "Sign in with Apple")
           + "</button>"
-          + '<p class="caption" style="margin:0 0 8px">Fastest — uses your Apple ID. '
+          + '<p class="caption" style="margin:0 0 8px">'
+          + (nativeApple
+            ? "One tap with your Apple ID — Face ID or your phone passcode. "
+              + "New here? That creates your account."
+            : "One tap with your Apple ID. New here? That creates your account. ")
           + (invited
-            ? "Your seat invite stays ready after Apple signs you in."
-            : "Then join with an invite code or a Sleeper league ID.")
+            ? " Your seat invite stays ready."
+            : " Then join with an invite code or a Sleeper league ID.")
           + "</p>");
       const forgotForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
         + '<p class="caption" style="margin:0 0 8px">Ask your commissioner to tap <b>Reset login</b> '
@@ -33313,7 +33418,7 @@ const html = `<!DOCTYPE html>
             + '<p class="caption">Seat invite <code style="user-select:all">'
             + esc(String(redeemCode).toUpperCase()) + "</code>"
             + " — this is your <b>seat ticket</b>, not your account password. "
-            + "Continue with Apple, or pick a username and a <b>new password</b>.</p>")
+            + "Sign in with Apple, or pick a username and a <b>new password</b>.</p>")
           : ((claimLeagueId || shared) && !forgot
             ? (joinStepsHtml("account") + joinInviteLeadHtml())
             : ""))
@@ -37431,7 +37536,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v351-sign-in-apple-wipe")
+  || !swSrc.includes("chuckle-shell-v352-sign-in-apple-native")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39795,9 +39900,14 @@ if (!inline.includes('data-gate-mode="forgot"')
   || !inline.includes("Email me a reset")) {
   throw new Error("gate must offer Forgot username or password and reclaim via a new seat ticket");
 }
-if (!inline.includes("Continue with Apple")
+if (!inline.includes("Sign in with Apple")
+  || !inline.includes("Create your account")
   || !inline.includes('data-apple-go="1"')
   || !inline.includes("function authSignInWithApple(")
+  || !inline.includes("function authHasNativeApple(")
+  || !inline.includes("function authExchangeAppleIdToken(")
+  || !inline.includes("__chuckleAppleCredential")
+  || !inline.includes("chuckleApple")
   || !inline.includes("function authCaptureOAuthSession(")
   || !inline.includes("function routeAfterAuth(")
   || !inline.includes('provider=apple')
@@ -39807,7 +39917,7 @@ if (!inline.includes("Continue with Apple")
   || !inline.includes('data-join-league-go="1"')
   || !inline.includes("Find teams")
   || !inline.includes("Use username and password")) {
-  throw new Error("gate must offer Continue with Apple and a post-login join screen (invite or Sleeper ID)");
+  throw new Error("gate must offer Sign in with Apple (native + web) and a post-login join screen");
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");

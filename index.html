@@ -4845,7 +4845,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261022175724";
+    const DATA_V = "tradeHelperClearSpace20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5924,22 +5924,28 @@
       try {
         sessionStorage.removeItem("cuckle.pending.thq");
         sessionStorage.removeItem("cuckle.pending.thpick");
+        sessionStorage.removeItem("cuckle.pending.thfactor");
       } catch (err) { /* ignore */ }
     }
 
-    /** Apply ?thpick= / ?thq= or session stash onto Trade helper search/target state. */
+    /** Apply ?thpick= / ?thq= / ?thfactor= or session stash onto Trade helper search/target state. */
     function tradeHelperApplyPendingPick() {
       let thq = "";
       let thpick = "";
+      let thfactor = "";
       try {
         const q = new URLSearchParams(location.search);
         thq = String(q.get("thq") || "");
         thpick = String(q.get("thpick") || "");
+        thfactor = String(q.get("thfactor") || "");
         if (!thq) thq = sessionStorage.getItem("cuckle.pending.thq") || "";
         if (!thpick) thpick = sessionStorage.getItem("cuckle.pending.thpick") || "";
+        if (!thfactor) thfactor = sessionStorage.getItem("cuckle.pending.thfactor") || "";
         if (thq) sessionStorage.setItem("cuckle.pending.thq", thq);
         if (thpick) sessionStorage.setItem("cuckle.pending.thpick", thpick);
+        if (thfactor) sessionStorage.setItem("cuckle.pending.thfactor", thfactor);
       } catch (err) { /* private */ }
+      if (thfactor) tradeHelperFactor = tradeHelperFactorCanon(thfactor);
       if (thpick) {
         tradeHelperTargetId = thpick;
         tradeHelperQ = "";
@@ -5950,7 +5956,7 @@
         tradeHelperQ = thq;
         return "q";
       }
-      return "";
+      return thfactor ? "factor" : "";
     }
 
     function dataTileSeatReady() {
@@ -11357,8 +11363,10 @@
         try {
           const thq0 = String(params.get("thq") || "");
           const thpick0 = String(params.get("thpick") || "");
+          const thfactor0 = String(params.get("thfactor") || "");
           if (thq0) sessionStorage.setItem("cuckle.pending.thq", thq0);
           if (thpick0) sessionStorage.setItem("cuckle.pending.thpick", thpick0);
+          if (thfactor0) sessionStorage.setItem("cuckle.pending.thfactor", thfactor0);
         } catch (err) { /* private */ }
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
@@ -15303,6 +15311,7 @@
       if (k === "2for1") return "2-for-1";
       if (k === "2plusPick") return "2 + pick";
       if (k === "3plusPick") return "3 + pick";
+      if (k === "3plusPick") return "3 + pick";
       return "1-for-1";
     }
 
@@ -15310,7 +15319,7 @@
       const cur = tradeHelperFactorCanon(tradeHelperFactor);
       const opts = [
         ["even", "Even book", "1-for-1 and near-even packages."],
-        ["clear_space", "Clear space", "2–3 for 1 (picks welcome) into a foundation — prefer seats that need depth."],
+        ["clear_space", "Clear space", "2–3 for 1 + pick toppers into a foundation — not book-even; prefer seats that need depth."],
       ];
       let html = '<div class="trade-helper-factors" aria-label="Trade factor">'
         + '<h3 class="ds-lists-h">Factor</h3>';
@@ -15455,23 +15464,34 @@
       const tv = calcValueNum(target);
       if (tv <= 0) return [];
       const clear = tradeHelperFactorCanon(tradeHelperFactor) === "clear_space";
+      // Clear-space consolidations are rarely book-even — allow wide ratios + soft rel.
+      const ratioLo = clear ? 0.52 : 0.85;
+      const ratioHi = clear ? 1.72 : 1.32;
       const out = [];
       const pushOffer = function (legsA, kind, note) {
         if (!legsA || !legsA.length) return;
+        // Clear space: still respect hard refuse, but only when sending a starter they sold.
         if (typeof homeDeskTheyAccept === "function" && !homeDeskTheyAccept(theirDir, legsA, myBag)) return;
         const legsB = [target];
         const rec = (typeof calcReceiveTotals === "function")
           ? calcReceiveTotals(legsA, legsB, mine, them)
           : { gap: Math.abs(legsA.reduce(function (s, x) { return s + calcValueNum(x); }, 0) - tv), rel: 0 };
         const send = legsA.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
-        if (send < 900) return;
+        if (send < (clear ? 700 : 900)) return;
         const gap = Number(rec.gap) || 0;
         const rel = Number(rec.rel) || 0;
-        if (rel > 0.22 && gap > 900) return;
+        if (clear) {
+          // Soft ceiling only — unclean overpays / underpays with pick toppers are the point.
+          if (rel > 0.55 && gap > 3200) return;
+        } else if (rel > 0.22 && gap > 900) {
+          return;
+        }
         let score = gap;
         if (kind === "1for1") score += clear ? 80 : 0;
-        if (kind === "2for1") score += clear ? -20 : 40;
-        if (kind === "3for1" || kind === "2plusPick" || kind === "3plusPick") score += clear ? -40 : 55;
+        if (kind === "2for1") score += clear ? 10 : 40;
+        if (kind === "3for1") score += clear ? -25 : 55;
+        if (kind === "2plusPick") score += clear ? -55 : 55;
+        if (kind === "3plusPick") score += clear ? -70 : 60;
         if (clear && theirDepth.band === "shallow") score -= 50;
         if (clear && theirDepth.band === "deep") score += 60;
         if (tradeHelperIsFoundational(target)) score -= 15;
@@ -15504,51 +15524,73 @@
             : (v > tv ? "Slight overpay — may get it done" : "Slight under — may need a sweetener"));
         }
       }
-      const pool = myBag.filter(tradeHelperCanSendFiller).slice(0, clear ? 14 : 10);
+      const pool = myBag.filter(tradeHelperCanSendFiller).slice(0, clear ? 16 : 10);
       const players = pool.filter(function (a) { return !tradeHelperIsPick(a); });
       const picks = pool.filter(tradeHelperIsPick);
+      const pCap = clear ? 10 : 8;
+      const pickCap = clear ? 6 : 4;
       for (let i = 0; i < players.length; i++) {
         for (let j = i + 1; j < players.length; j++) {
           const sum = calcValueNum(players[i]) + calcValueNum(players[j]);
           const ratio = sum / tv;
-          if (ratio < 0.85 || ratio > 1.32) continue;
+          if (ratio < ratioLo || ratio > (clear ? 1.55 : ratioHi)) continue;
           pushOffer([players[i], players[j]], "2for1",
             clear
-              ? ("Clear-space 2-for-1" + (theirDepth.band === "shallow" ? " · they need depth" : ""))
+              ? ("Unclean 2-for-1" + (theirDepth.band === "shallow" ? " · they need depth" : " · expect a pick topper in calc"))
               : "Two-for-one package near book value");
         }
       }
-      // 2 players + pick topper
-      for (let i = 0; i < Math.min(players.length, 8); i++) {
-        for (let j = i + 1; j < Math.min(players.length, 8); j++) {
-          for (let p = 0; p < Math.min(picks.length, 4); p++) {
+      // 2 players + pick topper (preferred under Clear space)
+      for (let i = 0; i < Math.min(players.length, pCap); i++) {
+        for (let j = i + 1; j < Math.min(players.length, pCap); j++) {
+          for (let p = 0; p < Math.min(picks.length, pickCap); p++) {
             const legs = [players[i], players[j], picks[p]];
             const sum = legs.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
             const ratio = sum / tv;
-            if (ratio < 0.88 || ratio > 1.35) continue;
-            pushOffer(legs, "2plusPick", "Two + pick topper near book");
+            if (ratio < ratioLo || ratio > ratioHi) continue;
+            pushOffer(legs, "2plusPick",
+              clear
+                ? ("2 + pick topper — not book-even" + (theirDepth.band === "shallow" ? " · they need depth" : ""))
+                : "Two + pick topper near book");
           }
         }
       }
       // 3-for-1 players
-      for (let i = 0; i < Math.min(players.length, 7); i++) {
-        for (let j = i + 1; j < Math.min(players.length, 7); j++) {
-          for (let k = j + 1; k < Math.min(players.length, 7); k++) {
+      for (let i = 0; i < Math.min(players.length, clear ? 8 : 7); i++) {
+        for (let j = i + 1; j < Math.min(players.length, clear ? 8 : 7); j++) {
+          for (let k = j + 1; k < Math.min(players.length, clear ? 8 : 7); k++) {
             const legs = [players[i], players[j], players[k]];
             const sum = legs.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
             const ratio = sum / tv;
-            if (ratio < 0.88 || ratio > 1.36) continue;
+            if (ratio < ratioLo || ratio > (clear ? 1.65 : 1.36)) continue;
             pushOffer(legs, "3for1",
               clear
-                ? ("Clear-space 3-for-1 into " + (tradeHelperIsFoundational(target) ? "a foundation" : "one piece"))
+                ? ("Unclean 3-for-1 into " + (tradeHelperIsFoundational(target) ? "a foundation" : "one piece"))
                 : "Three-for-one package near book value");
+          }
+        }
+      }
+      // 3 players + pick — common clear-space overpay shape
+      if (clear && picks.length) {
+        for (let i = 0; i < Math.min(players.length, 7); i++) {
+          for (let j = i + 1; j < Math.min(players.length, 7); j++) {
+            for (let k = j + 1; k < Math.min(players.length, 7); k++) {
+              for (let p = 0; p < Math.min(picks.length, 4); p++) {
+                const legs = [players[i], players[j], players[k], picks[p]];
+                const sum = legs.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
+                const ratio = sum / tv;
+                if (ratio < ratioLo || ratio > ratioHi) continue;
+                pushOffer(legs, "3plusPick",
+                  "3 + pick topper into " + (tradeHelperIsFoundational(target) ? "a foundation" : "one piece"));
+              }
+            }
           }
         }
       }
       out.sort(function (a, b) { return a.score - b.score; });
       const seen = {};
       const uniq = [];
-      const cap = clear ? 8 : 6;
+      const cap = clear ? 10 : 6;
       for (let i = 0; i < out.length; i++) {
         const k = out[i].sendA + "|" + out[i].kind;
         if (seen[k]) continue;
@@ -15668,7 +15710,7 @@
 
     /**
      * Clear-space consolidations: send this player + depth mates (+ pick) for one
-     * foundation/stud on a shallower seat.
+     * foundation/stud on a shallower seat. Not book-even — pick toppers expected.
      */
     function tradeHelperConsolidatePackages(asset) {
       const mine = authSeatId() ? String(authSeatId()) : "";
@@ -15677,7 +15719,7 @@
       const myBag = bags.get(mine) || [];
       const mates = myBag.filter(function (a) {
         return a && a.id !== asset.id && tradeHelperCanSendFiller(a);
-      }).slice(0, 14);
+      }).slice(0, 16);
       const matePlayers = mates.filter(function (a) { return !tradeHelperIsPick(a); });
       const matePicks = mates.filter(tradeHelperIsPick);
       const out = [];
@@ -15692,11 +15734,11 @@
         const targets = theirBag.filter(function (a) {
           if (!a || tradeHelperIsPick(a)) return false;
           const v = calcValueNum(a);
-          if (v < 1800) return false;
+          if (v < 1600) return false;
           const cls = tradeHelperClassOf(a);
           return cls.foundational || cls.riser
-            || v >= (typeof deskCuts === "function" ? deskCuts().start : 2200) * 1.15;
-        }).slice(0, 8);
+            || v >= (typeof deskCuts === "function" ? deskCuts().start : 2200) * 1.05;
+        }).slice(0, 10);
         targets.forEach(function (tgt) {
           const tv = calcValueNum(tgt);
           if (tv <= 0) return;
@@ -15706,17 +15748,21 @@
             if (typeof homeDeskTheyAccept === "function"
               && !homeDeskTheyAccept(theirDir, legsA, myBag)) return;
             const send = legsA.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
-            if (send < 900) return;
+            if (send < 700) return;
             const rec = (typeof calcReceiveTotals === "function")
               ? calcReceiveTotals(legsA, [tgt], mine, uid)
               : { gap: Math.abs(send - tv), rel: 0 };
             const gap = Number(rec.gap) || 0;
             const rel = Number(rec.rel) || 0;
-            if (rel > 0.24 && gap > 1100) return;
+            // Soft only — consolidations routinely miss book by a wide margin.
+            if (rel > 0.55 && gap > 3200) return;
             const ratio = send / tv;
-            if (ratio < 0.82 || ratio > 1.38) return;
+            if (ratio < 0.52 || ratio > 1.72) return;
             let score = gap;
-            if (kind === "3for1" || kind === "2plusPick") score -= 25;
+            if (kind === "2for1") score += 15;
+            if (kind === "3for1") score -= 20;
+            if (kind === "2plusPick") score -= 55;
+            if (kind === "3plusPick") score -= 70;
             if (theirDepth.band === "shallow") score -= 55;
             if (theirDepth.band === "deep") score += 70;
             if (tgtClass.foundational) score -= 20;
@@ -15738,19 +15784,27 @@
           };
           for (let i = 0; i < matePlayers.length; i++) {
             push([asset, matePlayers[i]], "2for1",
-              "Clear space vs " + themName
-                + (theirDepth.band === "shallow" ? " · they need depth" : ""));
+              "Unclean 2-for-1 vs " + themName
+                + (theirDepth.band === "shallow" ? " · they need depth" : " · pick topper likely"));
           }
-          for (let i = 0; i < Math.min(matePlayers.length, 8); i++) {
-            for (let p = 0; p < Math.min(matePicks.length, 3); p++) {
+          for (let i = 0; i < Math.min(matePlayers.length, 10); i++) {
+            for (let p = 0; p < Math.min(matePicks.length, 5); p++) {
               push([asset, matePlayers[i], matePicks[p]], "2plusPick",
-                "Two + pick into " + (tgt.name || "their piece") + " · " + themName);
+                "2 + pick topper into " + (tgt.name || "their piece") + " · " + themName);
+            }
+          }
+          for (let i = 0; i < Math.min(matePlayers.length, 7); i++) {
+            for (let j = i + 1; j < Math.min(matePlayers.length, 7); j++) {
+              push([asset, matePlayers[i], matePlayers[j]], "3for1",
+                "Unclean 3-for-1 consolidation vs " + themName);
             }
           }
           for (let i = 0; i < Math.min(matePlayers.length, 6); i++) {
             for (let j = i + 1; j < Math.min(matePlayers.length, 6); j++) {
-              push([asset, matePlayers[i], matePlayers[j]], "3for1",
-                "Three-for-one consolidation vs " + themName);
+              for (let p = 0; p < Math.min(matePicks.length, 4); p++) {
+                push([asset, matePlayers[i], matePlayers[j], matePicks[p]], "3plusPick",
+                  "3 + pick topper into " + (tgt.name || "their piece") + " · " + themName);
+              }
             }
           }
         });
@@ -15763,7 +15817,7 @@
         if (seen[k]) continue;
         seen[k] = true;
         uniq.push(out[i]);
-        if (uniq.length >= 8) break;
+        if (uniq.length >= 10) break;
       }
       return uniq;
     }
@@ -16320,12 +16374,12 @@
         if (!anal.packages.length) {
           body += '<p class="data-hint">' + (selling
             ? (clear
-              ? "No clean 2/3-for-1 consolidation on the selected seats. Toggle Even book or add managers."
+              ? "No workable 2/3-for-1 (+ pick) consolidation on the selected seats. Add managers or try Even book."
               : (tradeHelperSellSeatSet()
                 ? "No clean ask from the selected managers. Toggle more seats or open calc."
                 : "No clean ask package on other seats right now. Check interest and try calc."))
             : (clear
-              ? "No clean multi-piece path that skips your foundations. Try Even book or another target."
+              ? "No workable multi-piece (+ pick topper) path that skips your foundations. Try another target or Even book."
               : "No clean package on your team that both sides are likely to take. Check alternatives."))
             + "</p>";
         } else {
@@ -36458,8 +36512,10 @@
     try {
       const thq0 = String(params.get("thq") || "");
       const thpick0 = String(params.get("thpick") || "");
+      const thfactor0 = String(params.get("thfactor") || "");
       if (thq0) sessionStorage.setItem("cuckle.pending.thq", thq0);
       if (thpick0) sessionStorage.setItem("cuckle.pending.thpick", thpick0);
+      if (thfactor0) sessionStorage.setItem("cuckle.pending.thfactor", thfactor0);
     } catch (err) { /* private */ }
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();

@@ -11,9 +11,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "tradeHelperClass20261022"')
-  || !gen.includes('const DATA_V = "tradeHelperClass20261022"')
-  || !sw.includes("chuckle-shell-v347-trade-helper-class")) {
+if (!page.includes('const DATA_V = "tradeHelperClearSpace20261022"')
+  || !gen.includes('const DATA_V = "tradeHelperClearSpace20261022"')
+  || !sw.includes("chuckle-shell-v348-trade-helper-clear-space")) {
   fail("factors ship must bust DATA_V and SW");
 }
 
@@ -67,8 +67,12 @@ if (!consol.includes("shallow") || !consol.includes("2plusPick")) {
   fail("consolidate must prefer shallow seats and pick toppers");
 }
 
+if (!consol.includes("0.52") || !consol.includes("3plusPick")) {
+  fail("consolidate clear-space must allow unclean ratios + 3+pick");
+}
+
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "tradeHelperClass20261022",
-  CACHE: "chuckle-shell-v347-trade-helper-class",
+  DATA_V: "tradeHelperClearSpace20261022",
+  CACHE: "chuckle-shell-v348-trade-helper-clear-space",
 }));

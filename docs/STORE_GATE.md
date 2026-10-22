@@ -22,7 +22,9 @@ node scripts/store-device-gate.mjs
 
 ## Must pass
 
-1. **Login** — gate sign-in, land on Your leagues or Cuckle home.
+1. **Login** — **Continue with Apple** (or username/password), then **Join a
+   league** (CF- invite or Sleeper league ID) when you have no seats yet; else
+   Your leagues / Cuckle home.
 2. **Teams** — league bar Teams; all seats listed (not capped at 10).
 3. **Trade vote** — open Latest trade / a deal; cast or see the three options.
 4. **Calc** — open Cuckle trade calculator; two sides render.

@@ -74,18 +74,22 @@ on the function. Add the same secret the news dispatcher already uses.
 1. Enroll at [developer.apple.com](https://developer.apple.com) (personal or
    org). Bundle id reserved in-repo: **`com.chuckle.fantasy`**.
 2. Certificates → Apple Distribution + Development.
-3. Identifiers → App ID `com.chuckle.fantasy` (no extra capabilities for v1).
-4. Profiles → App Store + Development.
-5. App Store Connect → New app:
+3. Identifiers → App ID `com.chuckle.fantasy` → enable **Sign in with Apple**.
+   Entitlements ship in [`ios/Chuckle/Chuckle.entitlements`](../ios/Chuckle/Chuckle.entitlements).
+4. Also create an Apple **Services ID** for Supabase Auth (web OAuth) and paste
+   it into Supabase → Authentication → Providers → Apple (plus the key).
+5. Profiles → App Store + Development.
+6. App Store Connect → New app:
    - Name: **Chuckle Fantasy**
    - SKU: `chuckle-fantasy`
    - Bundle ID: `com.chuckle.fantasy`
    - Category: Sports
-6. Privacy nutrition: **no tracking**. Data collected: account (username) on
-   device + our servers (Supabase). No third-party advertising. Encryption:
-   standard HTTPS only — set **ITSAppUsesNonExemptEncryption = false**
+7. Privacy nutrition: **no tracking**. Data collected: account (username) on
+   device + our servers (Supabase). Sign in with Apple may share a private
+   relay email. No third-party advertising. Encryption: standard HTTPS only —
+   set **ITSAppUsesNonExemptEncryption = false**
    (already in [`ios/Chuckle/Info.plist`](../ios/Chuckle/Info.plist)).
-7. Icons: 1024×1024 master is [`data/ui/icon-1024.png`](../data/ui/icon-1024.png).
+8. Icons: 1024×1024 master is [`data/ui/icon-1024.png`](../data/ui/icon-1024.png).
    The Xcode asset catalog points at it.
 
 ---

@@ -76,10 +76,16 @@ If home voting says **Vote didn’t save**, run `db/wave9-vote-write-fix.sql`, h
 
 Authentication → Providers → Email → **Confirm email OFF**
 
+Authentication → Providers → **Apple** → enable (Services ID + secret key from
+Apple Developer). The gate’s **Continue with Apple** button calls
+`/auth/v1/authorize?provider=apple` and returns to the Site URL with tokens in
+the hash. Without Apple enabled, that button fails at Apple/Supabase.
+
 Authentication → URL Configuration:
 
 - **Site URL:** `https://slabslip.github.io/cuckle-trade-tracker`
 - **Redirect URLs:** `https://slabslip.github.io/cuckle-trade-tracker/**`
+  (include `?store=1` returns — the app keeps `store=1` on the OAuth redirect)
 
 ### 3. Deploy Edge Function `join-league`
 

@@ -15,3 +15,6 @@ make testflight
 
 Bundle id: `com.chuckle.fantasy`. Portrait only. Design Mode URLs are blocked.
 App icon: `data/ui/icon-1024.png` copied into the asset catalog.
+Sign in with Apple: enable the capability on the App ID; entitlements are in
+`Chuckle/Chuckle.entitlements`. Wire the same Services ID into Supabase Auth →
+Apple so the gate’s **Continue with Apple** button works in the WKWebView.

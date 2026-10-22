@@ -20,6 +20,7 @@
 		A20000000000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A20000000000000000000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000006 /* Chuckle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Chuckle.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A20000000000000000000007 /* Chuckle.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Chuckle.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -48,6 +49,7 @@
 				A20000000000000000000002 /* StoreWebView.swift */,
 				A20000000000000000000004 /* Assets.xcassets */,
 				A20000000000000000000005 /* Info.plist */,
+				A20000000000000000000007 /* Chuckle.entitlements */,
 				A20000000000000000000003 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Chuckle;
@@ -169,6 +171,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_ENTITLEMENTS = Chuckle/Chuckle.entitlements;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Chuckle/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Chuckle;
@@ -186,6 +189,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGNING_ALLOWED = NO;
+				CODE_SIGN_ENTITLEMENTS = Chuckle/Chuckle.entitlements;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Chuckle/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Chuckle;

@@ -33,6 +33,8 @@ struct StoreWebView: UIViewRepresentable {
                 decisionHandler(.cancel)
                 return
             }
+            // Allow Apple ID + Supabase Auth hosts for Sign in with Apple (web OAuth).
+            // Design Mode / preview docs stay blocked.
             if StoreOrigin.isBlocked(url) {
                 decisionHandler(.cancel)
                 return

@@ -5898,10 +5898,14 @@ const html = `<!DOCTYPE html>
       if (!tile) return false;
       let slice = pendingDataSlice || "";
       let who = pendingDataWho || "";
+      let thq = "";
+      let thpick = "";
       try {
         const q = new URLSearchParams(location.search);
         if (!slice) slice = String(q.get("slice") || "");
         if (!who) who = String(q.get("who") || "");
+        thq = String(q.get("thq") || "");
+        thpick = String(q.get("thpick") || "");
         if (!slice) slice = sessionStorage.getItem("cuckle.pending.slice") || "";
         if (!who) who = sessionStorage.getItem("cuckle.pending.who") || "";
       } catch (err) { /* private */ }
@@ -5913,6 +5917,15 @@ const html = `<!DOCTYPE html>
       me = null;
       homeTab = "history";
       if (typeof dataDashOpenReport === "function") dataDashOpenReport(tile);
+      if (tile === "trade_helper") {
+        if (thpick) {
+          tradeHelperTargetId = thpick;
+          tradeHelperQ = "";
+        } else if (thq) {
+          tradeHelperTargetId = "";
+          tradeHelperQ = thq;
+        }
+      }
       receiptListSlice = (slice === "top" || slice === "bot") ? slice : "";
       receiptListWho = who || "";
       if (receiptListWho && tile === "pot_net") receiptNetWho = receiptListWho;

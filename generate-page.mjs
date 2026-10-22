@@ -5881,6 +5881,8 @@ const html = `<!DOCTYPE html>
         sessionStorage.removeItem("cuckle.pending.tile");
         sessionStorage.removeItem("cuckle.pending.slice");
         sessionStorage.removeItem("cuckle.pending.who");
+        sessionStorage.removeItem("cuckle.pending.thq");
+        sessionStorage.removeItem("cuckle.pending.thpick");
       } catch (err) { /* ignore */ }
     }
 
@@ -5908,6 +5910,11 @@ const html = `<!DOCTYPE html>
         thpick = String(q.get("thpick") || "");
         if (!slice) slice = sessionStorage.getItem("cuckle.pending.slice") || "";
         if (!who) who = sessionStorage.getItem("cuckle.pending.who") || "";
+        if (!thq) thq = sessionStorage.getItem("cuckle.pending.thq") || "";
+        if (!thpick) thpick = sessionStorage.getItem("cuckle.pending.thpick") || "";
+        // Survive syncUrl stripping ?thpick= / ?thq= before honor runs.
+        if (thq) sessionStorage.setItem("cuckle.pending.thq", thq);
+        if (thpick) sessionStorage.setItem("cuckle.pending.thpick", thpick);
       } catch (err) { /* private */ }
       rememberPendingDataTile(tile, { slice: slice, who: who });
       if (appScreen !== "dash") return false;
@@ -11290,6 +11297,12 @@ const html = `<!DOCTYPE html>
         if (pendingDataTile && typeof rememberPendingDataTile === "function") {
           rememberPendingDataTile(pendingDataTile, { slice: pendingDataSlice, who: pendingDataWho });
         }
+        try {
+          const thq0 = String(params.get("thq") || "");
+          const thpick0 = String(params.get("thpick") || "");
+          if (thq0) sessionStorage.setItem("cuckle.pending.thq", thq0);
+          if (thpick0) sessionStorage.setItem("cuckle.pending.thpick", thpick0);
+        } catch (err) { /* private */ }
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
       const startMe = params.get("me");

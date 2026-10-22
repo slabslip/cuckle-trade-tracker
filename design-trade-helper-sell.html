@@ -26,6 +26,8 @@
         localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
         sessionStorage.setItem("cuckle.design.league_home", "1");
         sessionStorage.setItem("cuckle.design.seat", "truman");
+        sessionStorage.setItem("cuckle.pending.tile", "trade_helper");
+        sessionStorage.setItem("cuckle.pending.thpick", "player:6801");
       } catch (err) {}
       var go = function () {
         location.replace("./index.html?design=league-home&view=data&tile=trade_helper&thpick=player%3A6801&v=sell&_=" + Date.now());

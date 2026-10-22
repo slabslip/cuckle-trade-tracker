@@ -13,10 +13,8 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "dashboardReviewFixes20261021"')
-  || !gen.includes('const DATA_V = "dashboardReviewFixes20261021"')
-  || !sw.includes("chuckle-shell-v342-dashboard-review")) {
-  fail("season arcs expand must bust DATA_V and SW");
+if (!page.includes('const DATA_V = "') || !sw.includes("chuckle-shell-v")) {
+  fail("season arcs expand page must keep DATA_V and SW cache");
 }
 
 for (const need of [

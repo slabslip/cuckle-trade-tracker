@@ -3251,6 +3251,20 @@
     .trade-helper-kick .home-desk-row { margin-bottom: 8px; }
     .trade-helper-kick .home-desk-row:last-child { margin-bottom: 0; }
     .trade-helper-kick .home-desk-meta { white-space: normal; }
+    .trade-helper-side {
+      display: inline-block; font-size: 0.68rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      color: var(--muted); margin: 0 6px 0 0; vertical-align: 0.05em;
+    }
+    .trade-helper-side.buy { color: #8fb59a; }
+    .trade-helper-side.sell { color: #c4a36a; }
+    .trade-helper-mode {
+      display: inline-block; font-size: 0.72rem; font-weight: 700;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      margin: 0 0 6px; color: var(--muted);
+    }
+    .trade-helper-mode.buy { color: #8fb59a; }
+    .trade-helper-mode.sell { color: #c4a36a; }
     .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
     .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
     button.pick-intel-row {
@@ -4793,7 +4807,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "nightly20261022004320";
+    const DATA_V = "tradeHelperBuySell20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4905,7 +4919,7 @@
       league_draft: { lab: "League snake", why: "Pick a seat, then this season's snake tape." },
     };
     const DATA_REPORTS = [
-      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player or trade partner. Kickstart ideas sit under the search — then build an offer or see better options." },
+      { id: "trade_helper", lab: "Trade helper", desk: "book", group: "deal", size: "full", why: "Search a player to buy, or one on your team to sell. Kickstart ideas sit under the search." },
       { id: "fill_holes", lab: "Who has what you need", desk: "book", group: "deal", size: "full", why: "Get book, Dart to Star by color." },
       { id: "move_extras", lab: "Who wants your extras", desk: "book", group: "deal", size: "full", why: "Give book, Dart to Star by color." },
       { id: "poach_cuffs", lab: "Poach cuffs", desk: "cuffs", group: "deal", size: "full", why: "Cuffs you own that insure another starter." },
@@ -14732,7 +14746,7 @@
         || id === "poach_cuffs" || id === "my_block" || id === "block_fits")) {
         return "Claim your team to see this";
       }
-      if (id === "trade_helper") return "Search for player or trade partner — or tap a kickstart idea";
+      if (id === "trade_helper") return "Search a player to buy or one on your team to sell";
       if (id === "fill_holes") return "No Get that both sides will take";
       if (id === "move_extras") return "No Give that both sides will take";
       if (id === "poach_cuffs") return "You hold no cuff on another starter";
@@ -14997,6 +15011,11 @@
       return null;
     }
 
+    function tradeHelperIsMine(a) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      return !!(mine && a && String(a.owner_id) === mine);
+    }
+
     function tradeHelperSearchHits(q, limit) {
       const mine = authSeatId() ? String(authSeatId()) : "";
       const needle = String(q || "").trim().toLowerCase();
@@ -15004,7 +15023,6 @@
       const book = calcBook || { players: [], picks: [] };
       const pool = (book.players || []).filter(function (a) {
         if (!a || !a.id || a.value == null) return false;
-        if (mine && String(a.owner_id) === mine) return false;
         if (typeof calcAssetNeedle === "function") return calcAssetNeedle(a, needle);
         const blob = [a.name, a.pos, a.team, a.owner].join(" ").toLowerCase();
         return blob.indexOf(needle) >= 0;
@@ -15014,7 +15032,9 @@
         const bn = String(b.name || "").toLowerCase();
         const ap = an.indexOf(needle) === 0 ? 0 : 1;
         const bp = bn.indexOf(needle) === 0 ? 0 : 1;
-        return ap - bp || calcValueNum(b) - calcValueNum(a);
+        const am = mine && String(a.owner_id) === mine ? 0 : 1;
+        const bm = mine && String(b.owner_id) === mine ? 0 : 1;
+        return ap - bp || am - bm || calcValueNum(b) - calcValueNum(a);
       });
       return pool.slice(0, limit || 12);
     }
@@ -15096,6 +15116,181 @@
       return uniq;
     }
 
+    function tradeHelperSellPackages(asset) {
+      // Asset is on my team — find what other seats might send back for him.
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      if (!mine || !asset || !tradeHelperIsMine(asset)) return [];
+      const tv = calcValueNum(asset);
+      if (tv <= 0) return [];
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = bags.get(mine) || [];
+      const out = [];
+      bags.forEach(function (theirBag, uid) {
+        if (String(uid) === mine) return;
+        if (!theirBag || !theirBag.length) return;
+        const theirDir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
+        // Would they take this player from us?
+        if (typeof homeDeskTheyAccept === "function"
+          && !homeDeskTheyAccept(theirDir, [asset], theirBag)) return;
+        const themName = (typeof dataDashSeatName === "function" ? dataDashSeatName(uid) : "")
+          || (theirBag[0] && theirBag[0].owner) || "them";
+        const pushAsk = function (legsB, kind, note) {
+          if (!legsB || !legsB.length) return;
+          const rec = (typeof calcReceiveTotals === "function")
+            ? calcReceiveTotals([asset], legsB, mine, uid)
+            : { gap: Math.abs(legsB.reduce(function (s, x) { return s + calcValueNum(x); }, 0) - tv), rel: 0 };
+          const recv = legsB.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
+          if (recv < 900) return;
+          const gap = Number(rec.gap) || 0;
+          const rel = Number(rec.rel) || 0;
+          if (rel > 0.22 && gap > 900) return;
+          out.push({
+            kind: kind,
+            legsA: [asset],
+            legsB: legsB,
+            sendA: asset.id,
+            sendB: legsB.map(function (x) { return x.id; }).join(","),
+            themId: String(uid),
+            themName: themName,
+            gap: gap,
+            rel: rel,
+            note: note || "",
+            title: tradeHelperLegNames([asset]) + "  →  " + tradeHelperLegNames(legsB),
+            score: gap + (kind === "2for1" ? 40 : 0)
+              + (theirDir && (theirDir.label === "Rebuild" || theirDir.label === "Hard rebuild") ? -30 : 0),
+          });
+        };
+        for (let i = 0; i < theirBag.length; i++) {
+          const a = theirBag[i];
+          const v = calcValueNum(a);
+          if (v < 900) continue;
+          const ratio = v / tv;
+          if (ratio < 0.72 || ratio > 1.35) continue;
+          pushAsk([a], "1for1", ratio >= 0.95 && ratio <= 1.05
+            ? ("Near even vs " + themName)
+            : (v > tv
+              ? ("Over for you vs " + themName)
+              : ("Under — may need a sweetener from " + themName)));
+        }
+        const pool = theirBag.filter(function (a) { return calcValueNum(a) >= 700; }).slice(0, 10);
+        for (let i = 0; i < pool.length; i++) {
+          for (let j = i + 1; j < pool.length; j++) {
+            const sum = calcValueNum(pool[i]) + calcValueNum(pool[j]);
+            const ratio = sum / tv;
+            if (ratio < 0.85 || ratio > 1.28) continue;
+            pushAsk([pool[i], pool[j]], "2for1", "Two-for-one ask from " + themName);
+          }
+        }
+      });
+      out.sort(function (a, b) { return a.score - b.score; });
+      const seen = {};
+      const uniq = [];
+      for (let i = 0; i < out.length; i++) {
+        const k = out[i].themId + "|" + out[i].sendB + "|" + out[i].kind;
+        if (seen[k]) continue;
+        seen[k] = true;
+        uniq.push(out[i]);
+        if (uniq.length >= 8) break;
+      }
+      return uniq;
+    }
+
+    function tradeHelperInterest(asset) {
+      // Who might want this player if we're selling him.
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      if (!mine || !asset || !tradeHelperIsMine(asset)) return [];
+      const pos = String(asset.pos || "").toUpperCase();
+      if (!pos || pos === "PICK") return [];
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const rows = [];
+      (members || []).forEach(function (m) {
+        if (!m || !m.user_id) return;
+        const uid = String(m.user_id);
+        if (uid === mine) return;
+        const bag = bags.get(uid) || [];
+        if (!bag.length) return;
+        const dir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
+        const prof = typeof homeDeskProfile === "function" ? homeDeskProfile(bag) : null;
+        const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
+        const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
+        if (typeof homeDeskTheyAccept === "function"
+          && !homeDeskTheyAccept(dir, [asset], bag)) return;
+        let score = 40;
+        const why = [];
+        const hole = !!(prof && prof.holes && prof.holes.indexOf(pos) >= 0);
+        const thin = !!(prof && prof.thin && prof.thin.indexOf(pos) >= 0);
+        if (hole) { score -= 80; why.push("hole at " + pos); }
+        else if (thin) { score -= 40; why.push("thin at " + pos); }
+        if (dir && typeof dataDashIntentBuys === "function" && dataDashIntentBuys(dir, pos)) {
+          score -= 50;
+          why.push((dir.label || "seat") + " buys " + pos);
+        }
+        if (dir && (dir.label === "Win-now" || dir.label === "Reload")
+          && String(asset.roster_slot || "") === "starter") {
+          score -= 35;
+          why.push(dir.label + " wants starters");
+        }
+        if (proj && proj.band === "Late") {
+          score -= 25;
+          why.push("race favorite — pays for now");
+        }
+        if (arch && arch.archetype === "proxy_contender") {
+          score -= 20;
+          why.push("proxy contender");
+        }
+        if (!why.length) {
+          if (dir && dir.label) why.push(dir.label + " seat");
+          else why.push("book-value fit");
+        }
+        if (score > 20 && !hole && !thin) return;
+        rows.push({
+          themId: uid,
+          themName: m.name || (typeof dataDashSeatName === "function" ? dataDashSeatName(uid) : uid),
+          why: why.slice(0, 2).join(" · "),
+          score: score,
+        });
+      });
+      rows.sort(function (a, b) { return a.score - b.score; });
+      return rows.slice(0, 6);
+    }
+
+    function tradeHelperSellAlts(asset) {
+      // Other pieces on my team I might rather move at the same pos.
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      if (!mine || !asset) return [];
+      const pos = String(asset.pos || "").toUpperCase();
+      if (!pos || pos === "PICK") return [];
+      const tv = calcValueNum(asset);
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = bags.get(mine) || [];
+      const rows = [];
+      for (let i = 0; i < myBag.length; i++) {
+        const a = myBag[i];
+        if (!a || !a.id || a.id === asset.id) continue;
+        if (String(a.pos || "").toUpperCase() !== pos) continue;
+        const v = calcValueNum(a);
+        if (v < 900) continue;
+        const ratio = v / Math.max(1, tv);
+        if (ratio < 0.62 || ratio > 1.45) continue;
+        const why = [];
+        if (a.injury && !asset.injury) why.push("hurt — harder ask");
+        if (!a.injury && asset.injury) why.push("healthier ask");
+        const age = Number(a.age);
+        const tAge = Number(asset.age);
+        if (Number.isFinite(age) && Number.isFinite(tAge) && age > tAge + 1.5) {
+          why.push("older — better sell candidate");
+        }
+        if (!why.length) why.push("same pos on your team · near book");
+        rows.push({
+          asset: a,
+          score: Math.abs(v - tv),
+          why: why.slice(0, 2).join(" · "),
+        });
+      }
+      rows.sort(function (a, b) { return a.score - b.score; });
+      return rows.slice(0, 5);
+    }
+
     function tradeHelperAlternatives(target) {
       const mine = authSeatId() ? String(authSeatId()) : "";
       if (!target) return [];
@@ -15164,14 +15359,58 @@
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
       const myBag = mine ? (bags.get(mine) || []) : [];
       const myProf = typeof homeDeskProfile === "function" ? homeDeskProfile(myBag) : null;
+      const selling = tradeHelperIsMine(target);
+      const pos = String((target && target.pos) || "").toUpperCase();
+      const flags = [];
+
+      if (selling) {
+        const surplus = !!(myProf && myProf.surplus && myProf.surplus.indexOf(pos) >= 0);
+        const deep = !!(myProf && myProf.deep && myProf.deep.indexOf(pos) >= 0);
+        const hole = !!(myProf && myProf.holes && myProf.holes.indexOf(pos) >= 0);
+        if (surplus || deep) flags.push("You look deep at " + pos + " — fair sell candidate.");
+        else if (hole) flags.push("You are thin at " + pos + " — only sell if the return upgrades the team.");
+        else if (pos) flags.push("Neutral " + pos + " depth — sell if the return fits your window.");
+        if (target && target.injury) {
+          flags.push((target.name || "Player") + " is on " + target.injury
+            + " — buyers may shade the ask.");
+        }
+        if (typeof dataDashIsAging === "function" && dataDashIsAging(target)) {
+          flags.push("Aging piece — sell-high windows close faster.");
+        }
+        const interest = tradeHelperInterest(target);
+        const packages = tradeHelperSellPackages(target);
+        const alts = tradeHelperSellAlts(target);
+        let verdict = "Shop him to seats that need the pos — lead with the closest even ask.";
+        if (!interest.length && !packages.length) {
+          verdict = "Quiet interest right now — widen the ask or wait for a seat that needs " + (pos || "him") + ".";
+        } else if (packages.length && interest.length) {
+          verdict = "Real demand — start with the tightest ask from an interested seat.";
+        } else if (interest.length && !packages.length) {
+          verdict = "Seats want the pos, but book packages are messy — open calc and shape the return.";
+        }
+        if (interest.length) {
+          flags.push("Interest: " + interest.slice(0, 3).map(function (r) {
+            return (r.themName || "them") + " (" + r.why + ")";
+          }).join("; ") + ".");
+        }
+        return {
+          target: target,
+          mode: "sell",
+          flags: flags,
+          verdict: verdict,
+          packages: packages,
+          interest: interest,
+          alts: alts,
+          needPos: false,
+        };
+      }
+
       const themId = target ? String(target.owner_id || "") : "";
       const theirDir = themId && typeof seatDirOf === "function" ? seatDirOf(themId) : null;
       const theirProj = themId && typeof projSeatOf === "function" ? projSeatOf(themId) : null;
       const theirArch = themId && typeof archSeatOf === "function" ? archSeatOf(themId) : null;
-      const pos = String((target && target.pos) || "").toUpperCase();
       const needPos = !!(myProf && myProf.holes && myProf.holes.indexOf(pos) >= 0);
       const thinPos = !!(myProf && myProf.thin && myProf.thin.indexOf(pos) >= 0);
-      const flags = [];
       if (needPos) flags.push("You look thin at " + pos + " — fair hunt.");
       else if (thinPos) flags.push("You could use " + pos + " depth.");
       else if (pos) flags.push("Not a clear " + pos + " hole on your team — upgrade only if the price is right.");
@@ -15205,9 +15444,11 @@
       }
       return {
         target: target,
+        mode: "buy",
         flags: flags,
         verdict: verdict,
         packages: packages,
+        interest: [],
         alts: alts,
         needPos: needPos,
       };
@@ -15262,9 +15503,19 @@
       const getName = getPlay[0]
         ? ((typeof homeDeskShortName === "function" ? homeDeskShortName(getPlay[0]) : getPlay[0].name) || getPlay[0].name)
         : "";
-      if (getName) {
-        bits.push("Tap to search " + getName
-          + (row.nameB ? (" (or type " + row.nameB + ").") : "."));
+      const sellJob = row.job === "sell" || row.job === "downgrade";
+      const seedLegs = sellJob ? (row.talk.legsA || []) : (row.talk.legsB || []);
+      const seedPlay = seedLegs.filter(function (a) {
+        return a && a.id && !(typeof homeDeskIsPick === "function" && homeDeskIsPick(a));
+      });
+      const seedLabel = seedPlay[0]
+        ? ((typeof homeDeskShortName === "function" ? homeDeskShortName(seedPlay[0]) : seedPlay[0].name) || seedPlay[0].name)
+        : getName;
+      if (seedLabel) {
+        bits.push(sellJob
+          ? ("Tap to sell " + seedLabel + ".")
+          : ("Tap to search " + seedLabel
+            + (row.nameB ? (" (or type " + row.nameB + ").") : ".")));
       } else if (row.nameB) {
         bits.push("Tap to search " + row.nameB + ".");
       }
@@ -15278,13 +15529,15 @@
         + '<h3 class="ds-lists-h">Kickstart ideas</h3>'
         + '<p class="caption">Team Ideas with the longer why — tap one to start a search.</p>';
       html += cards.map(function (row) {
-        const getPlay = (row.talk.legsB || []).filter(function (a) {
+        const sellJob = row.job === "sell" || row.job === "downgrade";
+        const seedLegs = sellJob ? (row.talk.legsA || []) : (row.talk.legsB || []);
+        const getPlay = seedLegs.filter(function (a) {
           return a && a.id && !(typeof homeDeskIsPick === "function" && homeDeskIsPick(a));
         });
         const seedId = getPlay[0] ? getPlay[0].id : "";
         const seedName = seedId
           ? ""
-          : (row.nameB || ((row.talk.legsB || [])[0] && (row.talk.legsB || [])[0].name) || "");
+          : (row.nameB || (seedLegs[0] && seedLegs[0].name) || "");
         const line = (row.talk.legsA || []).map(function (a) {
           return typeof homeDeskShortName === "function" ? homeDeskShortName(a) : (a.name || "?");
         }).join(" + ")
@@ -15316,7 +15569,7 @@
         return '<section class="data-dash trade-helper" aria-label="Trade helper">'
           + '<p class="caption"><button type="button" class="chip back" data-dash-hunt-back="1">← Your board</button></p>'
           + '<div class="tile-share-row"><h2 class="screen-h" tabindex="-1">Trade helper</h2></div>'
-          + '<p class="data-hint">Claim your team to search targets and build offers.</p>'
+          + '<p class="data-hint">Claim your team to search buy and sell targets.</p>'
           + "</section>";
       }
       const target = tradeHelperTargetId ? tradeHelperAssetById(tradeHelperTargetId) : null;
@@ -15331,14 +15584,20 @@
           + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="Search for player or trade partner"'
           + ' value="' + esc(tradeHelperQ) + '" autocomplete="off" /></label>';
         if (q.length >= 2 && !hits.length) {
-          body += '<p class="data-hint">No other-seat players match that search.</p>';
+          body += '<p class="data-hint">No players match that search.</p>';
         } else if (hits.length) {
           body += hits.map(function (a) {
             const name = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
-            const bits = [a.pos, a.team, a.owner, a.injury ? ("hurt " + a.injury) : ""]
+            const mine = tradeHelperIsMine(a);
+            const side = mine ? "sell" : "buy";
+            const bits = [a.pos, a.team,
+              mine ? "Your team" : a.owner,
+              a.injury ? ("hurt " + a.injury) : ""]
               .filter(Boolean).join(" · ");
             return '<button type="button" class="data-xrow" data-trade-helper-pick="' + esc(a.id) + '">'
-              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(name) + "</span>"
+              + '<div class="data-xrow-main"><span class="data-xrow-name">'
+              + '<span class="trade-helper-side ' + side + '">' + (mine ? "Sell" : "Buy") + "</span>"
+              + esc(name) + "</span>"
               + '<span class="data-xrow-meta">' + esc(bits) + "</span></div></button>";
           }).join("");
         } else if (!q) {
@@ -15347,11 +15606,15 @@
       } else {
         const name = (typeof calcDisplayName === "function" ? calcDisplayName(target) : target.name) || target.name;
         const anal = tradeHelperAnalysis(target);
-        const bits = [target.pos, target.team, target.owner,
+        const selling = anal.mode === "sell";
+        const bits = [target.pos, target.team,
+          selling ? "Your team" : target.owner,
           target.injury ? ("hurt " + target.injury) : "",
           target.roster_slot || ""].filter(Boolean).join(" · ");
         body += '<p class="caption"><button type="button" class="chip" data-trade-helper-clear="1">← Other player</button></p>'
           + '<div class="trade-helper-target">'
+          + '<div class="trade-helper-mode ' + (selling ? "sell" : "buy") + '">'
+          + (selling ? "Sell — trade him out" : "Buy — trade for him") + "</div>"
           + '<h3 class="ds-lists-h">' + esc(name) + "</h3>"
           + '<p class="data-dash-sub">' + esc(bits) + "</p>"
           + '<p class="trade-helper-verdict">' + esc(anal.verdict) + "</p>"
@@ -15361,9 +15624,23 @@
             + anal.flags.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("")
             + "</ul>";
         }
-        body += '<h3 class="ds-lists-h">Offer ideas</h3>';
+        if (selling && anal.interest && anal.interest.length) {
+          body += '<h3 class="ds-lists-h">Who might want him</h3>';
+          body += anal.interest.map(function (r) {
+            return '<div class="data-xrow">'
+              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.themName || "them") + "</span>"
+              + '<span class="data-xrow-meta">' + esc(r.why || "") + "</span>"
+              + '<span class="data-hunt-why">Interest signal — see asks below</span>'
+              + "</div></div>";
+          }).join("");
+        }
+        body += '<h3 class="ds-lists-h">'
+          + (selling ? "What they might give" : "Offer ideas") + "</h3>";
         if (!anal.packages.length) {
-          body += '<p class="data-hint">No clean package on your team that both sides are likely to take. Check alternatives.</p>';
+          body += '<p class="data-hint">' + (selling
+            ? "No clean ask package on other seats right now. Check interest and try calc."
+            : "No clean package on your team that both sides are likely to take. Check alternatives.")
+            + "</p>";
         } else {
           body += anal.packages.map(function (p) {
             return '<button type="button" class="data-xrow" data-dash-fit="1"'
@@ -15371,20 +15648,28 @@
               + ' data-fit-a="' + esc(p.sendA) + '"'
               + ' data-fit-b="' + esc(p.sendB) + '">'
               + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(p.title) + "</span>"
-              + '<span class="data-xrow-meta">' + esc(p.kind === "2for1" ? "2-for-1" : "1-for-1")
-              + (p.note ? (" · " + p.note) : "") + "</span>"
+              + '<span class="data-xrow-meta">'
+              + esc((p.themName ? (p.themName + " · ") : "")
+                + (p.kind === "2for1" ? "2-for-1" : "1-for-1")
+                + (p.note ? (" · " + p.note) : "")) + "</span>"
               + '<span class="data-hunt-why">Open in calc to tweak the needle</span>'
               + "</div></button>";
           }).join("");
         }
-        body += '<h3 class="ds-lists-h">Maybe look here instead</h3>';
+        body += '<h3 class="ds-lists-h">'
+          + (selling ? "Maybe sell this instead" : "Maybe look here instead") + "</h3>";
         if (!anal.alts.length) {
-          body += '<p class="data-hint">No close same-pos alternatives on other seats right now.</p>';
+          body += '<p class="data-hint">' + (selling
+            ? "No close same-pos alternatives on your team right now."
+            : "No close same-pos alternatives on other seats right now.")
+            + "</p>";
         } else {
           body += anal.alts.map(function (row) {
             const a = row.asset;
             const an = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
-            const meta = [a.pos, a.team, row.themName, a.injury ? ("hurt " + a.injury) : ""]
+            const meta = [a.pos, a.team,
+              selling ? "Your team" : (row.themName || a.owner),
+              a.injury ? ("hurt " + a.injury) : ""]
               .filter(Boolean).join(" · ");
             return '<button type="button" class="data-xrow" data-trade-helper-pick="' + esc(a.id) + '">'
               + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(an) + "</span>"

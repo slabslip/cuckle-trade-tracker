@@ -36,7 +36,7 @@ need(page, "index.html", [
   "function dataTileSeatReady(",
   "function honorPendingDataTile(",
   "claim a remaining team to open it",
-  "Claim one of the remaining teams to open it",
+  "Claim your team to open it",
   "Create account to open this view",
   "function leagueNameForId(",
   "cuckle.pending.tile",
@@ -60,18 +60,19 @@ if (!honor.includes("dataTileSeatReady(") || !honor.includes("readPendingDataTil
 }
 
 const claim = fnSrc(page, "renderClaimTeam");
-if (!claim.includes("remaining") || !claim.includes("!s.claimed")) {
-  throw new Error("claim picker must list remaining (unclaimed) teams only");
+if (!claim.includes("claimSeats") || !claim.includes("data-claim-pick=")
+  || !claim.includes("Wrong team — unclaim")) {
+  throw new Error("claim picker must list teams and allow unclaim / take-over");
 }
 
-const gate = fnSrc(page, "onGateSubmit");
-if (!gate.includes("already") || !gate.includes("openClaimPick(") || !gate.includes("openLeagueDashboard(")) {
+const afterAuth = fnSrc(page, "routeAfterAuth");
+if (!afterAuth.includes("already") || !afterAuth.includes("openClaimPick(")
+  || !afterAuth.includes("openLeagueDashboard(")) {
   throw new Error("after account, share links must claim remaining team or open if already seated");
 }
 
-if (!page.includes('const DATA_V = "pickhub20261020232000"')
-  || !sw.includes("chuckle-shell-v322-pick-hub")) {
-  throw new Error("share-claim must bust DATA_V and SW");
+if (!/const DATA_V = "[^"]+"/.test(page) || !/^const CACHE = "chuckle-shell-v\d+/m.test(sw)) {
+  throw new Error("share-claim must keep DATA_V and versioned SW CACHE");
 }
 
 if (!mem.includes("remaining") || !mem.includes("dataTileSeatReady()")) {

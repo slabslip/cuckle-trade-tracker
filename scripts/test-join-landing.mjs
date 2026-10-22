@@ -13,7 +13,7 @@ const hist = JSON.parse(fs.readFileSync(
 ));
 
 const need = [
-  "been invited to join",
+  "Pick the team that is yours",
   "Claim your team",
   "You have joined",
   "function renderClaimTeam()",
@@ -22,6 +22,7 @@ const need = [
   "function openClaimPick(",
   "function joinInviteLeadHtml()",
   "function joinStepsHtml(",
+  "function onReleaseSeat(",
   "Crowning achievements",
   "Past names and finishes",
   "Regular season avg",
@@ -30,13 +31,19 @@ const need = [
   'data-join-enter-dash="1"',
   'data-claim-open-go="1"',
   'data-claim-pick="',
+  'data-release-seat="1"',
   'appScreen === "claimTeam"',
   'appScreen === "joinWelcome"',
   'claim_open_seat',
+  "ensure_league",
+  "release_seat",
+  "match_seat",
+  "Find my team",
+  "claimSleeperUser",
   "league_claim_preview",
   "name-history.json",
   "League added. Team claimed.",
-  "League added. Team not claimed yet.",
+  "Wrong team — unclaim",
   "joinLandSafeName",
 ];
 const missingPage = need.filter((s) => !page.includes(s));
@@ -49,8 +56,13 @@ if (missingGen.length) {
 }
 
 if (!fn.includes('action === "league_claim_preview"')
-  || !fn.includes('action === "claim_open_seat"')) {
-  throw new Error("join-league must expose league_claim_preview and claim_open_seat");
+  || !fn.includes('action === "claim_open_seat"')
+  || !fn.includes('action === "ensure_league"')
+  || !fn.includes('action === "release_seat"')
+  || !fn.includes('action === "match_seat"')
+  || !fn.includes("scoreHandleMatch")
+  || !fn.includes("resolveSleeperUsername")) {
+  throw new Error("join-league must expose match_seat (Sleeper username → seat) plus peer claim");
 }
 
 if (page.includes("openLeagueDashboard(leagueInfo)") && page.includes("await onRedeemInvite")) {

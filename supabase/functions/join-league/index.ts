@@ -1,7 +1,7 @@
-// Chuckle Fantasy — league commissioner + seat invites
+// Chuckle Fantasy — peer league join + seat claims
 //
 // POST /functions/v1/join-league
-// Authorization: Bearer <user JWT>
+// Authorization: Bearer <user JWT> (except public actions below)
 //
 // Actions:
 //   invite_preview   { code }               → public: team_name + suggested username (no auth)
@@ -11,25 +11,29 @@
 //   reclaim_seat    { code, username, password, recover_email? }
 //                   → public: unused CF- ticket sets a new login and claims the seat
 //   preview         { sleeper_league_id }
+//   ensure_league   { sleeper_league_id }  → register from Sleeper if needed, mint seats, return claim list
+//   match_seat      { sleeper_league_id, sleeper_username }
+//                   → resolve Sleeper username (API + fuzzy) to a seat in the league
 //   create          { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
+//                   → same mint path; if league already exists, peer-join (no commissioner lock)
 //   rebuild         { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
-//                   → first time: mint codes; revisit by same commissioner: status only (no remint)
-//   list_invites    { sleeper_league_id }  → unclaimed codes + claimed seats + members
-//   rotate_invites  { sleeper_league_id }  → new codes for all unclaimed seats
+//   list_invites    { sleeper_league_id }  → any signed-in user: codes + claimed seats + members
+//   rotate_invites  { sleeper_league_id }  → new codes for all unclaimed seats (creator or member)
 //   rotate_seat     { sleeper_league_id, sleeper_user_id }
 //                   → new code for one unclaimed seat (Generate invite)
 //   reissue_seat    { sleeper_league_id, sleeper_user_id }
-//                   → clear membership + mint new code for a claimed seat (manager left)
+//                   → clear membership + mint new code for a claimed seat
+//   release_seat    { sleeper_league_id }  → caller unclaims their own seat (remints CF-)
 //   transfer_commissioner { sleeper_league_id, new_commissioner_id }
-//                   → give dashboard admin to another league member
+//                   → optional admin handoff (not required for join)
 //   redeem          { code }               → atomic membership + claim
-//   claim_seat      { sleeper_league_id, sleeper_user_id }  → commissioner claims own seat
+//   claim_seat      { sleeper_league_id, sleeper_user_id }  → creator shortcut (legacy)
 //   claim_open_seat { sleeper_league_id, sleeper_user_id }
-//                   → any signed-in user claims an unclaimed seat
+//                   → claim a seat; switches if you already sit another; can take a wrong claim
 //
 // Deploy: supabase functions deploy join-league
 // SQL: also apply db/wave5-invite-plain.sql (code_plain column)
-//      and db/wave6-one-seat-redeem.sql (refuse seat-switch overwrite)
+//      and db/wave6-one-seat-redeem.sql (baseline redeem)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -110,10 +114,17 @@ async function loadTeams(leagueId: string) {
   );
   const teams = users
     .filter((u: { user_id: string }) => ownerIds.has(u.user_id))
-    .map((u: { user_id: string; display_name?: string; metadata?: { team_name?: string } }) => ({
+    .map((u: {
+      user_id: string;
+      display_name?: string;
+      username?: string;
+      metadata?: { team_name?: string };
+    }) => ({
       sleeper_user_id: u.user_id,
       team_name: (u.metadata && u.metadata.team_name) || u.display_name || u.user_id,
       display_name: u.display_name || null,
+      // League payload often omits username; /user/{name} fills it on match_seat.
+      username: u.username || null,
     }))
     .sort((a: { team_name: string }, b: { team_name: string }) =>
       a.team_name.localeCompare(b.team_name),
@@ -388,6 +399,203 @@ async function listLeagueMembers(
   }));
 }
 
+/** Remint a CF- ticket and clear claim stamps on one seat_invites row. */
+async function remintSeatInvite(
+  admin: ReturnType<typeof createClient>,
+  invite: { id: string; team_name: string },
+  createdBy: string,
+) {
+  const code = makeCode();
+  const code_hash = await sha256Hex(code);
+  const { error } = await admin.from("seat_invites").update({
+    code_hash,
+    code_plain: code,
+    claimed_by: null,
+    claimed_at: null,
+    created_by: createdBy,
+    team_name: invite.team_name,
+  }).eq("id", invite.id);
+  if (error) throw new Error(error.message);
+  return code;
+}
+
+/**
+ * Free a seat: drop membership(s) for that sleeper user and remint the invite.
+ * Used for self-unclaim, seat switch, and taking a wrongly claimed team.
+ */
+async function freeSeat(
+  admin: ReturnType<typeof createClient>,
+  leagueId: string,
+  sleeperUserId: string,
+  actorId: string,
+) {
+  await admin.from("league_memberships")
+    .delete()
+    .eq("sleeper_league_id", leagueId)
+    .eq("sleeper_user_id", sleeperUserId);
+  const { data: invite } = await admin.from("seat_invites")
+    .select("id, team_name, created_by")
+    .eq("sleeper_league_id", leagueId)
+    .eq("sleeper_user_id", sleeperUserId)
+    .maybeSingle();
+  if (!invite) return null;
+  return await remintSeatInvite(admin, invite, actorId || invite.created_by || actorId);
+}
+
+function seatsFromInvites(
+  invites: Array<{ sleeper_user_id: string; team_name: string; claimed_by: string | null }>,
+  teamMeta?: Array<{
+    sleeper_user_id: string;
+    display_name?: string | null;
+    username?: string | null;
+  }>,
+) {
+  const metaById = new Map(
+    (teamMeta || []).map((t) => [String(t.sleeper_user_id), t]),
+  );
+  return (invites || []).map((inv) => {
+    const meta = metaById.get(String(inv.sleeper_user_id));
+    return {
+      sleeper_user_id: inv.sleeper_user_id,
+      team_name: inv.team_name,
+      display_name: (meta && meta.display_name) || null,
+      username: (meta && meta.username) || null,
+      claimed: !!inv.claimed_by,
+      claimed_by: inv.claimed_by || null,
+      suggested_username: suggestUsername(
+        (meta && meta.display_name) || inv.team_name,
+      ),
+    };
+  }).sort((a, b) => a.team_name.localeCompare(b.team_name));
+}
+
+/** Collapse to a-z0-9 so TrumanCooper ≈ truman_cooper ≈ truman cooper. */
+function normHandle(raw: string) {
+  return String(raw || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function editDistance(a: string, b: string) {
+  const m = a.length;
+  const n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const prev = new Array(n + 1);
+  const cur = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= n; j++) prev[j] = cur[j];
+  }
+  return prev[n];
+}
+
+/**
+ * Score how well `typed` matches a seat handle. 100 = Sleeper API user_id hit.
+ * Fuzzy uses display_name / username (not fantasy team_name — those diverge).
+ */
+function scoreHandleMatch(typedRaw: string, candidates: string[]) {
+  const typed = normHandle(typedRaw);
+  if (!typed || typed.length < 2) return 0;
+  let best = 0;
+  for (const cand of candidates) {
+    const n = normHandle(cand);
+    if (!n) continue;
+    if (n === typed) {
+      best = Math.max(best, 95);
+      continue;
+    }
+    if (n.startsWith(typed) || typed.startsWith(n)) {
+      const ratio = Math.min(n.length, typed.length) / Math.max(n.length, typed.length);
+      // Sleeper handles often add digits (TaylorJohnson → TaylorJohnson16).
+      const prefixBoost = (n.startsWith(typed) && typed.length >= 5) ? 14 : 0;
+      best = Math.max(best, Math.min(94, Math.round(82 * ratio) + prefixBoost));
+      continue;
+    }
+    if (n.includes(typed) || typed.includes(n)) {
+      const ratio = Math.min(n.length, typed.length) / Math.max(n.length, typed.length);
+      best = Math.max(best, Math.round(74 * ratio));
+      continue;
+    }
+    const dist = editDistance(typed, n);
+    const maxLen = Math.max(typed.length, n.length);
+    const similarity = 1 - dist / maxLen;
+    // Allow ~1 typo on short names, ~2 on longer (trumancooper vs trumancoopr).
+    const maxDist = typed.length <= 6 ? 1 : typed.length <= 12 ? 2 : 3;
+    if (dist <= maxDist && similarity >= 0.72) {
+      best = Math.max(best, Math.round(60 + 30 * similarity));
+    }
+  }
+  return best;
+}
+
+async function resolveSleeperUsername(typed: string) {
+  const raw = String(typed || "").trim();
+  if (!raw || raw.length < 2 || raw.length > 40) return null;
+  // Sleeper usernames are lowercase; try as typed and collapsed.
+  const tries = [
+    raw,
+    raw.toLowerCase(),
+    normHandle(raw),
+  ];
+  const seen = new Set<string>();
+  for (const t of tries) {
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    try {
+      const user = await sleeperGet("/user/" + encodeURIComponent(t));
+      if (user && user.user_id) {
+        return {
+          user_id: String(user.user_id),
+          username: user.username ? String(user.username) : null,
+          display_name: user.display_name ? String(user.display_name) : null,
+        };
+      }
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
+
+async function ensureLeagueRegistered(
+  admin: ReturnType<typeof createClient>,
+  preview: NonNullable<Awaited<ReturnType<typeof loadTeams>>>,
+  userId: string,
+) {
+  const { data: prior } = await admin.from("leagues")
+    .select("sleeper_league_id, status, created_by, name, season, espn_league_id, total_rosters")
+    .eq("sleeper_league_id", preview.sleeper_league_id)
+    .maybeSingle();
+  const createdBy = (prior && prior.created_by) || userId;
+  const status = prior && prior.status === "ready" ? "ready" : "pending_sync";
+  if (!prior) {
+    const { error: leagueErr } = await admin.from("leagues").insert({
+      sleeper_league_id: preview.sleeper_league_id,
+      name: preview.name,
+      season: preview.season,
+      sport: preview.sport,
+      total_rosters: preview.total_rosters,
+      status,
+      created_by: createdBy,
+    });
+    if (leagueErr) throw new Error("Could not register league: " + leagueErr.message);
+  } else {
+    const { error: leagueErr } = await admin.from("leagues").update({
+      name: preview.name,
+      season: preview.season,
+      sport: preview.sport,
+      total_rosters: preview.total_rosters,
+    }).eq("sleeper_league_id", preview.sleeper_league_id);
+    if (leagueErr) throw new Error("Could not refresh league: " + leagueErr.message);
+  }
+  await ensureSeatInvites(admin, preview, createdBy);
+  return { prior, createdBy, status, isNew: !prior };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return json(405, { ok: false, error: "POST only" });
@@ -455,18 +663,7 @@ Deno.serve(async (req) => {
       .select("sleeper_user_id, team_name, claimed_by")
       .eq("sleeper_league_id", leagueId);
     if (invErr) return json(500, { ok: false, error: invErr.message });
-    const seats = (invites || []).map((inv: {
-      sleeper_user_id: string;
-      team_name: string;
-      claimed_by: string | null;
-    }) => ({
-      sleeper_user_id: inv.sleeper_user_id,
-      team_name: inv.team_name,
-      claimed: !!inv.claimed_by,
-      suggested_username: suggestUsername(inv.team_name),
-    })).sort((a: { team_name: string }, b: { team_name: string }) =>
-      a.team_name.localeCompare(b.team_name)
-    );
+    const seats = seatsFromInvites(invites || []);
     return json(200, {
       ok: true,
       sleeper_league_id: leagueId,
@@ -660,6 +857,178 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, league: preview });
   }
 
+  // ---- ensure_league: peer join by Sleeper ID (no commissioner required) ----
+  if (action === "ensure_league") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    if (!/^\d{6,64}$/.test(leagueId)) {
+      return json(400, { ok: false, error: "Enter a valid Sleeper league ID (digits only)" });
+    }
+    let preview;
+    try {
+      preview = await loadTeams(leagueId);
+    } catch (err) {
+      return json(502, { ok: false, error: String(err && (err as Error).message || err) });
+    }
+    if (!preview) return json(404, { ok: false, error: "No Sleeper league with that ID" });
+    let reg;
+    try {
+      reg = await ensureLeagueRegistered(admin, preview, user.id);
+    } catch (err) {
+      return json(500, { ok: false, error: String((err as Error).message || err) });
+    }
+    if (reg.isNew || reg.status !== "ready") {
+      await dispatchLeagueSync(preview.sleeper_league_id);
+    }
+    const { data: invites, error: invErr } = await admin.from("seat_invites")
+      .select("sleeper_user_id, team_name, claimed_by")
+      .eq("sleeper_league_id", preview.sleeper_league_id);
+    if (invErr) return json(500, { ok: false, error: invErr.message });
+    const { data: myMem } = await admin.from("league_memberships")
+      .select("sleeper_user_id, team_name")
+      .eq("auth_user_id", user.id)
+      .eq("sleeper_league_id", preview.sleeper_league_id)
+      .maybeSingle();
+    return json(200, {
+      ok: true,
+      already_exists: !reg.isNew,
+      sleeper_league_id: preview.sleeper_league_id,
+      league_name: preview.name,
+      status: reg.status,
+      seats: seatsFromInvites(invites || [], preview.teams),
+      my_seat: myMem
+        ? { sleeper_user_id: myMem.sleeper_user_id, team_name: myMem.team_name }
+        : null,
+      note: "Type your Sleeper username to find your team, or pick it below.",
+    });
+  }
+
+  // ---- match_seat: Sleeper username → league seat (API resolve + fuzzy) ----
+  if (action === "match_seat") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const typed = String(body.sleeper_username || body.username || "").trim();
+    if (!/^\d{6,64}$/.test(leagueId)) {
+      return json(400, { ok: false, error: "Missing league" });
+    }
+    if (typed.length < 2) {
+      return json(400, { ok: false, error: "Type your Sleeper username" });
+    }
+    let preview;
+    try {
+      preview = await loadTeams(leagueId);
+    } catch (err) {
+      return json(502, { ok: false, error: String(err && (err as Error).message || err) });
+    }
+    if (!preview) return json(404, { ok: false, error: "No Sleeper league with that ID" });
+
+    const { data: invites } = await admin.from("seat_invites")
+      .select("sleeper_user_id, team_name, claimed_by")
+      .eq("sleeper_league_id", leagueId);
+    const seats = seatsFromInvites(invites || [], preview.teams);
+    // Prefer live Sleeper roster meta when invite rows are stale/missing.
+    const byId = new Map(seats.map((s) => [String(s.sleeper_user_id), s]));
+    for (const t of preview.teams) {
+      if (!byId.has(String(t.sleeper_user_id))) {
+        seats.push({
+          sleeper_user_id: t.sleeper_user_id,
+          team_name: t.team_name,
+          display_name: t.display_name,
+          username: t.username,
+          claimed: false,
+          claimed_by: null,
+          suggested_username: suggestUsername(t.display_name || t.team_name),
+        });
+      } else {
+        const row = byId.get(String(t.sleeper_user_id))!;
+        if (!row.display_name && t.display_name) row.display_name = t.display_name;
+        if (!row.username && t.username) row.username = t.username;
+      }
+    }
+
+    const resolved = await resolveSleeperUsername(typed);
+    type Scored = {
+      sleeper_user_id: string;
+      team_name: string;
+      display_name: string | null;
+      username: string | null;
+      claimed: boolean;
+      score: number;
+      how: string;
+    };
+    const scored: Scored[] = [];
+
+    if (resolved) {
+      const hit = seats.find((s) => String(s.sleeper_user_id) === resolved.user_id);
+      if (hit) {
+        scored.push({
+          sleeper_user_id: hit.sleeper_user_id,
+          team_name: hit.team_name,
+          display_name: hit.display_name || resolved.display_name,
+          username: resolved.username || hit.username,
+          claimed: hit.claimed,
+          score: 100,
+          how: "sleeper_username",
+        });
+      }
+    }
+
+    for (const s of seats) {
+      if (scored.some((x) => x.sleeper_user_id === s.sleeper_user_id)) continue;
+      const score = scoreHandleMatch(typed, [
+        s.display_name || "",
+        s.username || "",
+        // Team name only as a weak hint (fantasy names ≠ Sleeper handles).
+        s.team_name || "",
+      ].filter(Boolean));
+      // Down-weight pure team_name hits so "Troy" doesn't steal kotula69's seat.
+      let adj = score;
+      const handleScore = scoreHandleMatch(typed, [s.display_name || "", s.username || ""].filter(Boolean));
+      if (handleScore > 0) adj = handleScore;
+      else if (score > 0) adj = Math.min(score, 68);
+      if (adj >= 68) {
+        scored.push({
+          sleeper_user_id: s.sleeper_user_id,
+          team_name: s.team_name,
+          display_name: s.display_name,
+          username: s.username,
+          claimed: s.claimed,
+          score: adj,
+          how: handleScore > 0 ? "fuzzy_handle" : "fuzzy_team",
+        });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score || a.team_name.localeCompare(b.team_name));
+    const best = scored[0] || null;
+    const second = scored[1] || null;
+    // Auto-connect only when clearly unique (API hit, or fuzzy with gap).
+    const confident = !!(best && (
+      best.score >= 95
+      || (best.score >= 80 && (!second || best.score - second.score >= 8))
+      || (best.score >= 72 && (!second || best.score - second.score >= 12))
+    ));
+
+    return json(200, {
+      ok: true,
+      typed,
+      resolved: resolved
+        ? {
+          user_id: resolved.user_id,
+          username: resolved.username,
+          display_name: resolved.display_name,
+          in_league: scored.some((s) => s.score === 100),
+        }
+        : null,
+      best: confident ? best : null,
+      candidates: scored.slice(0, 5),
+      note: confident && best
+        ? ("Matched " + (best.display_name || best.username || best.team_name)
+          + " — claim that seat when you are ready.")
+        : (scored.length
+          ? "A few teams are close — pick yours from the list."
+          : "No Sleeper username like that in this league. Check the spelling, or pick your team below."),
+    });
+  }
+
   // ---- create (idempotent) / rotate_invites ----
   if (action === "create" || action === "rotate_invites") {
     const leagueId = String(body.sleeper_league_id || "").trim();
@@ -686,13 +1055,47 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (action === "rotate_invites") {
-      if (!prior || prior.created_by !== user.id) {
-        return json(403, { ok: false, error: "Only the league creator can rotate invites" });
+      if (!prior) {
+        return json(404, { ok: false, error: "Unknown league" });
+      }
+      const { data: mem } = await admin.from("league_memberships")
+        .select("auth_user_id")
+        .eq("sleeper_league_id", leagueId)
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      if (prior.created_by !== user.id && !mem) {
+        return json(403, { ok: false, error: "Join this league before rotating invites" });
       }
     }
 
+    // Peer join: league already on Chuckle — ensure seats and return claim list (no lockout).
     if (action === "create" && prior && prior.created_by && prior.created_by !== user.id) {
-      return json(409, { ok: false, error: "This league already has a commissioner on Chuckle Fantasy" });
+      try {
+        await ensureSeatInvites(admin, preview, prior.created_by);
+      } catch (err) {
+        return json(500, { ok: false, error: String((err as Error).message || err) });
+      }
+      const { data: invites } = await admin.from("seat_invites")
+        .select("sleeper_user_id, team_name, claimed_by")
+        .eq("sleeper_league_id", preview.sleeper_league_id);
+      return json(200, {
+        ok: true,
+        already_exists: true,
+        peer_join: true,
+        league: {
+          sleeper_league_id: preview.sleeper_league_id,
+          name: prior.name || preview.name,
+          season: prior.season || preview.season,
+          sport: preview.sport,
+          total_rosters: prior.total_rosters || preview.total_rosters,
+          status: prior.status || "pending_sync",
+          espn_league_id: prior.espn_league_id || espnId,
+          teams: preview.teams,
+        },
+        seats: seatsFromInvites(invites || [], preview.teams),
+        invites: [],
+        note: "League already on Chuckle. Type your Sleeper username or pick your team.",
+      });
     }
 
     // Idempotent create: same commissioner revisiting — open console with stored codes.
@@ -782,8 +1185,16 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can rebuild this book" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
+    }
+    const { data: rebuildMem } = await admin.from("league_memberships")
+      .select("auth_user_id")
+      .eq("sleeper_league_id", leagueId)
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    if (league.created_by !== user.id && !rebuildMem) {
+      return json(403, { ok: false, error: "Join this league before rebuilding the book" });
     }
     if (espnId) {
       await admin.from("leagues").update({ espn_league_id: espnId }).eq("sleeper_league_id", leagueId);
@@ -811,9 +1222,10 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can list invites" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
     }
+    // Any signed-in user can list/share invites (peer join — no commissioner gate).
 
     let invites;
     let members;
@@ -916,8 +1328,8 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can generate invites" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
     }
     const { data: invite } = await admin.from("seat_invites")
       .select("*")
@@ -928,7 +1340,7 @@ Deno.serve(async (req) => {
     if (invite.claimed_by) {
       return json(400, {
         ok: false,
-        error: "That seat is claimed — use Reissue for new manager instead",
+        error: "That seat is claimed — unclaim or reissue it first",
       });
     }
 
@@ -1000,9 +1412,10 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can reissue a seat invite" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
     }
+    // Peer leagues: any signed-in user can free a stuck seat (wrong claim / manager left).
     const { data: invite } = await admin.from("seat_invites")
       .select("*")
       .eq("sleeper_league_id", leagueId)
@@ -1342,60 +1755,134 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, ...(data as Record<string, unknown>) });
   }
 
-  // ---- any signed-in user claims an unclaimed seat ----
-  if (action === "claim_open_seat") {
+  // ---- release own seat (wrong team → unclaim, then reclaim another) ----
+  if (action === "release_seat") {
     const leagueId = String(body.sleeper_league_id || "").trim();
-    const seatId = String(body.sleeper_user_id || "").trim();
-    if (!leagueId || !seatId) {
-      return json(400, { ok: false, error: "Pick your team to claim" });
-    }
-    const { data: invite } = await admin.from("seat_invites")
-      .select("*")
-      .eq("sleeper_league_id", leagueId)
-      .eq("sleeper_user_id", seatId)
-      .maybeSingle();
-    if (!invite) {
-      return json(404, {
-        ok: false,
-        error: "That team is not open to claim. Ask your commissioner for an invite link.",
-      });
-    }
-    if (invite.claimed_by && invite.claimed_by !== user.id) {
-      return json(409, { ok: false, error: "That team is already claimed — sign in instead." });
+    if (!leagueId) {
+      return json(400, { ok: false, error: "Missing league" });
     }
     const { data: priorMem } = await admin.from("league_memberships")
       .select("sleeper_user_id, team_name")
       .eq("auth_user_id", user.id)
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
+    if (!priorMem || !priorMem.sleeper_user_id) {
+      return json(404, { ok: false, error: "You do not have a team claimed in this league" });
+    }
+    try {
+      await freeSeat(admin, leagueId, String(priorMem.sleeper_user_id), user.id);
+    } catch (err) {
+      return json(500, { ok: false, error: String((err as Error).message || err) });
+    }
+    const { data: leagueRow } = await admin.from("leagues")
+      .select("name, status, season")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    return json(200, {
+      ok: true,
+      released: {
+        sleeper_user_id: priorMem.sleeper_user_id,
+        team_name: priorMem.team_name,
+      },
+      league: {
+        sleeper_league_id: leagueId,
+        name: (leagueRow && leagueRow.name) || leagueId,
+        status: (leagueRow && leagueRow.status) || "pending_sync",
+        season: leagueRow && leagueRow.season,
+      },
+      note: "Seat freed. Pick the correct team when you are ready.",
+    });
+  }
+
+  // ---- claim a seat (switch + take-over allowed; no permanent wrong-claim lock) ----
+  if (action === "claim_open_seat") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const seatId = String(body.sleeper_user_id || "").trim();
+    if (!leagueId || !seatId) {
+      return json(400, { ok: false, error: "Pick your team to claim" });
+    }
+    let { data: invite } = await admin.from("seat_invites")
+      .select("*")
+      .eq("sleeper_league_id", leagueId)
+      .eq("sleeper_user_id", seatId)
+      .maybeSingle();
+    if (!invite) {
+      // League may exist without seats yet — ensure from Sleeper once.
+      try {
+        const preview = await loadTeams(leagueId);
+        if (preview) {
+          await ensureLeagueRegistered(admin, preview, user.id);
+          const again = await admin.from("seat_invites")
+            .select("*")
+            .eq("sleeper_league_id", leagueId)
+            .eq("sleeper_user_id", seatId)
+            .maybeSingle();
+          invite = again.data;
+        }
+      } catch (err) {
+        return json(502, { ok: false, error: String((err as Error).message || err) });
+      }
+    }
+    if (!invite) {
+      return json(404, {
+        ok: false,
+        error: "That team is not in this league. Check the Sleeper league ID.",
+      });
+    }
+
+    const { data: priorMem } = await admin.from("league_memberships")
+      .select("sleeper_user_id, team_name")
+      .eq("auth_user_id", user.id)
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+
+    // Already on this seat — idempotent OK.
+    if (priorMem && priorMem.sleeper_user_id === invite.sleeper_user_id
+      && invite.claimed_by === user.id) {
+      const { data: leagueRow } = await admin.from("leagues")
+        .select("name, status, season")
+        .eq("sleeper_league_id", leagueId)
+        .maybeSingle();
+      return json(200, {
+        ok: true,
+        already_claimed: true,
+        membership: priorMem,
+        league: {
+          sleeper_league_id: leagueId,
+          name: (leagueRow && leagueRow.name) || leagueId,
+          status: (leagueRow && leagueRow.status) || "pending_sync",
+          season: leagueRow && leagueRow.season,
+          team_name: invite.team_name,
+          sleeper_user_id: invite.sleeper_user_id,
+        },
+      });
+    }
+
+    // Switch: free your previous seat in this league first.
     if (priorMem && priorMem.sleeper_user_id
       && priorMem.sleeper_user_id !== invite.sleeper_user_id) {
-      return json(409, {
-        ok: false,
-        error: "You already sit as " + (priorMem.team_name || "another team")
-          + " in this league. Reissue the wrong seat from Manage invites before claiming another.",
-      });
-    }
-    if (invite.code_hash) {
-      const { data, error } = await admin.rpc("redeem_seat_invite", {
-        p_code_hash: invite.code_hash,
-        p_auth_user_id: user.id,
-      });
-      if (!error) return json(200, { ok: true, ...(data as Record<string, unknown>) });
-      const msg = String(error.message || "");
-      if (msg.includes("already have a seat in this league")) {
-        return json(409, {
-          ok: false,
-          error: "You already have a seat in this league. Reissue the wrong seat first.",
-        });
-      }
-      if (msg.includes("already used") || msg.includes("seat already claimed")) {
-        return json(409, { ok: false, error: "That team is already claimed — sign in instead." });
-      }
-      if (!(msg.includes("redeem_seat_invite") || msg.includes("Could not find the function"))) {
-        return json(500, { ok: false, error: error.message });
+      try {
+        await freeSeat(admin, leagueId, String(priorMem.sleeper_user_id), user.id);
+      } catch (err) {
+        return json(500, { ok: false, error: String((err as Error).message || err) });
       }
     }
+
+    // Take-over: wrong claim must not block the correct manager.
+    if (invite.claimed_by && invite.claimed_by !== user.id) {
+      try {
+        await freeSeat(admin, leagueId, String(invite.sleeper_user_id), user.id);
+      } catch (err) {
+        return json(500, { ok: false, error: String((err as Error).message || err) });
+      }
+      const refreshed = await admin.from("seat_invites")
+        .select("*")
+        .eq("sleeper_league_id", leagueId)
+        .eq("sleeper_user_id", seatId)
+        .maybeSingle();
+      invite = refreshed.data || invite;
+    }
+
     const { data: membership, error: memErr } = await admin.from("league_memberships").upsert({
       auth_user_id: user.id,
       sleeper_league_id: invite.sleeper_league_id,
@@ -1404,7 +1891,7 @@ Deno.serve(async (req) => {
     }, { onConflict: "auth_user_id,sleeper_league_id" }).select("*").maybeSingle();
     if (memErr) {
       if (String(memErr.message || "").includes("league_memberships_seat_key")) {
-        return json(409, { ok: false, error: "That team is already claimed by another account" });
+        return json(409, { ok: false, error: "That team was just claimed — try again." });
       }
       return json(500, { ok: false, error: memErr.message });
     }
@@ -1419,6 +1906,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
     return json(200, {
       ok: true,
+      switched: !!(priorMem && priorMem.sleeper_user_id
+        && priorMem.sleeper_user_id !== invite.sleeper_user_id),
       membership,
       league: {
         sleeper_league_id: leagueId,
@@ -1434,7 +1923,7 @@ Deno.serve(async (req) => {
   if (action === "join") {
     return json(400, {
       ok: false,
-      error: "Use an invite code from your commissioner (action: redeem), or create the league if you are the commissioner.",
+      error: "Use an invite code (action: redeem), ensure_league + claim_open_seat, or release_seat to switch.",
     });
   }
 

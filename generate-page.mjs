@@ -3283,6 +3283,29 @@ const html = `<!DOCTYPE html>
       border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c);
     }
     .trade-helper-seats .cuffs-q { margin: 0 0 8px; }
+    .trade-helper-factors { margin: 0 0 14px; }
+    .trade-helper-factors > .ds-lists-h { margin: 0 0 4px; }
+    .trade-helper-factors > .caption { margin: 0 0 8px; }
+    .trade-helper-factor-chips {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 0;
+    }
+    .trade-helper-factor-chips .chip.on {
+      border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c);
+    }
+    .trade-helper-found {
+      display: inline-block; margin: 0 0 0 6px; padding: 1px 6px;
+      border: 1px solid #6b5a2e; border-radius: 999px;
+      font-size: 0.62rem; font-weight: 750; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--lh-gold, #e0b44c);
+      vertical-align: 0.12em;
+    }
+    .trade-helper-found.is-user { border-color: #8fb59a; color: #8fb59a; }
+    .trade-helper-depth {
+      display: inline-block; margin-left: 6px; color: var(--dim);
+      font-size: 0.72rem; font-weight: 650;
+    }
+    .trade-helper-depth.shallow { color: #c4a36a; }
+    .trade-helper-depth.deep { color: #8fb59a; }
     .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
     .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
     button.pick-intel-row {
@@ -4825,7 +4848,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "nightly20261022134603";
+    const DATA_V = "tradeHelperFactors20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4876,6 +4899,8 @@ const html = `<!DOCTYPE html>
     /** Empty = shop the whole league. Otherwise only these other seat user_ids. */
     let tradeHelperSellSeats = [];
     let tradeHelperSellSeatQ = "";
+    /** even | clear_space — shapes multi-piece vs 1-for-1 package bias. */
+    let tradeHelperFactor = "even";
     let teamHomeEdit = false;
     let teamHomeLayout = null;
     let seatDirection = null;
@@ -12569,6 +12594,7 @@ const html = `<!DOCTYPE html>
       tradeHelperTargetId = "";
       tradeHelperSellSeats = [];
       tradeHelperSellSeatQ = "";
+      tradeHelperFactor = "even";
     }
 
     function dataDashRoomCanon(id) {
@@ -15087,6 +15113,123 @@ const html = `<!DOCTYPE html>
       return !!(mine && a && String(a.owner_id) === mine);
     }
 
+    function tradeHelperIsPick(a) {
+      if (!a) return true;
+      if (typeof homeDeskIsPick === "function") return homeDeskIsPick(a);
+      return a.kind === "pick" || String(a.pos || "").toUpperCase() === "PICK";
+    }
+
+    /** User explicitly marked this id as a cornerstone. */
+    function tradeHelperIsFoundationalUser(a) {
+      if (!a || !a.id) return false;
+      return seatFoundationalReadLocal().indexOf(String(a.id)) >= 0;
+    }
+
+    /**
+     * Cornerstone piece: user mark, or auto stud / near-stud book.
+     * Auto foundations stay out of filler legs; user marks are never auto-sent.
+     */
+    function tradeHelperIsFoundational(a) {
+      if (!a || !a.id || tradeHelperIsPick(a)) return false;
+      if (tradeHelperIsFoundationalUser(a)) return true;
+      if (typeof homeDeskIsStud === "function" && homeDeskIsStud(a)) return true;
+      const cuts = typeof deskCuts === "function" ? deskCuts() : { stud: 5500 };
+      const v = calcValueNum(a);
+      return v >= (Number(cuts.stud) || 5500) * 0.92;
+    }
+
+    /** True if this asset may be used as filler in a multi-piece send. */
+    function tradeHelperCanSendFiller(a) {
+      if (!a || !a.id) return false;
+      if (tradeHelperIsFoundationalUser(a)) return false;
+      if (tradeHelperIsFoundational(a)) return false;
+      return calcValueNum(a) >= 500;
+    }
+
+    function tradeHelperDepthOf(uid) {
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const bag = bags.get(String(uid || "")) || [];
+      const prof = typeof homeDeskProfile === "function"
+        ? homeDeskProfile(bag)
+        : { holes: [], thin: [], deep: [], surplus: [], route: "" };
+      const holeN = (prof.holes || []).length;
+      const thinN = (prof.thin || []).length;
+      const deepN = (prof.deep || []).length;
+      const surN = (prof.surplus || []).length;
+      let band = "balanced";
+      if (holeN >= 2 || holeN + thinN >= 2) band = "shallow";
+      else if (deepN >= 2 || (deepN >= 1 && surN >= 2)) band = "deep";
+      else if (holeN + thinN >= 1) band = "shallow";
+      else if (deepN + surN >= 2) band = "deep";
+      const label = band === "shallow"
+        ? "Needs depth"
+        : (band === "deep" ? "Roster deep" : "Balanced depth");
+      return {
+        band: band,
+        label: label,
+        holes: prof.holes || [],
+        thin: prof.thin || [],
+        deep: prof.deep || [],
+        surplus: prof.surplus || [],
+        route: prof.route || "",
+      };
+    }
+
+    function tradeHelperFactorCanon(v) {
+      const t = String(v || "").toLowerCase();
+      if (t === "clear_space" || t === "clear" || t === "space") return "clear_space";
+      return "even";
+    }
+
+    function tradeHelperKindLabel(kind) {
+      const k = String(kind || "");
+      if (k === "3for1") return "3-for-1";
+      if (k === "2for1") return "2-for-1";
+      if (k === "2plusPick") return "2 + pick";
+      if (k === "3plusPick") return "3 + pick";
+      return "1-for-1";
+    }
+
+    function tradeHelperFactorHtml() {
+      const cur = tradeHelperFactorCanon(tradeHelperFactor);
+      const opts = [
+        ["even", "Even book", "1-for-1 and near-even packages."],
+        ["clear_space", "Clear space", "2–3 for 1 (picks welcome) into a foundation — prefer seats that need depth."],
+      ];
+      let html = '<div class="trade-helper-factors" aria-label="Trade factor">'
+        + '<h3 class="ds-lists-h">Factor</h3>';
+      const active = opts.find(function (o) { return o[0] === cur; }) || opts[0];
+      html += '<p class="caption">' + esc(active[2]) + "</p>"
+        + '<div class="trade-helper-factor-chips" role="group" aria-label="Package factor">';
+      opts.forEach(function (o) {
+        const on = o[0] === cur;
+        html += '<button type="button" class="chip' + (on ? " on" : "") + '"'
+          + ' data-trade-helper-factor="' + esc(o[0]) + '"'
+          + ' aria-pressed="' + (on ? "true" : "false") + '">'
+          + esc(o[1]) + "</button>";
+      });
+      html += "</div></div>";
+      return html;
+    }
+
+    function tradeHelperFoundationalBtnHtml(asset) {
+      if (!asset || !asset.id || tradeHelperIsPick(asset)) return "";
+      const mine = tradeHelperIsMine(asset);
+      const user = tradeHelperIsFoundationalUser(asset);
+      const auto = !user && tradeHelperIsFoundational(asset);
+      if (!mine && !user && !auto) return "";
+      if (!mine) {
+        return auto || user
+          ? '<span class="trade-helper-found" title="Cornerstone book piece">Foundational</span>'
+          : "";
+      }
+      return '<button type="button" class="chip' + (user || auto ? " on" : "") + '"'
+        + ' data-trade-helper-found-toggle="' + esc(asset.id) + '"'
+        + ' aria-pressed="' + (user ? "true" : "false") + '">'
+        + (user ? "Foundational ✓" : (auto ? "Foundational (auto)" : "Mark foundational"))
+        + "</button>";
+    }
+
     function tradeHelperSellSeatSet() {
       if (!tradeHelperSellSeats || !tradeHelperSellSeats.length) return null;
       const set = {};
@@ -15195,8 +15338,10 @@ const html = `<!DOCTYPE html>
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
       const myBag = (bags.get(mine) || []).slice();
       const theirDir = typeof seatDirOf === "function" ? seatDirOf(them) : null;
+      const theirDepth = tradeHelperDepthOf(them);
       const tv = calcValueNum(target);
       if (tv <= 0) return [];
+      const clear = tradeHelperFactorCanon(tradeHelperFactor) === "clear_space";
       const out = [];
       const pushOffer = function (legsA, kind, note) {
         if (!legsA || !legsA.length) return;
@@ -15210,6 +15355,13 @@ const html = `<!DOCTYPE html>
         const gap = Number(rec.gap) || 0;
         const rel = Number(rec.rel) || 0;
         if (rel > 0.22 && gap > 900) return;
+        let score = gap;
+        if (kind === "1for1") score += clear ? 80 : 0;
+        if (kind === "2for1") score += clear ? -20 : 40;
+        if (kind === "3for1" || kind === "2plusPick" || kind === "3plusPick") score += clear ? -40 : 55;
+        if (clear && theirDepth.band === "shallow") score -= 50;
+        if (clear && theirDepth.band === "deep") score += 60;
+        if (tradeHelperIsFoundational(target)) score -= 15;
         out.push({
           kind: kind,
           legsA: legsA,
@@ -15217,43 +15369,79 @@ const html = `<!DOCTYPE html>
           sendA: legsA.map(function (x) { return x.id; }).join(","),
           sendB: target.id,
           themId: them,
+          themName: target.owner || "",
           gap: gap,
           rel: rel,
           note: note || "",
           title: tradeHelperLegNames(legsA) + "  →  " + tradeHelperLegNames(legsB),
-          score: gap + (kind === "2for1" ? 40 : 0),
+          score: score,
         });
       };
-      // 1-for-1 near value
-      for (let i = 0; i < myBag.length; i++) {
-        const a = myBag[i];
-        const v = calcValueNum(a);
-        if (v < 900) continue;
-        const ratio = v / tv;
-        if (ratio < 0.72 || ratio > 1.35) continue;
-        pushOffer([a], "1for1", ratio >= 0.95 && ratio <= 1.05
-          ? "Near even on the book"
-          : (v > tv ? "Slight overpay — may get it done" : "Slight under — may need a sweetener"));
+      const singles = myBag.filter(function (a) {
+        return calcValueNum(a) >= 900 && (clear ? tradeHelperCanSendFiller(a) : !tradeHelperIsFoundationalUser(a));
+      });
+      if (!clear) {
+        for (let i = 0; i < singles.length; i++) {
+          const a = singles[i];
+          const v = calcValueNum(a);
+          const ratio = v / tv;
+          if (ratio < 0.72 || ratio > 1.35) continue;
+          pushOffer([a], "1for1", ratio >= 0.95 && ratio <= 1.05
+            ? "Near even on the book"
+            : (v > tv ? "Slight overpay — may get it done" : "Slight under — may need a sweetener"));
+        }
       }
-      // 2-for-1: two of mine ≈ target
-      const pool = myBag.filter(function (a) { return calcValueNum(a) >= 700; }).slice(0, 10);
-      for (let i = 0; i < pool.length; i++) {
-        for (let j = i + 1; j < pool.length; j++) {
-          const sum = calcValueNum(pool[i]) + calcValueNum(pool[j]);
+      const pool = myBag.filter(tradeHelperCanSendFiller).slice(0, clear ? 14 : 10);
+      const players = pool.filter(function (a) { return !tradeHelperIsPick(a); });
+      const picks = pool.filter(tradeHelperIsPick);
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          const sum = calcValueNum(players[i]) + calcValueNum(players[j]);
           const ratio = sum / tv;
-          if (ratio < 0.85 || ratio > 1.28) continue;
-          pushOffer([pool[i], pool[j]], "2for1", "Two-for-one package near book value");
+          if (ratio < 0.85 || ratio > 1.32) continue;
+          pushOffer([players[i], players[j]], "2for1",
+            clear
+              ? ("Clear-space 2-for-1" + (theirDepth.band === "shallow" ? " · they need depth" : ""))
+              : "Two-for-one package near book value");
+        }
+      }
+      // 2 players + pick topper
+      for (let i = 0; i < Math.min(players.length, 8); i++) {
+        for (let j = i + 1; j < Math.min(players.length, 8); j++) {
+          for (let p = 0; p < Math.min(picks.length, 4); p++) {
+            const legs = [players[i], players[j], picks[p]];
+            const sum = legs.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
+            const ratio = sum / tv;
+            if (ratio < 0.88 || ratio > 1.35) continue;
+            pushOffer(legs, "2plusPick", "Two + pick topper near book");
+          }
+        }
+      }
+      // 3-for-1 players
+      for (let i = 0; i < Math.min(players.length, 7); i++) {
+        for (let j = i + 1; j < Math.min(players.length, 7); j++) {
+          for (let k = j + 1; k < Math.min(players.length, 7); k++) {
+            const legs = [players[i], players[j], players[k]];
+            const sum = legs.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
+            const ratio = sum / tv;
+            if (ratio < 0.88 || ratio > 1.36) continue;
+            pushOffer(legs, "3for1",
+              clear
+                ? ("Clear-space 3-for-1 into " + (tradeHelperIsFoundational(target) ? "a foundation" : "one piece"))
+                : "Three-for-one package near book value");
+          }
         }
       }
       out.sort(function (a, b) { return a.score - b.score; });
       const seen = {};
       const uniq = [];
+      const cap = clear ? 8 : 6;
       for (let i = 0; i < out.length; i++) {
         const k = out[i].sendA + "|" + out[i].kind;
         if (seen[k]) continue;
         seen[k] = true;
         uniq.push(out[i]);
-        if (uniq.length >= 5) break;
+        if (uniq.length >= cap) break;
       }
       return uniq;
     }
@@ -15265,14 +15453,15 @@ const html = `<!DOCTYPE html>
       const tv = calcValueNum(asset);
       if (tv <= 0) return [];
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
-      const myBag = bags.get(mine) || [];
+      const clear = tradeHelperFactorCanon(tradeHelperFactor) === "clear_space";
+      if (clear) return tradeHelperConsolidatePackages(asset);
       const out = [];
       bags.forEach(function (theirBag, uid) {
         if (String(uid) === mine) return;
         if (!tradeHelperSellSeatAllowed(uid)) return;
         if (!theirBag || !theirBag.length) return;
         const theirDir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
-        // Would they take this player from us?
+        const theirDepth = tradeHelperDepthOf(uid);
         if (typeof homeDeskTheyAccept === "function"
           && !homeDeskTheyAccept(theirDir, [asset], theirBag)) return;
         const themName = (typeof dataDashSeatName === "function" ? dataDashSeatName(uid) : "")
@@ -15287,6 +15476,9 @@ const html = `<!DOCTYPE html>
           const gap = Number(rec.gap) || 0;
           const rel = Number(rec.rel) || 0;
           if (rel > 0.22 && gap > 900) return;
+          let score = gap + (kind === "2for1" ? 40 : 0) + (kind === "3for1" || kind === "2plusPick" ? 50 : 0);
+          if (theirDir && (theirDir.label === "Rebuild" || theirDir.label === "Hard rebuild")) score -= 30;
+          if (theirDepth.band === "shallow") score -= 20;
           out.push({
             kind: kind,
             legsA: [asset],
@@ -15299,8 +15491,7 @@ const html = `<!DOCTYPE html>
             rel: rel,
             note: note || "",
             title: tradeHelperLegNames([asset]) + "  →  " + tradeHelperLegNames(legsB),
-            score: gap + (kind === "2for1" ? 40 : 0)
-              + (theirDir && (theirDir.label === "Rebuild" || theirDir.label === "Hard rebuild") ? -30 : 0),
+            score: score,
           });
         };
         for (let i = 0; i < theirBag.length; i++) {
@@ -15315,13 +15506,37 @@ const html = `<!DOCTYPE html>
               ? ("Over for you vs " + themName)
               : ("Under — may need a sweetener from " + themName)));
         }
-        const pool = theirBag.filter(function (a) { return calcValueNum(a) >= 700; }).slice(0, 10);
-        for (let i = 0; i < pool.length; i++) {
-          for (let j = i + 1; j < pool.length; j++) {
-            const sum = calcValueNum(pool[i]) + calcValueNum(pool[j]);
+        const pool = theirBag.filter(function (a) { return calcValueNum(a) >= 700; }).slice(0, 12);
+        const theirPlayers = pool.filter(function (a) { return !tradeHelperIsPick(a); });
+        const theirPicks = pool.filter(tradeHelperIsPick);
+        for (let i = 0; i < theirPlayers.length; i++) {
+          for (let j = i + 1; j < theirPlayers.length; j++) {
+            const sum = calcValueNum(theirPlayers[i]) + calcValueNum(theirPlayers[j]);
             const ratio = sum / tv;
             if (ratio < 0.85 || ratio > 1.28) continue;
-            pushAsk([pool[i], pool[j]], "2for1", "Two-for-one ask from " + themName);
+            pushAsk([theirPlayers[i], theirPlayers[j]], "2for1", "Two-for-one ask from " + themName);
+          }
+        }
+        for (let i = 0; i < Math.min(theirPlayers.length, 7); i++) {
+          for (let j = i + 1; j < Math.min(theirPlayers.length, 7); j++) {
+            for (let p = 0; p < Math.min(theirPicks.length, 3); p++) {
+              const legs = [theirPlayers[i], theirPlayers[j], theirPicks[p]];
+              const sum = legs.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
+              const ratio = sum / tv;
+              if (ratio < 0.88 || ratio > 1.34) continue;
+              pushAsk(legs, "2plusPick", "Two + pick ask from " + themName);
+            }
+          }
+        }
+        for (let i = 0; i < Math.min(theirPlayers.length, 6); i++) {
+          for (let j = i + 1; j < Math.min(theirPlayers.length, 6); j++) {
+            for (let k = j + 1; k < Math.min(theirPlayers.length, 6); k++) {
+              const legs = [theirPlayers[i], theirPlayers[j], theirPlayers[k]];
+              const sum = legs.reduce(function (s, x) { return s + calcValueNum(x); }, 0);
+              const ratio = sum / tv;
+              if (ratio < 0.88 || ratio > 1.36) continue;
+              pushAsk(legs, "3for1", "Three-for-one ask from " + themName);
+            }
           }
         }
       });
@@ -15338,6 +15553,104 @@ const html = `<!DOCTYPE html>
       return uniq;
     }
 
+    /**
+     * Clear-space consolidations: send this player + depth mates (+ pick) for one
+     * foundation/stud on a shallower seat.
+     */
+    function tradeHelperConsolidatePackages(asset) {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      if (!mine || !asset || !tradeHelperIsMine(asset)) return [];
+      const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const myBag = bags.get(mine) || [];
+      const mates = myBag.filter(function (a) {
+        return a && a.id !== asset.id && tradeHelperCanSendFiller(a);
+      }).slice(0, 14);
+      const matePlayers = mates.filter(function (a) { return !tradeHelperIsPick(a); });
+      const matePicks = mates.filter(tradeHelperIsPick);
+      const out = [];
+      bags.forEach(function (theirBag, uid) {
+        if (String(uid) === mine) return;
+        if (!tradeHelperSellSeatAllowed(uid)) return;
+        if (!theirBag || !theirBag.length) return;
+        const theirDir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
+        const theirDepth = tradeHelperDepthOf(uid);
+        const themName = (typeof dataDashSeatName === "function" ? dataDashSeatName(uid) : "")
+          || (theirBag[0] && theirBag[0].owner) || "them";
+        const targets = theirBag.filter(function (a) {
+          if (!a || tradeHelperIsPick(a)) return false;
+          const v = calcValueNum(a);
+          if (v < 1800) return false;
+          return tradeHelperIsFoundational(a) || v >= (typeof deskCuts === "function" ? deskCuts().start : 2200) * 1.15;
+        }).slice(0, 6);
+        targets.forEach(function (tgt) {
+          const tv = calcValueNum(tgt);
+          if (tv <= 0) return;
+          const push = function (legsA, kind, note) {
+            if (!legsA || legsA.length < 2) return;
+            if (typeof homeDeskTheyAccept === "function"
+              && !homeDeskTheyAccept(theirDir, legsA, myBag)) return;
+            const send = legsA.reduce(function (s, x) { return s + Math.max(0, calcValueNum(x)); }, 0);
+            if (send < 900) return;
+            const rec = (typeof calcReceiveTotals === "function")
+              ? calcReceiveTotals(legsA, [tgt], mine, uid)
+              : { gap: Math.abs(send - tv), rel: 0 };
+            const gap = Number(rec.gap) || 0;
+            const rel = Number(rec.rel) || 0;
+            if (rel > 0.24 && gap > 1100) return;
+            const ratio = send / tv;
+            if (ratio < 0.82 || ratio > 1.38) return;
+            let score = gap;
+            if (kind === "3for1" || kind === "2plusPick") score -= 25;
+            if (theirDepth.band === "shallow") score -= 55;
+            if (theirDepth.band === "deep") score += 70;
+            if (tradeHelperIsFoundational(tgt)) score -= 20;
+            out.push({
+              kind: kind,
+              legsA: legsA,
+              legsB: [tgt],
+              sendA: legsA.map(function (x) { return x.id; }).join(","),
+              sendB: tgt.id,
+              themId: String(uid),
+              themName: themName,
+              gap: gap,
+              rel: rel,
+              note: note || "",
+              title: tradeHelperLegNames(legsA) + "  →  " + tradeHelperLegNames([tgt]),
+              score: score,
+            });
+          };
+          for (let i = 0; i < matePlayers.length; i++) {
+            push([asset, matePlayers[i]], "2for1",
+              "Clear space vs " + themName
+                + (theirDepth.band === "shallow" ? " · they need depth" : ""));
+          }
+          for (let i = 0; i < Math.min(matePlayers.length, 8); i++) {
+            for (let p = 0; p < Math.min(matePicks.length, 3); p++) {
+              push([asset, matePlayers[i], matePicks[p]], "2plusPick",
+                "Two + pick into " + (tgt.name || "their piece") + " · " + themName);
+            }
+          }
+          for (let i = 0; i < Math.min(matePlayers.length, 6); i++) {
+            for (let j = i + 1; j < Math.min(matePlayers.length, 6); j++) {
+              push([asset, matePlayers[i], matePlayers[j]], "3for1",
+                "Three-for-one consolidation vs " + themName);
+            }
+          }
+        });
+      });
+      out.sort(function (a, b) { return a.score - b.score; });
+      const seen = {};
+      const uniq = [];
+      for (let i = 0; i < out.length; i++) {
+        const k = out[i].themId + "|" + out[i].sendA + "|" + out[i].sendB;
+        if (seen[k]) continue;
+        seen[k] = true;
+        uniq.push(out[i]);
+        if (uniq.length >= 8) break;
+      }
+      return uniq;
+    }
+
     function tradeHelperInterest(asset) {
       // Who might want this player if we're selling him.
       const mine = authSeatId() ? String(authSeatId()) : "";
@@ -15346,6 +15659,7 @@ const html = `<!DOCTYPE html>
       if (!pos || pos === "PICK") return [];
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
       const seatFilter = tradeHelperSellSeatSet();
+      const clear = tradeHelperFactorCanon(tradeHelperFactor) === "clear_space";
       const rows = [];
       (members || []).forEach(function (m) {
         if (!m || !m.user_id) return;
@@ -15356,6 +15670,7 @@ const html = `<!DOCTYPE html>
         if (!bag.length) return;
         const dir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
         const prof = typeof homeDeskProfile === "function" ? homeDeskProfile(bag) : null;
+        const depth = tradeHelperDepthOf(uid);
         const proj = typeof projSeatOf === "function" ? projSeatOf(uid) : null;
         const arch = typeof archSeatOf === "function" ? archSeatOf(uid) : null;
         if (typeof homeDeskTheyAccept === "function"
@@ -15366,6 +15681,13 @@ const html = `<!DOCTYPE html>
         const thin = !!(prof && prof.thin && prof.thin.indexOf(pos) >= 0);
         if (hole) { score -= 80; why.push("hole at " + pos); }
         else if (thin) { score -= 40; why.push("thin at " + pos); }
+        if (depth.band === "shallow") {
+          score -= clear ? 55 : 25;
+          why.push(depth.label);
+        } else if (depth.band === "deep") {
+          score += clear ? 40 : 10;
+          if (!clear) why.push(depth.label);
+        }
         if (dir && typeof dataDashIntentBuys === "function" && dataDashIntentBuys(dir, pos)) {
           score -= 50;
           why.push((dir.label || "seat") + " buys " + pos);
@@ -15387,11 +15709,13 @@ const html = `<!DOCTYPE html>
           if (dir && dir.label) why.push(dir.label + " seat");
           else why.push("book-value fit");
         }
-        if (score > 20 && !hole && !thin) return;
+        if (score > 20 && !hole && !thin && !(clear && depth.band === "shallow")) return;
         rows.push({
           themId: uid,
           themName: m.name || (typeof dataDashSeatName === "function" ? dataDashSeatName(uid) : uid),
-          why: why.slice(0, 2).join(" · "),
+          why: why.slice(0, 3).join(" · "),
+          depthBand: depth.band,
+          depthLabel: depth.label,
           score: score,
         });
       });
@@ -15509,6 +15833,8 @@ const html = `<!DOCTYPE html>
       const pos = String((target && target.pos) || "").toUpperCase();
       const flags = [];
 
+      const clear = tradeHelperFactorCanon(tradeHelperFactor) === "clear_space";
+      const myDepth = mine ? tradeHelperDepthOf(mine) : null;
       if (selling) {
         const surplus = !!(myProf && myProf.surplus && myProf.surplus.indexOf(pos) >= 0);
         const deep = !!(myProf && myProf.deep && myProf.deep.indexOf(pos) >= 0);
@@ -15516,6 +15842,14 @@ const html = `<!DOCTYPE html>
         if (surplus || deep) flags.push("You look deep at " + pos + " — fair sell candidate.");
         else if (hole) flags.push("You are thin at " + pos + " — only sell if the return upgrades the team.");
         else if (pos) flags.push("Neutral " + pos + " depth — sell if the return fits your window.");
+        if (myDepth && myDepth.band === "deep") {
+          flags.push("Your roster reads deep overall — clear-space consolidations fit.");
+        }
+        if (tradeHelperIsFoundational(target)) {
+          flags.push(tradeHelperIsFoundationalUser(target)
+            ? "You marked him Foundational — only move him for multi-first / foundation-plus value."
+            : "Book reads Foundational — treat as a cornerstone, not filler.");
+        }
         if (target && target.injury) {
           flags.push((target.name || "Player") + " is on " + target.injury
             + " — buyers may shade the ask.");
@@ -15528,18 +15862,24 @@ const html = `<!DOCTYPE html>
         const alts = tradeHelperSellAlts(target);
         const seatFilter = tradeHelperSellSeatSet();
         const scoped = !!seatFilter;
-        let verdict = scoped
-          ? "Shop him to the managers you toggled on — lead with the closest even ask."
-          : "Shop him to seats that need the pos — lead with the closest even ask.";
+        let verdict = clear
+          ? "Clear space — package him with depth mates for one foundation on a seat that needs bodies."
+          : (scoped
+            ? "Shop him to the managers you toggled on — lead with the closest even ask."
+            : "Shop him to seats that need the pos — lead with the closest even ask.");
         if (!interest.length && !packages.length) {
           verdict = scoped
             ? "Quiet from the selected managers — toggle Whole league or add other seats."
-            : ("Quiet interest right now — widen the ask or wait for a seat that needs "
-              + (pos || "him") + ".");
-        } else if (packages.length && interest.length) {
-          verdict = scoped
-            ? "Demand in your shortlist — start with the tightest ask from those seats."
-            : "Real demand — start with the tightest ask from an interested seat.";
+            : (clear
+              ? "No clean 2/3-for-1 consolidation right now — try Even book or widen the manager list."
+              : ("Quiet interest right now — widen the ask or wait for a seat that needs "
+                + (pos || "him") + "."));
+        } else if (packages.length && (interest.length || clear)) {
+          verdict = clear
+            ? "Depth-hungry seats found — lead with the tightest multi-piece consolidation."
+            : (scoped
+              ? "Demand in your shortlist — start with the tightest ask from those seats."
+              : "Real demand — start with the tightest ask from an interested seat.");
         } else if (interest.length && !packages.length) {
           verdict = scoped
             ? "Selected seats want the pos, but book packages are messy — open calc and shape the return."
@@ -15561,6 +15901,8 @@ const html = `<!DOCTYPE html>
           interest: interest,
           alts: alts,
           needPos: false,
+          foundational: tradeHelperIsFoundational(target),
+          factor: tradeHelperFactorCanon(tradeHelperFactor),
         };
       }
 
@@ -15568,11 +15910,20 @@ const html = `<!DOCTYPE html>
       const theirDir = themId && typeof seatDirOf === "function" ? seatDirOf(themId) : null;
       const theirProj = themId && typeof projSeatOf === "function" ? projSeatOf(themId) : null;
       const theirArch = themId && typeof archSeatOf === "function" ? archSeatOf(themId) : null;
+      const theirDepth = themId ? tradeHelperDepthOf(themId) : null;
       const needPos = !!(myProf && myProf.holes && myProf.holes.indexOf(pos) >= 0);
       const thinPos = !!(myProf && myProf.thin && myProf.thin.indexOf(pos) >= 0);
       if (needPos) flags.push("You look thin at " + pos + " — fair hunt.");
       else if (thinPos) flags.push("You could use " + pos + " depth.");
       else if (pos) flags.push("Not a clear " + pos + " hole on your team — upgrade only if the price is right.");
+      if (tradeHelperIsFoundational(target)) {
+        flags.push("Foundational target — expect multi-piece or multi-first value to pry him loose.");
+      }
+      if (theirDepth) {
+        flags.push((target.owner || "Them") + " depth: " + theirDepth.label
+          + (theirDepth.holes.length ? (" · holes " + theirDepth.holes.join("/")) : "")
+          + (theirDepth.thin.length ? (" · thin " + theirDepth.thin.join("/")) : ""));
+      }
       if (target && target.injury) {
         flags.push((target.name || "Target") + " is on " + target.injury
           + " — price the downtime or pivot.");
@@ -15591,13 +15942,17 @@ const html = `<!DOCTYPE html>
       if (theirArch && theirArch.lab) flags.push("Manager type: " + theirArch.lab);
       const packages = tradeHelperPackages(target);
       const alts = tradeHelperAlternatives(target);
-      let verdict = "Build an offer if the path band fits; otherwise pivot.";
+      let verdict = clear
+        ? "Clear space — stack 2–3 sendable pieces (picks OK) for this upgrade; skip your foundations."
+        : "Build an offer if the path band fits; otherwise pivot.";
       if (target && target.injury && alts.length) {
         verdict = "Hurt target — weigh healthier same-pos options before you pay full freight.";
       } else if (!packages.length && alts.length) {
         verdict = "Hard to even this on your team — look at alternatives first.";
-      } else if (packages.length && needPos) {
-        verdict = "Solid need fit — lead with the closest even package.";
+      } else if (packages.length && (needPos || clear)) {
+        verdict = clear
+          ? "Multi-piece path open — lead with the tightest 2/3-for-1 that clears your bench."
+          : "Solid need fit — lead with the closest even package.";
       } else if (theirProj && theirProj.band === "Late" && target && !target.injury) {
         verdict = "Win-now seller will want a real piece — don’t lowball.";
       }
@@ -15610,6 +15965,8 @@ const html = `<!DOCTYPE html>
         interest: [],
         alts: alts,
         needPos: needPos,
+        foundational: tradeHelperIsFoundational(target),
+        factor: tradeHelperFactorCanon(tradeHelperFactor),
       };
     }
 
@@ -15774,14 +16131,23 @@ const html = `<!DOCTYPE html>
           selling ? "Your team" : target.owner,
           target.injury ? ("hurt " + target.injury) : "",
           target.roster_slot || ""].filter(Boolean).join(" · ");
+        const clear = anal.factor === "clear_space";
         body += '<p class="caption"><button type="button" class="chip" data-trade-helper-clear="1">← Other player</button></p>'
           + '<div class="trade-helper-target">'
           + '<div class="trade-helper-mode ' + (selling ? "sell" : "buy") + '">'
           + (selling ? "Sell — trade him out" : "Buy — trade for him") + "</div>"
-          + '<h3 class="ds-lists-h">' + esc(name) + "</h3>"
+          + '<h3 class="ds-lists-h">' + esc(name)
+          + (anal.foundational
+            ? ('<span class="trade-helper-found'
+              + (tradeHelperIsFoundationalUser(target) ? " is-user" : "")
+              + '">Foundational</span>')
+            : "")
+          + "</h3>"
           + '<p class="data-dash-sub">' + esc(bits) + "</p>"
           + '<p class="trade-helper-verdict">' + esc(anal.verdict) + "</p>"
+          + '<p class="caption">' + tradeHelperFoundationalBtnHtml(target) + "</p>"
           + "</div>";
+        body += tradeHelperFactorHtml();
         if (selling) body += tradeHelperSellSeatsHtml();
         if (anal.flags.length) {
           body += '<ul class="trade-helper-flags">'
@@ -15793,7 +16159,12 @@ const html = `<!DOCTYPE html>
           if (anal.interest && anal.interest.length) {
             body += anal.interest.map(function (r) {
               return '<div class="data-xrow">'
-                + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.themName || "them") + "</span>"
+                + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.themName || "them")
+                + (r.depthBand
+                  ? ('<span class="trade-helper-depth ' + esc(r.depthBand) + '">'
+                    + esc(r.depthLabel || r.depthBand) + "</span>")
+                  : "")
+                + "</span>"
                 + '<span class="data-xrow-meta">' + esc(r.why || "") + "</span>"
                 + '<span class="data-hunt-why">Interest signal — see asks below</span>'
                 + "</div></div>";
@@ -15807,13 +16178,20 @@ const html = `<!DOCTYPE html>
           }
         }
         body += '<h3 class="ds-lists-h">'
-          + (selling ? "What they might give" : "Offer ideas") + "</h3>";
+          + (selling
+            ? (clear ? "Consolidate for a foundation" : "What they might give")
+            : (clear ? "Clear-space offer ideas" : "Offer ideas"))
+          + "</h3>";
         if (!anal.packages.length) {
           body += '<p class="data-hint">' + (selling
-            ? (tradeHelperSellSeatSet()
-              ? "No clean ask from the selected managers. Toggle more seats or open calc."
-              : "No clean ask package on other seats right now. Check interest and try calc.")
-            : "No clean package on your team that both sides are likely to take. Check alternatives.")
+            ? (clear
+              ? "No clean 2/3-for-1 consolidation on the selected seats. Toggle Even book or add managers."
+              : (tradeHelperSellSeatSet()
+                ? "No clean ask from the selected managers. Toggle more seats or open calc."
+                : "No clean ask package on other seats right now. Check interest and try calc."))
+            : (clear
+              ? "No clean multi-piece path that skips your foundations. Try Even book or another target."
+              : "No clean package on your team that both sides are likely to take. Check alternatives."))
             + "</p>";
         } else {
           body += anal.packages.map(function (p) {
@@ -15824,7 +16202,7 @@ const html = `<!DOCTYPE html>
               + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(p.title) + "</span>"
               + '<span class="data-xrow-meta">'
               + esc((p.themName ? (p.themName + " · ") : "")
-                + (p.kind === "2for1" ? "2-for-1" : "1-for-1")
+                + tradeHelperKindLabel(p.kind)
                 + (p.note ? (" · " + p.note) : "")) + "</span>"
               + '<span class="data-hunt-why">Open in calc to tweak the needle</span>'
               + "</div></button>";
@@ -27248,6 +27626,58 @@ const html = `<!DOCTYPE html>
       }
     }
 
+    /** User-marked cornerstone pieces — local per seat (not movable in auto packages). */
+    function seatFoundationalKey() {
+      const leagueId = (typeof avatarLeagueId === "function" && avatarLeagueId())
+        || (activeLeague && activeLeague.sleeper_league_id)
+        || "";
+      const seat = authSeatId() || "";
+      if (!leagueId || !seat) return "";
+      return "cuckle.foundational.v1." + leagueId + "." + seat;
+    }
+
+    function seatFoundationalReadLocal() {
+      try {
+        const key = seatFoundationalKey();
+        const raw = key ? localStorage.getItem(key) : null;
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (parsed && Array.isArray(parsed.assets)) {
+          return typeof dataDashBlockCanon === "function"
+            ? dataDashBlockCanon(parsed.assets)
+            : parsed.assets.map(String).filter(Boolean);
+        }
+      } catch (err) { /* private mode */ }
+      return [];
+    }
+
+    function seatFoundationalWriteLocal(ids) {
+      try {
+        const key = seatFoundationalKey();
+        if (!key) return;
+        const canon = typeof dataDashBlockCanon === "function"
+          ? dataDashBlockCanon(ids)
+          : (ids || []).map(String).filter(Boolean).slice(0, 12);
+        localStorage.setItem(key, JSON.stringify({
+          assets: canon,
+          updated_at: new Date().toISOString(),
+        }));
+      } catch (err) { /* private mode */ }
+    }
+
+    function seatFoundationalToggle(assetId) {
+      const id = String(assetId || "");
+      if (!id) return seatFoundationalReadLocal();
+      const cur = seatFoundationalReadLocal().slice();
+      const ix = cur.indexOf(id);
+      if (ix >= 0) cur.splice(ix, 1);
+      else {
+        cur.push(id);
+        if (cur.length > 12) cur.shift();
+      }
+      seatFoundationalWriteLocal(cur);
+      return cur;
+    }
+
     async function cosmeticsPushRemote() {
       const lid = avatarLeagueId();
       const uid = authSeatId();
@@ -34168,6 +34598,7 @@ const html = `<!DOCTYPE html>
         tradeHelperTargetId = "";
         tradeHelperSellSeats = [];
         tradeHelperSellSeatQ = "";
+        tradeHelperFactor = "even";
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         dataRoom = "overview";
         dataPane = "ping";
@@ -34180,8 +34611,26 @@ const html = `<!DOCTYPE html>
         tradeHelperTargetId = "";
         tradeHelperSellSeats = [];
         tradeHelperSellSeatQ = "";
+        tradeHelperFactor = "even";
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = "[data-trade-helper-q]";
+        render();
+        return;
+      }
+      const tradeHelperFactorBtn = e.target.closest("[data-trade-helper-factor]");
+      if (tradeHelperFactorBtn) {
+        tradeHelperFactor = tradeHelperFactorCanon(
+          tradeHelperFactorBtn.getAttribute("data-trade-helper-factor") || "even",
+        );
+        focusNext = '[data-trade-helper-factor="' + tradeHelperFactor + '"]';
+        render();
+        return;
+      }
+      const tradeHelperFoundBtn = e.target.closest("[data-trade-helper-found-toggle]");
+      if (tradeHelperFoundBtn) {
+        const fid = tradeHelperFoundBtn.getAttribute("data-trade-helper-found-toggle") || "";
+        if (fid) seatFoundationalToggle(fid);
+        focusNext = '[data-trade-helper-found-toggle="' + fid + '"]';
         render();
         return;
       }
@@ -35796,6 +36245,7 @@ const html = `<!DOCTYPE html>
         tradeHelperTargetId = "";
         tradeHelperSellSeats = [];
         tradeHelperSellSeatQ = "";
+        tradeHelperFactor = "even";
         const start = tradeHelperQBox.selectionStart;
         const end = tradeHelperQBox.selectionEnd;
         render();
@@ -36129,7 +36579,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v345-trade-helper-sell-seats")
+  || !swSrc.includes("chuckle-shell-v346-trade-helper-factors")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -37704,6 +38154,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function tradeHelperIsMine(")
     || !inline.includes("function tradeHelperSellSeatsHtml(")
     || !inline.includes("function tradeHelperSellSeatAllowed(")
+    || !inline.includes("function tradeHelperIsFoundational(")
+    || !inline.includes("function tradeHelperConsolidatePackages(")
+    || !inline.includes("function tradeHelperDepthOf(")
+    || !inline.includes("function tradeHelperFactorHtml(")
     || !inline.includes("Kickstart ideas")
     || !inline.includes('placeholder="Search for player or trade partner"')
     || !inline.includes("Sell — trade him out")
@@ -37711,10 +38165,17 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("What they might give")
     || !inline.includes("Who might want him")
     || !inline.includes("Whole league")
+    || !inline.includes("Clear space")
+    || !inline.includes("Foundational")
+    || !inline.includes("Consolidate for a foundation")
     || !inline.includes('data-trade-helper-sell-seat="')
     || !inline.includes('data-trade-helper-sell-all="1"')
+    || !inline.includes('data-trade-helper-factor="')
+    || !inline.includes('data-trade-helper-found-toggle="')
     || !fnSrc("tradeHelperSellPackages").includes("tradeHelperSellSeatAllowed(")
     || !fnSrc("tradeHelperInterest").includes("tradeHelperSellSeatAllowed(")
+    || !fnSrc("tradeHelperPackages").includes("3for1")
+    || !fnSrc("tradeHelperConsolidatePackages").includes("2plusPick")
     || inline.includes("Travis Etienne or TipsUp")
     || !inline.includes('data-trade-helper-seed="')
     || !inline.includes('closest("[data-trade-helper-seed]")')

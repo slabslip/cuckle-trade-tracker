@@ -1,7 +1,7 @@
-// Chuckle Fantasy — league commissioner + seat invites
+// Chuckle Fantasy — peer league join + seat claims
 //
 // POST /functions/v1/join-league
-// Authorization: Bearer <user JWT>
+// Authorization: Bearer <user JWT> (except public actions below)
 //
 // Actions:
 //   invite_preview   { code }               → public: team_name + suggested username (no auth)
@@ -11,25 +11,27 @@
 //   reclaim_seat    { code, username, password, recover_email? }
 //                   → public: unused CF- ticket sets a new login and claims the seat
 //   preview         { sleeper_league_id }
+//   ensure_league   { sleeper_league_id }  → register from Sleeper if needed, mint seats, return claim list
 //   create          { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
+//                   → same mint path; if league already exists, peer-join (no commissioner lock)
 //   rebuild         { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
-//                   → first time: mint codes; revisit by same commissioner: status only (no remint)
-//   list_invites    { sleeper_league_id }  → unclaimed codes + claimed seats + members
-//   rotate_invites  { sleeper_league_id }  → new codes for all unclaimed seats
+//   list_invites    { sleeper_league_id }  → any signed-in user: codes + claimed seats + members
+//   rotate_invites  { sleeper_league_id }  → new codes for all unclaimed seats (creator or member)
 //   rotate_seat     { sleeper_league_id, sleeper_user_id }
 //                   → new code for one unclaimed seat (Generate invite)
 //   reissue_seat    { sleeper_league_id, sleeper_user_id }
-//                   → clear membership + mint new code for a claimed seat (manager left)
+//                   → clear membership + mint new code for a claimed seat
+//   release_seat    { sleeper_league_id }  → caller unclaims their own seat (remints CF-)
 //   transfer_commissioner { sleeper_league_id, new_commissioner_id }
-//                   → give dashboard admin to another league member
+//                   → optional admin handoff (not required for join)
 //   redeem          { code }               → atomic membership + claim
-//   claim_seat      { sleeper_league_id, sleeper_user_id }  → commissioner claims own seat
+//   claim_seat      { sleeper_league_id, sleeper_user_id }  → creator shortcut (legacy)
 //   claim_open_seat { sleeper_league_id, sleeper_user_id }
-//                   → any signed-in user claims an unclaimed seat
+//                   → claim a seat; switches if you already sit another; can take a wrong claim
 //
 // Deploy: supabase functions deploy join-league
 // SQL: also apply db/wave5-invite-plain.sql (code_plain column)
-//      and db/wave6-one-seat-redeem.sql (refuse seat-switch overwrite)
+//      and db/wave6-one-seat-redeem.sql (baseline redeem)
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -388,6 +390,96 @@ async function listLeagueMembers(
   }));
 }
 
+/** Remint a CF- ticket and clear claim stamps on one seat_invites row. */
+async function remintSeatInvite(
+  admin: ReturnType<typeof createClient>,
+  invite: { id: string; team_name: string },
+  createdBy: string,
+) {
+  const code = makeCode();
+  const code_hash = await sha256Hex(code);
+  const { error } = await admin.from("seat_invites").update({
+    code_hash,
+    code_plain: code,
+    claimed_by: null,
+    claimed_at: null,
+    created_by: createdBy,
+    team_name: invite.team_name,
+  }).eq("id", invite.id);
+  if (error) throw new Error(error.message);
+  return code;
+}
+
+/**
+ * Free a seat: drop membership(s) for that sleeper user and remint the invite.
+ * Used for self-unclaim, seat switch, and taking a wrongly claimed team.
+ */
+async function freeSeat(
+  admin: ReturnType<typeof createClient>,
+  leagueId: string,
+  sleeperUserId: string,
+  actorId: string,
+) {
+  await admin.from("league_memberships")
+    .delete()
+    .eq("sleeper_league_id", leagueId)
+    .eq("sleeper_user_id", sleeperUserId);
+  const { data: invite } = await admin.from("seat_invites")
+    .select("id, team_name, created_by")
+    .eq("sleeper_league_id", leagueId)
+    .eq("sleeper_user_id", sleeperUserId)
+    .maybeSingle();
+  if (!invite) return null;
+  return await remintSeatInvite(admin, invite, actorId || invite.created_by || actorId);
+}
+
+function seatsFromInvites(
+  invites: Array<{ sleeper_user_id: string; team_name: string; claimed_by: string | null }>,
+) {
+  return (invites || []).map((inv) => ({
+    sleeper_user_id: inv.sleeper_user_id,
+    team_name: inv.team_name,
+    claimed: !!inv.claimed_by,
+    claimed_by: inv.claimed_by || null,
+    suggested_username: suggestUsername(inv.team_name),
+  })).sort((a, b) => a.team_name.localeCompare(b.team_name));
+}
+
+async function ensureLeagueRegistered(
+  admin: ReturnType<typeof createClient>,
+  preview: NonNullable<Awaited<ReturnType<typeof loadTeams>>>,
+  userId: string,
+) {
+  const { data: prior } = await admin.from("leagues")
+    .select("sleeper_league_id, status, created_by, name, season, espn_league_id, total_rosters")
+    .eq("sleeper_league_id", preview.sleeper_league_id)
+    .maybeSingle();
+  const createdBy = (prior && prior.created_by) || userId;
+  const status = prior && prior.status === "ready" ? "ready" : "pending_sync";
+  if (!prior) {
+    const { error: leagueErr } = await admin.from("leagues").insert({
+      sleeper_league_id: preview.sleeper_league_id,
+      name: preview.name,
+      season: preview.season,
+      sport: preview.sport,
+      total_rosters: preview.total_rosters,
+      status,
+      created_by: createdBy,
+    });
+    if (leagueErr) throw new Error("Could not register league: " + leagueErr.message);
+  } else {
+    const { error: leagueErr } = await admin.from("leagues").update({
+      name: preview.name,
+      season: preview.season,
+      sport: preview.sport,
+      total_rosters: preview.total_rosters,
+    }).eq("sleeper_league_id", preview.sleeper_league_id);
+    if (leagueErr) throw new Error("Could not refresh league: " + leagueErr.message);
+  }
+  await ensureSeatInvites(admin, preview, createdBy);
+  return { prior, createdBy, status, isNew: !prior };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   if (req.method !== "POST") return json(405, { ok: false, error: "POST only" });
@@ -455,18 +547,7 @@ Deno.serve(async (req) => {
       .select("sleeper_user_id, team_name, claimed_by")
       .eq("sleeper_league_id", leagueId);
     if (invErr) return json(500, { ok: false, error: invErr.message });
-    const seats = (invites || []).map((inv: {
-      sleeper_user_id: string;
-      team_name: string;
-      claimed_by: string | null;
-    }) => ({
-      sleeper_user_id: inv.sleeper_user_id,
-      team_name: inv.team_name,
-      claimed: !!inv.claimed_by,
-      suggested_username: suggestUsername(inv.team_name),
-    })).sort((a: { team_name: string }, b: { team_name: string }) =>
-      a.team_name.localeCompare(b.team_name)
-    );
+    const seats = seatsFromInvites(invites || []);
     return json(200, {
       ok: true,
       sleeper_league_id: leagueId,
@@ -660,6 +741,51 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, league: preview });
   }
 
+  // ---- ensure_league: peer join by Sleeper ID (no commissioner required) ----
+  if (action === "ensure_league") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    if (!/^\d{6,64}$/.test(leagueId)) {
+      return json(400, { ok: false, error: "Enter a valid Sleeper league ID (digits only)" });
+    }
+    let preview;
+    try {
+      preview = await loadTeams(leagueId);
+    } catch (err) {
+      return json(502, { ok: false, error: String(err && (err as Error).message || err) });
+    }
+    if (!preview) return json(404, { ok: false, error: "No Sleeper league with that ID" });
+    let reg;
+    try {
+      reg = await ensureLeagueRegistered(admin, preview, user.id);
+    } catch (err) {
+      return json(500, { ok: false, error: String((err as Error).message || err) });
+    }
+    if (reg.isNew || reg.status !== "ready") {
+      await dispatchLeagueSync(preview.sleeper_league_id);
+    }
+    const { data: invites, error: invErr } = await admin.from("seat_invites")
+      .select("sleeper_user_id, team_name, claimed_by")
+      .eq("sleeper_league_id", preview.sleeper_league_id);
+    if (invErr) return json(500, { ok: false, error: invErr.message });
+    const { data: myMem } = await admin.from("league_memberships")
+      .select("sleeper_user_id, team_name")
+      .eq("auth_user_id", user.id)
+      .eq("sleeper_league_id", preview.sleeper_league_id)
+      .maybeSingle();
+    return json(200, {
+      ok: true,
+      already_exists: !reg.isNew,
+      sleeper_league_id: preview.sleeper_league_id,
+      league_name: preview.name,
+      status: reg.status,
+      seats: seatsFromInvites(invites || []),
+      my_seat: myMem
+        ? { sleeper_user_id: myMem.sleeper_user_id, team_name: myMem.team_name }
+        : null,
+      note: "Pick your team. You can unclaim and switch if you pick the wrong one.",
+    });
+  }
+
   // ---- create (idempotent) / rotate_invites ----
   if (action === "create" || action === "rotate_invites") {
     const leagueId = String(body.sleeper_league_id || "").trim();
@@ -686,13 +812,47 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (action === "rotate_invites") {
-      if (!prior || prior.created_by !== user.id) {
-        return json(403, { ok: false, error: "Only the league creator can rotate invites" });
+      if (!prior) {
+        return json(404, { ok: false, error: "Unknown league" });
+      }
+      const { data: mem } = await admin.from("league_memberships")
+        .select("auth_user_id")
+        .eq("sleeper_league_id", leagueId)
+        .eq("auth_user_id", user.id)
+        .maybeSingle();
+      if (prior.created_by !== user.id && !mem) {
+        return json(403, { ok: false, error: "Join this league before rotating invites" });
       }
     }
 
+    // Peer join: league already on Chuckle — ensure seats and return claim list (no lockout).
     if (action === "create" && prior && prior.created_by && prior.created_by !== user.id) {
-      return json(409, { ok: false, error: "This league already has a commissioner on Chuckle Fantasy" });
+      try {
+        await ensureSeatInvites(admin, preview, prior.created_by);
+      } catch (err) {
+        return json(500, { ok: false, error: String((err as Error).message || err) });
+      }
+      const { data: invites } = await admin.from("seat_invites")
+        .select("sleeper_user_id, team_name, claimed_by")
+        .eq("sleeper_league_id", preview.sleeper_league_id);
+      return json(200, {
+        ok: true,
+        already_exists: true,
+        peer_join: true,
+        league: {
+          sleeper_league_id: preview.sleeper_league_id,
+          name: prior.name || preview.name,
+          season: prior.season || preview.season,
+          sport: preview.sport,
+          total_rosters: prior.total_rosters || preview.total_rosters,
+          status: prior.status || "pending_sync",
+          espn_league_id: prior.espn_league_id || espnId,
+          teams: preview.teams,
+        },
+        seats: seatsFromInvites(invites || []),
+        invites: [],
+        note: "League already on Chuckle. Pick your team to join — no commissioner step.",
+      });
     }
 
     // Idempotent create: same commissioner revisiting — open console with stored codes.
@@ -782,8 +942,16 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can rebuild this book" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
+    }
+    const { data: rebuildMem } = await admin.from("league_memberships")
+      .select("auth_user_id")
+      .eq("sleeper_league_id", leagueId)
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    if (league.created_by !== user.id && !rebuildMem) {
+      return json(403, { ok: false, error: "Join this league before rebuilding the book" });
     }
     if (espnId) {
       await admin.from("leagues").update({ espn_league_id: espnId }).eq("sleeper_league_id", leagueId);
@@ -811,9 +979,10 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can list invites" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
     }
+    // Any signed-in user can list/share invites (peer join — no commissioner gate).
 
     let invites;
     let members;
@@ -916,8 +1085,8 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can generate invites" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
     }
     const { data: invite } = await admin.from("seat_invites")
       .select("*")
@@ -928,7 +1097,7 @@ Deno.serve(async (req) => {
     if (invite.claimed_by) {
       return json(400, {
         ok: false,
-        error: "That seat is claimed — use Reissue for new manager instead",
+        error: "That seat is claimed — unclaim or reissue it first",
       });
     }
 
@@ -1000,9 +1169,10 @@ Deno.serve(async (req) => {
       .select("created_by, name, status, season, total_rosters, espn_league_id")
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
-    if (!league || league.created_by !== user.id) {
-      return json(403, { ok: false, error: "Only the league creator can reissue a seat invite" });
+    if (!league) {
+      return json(404, { ok: false, error: "Unknown league" });
     }
+    // Peer leagues: any signed-in user can free a stuck seat (wrong claim / manager left).
     const { data: invite } = await admin.from("seat_invites")
       .select("*")
       .eq("sleeper_league_id", leagueId)
@@ -1342,60 +1512,134 @@ Deno.serve(async (req) => {
     return json(200, { ok: true, ...(data as Record<string, unknown>) });
   }
 
-  // ---- any signed-in user claims an unclaimed seat ----
-  if (action === "claim_open_seat") {
+  // ---- release own seat (wrong team → unclaim, then reclaim another) ----
+  if (action === "release_seat") {
     const leagueId = String(body.sleeper_league_id || "").trim();
-    const seatId = String(body.sleeper_user_id || "").trim();
-    if (!leagueId || !seatId) {
-      return json(400, { ok: false, error: "Pick your team to claim" });
-    }
-    const { data: invite } = await admin.from("seat_invites")
-      .select("*")
-      .eq("sleeper_league_id", leagueId)
-      .eq("sleeper_user_id", seatId)
-      .maybeSingle();
-    if (!invite) {
-      return json(404, {
-        ok: false,
-        error: "That team is not open to claim. Ask your commissioner for an invite link.",
-      });
-    }
-    if (invite.claimed_by && invite.claimed_by !== user.id) {
-      return json(409, { ok: false, error: "That team is already claimed — sign in instead." });
+    if (!leagueId) {
+      return json(400, { ok: false, error: "Missing league" });
     }
     const { data: priorMem } = await admin.from("league_memberships")
       .select("sleeper_user_id, team_name")
       .eq("auth_user_id", user.id)
       .eq("sleeper_league_id", leagueId)
       .maybeSingle();
+    if (!priorMem || !priorMem.sleeper_user_id) {
+      return json(404, { ok: false, error: "You do not have a team claimed in this league" });
+    }
+    try {
+      await freeSeat(admin, leagueId, String(priorMem.sleeper_user_id), user.id);
+    } catch (err) {
+      return json(500, { ok: false, error: String((err as Error).message || err) });
+    }
+    const { data: leagueRow } = await admin.from("leagues")
+      .select("name, status, season")
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+    return json(200, {
+      ok: true,
+      released: {
+        sleeper_user_id: priorMem.sleeper_user_id,
+        team_name: priorMem.team_name,
+      },
+      league: {
+        sleeper_league_id: leagueId,
+        name: (leagueRow && leagueRow.name) || leagueId,
+        status: (leagueRow && leagueRow.status) || "pending_sync",
+        season: leagueRow && leagueRow.season,
+      },
+      note: "Seat freed. Pick the correct team when you are ready.",
+    });
+  }
+
+  // ---- claim a seat (switch + take-over allowed; no permanent wrong-claim lock) ----
+  if (action === "claim_open_seat") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const seatId = String(body.sleeper_user_id || "").trim();
+    if (!leagueId || !seatId) {
+      return json(400, { ok: false, error: "Pick your team to claim" });
+    }
+    let { data: invite } = await admin.from("seat_invites")
+      .select("*")
+      .eq("sleeper_league_id", leagueId)
+      .eq("sleeper_user_id", seatId)
+      .maybeSingle();
+    if (!invite) {
+      // League may exist without seats yet — ensure from Sleeper once.
+      try {
+        const preview = await loadTeams(leagueId);
+        if (preview) {
+          await ensureLeagueRegistered(admin, preview, user.id);
+          const again = await admin.from("seat_invites")
+            .select("*")
+            .eq("sleeper_league_id", leagueId)
+            .eq("sleeper_user_id", seatId)
+            .maybeSingle();
+          invite = again.data;
+        }
+      } catch (err) {
+        return json(502, { ok: false, error: String((err as Error).message || err) });
+      }
+    }
+    if (!invite) {
+      return json(404, {
+        ok: false,
+        error: "That team is not in this league. Check the Sleeper league ID.",
+      });
+    }
+
+    const { data: priorMem } = await admin.from("league_memberships")
+      .select("sleeper_user_id, team_name")
+      .eq("auth_user_id", user.id)
+      .eq("sleeper_league_id", leagueId)
+      .maybeSingle();
+
+    // Already on this seat — idempotent OK.
+    if (priorMem && priorMem.sleeper_user_id === invite.sleeper_user_id
+      && invite.claimed_by === user.id) {
+      const { data: leagueRow } = await admin.from("leagues")
+        .select("name, status, season")
+        .eq("sleeper_league_id", leagueId)
+        .maybeSingle();
+      return json(200, {
+        ok: true,
+        already_claimed: true,
+        membership: priorMem,
+        league: {
+          sleeper_league_id: leagueId,
+          name: (leagueRow && leagueRow.name) || leagueId,
+          status: (leagueRow && leagueRow.status) || "pending_sync",
+          season: leagueRow && leagueRow.season,
+          team_name: invite.team_name,
+          sleeper_user_id: invite.sleeper_user_id,
+        },
+      });
+    }
+
+    // Switch: free your previous seat in this league first.
     if (priorMem && priorMem.sleeper_user_id
       && priorMem.sleeper_user_id !== invite.sleeper_user_id) {
-      return json(409, {
-        ok: false,
-        error: "You already sit as " + (priorMem.team_name || "another team")
-          + " in this league. Reissue the wrong seat from Manage invites before claiming another.",
-      });
-    }
-    if (invite.code_hash) {
-      const { data, error } = await admin.rpc("redeem_seat_invite", {
-        p_code_hash: invite.code_hash,
-        p_auth_user_id: user.id,
-      });
-      if (!error) return json(200, { ok: true, ...(data as Record<string, unknown>) });
-      const msg = String(error.message || "");
-      if (msg.includes("already have a seat in this league")) {
-        return json(409, {
-          ok: false,
-          error: "You already have a seat in this league. Reissue the wrong seat first.",
-        });
-      }
-      if (msg.includes("already used") || msg.includes("seat already claimed")) {
-        return json(409, { ok: false, error: "That team is already claimed — sign in instead." });
-      }
-      if (!(msg.includes("redeem_seat_invite") || msg.includes("Could not find the function"))) {
-        return json(500, { ok: false, error: error.message });
+      try {
+        await freeSeat(admin, leagueId, String(priorMem.sleeper_user_id), user.id);
+      } catch (err) {
+        return json(500, { ok: false, error: String((err as Error).message || err) });
       }
     }
+
+    // Take-over: wrong claim must not block the correct manager.
+    if (invite.claimed_by && invite.claimed_by !== user.id) {
+      try {
+        await freeSeat(admin, leagueId, String(invite.sleeper_user_id), user.id);
+      } catch (err) {
+        return json(500, { ok: false, error: String((err as Error).message || err) });
+      }
+      const refreshed = await admin.from("seat_invites")
+        .select("*")
+        .eq("sleeper_league_id", leagueId)
+        .eq("sleeper_user_id", seatId)
+        .maybeSingle();
+      invite = refreshed.data || invite;
+    }
+
     const { data: membership, error: memErr } = await admin.from("league_memberships").upsert({
       auth_user_id: user.id,
       sleeper_league_id: invite.sleeper_league_id,
@@ -1404,7 +1648,7 @@ Deno.serve(async (req) => {
     }, { onConflict: "auth_user_id,sleeper_league_id" }).select("*").maybeSingle();
     if (memErr) {
       if (String(memErr.message || "").includes("league_memberships_seat_key")) {
-        return json(409, { ok: false, error: "That team is already claimed by another account" });
+        return json(409, { ok: false, error: "That team was just claimed — try again." });
       }
       return json(500, { ok: false, error: memErr.message });
     }
@@ -1419,6 +1663,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
     return json(200, {
       ok: true,
+      switched: !!(priorMem && priorMem.sleeper_user_id
+        && priorMem.sleeper_user_id !== invite.sleeper_user_id),
       membership,
       league: {
         sleeper_league_id: leagueId,
@@ -1434,7 +1680,7 @@ Deno.serve(async (req) => {
   if (action === "join") {
     return json(400, {
       ok: false,
-      error: "Use an invite code from your commissioner (action: redeem), or create the league if you are the commissioner.",
+      error: "Use an invite code (action: redeem), ensure_league + claim_open_seat, or release_seat to switch.",
     });
   }
 

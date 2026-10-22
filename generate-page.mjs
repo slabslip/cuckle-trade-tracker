@@ -4880,7 +4880,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "signInAppleJoinNews20261022";
+    const DATA_V = "peerJoinClaim20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22787,39 +22787,39 @@ const html = `<!DOCTYPE html>
       const memIds = new Set((memberships || []).map((m) => m.sleeper_league_id));
       const rows = (memberships || []).map((m) => {
         const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
-        const isComm = (ownedLeagues || []).some((o) => o.sleeper_league_id === m.sleeper_league_id);
         return '<div class="league-block">'
           + '<button type="button" class="league-row" data-open-league="' + esc(m.sleeper_league_id) + '">'
           + "<div><b>" + esc(m.name) + "</b>"
           + "<span>" + esc(m.team_name) + " · " + st
           + (m.season ? " · " + esc(m.season) : "")
-          + (isComm ? " · Commissioner" : "")
           + "</span></div>"
           + '<span class="chev" aria-hidden="true">›</span></button>'
-          + (isComm
-            ? '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
-              + '">Manage invites</button>'
-            : "")
+          + '<button type="button" class="linkish" data-change-team="' + esc(m.sleeper_league_id) + '"'
+          + ' data-change-team-name="' + esc(m.name || "") + '">Wrong team?</button>'
+          + '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
+          + '">Share invites</button>'
           + "</div>";
       }).join("");
-      const ownedOnly = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
+      const pendingClaim = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
         const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
         return '<div class="league-block">'
           + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
-          + "<span>Commissioner · " + st
+          + "<span>" + st
           + (o.season ? " · " + esc(o.season) : "")
-          + " · claim your seat to open the meter</span></div></div>"
-          + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
-          + '">Invites & claim seat</button>'
+          + " · claim your team to open the meter</span></div></div>"
+          + '<button type="button" class="chip" data-change-team="' + esc(o.sleeper_league_id) + '"'
+          + ' data-change-team-name="' + esc(o.name || "") + '">Claim your team</button>'
+          + '<button type="button" class="linkish" data-manage-invites="' + esc(o.sleeper_league_id)
+          + '">Share invites</button>'
           + "</div>";
       }).join("");
-      const body = rows + ownedOnly + readyAddBooksHtml();
+      const body = rows + pendingClaim + readyAddBooksHtml();
       return '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
         + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
         + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (body || '<p class="caption">No leagues yet.</p>')
+        + (body || '<p class="caption">No leagues yet. Join with a Sleeper ID or invite code.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-join="1">Join a league</button>'
         + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
         + "</div>";
     }
@@ -24025,41 +24025,83 @@ const html = `<!DOCTYPE html>
       render();
     }
 
-    async function openClaimPick(leagueId, leagueName) {
+    function mySeatInClaimLeague() {
+      const lid = claimLeagueId || gateInviteLeagueId || "";
+      if (!lid) return null;
+      return (memberships || []).find(function (m) {
+        return m && m.sleeper_league_id === lid && m.sleeper_user_id;
+      }) || null;
+    }
+
+    async function openClaimPick(leagueId, leagueName, preloaded) {
       claimLeagueId = String(leagueId || "").trim();
       claimLeagueName = leagueName || claimLeagueName || "";
       claimPickId = "";
+      joinError = "";
       appScreen = "claimTeam";
       focusNext = ".screen-h";
+      if (preloaded && Array.isArray(preloaded.seats)) {
+        claimSeats = preloaded.seats;
+        claimLeagueName = preloaded.league_name || claimLeagueName || claimLeagueId;
+        render();
+        return;
+      }
       render();
       try {
-        const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: claimLeagueId });
-        claimSeats = data.seats || [];
-        claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
+        if (authSession && authSession.access_token) {
+          const data = await joinLeagueCall("ensure_league", { sleeper_league_id: claimLeagueId });
+          claimSeats = data.seats || [];
+          claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
+        } else {
+          const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: claimLeagueId });
+          claimSeats = data.seats || [];
+          claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
+        }
       } catch (err) {
         try {
-          saveActiveLeague({
-            sleeper_league_id: claimLeagueId,
-            name: claimLeagueName || claimLeagueId,
-            status: "ready",
-          });
-          await loadMembers();
-          claimSeats = (members || []).map(function (m) {
-            return { sleeper_user_id: m.user_id, team_name: m.name, claimed: false };
-          });
+          const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: claimLeagueId });
+          claimSeats = data.seats || [];
+          claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
         } catch (err2) {
-          joinError = (err && err.message) || "Could not load teams. Ask your commissioner for an invite link.";
+          joinError = (err && err.message) || "Could not load teams. Check the Sleeper league ID.";
         }
       }
       render();
+    }
+
+    async function onReleaseSeat(leagueId) {
+      const lid = String(leagueId || claimLeagueId || "").trim();
+      if (!authSession) {
+        joinError = "Sign in first.";
+        appScreen = "gate";
+        render();
+        return;
+      }
+      if (!lid || joinBusy) return;
+      joinBusy = true;
+      joinError = "";
+      render();
+      try {
+        await joinLeagueCall("release_seat", { sleeper_league_id: lid });
+        await loadMemberships();
+        if (authSession) {
+          authSave(Object.assign({}, authSession, { seat_user_id: "", seat_name: "" }));
+        }
+        joinBusy = false;
+        await openClaimPick(lid, claimLeagueName);
+      } catch (err) {
+        joinError = (err && err.message) || "Could not unclaim that team.";
+        joinBusy = false;
+        render();
+      }
     }
 
     async function onClaimOpenSeat(sleeperUserId) {
       const seatId = String(sleeperUserId || claimPickId || "").trim();
       const lid = claimLeagueId || gateInviteLeagueId || "";
       if (!authSession) {
-        joinError = "Create a username and password first, then claim your team.";
-        gateMode = "signup";
+        joinError = "Sign in with Apple first, then claim your team.";
+        gateMode = "signin";
         appScreen = "gate";
         render();
         return;
@@ -24071,6 +24113,24 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (joinBusy) return;
+      const target = (claimSeats || []).find(function (s) {
+        return String(s.sleeper_user_id) === String(seatId);
+      });
+      const mine = mySeatInClaimLeague();
+      if (target && target.claimed && (!mine || String(mine.sleeper_user_id) !== String(seatId))) {
+        const ok = window.confirm(
+          (target.team_name || "That team")
+            + " is currently claimed. Take it anyway? "
+            + "The other account will be unclaimed so the correct manager can sit here.",
+        );
+        if (!ok) return;
+      } else if (mine && String(mine.sleeper_user_id) !== String(seatId)) {
+        const ok = window.confirm(
+          "Switch from " + (mine.team_name || "your current team")
+            + " to " + ((target && target.team_name) || "this team") + "?",
+        );
+        if (!ok) return;
+      }
       joinBusy = true;
       joinError = "";
       render();
@@ -24097,10 +24157,7 @@ const html = `<!DOCTYPE html>
         voteSeatRemember(leagueInfo.sleeper_user_id);
         await openJoinWelcome(leagueInfo, { auto: false });
       } catch (err) {
-        const msg = (err && err.message) || "Could not claim that team.";
-        joinError = /unknown action/i.test(msg)
-          ? "Ask your commissioner for an invite link, then open it to claim this team."
-          : msg;
+        joinError = (err && err.message) || "Could not claim that team.";
         joinBusy = false;
         render();
       }
@@ -24862,7 +24919,7 @@ const html = `<!DOCTYPE html>
       const el = document.getElementById("joinInviteCode");
       const code = el ? String(el.value || "").trim() : "";
       if (!code) {
-        joinError = "Paste a CF- invite code from your commissioner.";
+        joinError = "Paste a CF- invite code from a league mate.";
         render();
         return;
       }
@@ -24881,29 +24938,24 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      if (!authSession) {
+        joinError = "Sign in with Apple first, then join.";
+        appScreen = "gate";
+        render();
+        return;
+      }
       joinBusy = true;
       joinError = "";
       render();
       try {
-        const data = await joinPublicCall("league_claim_preview", { sleeper_league_id: lid });
+        const data = await joinLeagueCall("ensure_league", { sleeper_league_id: lid });
         claimLeagueId = lid;
         claimLeagueName = data.league_name || lid;
         joinBusy = false;
-        await openClaimPick(lid, claimLeagueName);
+        await openClaimPick(lid, claimLeagueName, data);
       } catch (err) {
         joinBusy = false;
-        const msg = (err && err.message) || "";
-        if (/unknown league/i.test(msg)) {
-          joinError = "That league is not on Chuckle yet. Create it as commissioner, then share invites.";
-          joinLeagueId = lid;
-          joinSources = [{ kind: "sleeper", id: lid }];
-          syncJoinIdsFromSources();
-          appScreen = "create";
-          focusNext = "[data-join-src-id]";
-          render();
-          return;
-        }
-        joinError = msg || "Could not load that league.";
+        joinError = (err && err.message) || "Could not load that league.";
         console.error(err);
         render();
       }
@@ -25206,15 +25258,15 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      // Soft client guard (SQL wave6 is the real lock): do not silently switch seats.
+      // Soft client guard: switching seats goes through claim_open_seat / Wrong team — unclaim.
       if (gateInviteLeagueId && gateInviteSeatId) {
         const mine = (memberships || []).find(
           (m) => m.sleeper_league_id === gateInviteLeagueId,
         );
         if (mine && mine.sleeper_user_id && mine.sleeper_user_id !== gateInviteSeatId) {
           joinError = "You already sit as " + (mine.team_name || "another team")
-            + " in this league. Reissue the wrong seat from Manage invites — "
-            + "do not redeem another manager's link on your account.";
+            + " in this league. Open Claim your team and switch, or tap Wrong team — unclaim first. "
+            + "Do not redeem another manager's invite onto your account.";
           if (appScreen !== "inviteConfirm") appScreen = "inviteConfirm";
           render();
           return;
@@ -33439,7 +33491,7 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Join a league</h2>'
         + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
-        + "Paste a commissioner invite, or enter a Sleeper league ID to claim an open seat.</p>"
+        + "Paste an invite code from a league mate, or enter a Sleeper league ID and claim your team.</p>"
         + '<div class="app-card"><h3>Invite code</h3>'
         + '<div class="app-form">'
         + '<label>CF- code<input id="joinInviteCode" name="invite" autocomplete="off"'
@@ -33451,8 +33503,8 @@ const html = `<!DOCTYPE html>
         + (joinBusy ? "Joining…" : "Redeem invite") + "</button>"
         + "</div></div></div>"
         + '<div class="app-card"><h3>Sleeper league ID</h3>'
-        + '<p class="caption" style="margin:0 0 8px">From the Sleeper app URL. If the league is already '
-        + "on Chuckle, pick your team next. If not, create it as commissioner.</p>"
+        + '<p class="caption" style="margin:0 0 8px">From the Sleeper app URL. Everyone joins the same way '
+        + "and claims their own team — no commissioner setup.</p>"
         + '<div class="app-form">'
         + '<label>League ID<input id="joinLeagueIdInput" name="league" inputmode="numeric"'
         + ' autocomplete="off" placeholder="e.g. 1315431339301806080"'
@@ -33461,8 +33513,6 @@ const html = `<!DOCTYPE html>
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-join-league-go="1"' + (joinBusy ? " disabled" : "") + ">"
         + (joinBusy ? "Looking…" : "Find teams") + "</button>"
-        + '<button type="button" class="linkish" data-join-create-go="1"'
-        + (joinBusy ? " disabled" : "") + ">Create as commissioner</button>"
         + "</div></div>"
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + "</div>"
@@ -33587,8 +33637,8 @@ const html = `<!DOCTYPE html>
               + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
               + "</div>")
-            : ('<p class="caption" style="margin:4px 0 8px">Copy the invite link and send it — '
-              + "do not open it while signed in as commissioner (that claims the seat onto your account).</p>"
+            : ('<p class="caption" style="margin:4px 0 8px">Copy the invite link and send it to that manager. '
+              + "Opening it while signed in claims the seat onto your account.</p>"
               + '<div class="app-actions">'
               + '<button type="button" class="chip" data-copy-invite-link="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">"
@@ -33613,30 +33663,10 @@ const html = `<!DOCTYPE html>
         + ' aria-selected="' + (tab === "claimed" ? "true" : "false") + '"'
         + ' data-invite-tab="claimed">Claimed (' + claimed.length + ")</button>"
         + "</div>";
-      const transferBlock = '<div class="app-card" style="margin-top:12px">'
-        + "<h3>Transfer commissioner</h3>"
-        + '<p class="caption" style="margin:0 0 8px">Give dashboard admin to another league member. '
-        + "You keep your seat; they get invites and Settings admin for this league.</p>"
-        + (transferCandidates.length
-          ? ('<div class="app-form"><label>New commissioner<select id="transferPick"'
-            + (joinBusy ? " disabled" : "") + ">"
-            + '<option value="">Pick a member…</option>'
-            + transferCandidates.map((m) => {
-              const label = (m.username ? "@" + m.username : "member") + " — " + m.team_name;
-              const sel = transferPickId === m.auth_user_id ? " selected" : "";
-              return '<option value="' + esc(m.auth_user_id) + '"' + sel + ">"
-                + esc(label) + "</option>";
-            }).join("")
-            + "</select></label>"
-            + '<div class="app-actions">'
-            + '<button type="button" class="chip" data-transfer-comm="1"'
-            + (joinBusy ? " disabled" : "") + ">Transfer admin</button>"
-            + "</div></div>")
-          : '<p class="caption">No other members yet. Someone must redeem an invite before you can transfer.</p>')
-        + "</div>";
+      const transferBlock = "";
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-settings="leagues">← Settings</button>'
-        + '<h2 class="screen-h" tabindex="-1">Invite console</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Share invites</h2>'
         + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + tabs
@@ -33798,7 +33828,7 @@ const html = `<!DOCTYPE html>
           : "")
         + readyAddBooksHtml()
         + '<div class="app-actions" style="margin-top:8px">'
-        + '<button type="button" class="chip" data-app-create="1">Create a league</button>'
+        + '<button type="button" class="chip" data-app-join="1">Join a league</button>'
         + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
         + "</div>";
     }
@@ -33830,50 +33860,70 @@ const html = `<!DOCTYPE html>
 
     function renderClaimTeam() {
       const league = claimLeagueName || gateInviteLeague || "this league";
-      const remaining = (claimSeats || []).filter(function (s) { return !s.claimed; });
-      const takenN = (claimSeats || []).length - remaining.length;
-      const picked = remaining.find(function (s) {
+      const mine = mySeatInClaimLeague();
+      const myId = mine ? String(mine.sleeper_user_id) : "";
+      const takenN = (claimSeats || []).filter(function (s) { return s.claimed; }).length;
+      const picked = (claimSeats || []).find(function (s) {
         return String(s.sleeper_user_id) === String(claimPickId);
       });
-      const rows = remaining.map(function (s) {
+      const rows = (claimSeats || []).map(function (s) {
         const on = String(s.sleeper_user_id) === String(claimPickId);
+        const isMine = myId && String(s.sleeper_user_id) === myId;
+        const label = esc(s.team_name)
+          + (isMine ? " · yours" : (s.claimed ? " · taken" : ""));
         return '<button type="button" class="chip'
-          + (on ? " claim-team-on" : "") + '"'
+          + (on ? " claim-team-on" : "")
+          + (isMine ? " claim-team-mine" : "") + '"'
           + ' data-claim-pick="' + esc(s.sleeper_user_id) + '"'
           + (joinBusy ? " disabled" : "") + ">"
-          + esc(s.team_name)
+          + label
           + "</button>";
       }).join("");
       const hero = (typeof shareAccessPending === "function" && shareAccessPending())
-        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim one of the remaining teams to open it.")
-        : ("You have been invited to join <b>" + esc(league) + "</b>. Pick the team that is yours.");
+        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim your team to open it.")
+        : ("Join <b>" + esc(league) + "</b>. Pick the team that is yours.");
       const hint = !claimSeats.length
-        ? "Could not load teams yet. Ask your commissioner for an invite link."
-        : (!remaining.length
-          ? "No remaining teams. Sign in if yours is already claimed."
+        ? "Could not load teams yet. Check the Sleeper league ID."
+        : (mine
+          ? ("You currently sit as <b>" + esc(mine.team_name || "a team")
+            + "</b>. Wrong team? Unclaim, or tap another team to switch. "
+            + "Taken labels can still be claimed if someone picked wrong.")
           : (takenN
-            ? (takenN + " already claimed. Remaining teams below.")
-            : "League added. Team not claimed yet."));
+            ? (takenN + " marked taken — you can still claim your correct team.")
+            : "Pick your team. You can unclaim and switch later if you miss."));
+      const claimLabel = picked && picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
+        ? "Take this team"
+        : (mine && picked && String(mine.sleeper_user_id) !== String(picked.sleeper_user_id)
+          ? "Switch to this team"
+          : "Yes — this is my team");
       return '<div class="app-shell">'
         + joinStepsHtml("team")
         + '<h2 class="screen-h" tabindex="-1">Claim your team</h2>'
         + '<div class="app-card">'
         + '<p class="join-land-hero">' + hero + "</p>"
-        + '<p class="caption">' + esc(hint) + "</p>"
+        + '<p class="caption">' + hint + "</p>"
         + '<div class="claim-team-list">'
         + (rows || "")
         + "</div>"
         + (picked
           ? ('<p class="caption" style="margin-top:12px">You picked <b>' + esc(picked.team_name)
-            + "</b>. Only claim it if that is your team.</p>")
+            + "</b>"
+            + (picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
+              ? " (currently taken — claiming moves it to you)."
+              : ". Only claim it if that is your team.")
+            + "</p>")
           : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + '<div class="app-actions" style="margin-top:12px">'
         + (picked
           ? ('<button type="button" class="chip" data-claim-open-go="1"'
             + (joinBusy ? " disabled" : "") + ">"
-            + (joinBusy ? "Claiming…" : "Yes — this is my team") + "</button>")
+            + (joinBusy ? "Claiming…" : claimLabel) + "</button>")
           : '<p class="caption">Tap your team above.</p>')
+        + (mine
+          ? ('<button type="button" class="linkish" data-release-seat="1"'
+            + (joinBusy ? " disabled" : "") + ">Wrong team — unclaim</button>")
+          : "")
         + '<button type="button" class="linkish" data-app-home="1">Your leagues</button>'
         + "</div></div></div>";
     }
@@ -34352,16 +34402,21 @@ const html = `<!DOCTYPE html>
           openAddReadyLeague(addReady.getAttribute("data-add-ready-league"));
           return;
         }
-        const appCreate = e.target.closest("[data-app-create]");
-        if (appCreate) {
+        const appJoin = e.target.closest("[data-app-join]");
+        if (appJoin) {
           closeLeaguesDrawer(true);
-          resetCreateSources();
-          appScreen = "create";
+          appScreen = "join";
           joinError = "";
-          createdInvites = null;
-          inviteTab = "unclaimed";
           focusNext = ".screen-h";
           render();
+          return;
+        }
+        const changeTeam = e.target.closest("[data-change-team]");
+        if (changeTeam) {
+          closeLeaguesDrawer(true);
+          const lid = changeTeam.getAttribute("data-change-team") || "";
+          const nm = changeTeam.getAttribute("data-change-team-name") || "";
+          openClaimPick(lid, nm).catch(function (err) { console.error(err); });
           return;
         }
         const appRedeem = e.target.closest("[data-app-redeem]");
@@ -36030,21 +36085,6 @@ const html = `<!DOCTYPE html>
         onJoinLeagueIdGo();
         return;
       }
-      const joinCreateGo = e.target.closest("[data-join-create-go]");
-      if (joinCreateGo) {
-        const el = document.getElementById("joinLeagueIdInput");
-        const lid = el ? String(el.value || "").trim() : "";
-        if (lid) {
-          joinLeagueId = lid;
-          joinSources = [{ kind: "sleeper", id: lid }];
-          if (typeof syncJoinIdsFromSources === "function") syncJoinIdsFromSources();
-        }
-        joinError = "";
-        appScreen = "create";
-        focusNext = "[data-join-src-id]";
-        render();
-        return;
-      }
       const gateGo = e.target.closest("[data-gate-go]");
       if (gateGo) {
         e.preventDefault();
@@ -36119,16 +36159,26 @@ const html = `<!DOCTYPE html>
         openAddReadyLeague(addReady.getAttribute("data-add-ready-league"));
         return;
       }
-      const appCreate = e.target.closest("[data-app-create]");
-      if (appCreate) {
+      const appJoin = e.target.closest("[data-app-join]");
+      if (appJoin) {
         closeLeaguesDrawer(true);
-        resetCreateSources();
-        appScreen = "create";
+        appScreen = "join";
         joinError = "";
-        createdInvites = null;
-        inviteTab = "unclaimed";
         focusNext = ".screen-h";
         render();
+        return;
+      }
+      const changeTeam = e.target.closest("[data-change-team]");
+      if (changeTeam) {
+        closeLeaguesDrawer(true);
+        const lid = changeTeam.getAttribute("data-change-team") || "";
+        const nm = changeTeam.getAttribute("data-change-team-name") || "";
+        openClaimPick(lid, nm).catch(function (err) { console.error(err); });
+        return;
+      }
+      const releaseSeatBtn = e.target.closest("[data-release-seat]");
+      if (releaseSeatBtn) {
+        onReleaseSeat(claimLeagueId || gateInviteLeagueId).catch(function (err) { console.error(err); });
         return;
       }
       const appRedeem = e.target.closest("[data-app-redeem]");
@@ -37536,7 +37586,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v353-sign-in-apple-join")
+  || !swSrc.includes("chuckle-shell-v354-peer-join-claim")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39916,8 +39966,12 @@ if (!inline.includes("Sign in with Apple")
   || !inline.includes('data-join-invite-go="1"')
   || !inline.includes('data-join-league-go="1"')
   || !inline.includes("Find teams")
-  || !inline.includes("Use username and password")) {
-  throw new Error("gate must offer Sign in with Apple (native + web) and a post-login join screen");
+  || !inline.includes("Use username and password")
+  || !inline.includes("ensure_league")
+  || !inline.includes("release_seat")
+  || !inline.includes("Wrong team — unclaim")
+  || inline.includes(">Create as commissioner</button>")) {
+  throw new Error("gate must offer Sign in with Apple and peer join (invite or Sleeper ID, no commissioner create)");
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");
@@ -39931,7 +39985,7 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("function renderJoinWelcome()")
   || !inline.includes("function openJoinWelcome(")
   || !inline.includes("function openClaimPick(")
-  || !inline.includes("been invited to join")
+  || !inline.includes("Pick the team that is yours")
   || !inline.includes("joined <b>")
   || !inline.includes("Claim your team")
   || !inline.includes("Crowning achievements")
@@ -39940,9 +39994,12 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("Regular season avg")
   || !inline.includes('data-join-enter-dash="1"')
   || !inline.includes('data-claim-open-go="1"')
+  || !inline.includes('data-release-seat="1"')
   || !inline.includes('appScreen === "claimTeam"')
   || !inline.includes('appScreen === "joinWelcome"')
   || !inline.includes('claim_open_seat')
+  || !inline.includes("ensure_league")
+  || !inline.includes("release_seat")
   || !inline.includes("league_claim_preview")
   || !inline.includes("name-history.json")) {
   throw new Error("join landing must ship invite copy, team picker, and pre-dash welcome");
@@ -40500,7 +40557,8 @@ if (!inline.includes('getElementById("goBack")')
     || !drawerListener.includes('closest("[data-manage-invites]")')
     || !drawerListener.includes('closest("[data-app-settings]")')
     || !drawerListener.includes('closest("[data-auth-signout]")')
-    || !drawerListener.includes('closest("[data-app-create]")')
+    || !drawerListener.includes('closest("[data-app-join]")')
+    || !drawerListener.includes('closest("[data-change-team]")')
     || !drawerListener.includes('closest("[data-app-redeem]")')) {
     throw new Error("leagues drawer must handle open-league and list actions (it is outside #app)");
   }

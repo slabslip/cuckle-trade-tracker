@@ -4815,7 +4815,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperBuySell20261022";
+    const DATA_V = "tradeHelperThpickFix20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5881,9 +5881,41 @@ const html = `<!DOCTYPE html>
         sessionStorage.removeItem("cuckle.pending.tile");
         sessionStorage.removeItem("cuckle.pending.slice");
         sessionStorage.removeItem("cuckle.pending.who");
+        // Keep thq / thpick — dataDashOpenReport and a late calcBook paint still need them.
+      } catch (err) { /* ignore */ }
+    }
+
+    function clearTradeHelperPending() {
+      try {
         sessionStorage.removeItem("cuckle.pending.thq");
         sessionStorage.removeItem("cuckle.pending.thpick");
       } catch (err) { /* ignore */ }
+    }
+
+    /** Apply ?thpick= / ?thq= or session stash onto Trade helper search/target state. */
+    function tradeHelperApplyPendingPick() {
+      let thq = "";
+      let thpick = "";
+      try {
+        const q = new URLSearchParams(location.search);
+        thq = String(q.get("thq") || "");
+        thpick = String(q.get("thpick") || "");
+        if (!thq) thq = sessionStorage.getItem("cuckle.pending.thq") || "";
+        if (!thpick) thpick = sessionStorage.getItem("cuckle.pending.thpick") || "";
+        if (thq) sessionStorage.setItem("cuckle.pending.thq", thq);
+        if (thpick) sessionStorage.setItem("cuckle.pending.thpick", thpick);
+      } catch (err) { /* private */ }
+      if (thpick) {
+        tradeHelperTargetId = thpick;
+        tradeHelperQ = "";
+        return "pick";
+      }
+      if (thq) {
+        tradeHelperTargetId = "";
+        tradeHelperQ = thq;
+        return "q";
+      }
+      return "";
     }
 
     function dataTileSeatReady() {
@@ -5900,21 +5932,16 @@ const html = `<!DOCTYPE html>
       if (!tile) return false;
       let slice = pendingDataSlice || "";
       let who = pendingDataWho || "";
-      let thq = "";
-      let thpick = "";
       try {
         const q = new URLSearchParams(location.search);
         if (!slice) slice = String(q.get("slice") || "");
         if (!who) who = String(q.get("who") || "");
-        thq = String(q.get("thq") || "");
-        thpick = String(q.get("thpick") || "");
         if (!slice) slice = sessionStorage.getItem("cuckle.pending.slice") || "";
         if (!who) who = sessionStorage.getItem("cuckle.pending.who") || "";
-        if (!thq) thq = sessionStorage.getItem("cuckle.pending.thq") || "";
-        if (!thpick) thpick = sessionStorage.getItem("cuckle.pending.thpick") || "";
-        // Survive syncUrl stripping ?thpick= / ?thq= before honor runs.
-        if (thq) sessionStorage.setItem("cuckle.pending.thq", thq);
-        if (thpick) sessionStorage.setItem("cuckle.pending.thpick", thpick);
+        // Survive syncUrl stripping ?thpick= / ?thq= before honor / openReport runs.
+        if (typeof tradeHelperApplyPendingPick === "function" && tile === "trade_helper") {
+          tradeHelperApplyPendingPick();
+        }
       } catch (err) { /* private */ }
       rememberPendingDataTile(tile, { slice: slice, who: who });
       if (appScreen !== "dash") return false;
@@ -5924,14 +5951,9 @@ const html = `<!DOCTYPE html>
       me = null;
       homeTab = "history";
       if (typeof dataDashOpenReport === "function") dataDashOpenReport(tile);
-      if (tile === "trade_helper") {
-        if (thpick) {
-          tradeHelperTargetId = thpick;
-          tradeHelperQ = "";
-        } else if (thq) {
-          tradeHelperTargetId = "";
-          tradeHelperQ = thq;
-        }
+      // openReport restores thpick from session; re-apply after in case open cleared first.
+      if (tile === "trade_helper" && typeof tradeHelperApplyPendingPick === "function") {
+        tradeHelperApplyPendingPick();
       }
       receiptListSlice = (slice === "top" || slice === "bot") ? slice : "";
       receiptListWho = who || "";
@@ -15608,11 +15630,15 @@ const html = `<!DOCTYPE html>
       }
       const target = tradeHelperTargetId ? tradeHelperAssetById(tradeHelperTargetId) : null;
       const q = tradeHelperQ.trim();
-      const hits = (!target && q.length >= 2)
+      const hits = (!target && !tradeHelperTargetId && q.length >= 2)
         ? tradeHelperSearchHits(tradeHelperQ, 12)
         : [];
       let body = "";
-      if (!target) {
+      if (tradeHelperTargetId && !target) {
+        // Deep-link / pick landed before calculator.json — keep the target id and wait.
+        body += '<p class="caption"><button type="button" class="chip" data-trade-helper-clear="1">← Other player</button></p>'
+          + '<p class="data-hint">Loading player…</p>';
+      } else if (!target) {
         body += '<label class="trade-helper-search">'
           + '<span class="data-dash-sub">Search</span>'
           + '<input type="search" class="cuffs-q" data-trade-helper-q="1" placeholder="Search for player or trade partner"'
@@ -16109,9 +16135,16 @@ const html = `<!DOCTYPE html>
         receiptTicket = false;
         receiptPickKey = "";
         if (id === "trade_helper") {
-          tradeHelperQ = "";
-          tradeHelperTargetId = "";
-          focusNext = "[data-trade-helper-q]";
+          const pending = typeof tradeHelperApplyPendingPick === "function"
+            ? tradeHelperApplyPendingPick()
+            : "";
+          if (!pending) {
+            tradeHelperQ = "";
+            tradeHelperTargetId = "";
+          }
+          focusNext = tradeHelperTargetId
+            ? ".trade-helper-mode, .trade-helper-target .ds-lists-h, .screen-h"
+            : "[data-trade-helper-q]";
         } else {
           focusNext = ".screen-h";
         }
@@ -34019,6 +34052,7 @@ const html = `<!DOCTYPE html>
         dataBlockAddOpen = false;
         tradeHelperQ = "";
         tradeHelperTargetId = "";
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         dataRoom = "overview";
         dataPane = "ping";
         focusNext = ".screen-h";
@@ -34028,6 +34062,7 @@ const html = `<!DOCTYPE html>
       const tradeHelperClear = e.target.closest("[data-trade-helper-clear]");
       if (tradeHelperClear) {
         tradeHelperTargetId = "";
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = "[data-trade-helper-q]";
         render();
         return;
@@ -34036,6 +34071,7 @@ const html = `<!DOCTYPE html>
       if (tradeHelperPick) {
         tradeHelperTargetId = tradeHelperPick.getAttribute("data-trade-helper-pick") || "";
         tradeHelperQ = "";
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = ".trade-helper-target .ds-lists-h, .screen-h";
         render();
         return;
@@ -34044,6 +34080,7 @@ const html = `<!DOCTYPE html>
       if (tradeHelperSeed) {
         tradeHelperTargetId = "";
         tradeHelperQ = tradeHelperSeed.getAttribute("data-trade-helper-seed") || "";
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = "[data-trade-helper-q]";
         render();
         return;
@@ -35674,6 +35711,12 @@ const html = `<!DOCTYPE html>
     if (pendingDataTile && typeof rememberPendingDataTile === "function") {
       rememberPendingDataTile(pendingDataTile, { slice: pendingDataSlice, who: pendingDataWho });
     }
+    try {
+      const thq0 = String(params.get("thq") || "");
+      const thpick0 = String(params.get("thpick") || "");
+      if (thq0) sessionStorage.setItem("cuckle.pending.thq", thq0);
+      if (thpick0) sessionStorage.setItem("cuckle.pending.thpick", thpick0);
+    } catch (err) { /* private */ }
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();
       gateMode = "signup";
@@ -35931,7 +35974,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v343-trade-helper-buy-sell")
+  || !swSrc.includes("chuckle-shell-v344-trade-helper-thpick")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")

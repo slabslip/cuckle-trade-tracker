@@ -11,9 +11,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "tradeHelperBuySell20261022"')
-  || !gen.includes('const DATA_V = "tradeHelperBuySell20261022"')
-  || !sw.includes("chuckle-shell-v343-trade-helper-buy-sell")) {
+if (!page.includes('const DATA_V = "tradeHelperThpickFix20261022"')
+  || !gen.includes('const DATA_V = "tradeHelperThpickFix20261022"')
+  || !sw.includes("chuckle-shell-v344-trade-helper-thpick")) {
   fail("buy/sell trade helper must bust DATA_V and SW");
 }
 
@@ -22,15 +22,30 @@ for (const need of [
   "function tradeHelperSellPackages(",
   "function tradeHelperInterest(",
   "function tradeHelperSellAlts(",
+  "function tradeHelperApplyPendingPick(",
+  "function clearTradeHelperPending(",
   "Sell — trade him out",
   "Buy — trade for him",
   "What they might give",
   "Who might want him",
   "Maybe sell this instead",
+  "Loading player…",
   "trade-helper-side",
   "trade-helper-mode",
 ]) {
   if (!page.includes(need)) fail("missing: " + need);
+}
+
+const openReport = page.slice(
+  page.indexOf("function dataDashOpenReport("),
+  page.indexOf("function dataDashOpenReport(") + 1800,
+);
+if (!openReport.includes("tradeHelperApplyPendingPick")) {
+  fail("dataDashOpenReport must restore thpick via tradeHelperApplyPendingPick");
+}
+if (openReport.includes('tradeHelperTargetId = ""')
+  && !openReport.includes("if (!pending)")) {
+  fail("dataDashOpenReport must not always wipe tradeHelperTargetId");
 }
 
 const searchFn = page.slice(
@@ -51,6 +66,6 @@ if (!anal.includes('mode: "sell"') || !anal.includes('mode: "buy"')) {
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "tradeHelperBuySell20261022",
-  CACHE: "chuckle-shell-v343-trade-helper-buy-sell",
+  DATA_V: "tradeHelperThpickFix20261022",
+  CACHE: "chuckle-shell-v344-trade-helper-thpick",
 }));

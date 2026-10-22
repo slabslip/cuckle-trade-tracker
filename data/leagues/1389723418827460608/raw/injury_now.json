@@ -1,6 +1,6 @@
 {
   "as_of": "2026-10-22",
-  "n": 42,
+  "n": 41,
   "players": {
     "1466": {
       "name": "Travis Kelce",
@@ -23,13 +23,6 @@
       "team": "SF",
       "pos": "WR"
     },
-    "3321": {
-      "name": "Tyreek Hill",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": null,
-      "pos": "WR"
-    },
     "4035": {
       "name": "Alvin Kamara",
       "injury_status": "Questionable",
@@ -50,6 +43,13 @@
       "status": "Active",
       "team": "BAL",
       "pos": "QB"
+    },
+    "4950": {
+      "name": "Christian Kirk",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "SF",
+      "pos": "WR"
     },
     "4983": {
       "name": "DJ Moore",
@@ -274,13 +274,6 @@
       "status": "Active",
       "team": "ARI",
       "pos": "RB"
-    },
-    "13296": {
-      "name": "Caleb Douglas",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIA",
-      "pos": "WR"
     },
     "13298": {
       "name": "KC Concepcion Jr.",

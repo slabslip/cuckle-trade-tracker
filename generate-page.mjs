@@ -5932,22 +5932,28 @@ const html = `<!DOCTYPE html>
       try {
         sessionStorage.removeItem("cuckle.pending.thq");
         sessionStorage.removeItem("cuckle.pending.thpick");
+        sessionStorage.removeItem("cuckle.pending.thfactor");
       } catch (err) { /* ignore */ }
     }
 
-    /** Apply ?thpick= / ?thq= or session stash onto Trade helper search/target state. */
+    /** Apply ?thpick= / ?thq= / ?thfactor= or session stash onto Trade helper search/target state. */
     function tradeHelperApplyPendingPick() {
       let thq = "";
       let thpick = "";
+      let thfactor = "";
       try {
         const q = new URLSearchParams(location.search);
         thq = String(q.get("thq") || "");
         thpick = String(q.get("thpick") || "");
+        thfactor = String(q.get("thfactor") || "");
         if (!thq) thq = sessionStorage.getItem("cuckle.pending.thq") || "";
         if (!thpick) thpick = sessionStorage.getItem("cuckle.pending.thpick") || "";
+        if (!thfactor) thfactor = sessionStorage.getItem("cuckle.pending.thfactor") || "";
         if (thq) sessionStorage.setItem("cuckle.pending.thq", thq);
         if (thpick) sessionStorage.setItem("cuckle.pending.thpick", thpick);
+        if (thfactor) sessionStorage.setItem("cuckle.pending.thfactor", thfactor);
       } catch (err) { /* private */ }
+      if (thfactor) tradeHelperFactor = tradeHelperFactorCanon(thfactor);
       if (thpick) {
         tradeHelperTargetId = thpick;
         tradeHelperQ = "";
@@ -5958,7 +5964,7 @@ const html = `<!DOCTYPE html>
         tradeHelperQ = thq;
         return "q";
       }
-      return "";
+      return thfactor ? "factor" : "";
     }
 
     function dataTileSeatReady() {

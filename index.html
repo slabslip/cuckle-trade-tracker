@@ -5993,10 +5993,10 @@
       homeTab = "history";
       if (typeof dataDashOpenReport === "function") dataDashOpenReport(tile);
       // openReport restores thpick from session; re-apply after in case open cleared first.
+      // Keep cuckle.pending.th* until leave History / explicit clear — late calcBook
+      // paint still re-reads the stash (see clearPendingDataTile comment).
       if (tile === "trade_helper" && typeof tradeHelperApplyPendingPick === "function") {
         tradeHelperApplyPendingPick();
-        // Consume once — otherwise Home/Data tab hops re-open the same thpick/thfactor.
-        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
       }
       receiptListSlice = (slice === "top" || slice === "bot") ? slice : "";
       receiptListWho = who || "";
@@ -16831,9 +16831,6 @@
           if (!pending) {
             tradeHelperQ = "";
             tradeHelperTargetId = "";
-          } else if (typeof clearTradeHelperPending === "function") {
-            // Applied into live state — do not revive on the next board → helper open.
-            clearTradeHelperPending();
           }
           focusNext = tradeHelperTargetId
             ? ".trade-helper-mode, .trade-helper-target .ds-lists-h, .screen-h"

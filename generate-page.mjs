@@ -16463,9 +16463,7 @@ const html = `<!DOCTYPE html>
       const slug = String(title + "-" + player).toLowerCase()
         .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "trade-helper";
       const fileName = "cuckle-" + slug + ".png";
-      const file = new File([blob], fileName, { type: "image/png" });
       const text = title + " · " + player;
-      const payload = { files: [file], title: title, text: text };
       function save() {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -16476,12 +16474,23 @@ const html = `<!DOCTYPE html>
         a.click();
         a.remove();
         setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
-        tradeHelperShareNote = "Saved image";
+        tradeHelperShareNote = "Saved image — " + title;
         render();
       }
-      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      let file = null;
+      try {
+        if (typeof File === "function") file = new File([blob], fileName, { type: "image/png" });
+      } catch (err) { file = null; }
+      const payload = file
+        ? { files: [file], title: title, text: text }
+        : { title: title, text: text };
+      let canFiles = false;
+      try {
+        canFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+      } catch (err) { canFiles = false; }
+      if (canFiles) {
         navigator.share(payload).then(function () {
-          tradeHelperShareNote = "Sent";
+          tradeHelperShareNote = "Sent — " + title;
           render();
         }).catch(function (err) {
           if (err && err.name === "AbortError") return;
@@ -16491,7 +16500,7 @@ const html = `<!DOCTYPE html>
       }
       if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
         navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () {
-          tradeHelperShareNote = "Copied image";
+          tradeHelperShareNote = "Copied image — " + title;
           render();
         }).catch(function () { save(); });
         return;
@@ -16600,6 +16609,9 @@ const html = `<!DOCTYPE html>
           }
         }
         body += tradeHelperShareSectionHead("packages", anal);
+        if (tradeHelperShareNote) {
+          body += '<p class="trade-helper-share-note" role="status">' + esc(tradeHelperShareNote) + "</p>";
+        }
         if (!anal.packages.length) {
           body += '<p class="data-hint">' + (selling
             ? (clear
@@ -16650,9 +16662,6 @@ const html = `<!DOCTYPE html>
               + '<span class="data-hunt-why">' + esc(row.why) + "</span>"
               + "</div></button>";
           }).join("");
-        }
-        if (tradeHelperShareNote) {
-          body += '<p class="trade-helper-share-note" role="status">' + esc(tradeHelperShareNote) + "</p>";
         }
       }
       return '<section class="data-dash trade-helper" aria-label="Trade helper">'

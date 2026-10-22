@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Trade helper: buy external players + sell your own team. */
+/** Trade helper: buy external players + sell your own team (scoped managers). */
 import fs from "node:fs";
 
 const page = fs.readFileSync("index.html", "utf8");
@@ -11,9 +11,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "tradeHelperThpickFix20261022"')
-  || !gen.includes('const DATA_V = "tradeHelperThpickFix20261022"')
-  || !sw.includes("chuckle-shell-v344-trade-helper-thpick")) {
+if (!page.includes('const DATA_V = "tradeHelperSellSeats20261022"')
+  || !gen.includes('const DATA_V = "tradeHelperSellSeats20261022"')
+  || !sw.includes("chuckle-shell-v345-trade-helper-sell-seats")) {
   fail("buy/sell trade helper must bust DATA_V and SW");
 }
 
@@ -24,14 +24,23 @@ for (const need of [
   "function tradeHelperSellAlts(",
   "function tradeHelperApplyPendingPick(",
   "function clearTradeHelperPending(",
+  "function tradeHelperSellSeatsHtml(",
+  "function tradeHelperSellSeatAllowed(",
+  "function tradeHelperSellSeatSet(",
   "Sell — trade him out",
   "Buy — trade for him",
   "What they might give",
   "Who might want him",
   "Maybe sell this instead",
   "Loading player…",
+  "Whole league",
+  "Shop to",
   "trade-helper-side",
   "trade-helper-mode",
+  "trade-helper-seats",
+  'data-trade-helper-sell-all="1"',
+  'data-trade-helper-sell-seat="',
+  'data-trade-helper-sell-seat-q="1"',
 ]) {
   if (!page.includes(need)) fail("missing: " + need);
 }
@@ -63,9 +72,25 @@ const anal = page.slice(
 if (!anal.includes('mode: "sell"') || !anal.includes('mode: "buy"')) {
   fail("analysis must branch buy vs sell");
 }
+if (!anal.includes("tradeHelperSellSeatSet(")) {
+  fail("sell analysis must respect manager toggles");
+}
+
+const sellPk = page.slice(
+  page.indexOf("function tradeHelperSellPackages("),
+  page.indexOf("function tradeHelperInterest("),
+);
+const sellIn = page.slice(
+  page.indexOf("function tradeHelperInterest("),
+  page.indexOf("function tradeHelperSellAlts("),
+);
+if (!sellPk.includes("tradeHelperSellSeatAllowed(")
+  || !sellIn.includes("tradeHelperSellSeatAllowed(")) {
+  fail("sell interest/packages must filter by toggled managers");
+}
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "tradeHelperThpickFix20261022",
-  CACHE: "chuckle-shell-v344-trade-helper-thpick",
+  DATA_V: "tradeHelperSellSeats20261022",
+  CACHE: "chuckle-shell-v345-trade-helper-sell-seats",
 }));

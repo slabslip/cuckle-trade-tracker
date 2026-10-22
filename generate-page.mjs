@@ -3273,6 +3273,16 @@ const html = `<!DOCTYPE html>
     }
     .trade-helper-mode.buy { color: #8fb59a; }
     .trade-helper-mode.sell { color: #c4a36a; }
+    .trade-helper-seats { margin: 0 0 14px; }
+    .trade-helper-seats > .ds-lists-h { margin: 0 0 4px; }
+    .trade-helper-seats > .caption { margin: 0 0 8px; }
+    .trade-helper-seat-chips {
+      display: flex; flex-wrap: wrap; gap: 6px; margin: 0;
+    }
+    .trade-helper-seat-chips .chip.on {
+      border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c);
+    }
+    .trade-helper-seats .cuffs-q { margin: 0 0 8px; }
     .cuffs-intel .cuffs-list { display: grid; gap: 6px; }
     .cuffs-intel .cuffs-hint { margin: 0 0 8px; color: var(--muted); font-size: 0.8125rem; }
     button.pick-intel-row {
@@ -4815,7 +4825,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperThpickFix20261022";
+    const DATA_V = "tradeHelperSellSeats20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -4863,6 +4873,9 @@ const html = `<!DOCTYPE html>
     let dataBlockAddOpen = false;
     let tradeHelperQ = "";
     let tradeHelperTargetId = "";
+    /** Empty = shop the whole league. Otherwise only these other seat user_ids. */
+    let tradeHelperSellSeats = [];
+    let tradeHelperSellSeatQ = "";
     let teamHomeEdit = false;
     let teamHomeLayout = null;
     let seatDirection = null;
@@ -12554,6 +12567,8 @@ const html = `<!DOCTYPE html>
       dataBlockAddOpen = false;
       tradeHelperQ = "";
       tradeHelperTargetId = "";
+      tradeHelperSellSeats = [];
+      tradeHelperSellSeatQ = "";
     }
 
     function dataDashRoomCanon(id) {
@@ -15072,6 +15087,77 @@ const html = `<!DOCTYPE html>
       return !!(mine && a && String(a.owner_id) === mine);
     }
 
+    function tradeHelperSellSeatSet() {
+      if (!tradeHelperSellSeats || !tradeHelperSellSeats.length) return null;
+      const set = {};
+      for (let i = 0; i < tradeHelperSellSeats.length; i++) {
+        const id = String(tradeHelperSellSeats[i] || "");
+        if (id) set[id] = true;
+      }
+      return Object.keys(set).length ? set : null;
+    }
+
+    function tradeHelperSellSeatAllowed(uid) {
+      const set = tradeHelperSellSeatSet();
+      if (!set) return true;
+      return !!set[String(uid || "")];
+    }
+
+    function tradeHelperSellPartnerRows() {
+      const mine = authSeatId() ? String(authSeatId()) : "";
+      const needle = String(tradeHelperSellSeatQ || "").trim().toLowerCase();
+      const rows = [];
+      (members || []).forEach(function (m) {
+        if (!m || !m.user_id) return;
+        const uid = String(m.user_id);
+        if (mine && uid === mine) return;
+        const name = m.name || (typeof dataDashSeatName === "function" ? dataDashSeatName(uid) : uid);
+        if (needle && String(name).toLowerCase().indexOf(needle) < 0) return;
+        rows.push({ id: uid, name: name || uid });
+      });
+      rows.sort(function (a, b) {
+        return String(a.name).localeCompare(String(b.name));
+      });
+      return rows;
+    }
+
+    function tradeHelperSellSeatsHtml() {
+      const set = tradeHelperSellSeatSet();
+      const allOn = !set;
+      const partners = tradeHelperSellPartnerRows();
+      const selected = set ? Object.keys(set).length : 0;
+      let html = '<div class="trade-helper-seats" aria-label="Shop to managers">'
+        + '<h3 class="ds-lists-h">Shop to</h3>'
+        + '<p class="caption">'
+        + (allOn
+          ? "Whole league — interest and asks across every other seat."
+          : (selected === 1
+            ? "One manager selected — analysis scoped to that seat."
+            : (selected + " managers selected — analysis scoped to those seats.")))
+        + "</p>"
+        + '<label class="trade-helper-search">'
+        + '<span class="data-dash-sub">Filter managers</span>'
+        + '<input type="search" class="cuffs-q" data-trade-helper-sell-seat-q="1"'
+        + ' placeholder="Type a manager name"'
+        + ' value="' + esc(tradeHelperSellSeatQ) + '" autocomplete="off" /></label>'
+        + '<div class="trade-helper-seat-chips" role="group" aria-label="Managers to shop">'
+        + '<button type="button" class="chip' + (allOn ? " on" : "") + '"'
+        + ' data-trade-helper-sell-all="1" aria-pressed="' + (allOn ? "true" : "false") + '">'
+        + "Whole league</button>";
+      partners.forEach(function (p) {
+        const on = !!(set && set[p.id]);
+        html += '<button type="button" class="chip' + (on ? " on" : "") + '"'
+          + ' data-trade-helper-sell-seat="' + esc(p.id) + '"'
+          + ' aria-pressed="' + (on ? "true" : "false") + '">'
+          + esc(p.name) + "</button>";
+      });
+      if (!partners.length && tradeHelperSellSeatQ.trim()) {
+        html += '<p class="data-hint">No managers match that filter.</p>';
+      }
+      html += "</div></div>";
+      return html;
+    }
+
     function tradeHelperSearchHits(q, limit) {
       const mine = authSeatId() ? String(authSeatId()) : "";
       const needle = String(q || "").trim().toLowerCase();
@@ -15183,6 +15269,7 @@ const html = `<!DOCTYPE html>
       const out = [];
       bags.forEach(function (theirBag, uid) {
         if (String(uid) === mine) return;
+        if (!tradeHelperSellSeatAllowed(uid)) return;
         if (!theirBag || !theirBag.length) return;
         const theirDir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
         // Would they take this player from us?
@@ -15258,11 +15345,13 @@ const html = `<!DOCTYPE html>
       const pos = String(asset.pos || "").toUpperCase();
       if (!pos || pos === "PICK") return [];
       const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : new Map();
+      const seatFilter = tradeHelperSellSeatSet();
       const rows = [];
       (members || []).forEach(function (m) {
         if (!m || !m.user_id) return;
         const uid = String(m.user_id);
         if (uid === mine) return;
+        if (!tradeHelperSellSeatAllowed(uid)) return;
         const bag = bags.get(uid) || [];
         if (!bag.length) return;
         const dir = typeof seatDirOf === "function" ? seatDirOf(uid) : null;
@@ -15307,7 +15396,8 @@ const html = `<!DOCTYPE html>
         });
       });
       rows.sort(function (a, b) { return a.score - b.score; });
-      return rows.slice(0, 6);
+      // Scoped shops keep every matching seat; league-wide still tops out.
+      return rows.slice(0, seatFilter ? 12 : 6);
     }
 
     function tradeHelperSellAlts(asset) {
@@ -15436,18 +15526,31 @@ const html = `<!DOCTYPE html>
         const interest = tradeHelperInterest(target);
         const packages = tradeHelperSellPackages(target);
         const alts = tradeHelperSellAlts(target);
-        let verdict = "Shop him to seats that need the pos — lead with the closest even ask.";
+        const seatFilter = tradeHelperSellSeatSet();
+        const scoped = !!seatFilter;
+        let verdict = scoped
+          ? "Shop him to the managers you toggled on — lead with the closest even ask."
+          : "Shop him to seats that need the pos — lead with the closest even ask.";
         if (!interest.length && !packages.length) {
-          verdict = "Quiet interest right now — widen the ask or wait for a seat that needs " + (pos || "him") + ".";
+          verdict = scoped
+            ? "Quiet from the selected managers — toggle Whole league or add other seats."
+            : ("Quiet interest right now — widen the ask or wait for a seat that needs "
+              + (pos || "him") + ".");
         } else if (packages.length && interest.length) {
-          verdict = "Real demand — start with the tightest ask from an interested seat.";
+          verdict = scoped
+            ? "Demand in your shortlist — start with the tightest ask from those seats."
+            : "Real demand — start with the tightest ask from an interested seat.";
         } else if (interest.length && !packages.length) {
-          verdict = "Seats want the pos, but book packages are messy — open calc and shape the return.";
+          verdict = scoped
+            ? "Selected seats want the pos, but book packages are messy — open calc and shape the return."
+            : "Seats want the pos, but book packages are messy — open calc and shape the return.";
         }
         if (interest.length) {
           flags.push("Interest: " + interest.slice(0, 3).map(function (r) {
             return (r.themName || "them") + " (" + r.why + ")";
           }).join("; ") + ".");
+        } else if (scoped) {
+          flags.push("No interest signal from the managers you have toggled on.");
         }
         return {
           target: target,
@@ -15679,26 +15782,37 @@ const html = `<!DOCTYPE html>
           + '<p class="data-dash-sub">' + esc(bits) + "</p>"
           + '<p class="trade-helper-verdict">' + esc(anal.verdict) + "</p>"
           + "</div>";
+        if (selling) body += tradeHelperSellSeatsHtml();
         if (anal.flags.length) {
           body += '<ul class="trade-helper-flags">'
             + anal.flags.map(function (f) { return "<li>" + esc(f) + "</li>"; }).join("")
             + "</ul>";
         }
-        if (selling && anal.interest && anal.interest.length) {
+        if (selling) {
           body += '<h3 class="ds-lists-h">Who might want him</h3>';
-          body += anal.interest.map(function (r) {
-            return '<div class="data-xrow">'
-              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.themName || "them") + "</span>"
-              + '<span class="data-xrow-meta">' + esc(r.why || "") + "</span>"
-              + '<span class="data-hunt-why">Interest signal — see asks below</span>'
-              + "</div></div>";
-          }).join("");
+          if (anal.interest && anal.interest.length) {
+            body += anal.interest.map(function (r) {
+              return '<div class="data-xrow">'
+                + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(r.themName || "them") + "</span>"
+                + '<span class="data-xrow-meta">' + esc(r.why || "") + "</span>"
+                + '<span class="data-hunt-why">Interest signal — see asks below</span>'
+                + "</div></div>";
+            }).join("");
+          } else {
+            body += '<p class="data-hint">'
+              + (tradeHelperSellSeatSet()
+                ? "No interest from the managers you toggled on. Try Whole league or add seats."
+                : "No clear interest across the league right now.")
+              + "</p>";
+          }
         }
         body += '<h3 class="ds-lists-h">'
           + (selling ? "What they might give" : "Offer ideas") + "</h3>";
         if (!anal.packages.length) {
           body += '<p class="data-hint">' + (selling
-            ? "No clean ask package on other seats right now. Check interest and try calc."
+            ? (tradeHelperSellSeatSet()
+              ? "No clean ask from the selected managers. Toggle more seats or open calc."
+              : "No clean ask package on other seats right now. Check interest and try calc.")
             : "No clean package on your team that both sides are likely to take. Check alternatives.")
             + "</p>";
         } else {
@@ -34052,6 +34166,8 @@ const html = `<!DOCTYPE html>
         dataBlockAddOpen = false;
         tradeHelperQ = "";
         tradeHelperTargetId = "";
+        tradeHelperSellSeats = [];
+        tradeHelperSellSeatQ = "";
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         dataRoom = "overview";
         dataPane = "ping";
@@ -34062,8 +34178,31 @@ const html = `<!DOCTYPE html>
       const tradeHelperClear = e.target.closest("[data-trade-helper-clear]");
       if (tradeHelperClear) {
         tradeHelperTargetId = "";
+        tradeHelperSellSeats = [];
+        tradeHelperSellSeatQ = "";
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = "[data-trade-helper-q]";
+        render();
+        return;
+      }
+      const tradeHelperSellAll = e.target.closest("[data-trade-helper-sell-all]");
+      if (tradeHelperSellAll) {
+        tradeHelperSellSeats = [];
+        focusNext = "[data-trade-helper-sell-all]";
+        render();
+        return;
+      }
+      const tradeHelperSellSeat = e.target.closest("[data-trade-helper-sell-seat]");
+      if (tradeHelperSellSeat) {
+        const sid = tradeHelperSellSeat.getAttribute("data-trade-helper-sell-seat") || "";
+        if (sid) {
+          const cur = (tradeHelperSellSeats || []).map(String);
+          const ix = cur.indexOf(String(sid));
+          if (ix >= 0) cur.splice(ix, 1);
+          else cur.push(String(sid));
+          tradeHelperSellSeats = cur;
+        }
+        focusNext = '[data-trade-helper-sell-seat="' + sid + '"]';
         render();
         return;
       }
@@ -34071,6 +34210,7 @@ const html = `<!DOCTYPE html>
       if (tradeHelperPick) {
         tradeHelperTargetId = tradeHelperPick.getAttribute("data-trade-helper-pick") || "";
         tradeHelperQ = "";
+        // Keep sell-seat filters when hopping to another of your players.
         if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
         focusNext = ".trade-helper-target .ds-lists-h, .screen-h";
         render();
@@ -35654,10 +35794,25 @@ const html = `<!DOCTYPE html>
       if (tradeHelperQBox) {
         tradeHelperQ = tradeHelperQBox.value;
         tradeHelperTargetId = "";
+        tradeHelperSellSeats = [];
+        tradeHelperSellSeatQ = "";
         const start = tradeHelperQBox.selectionStart;
         const end = tradeHelperQBox.selectionEnd;
         render();
         const back = document.querySelector("#app [data-trade-helper-q]");
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
+        return;
+      }
+      const tradeHelperSellSeatQBox = e.target.closest("[data-trade-helper-sell-seat-q]");
+      if (tradeHelperSellSeatQBox) {
+        tradeHelperSellSeatQ = tradeHelperSellSeatQBox.value;
+        const start = tradeHelperSellSeatQBox.selectionStart;
+        const end = tradeHelperSellSeatQBox.selectionEnd;
+        render();
+        const back = document.querySelector("#app [data-trade-helper-sell-seat-q]");
         if (back) {
           back.focus({ preventScroll: true });
           try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
@@ -35974,7 +36129,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v344-trade-helper-thpick")
+  || !swSrc.includes("chuckle-shell-v345-trade-helper-sell-seats")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -37547,12 +37702,19 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function tradeHelperSellPackages(")
     || !inline.includes("function tradeHelperInterest(")
     || !inline.includes("function tradeHelperIsMine(")
+    || !inline.includes("function tradeHelperSellSeatsHtml(")
+    || !inline.includes("function tradeHelperSellSeatAllowed(")
     || !inline.includes("Kickstart ideas")
     || !inline.includes('placeholder="Search for player or trade partner"')
     || !inline.includes("Sell — trade him out")
     || !inline.includes("Buy — trade for him")
     || !inline.includes("What they might give")
     || !inline.includes("Who might want him")
+    || !inline.includes("Whole league")
+    || !inline.includes('data-trade-helper-sell-seat="')
+    || !inline.includes('data-trade-helper-sell-all="1"')
+    || !fnSrc("tradeHelperSellPackages").includes("tradeHelperSellSeatAllowed(")
+    || !fnSrc("tradeHelperInterest").includes("tradeHelperSellSeatAllowed(")
     || inline.includes("Travis Etienne or TipsUp")
     || !inline.includes('data-trade-helper-seed="')
     || !inline.includes('closest("[data-trade-helper-seed]")')

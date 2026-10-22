@@ -4845,7 +4845,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperClearSpace20261022";
+    const DATA_V = "shipAuditThfactorPending20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5995,6 +5995,8 @@
       // openReport restores thpick from session; re-apply after in case open cleared first.
       if (tile === "trade_helper" && typeof tradeHelperApplyPendingPick === "function") {
         tradeHelperApplyPendingPick();
+        // Consume once — otherwise Home/Data tab hops re-open the same thpick/thfactor.
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
       }
       receiptListSlice = (slice === "top" || slice === "bot") ? slice : "";
       receiptListWho = who || "";
@@ -12508,6 +12510,9 @@
       if (next !== "history") {
         dataSet = null;
         dataDashReset();
+        // Live helper state is wiped above; drop share-stash too so the next Data
+        // door open is not a ghost Clear space / thpick from an earlier deep link.
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
       }
       homeTab = next || "home";
       me = null;
@@ -16826,6 +16831,9 @@
           if (!pending) {
             tradeHelperQ = "";
             tradeHelperTargetId = "";
+          } else if (typeof clearTradeHelperPending === "function") {
+            // Applied into live state — do not revive on the next board → helper open.
+            clearTradeHelperPending();
           }
           focusNext = tradeHelperTargetId
             ? ".trade-helper-mode, .trade-helper-target .ds-lists-h, .screen-h"

@@ -4853,7 +4853,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperClearSpace20261022";
+    const DATA_V = "shipAuditThfactorPending20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6003,6 +6003,8 @@ const html = `<!DOCTYPE html>
       // openReport restores thpick from session; re-apply after in case open cleared first.
       if (tile === "trade_helper" && typeof tradeHelperApplyPendingPick === "function") {
         tradeHelperApplyPendingPick();
+        // Consume once — otherwise Home/Data tab hops re-open the same thpick/thfactor.
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
       }
       receiptListSlice = (slice === "top" || slice === "bot") ? slice : "";
       receiptListWho = who || "";
@@ -12516,6 +12518,9 @@ const html = `<!DOCTYPE html>
       if (next !== "history") {
         dataSet = null;
         dataDashReset();
+        // Live helper state is wiped above; drop share-stash too so the next Data
+        // door open is not a ghost Clear space / thpick from an earlier deep link.
+        if (typeof clearTradeHelperPending === "function") clearTradeHelperPending();
       }
       homeTab = next || "home";
       me = null;
@@ -16834,6 +16839,9 @@ const html = `<!DOCTYPE html>
           if (!pending) {
             tradeHelperQ = "";
             tradeHelperTargetId = "";
+          } else if (typeof clearTradeHelperPending === "function") {
+            // Applied into live state — do not revive on the next board → helper open.
+            clearTradeHelperPending();
           }
           focusNext = tradeHelperTargetId
             ? ".trade-helper-mode, .trade-helper-target .ds-lists-h, .screen-h"
@@ -36782,7 +36790,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v348-trade-helper-clear-space")
+  || !swSrc.includes("chuckle-shell-v349-ship-audit-thfactor-pending")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -38363,6 +38371,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function tradeHelperConsolidatePackages(")
     || !inline.includes("function tradeHelperDepthOf(")
     || !inline.includes("function tradeHelperFactorHtml(")
+    || !inline.includes("function clearTradeHelperPending(")
+    || !fnSrc("setHomeTab").includes("clearTradeHelperPending(")
+    || !fnSrc("dataDashOpenReport").includes("clearTradeHelperPending(")
+    || !fnSrc("honorPendingDataTile").includes("clearTradeHelperPending(")
     || !inline.includes("trade-helper-riser")
     || !inline.includes("Kickstart ideas")
     || !inline.includes('placeholder="Search for player or trade partner"')

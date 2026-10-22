@@ -4845,7 +4845,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperClass20261022";
+    const DATA_V = "news20261022175724";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15159,23 +15159,27 @@
         ? homeDeskIsStud(a)
         : (v >= cuts.stud);
       const nearStud = v >= cuts.near;
-      // Pos-top on their own bag with real start value — catches elite WR1/RB1 under stud cut noise.
+      // Pos-top only when already near cornerstone value — avoids promoting a weak-room TE1/RB1.
       let bagTop = false;
-      if (!stud && !nearStud && v >= cuts.start * 1.25) {
+      if (!stud && !nearStud && v >= cuts.stud * 0.85) {
         const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : null;
         const uid = String(a.owner_id || "");
         const bag = bags && uid ? (bags.get(uid) || []) : [];
         const pos = String(a.pos || "").toUpperCase();
         if (pos && bag.length) {
           let best = -1;
+          let second = -1;
           for (let i = 0; i < bag.length; i++) {
             const o = bag[i];
             if (!o || tradeHelperIsPick(o)) continue;
             if (String(o.pos || "").toUpperCase() !== pos) continue;
             const ov = calcValueNum(o);
-            if (ov > best) best = ov;
+            if (ov > best) { second = best; best = ov; }
+            else if (ov > second) second = ov;
           }
-          bagTop = best >= 0 && Math.abs(best - v) < 1;
+          const isTop = best >= 0 && Math.abs(best - v) < 1;
+          const clearLead = second < 0 || v >= second * 1.12;
+          bagTop = isTop && clearLead;
         }
       }
       const foundational = !!(user || stud || nearStud || bagTop);
@@ -15183,7 +15187,7 @@
       if (user) reasons.push("you marked foundational");
       else if (stud) reasons.push("stud book value");
       else if (nearStud) reasons.push("near-stud cornerstone");
-      else if (bagTop) reasons.push("top " + String(a.pos || "").toUpperCase() + " on their roster");
+      else if (bagTop) reasons.push("clear top " + String(a.pos || "").toUpperCase() + " on their roster");
       if (aging && foundational) reasons.push("aging cornerstone — sell-high only");
 
       // Riser / young upside — can stack on young foundations (Nabers, Bowers, Jeanty…).

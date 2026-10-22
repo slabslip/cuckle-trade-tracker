@@ -8558,6 +8558,24 @@
     }
   },
   {
+    "transaction_id": "1418715484450197504",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792610639253,
+    "date": "2026-10-21",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "10235": 7
+    },
+    "drops": {
+      "JAX": 7
+    }
+  },
+  {
     "transaction_id": "1418629468968284160",
     "type": "free_agent",
     "league_id": "1389723418827460608",

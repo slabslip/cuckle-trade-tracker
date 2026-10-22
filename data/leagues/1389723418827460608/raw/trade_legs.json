@@ -186,7 +186,7 @@
     "to_roster_id": 10,
     "kind": "player",
     "asset_key": "player:4199",
-    "label": "Aaron Jones"
+    "label": "Aaron Jones Sr."
   },
   {
     "transaction_id": "1415780413250506752",
@@ -213,7 +213,7 @@
     "to_roster_id": 2,
     "kind": "player",
     "asset_key": "player:12495",
-    "label": "Ollie Gordon"
+    "label": "Ollie Gordon II"
   },
   {
     "transaction_id": "1415780413250506752",
@@ -240,7 +240,7 @@
     "from_roster_id": 2,
     "kind": "player",
     "asset_key": "player:4199",
-    "label": "Aaron Jones"
+    "label": "Aaron Jones Sr."
   },
   {
     "transaction_id": "1415780413250506752",
@@ -267,7 +267,7 @@
     "from_roster_id": 10,
     "kind": "player",
     "asset_key": "player:12495",
-    "label": "Ollie Gordon"
+    "label": "Ollie Gordon II"
   },
   {
     "transaction_id": "1415780413250506752",
@@ -492,7 +492,7 @@
     "to_roster_id": 12,
     "kind": "player",
     "asset_key": "player:7553",
-    "label": "Kyle Pitts"
+    "label": "Kyle Pitts Sr."
   },
   {
     "transaction_id": "1275994024758509568",
@@ -501,7 +501,7 @@
     "to_roster_id": 12,
     "kind": "player",
     "asset_key": "player:8125",
-    "label": "Calvin Austin"
+    "label": "Calvin Austin III"
   },
   {
     "transaction_id": "1275994024758509568",
@@ -528,7 +528,7 @@
     "from_roster_id": 2,
     "kind": "player",
     "asset_key": "player:7553",
-    "label": "Kyle Pitts"
+    "label": "Kyle Pitts Sr."
   },
   {
     "transaction_id": "1275994024758509568",
@@ -537,7 +537,7 @@
     "from_roster_id": 2,
     "kind": "player",
     "asset_key": "player:8125",
-    "label": "Calvin Austin"
+    "label": "Calvin Austin III"
   },
   {
     "transaction_id": "1275983247628595200",
@@ -555,7 +555,7 @@
     "to_roster_id": 2,
     "kind": "player",
     "asset_key": "player:6819",
-    "label": "Michael Pittman"
+    "label": "Michael Pittman Jr."
   },
   {
     "transaction_id": "1275983247628595200",
@@ -591,7 +591,7 @@
     "from_roster_id": 6,
     "kind": "player",
     "asset_key": "player:6819",
-    "label": "Michael Pittman"
+    "label": "Michael Pittman Jr."
   },
   {
     "transaction_id": "1275983247628595200",
@@ -726,7 +726,7 @@
     "to_roster_id": 4,
     "kind": "player",
     "asset_key": "player:6819",
-    "label": "Michael Pittman"
+    "label": "Michael Pittman Jr."
   },
   {
     "transaction_id": "1291857537913606144",
@@ -744,7 +744,7 @@
     "to_roster_id": 2,
     "kind": "player",
     "asset_key": "player:11655",
-    "label": "Tyrone Tracy"
+    "label": "Tyrone Tracy Jr."
   },
   {
     "transaction_id": "1291857537913606144",
@@ -762,7 +762,7 @@
     "from_roster_id": 2,
     "kind": "player",
     "asset_key": "player:6819",
-    "label": "Michael Pittman"
+    "label": "Michael Pittman Jr."
   },
   {
     "transaction_id": "1291857537913606144",
@@ -780,7 +780,7 @@
     "from_roster_id": 4,
     "kind": "player",
     "asset_key": "player:11655",
-    "label": "Tyrone Tracy"
+    "label": "Tyrone Tracy Jr."
   },
   {
     "transaction_id": "1291857537913606144",

@@ -246,7 +246,7 @@
       "TipsUp": {
         "in": [
           "Ty Montgomery",
-          "Aaron Jones"
+          "Aaron Jones Sr."
         ],
         "out": [
           "Jarvis Landry",
@@ -260,7 +260,7 @@
         ],
         "out": [
           "Ty Montgomery",
-          "Aaron Jones"
+          "Aaron Jones Sr."
         ]
       }
     }
@@ -1139,7 +1139,7 @@
     "sides": {
       "SF69erss": {
         "in": [
-          "Gardner Minshew"
+          "Gardner Minshew II"
         ],
         "out": [
           "Jarrett Stidham"
@@ -1150,7 +1150,7 @@
           "Jarrett Stidham"
         ],
         "out": [
-          "Gardner Minshew"
+          "Gardner Minshew II"
         ]
       }
     }
@@ -3114,15 +3114,15 @@
         "out": [
           "Davante Adams",
           "JuJu Smith-Schuster",
-          "Aaron Jones",
-          "Deebo Samuel",
+          "Aaron Jones Sr.",
+          "Deebo Samuel Sr.",
           "Jalen Hurts",
           "Trevor Lawrence",
-          "Travis Etienne",
+          "Travis Etienne Jr.",
           "Zonovan Knight",
           "George Pickens",
           "Chris Olave",
-          "Brian Robinson",
+          "Brian Robinson Jr.",
           "Christian Watson"
         ]
       },
@@ -3130,15 +3130,15 @@
         "in": [
           "Davante Adams",
           "JuJu Smith-Schuster",
-          "Aaron Jones",
-          "Deebo Samuel",
+          "Aaron Jones Sr.",
+          "Deebo Samuel Sr.",
           "Jalen Hurts",
           "Trevor Lawrence",
-          "Travis Etienne",
+          "Travis Etienne Jr.",
           "Zonovan Knight",
           "George Pickens",
           "Chris Olave",
-          "Brian Robinson",
+          "Brian Robinson Jr.",
           "Christian Watson"
         ],
         "out": []
@@ -3203,13 +3203,13 @@
           "2023 R1 (orig roster 7)"
         ],
         "out": [
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "2023 R1 (orig roster 8)"
         ]
       },
       "TrumanCooper": {
         "in": [
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "2023 R1 (orig roster 8)"
         ],
         "out": [
@@ -3608,7 +3608,7 @@
     "sides": {
       "TipsUp": {
         "in": [
-          "Kyle Pitts"
+          "Kyle Pitts Sr."
         ],
         "out": [
           "Pat Freiermuth",
@@ -3623,7 +3623,7 @@
           "2025 R2 (orig roster 2)"
         ],
         "out": [
-          "Kyle Pitts"
+          "Kyle Pitts Sr."
         ]
       }
     }
@@ -3642,7 +3642,7 @@
         "out": [
           "Jakobi Meyers",
           "Darius Slayton",
-          "Brian Robinson",
+          "Brian Robinson Jr.",
           "2024 R3 (orig roster 2)"
         ]
       },
@@ -3650,7 +3650,7 @@
         "in": [
           "Jakobi Meyers",
           "Darius Slayton",
-          "Brian Robinson",
+          "Brian Robinson Jr.",
           "2024 R3 (orig roster 2)"
         ],
         "out": [
@@ -3802,7 +3802,7 @@
     "sides": {
       "SF69erss": {
         "in": [
-          "Pierre Strong"
+          "Pierre Strong Jr."
         ],
         "out": [
           "2025 R4 (orig roster 1)"
@@ -3813,7 +3813,7 @@
           "2025 R4 (orig roster 1)"
         ],
         "out": [
-          "Pierre Strong"
+          "Pierre Strong Jr."
         ]
       }
     }
@@ -4132,7 +4132,7 @@
     "sides": {
       "ChiefGumby": {
         "in": [
-          "Chris Godwin",
+          "Chris Godwin Jr.",
           "2026 R1 (orig roster 10)",
           "2026 R4 (orig roster 10)",
           "2024 R3 (orig roster 9)"
@@ -4152,7 +4152,7 @@
           "2026 R4 (orig roster 3)"
         ],
         "out": [
-          "Chris Godwin",
+          "Chris Godwin Jr.",
           "2026 R1 (orig roster 10)",
           "2026 R4 (orig roster 10)",
           "2024 R3 (orig roster 9)"
@@ -4354,13 +4354,13 @@
           "2025 R3 (orig roster 7)"
         ],
         "out": [
-          "Marvin Mims",
+          "Marvin Mims Jr.",
           "2025 R2 (orig roster 1)"
         ]
       },
       "TrumanCooper": {
         "in": [
-          "Marvin Mims",
+          "Marvin Mims Jr.",
           "2025 R2 (orig roster 1)"
         ],
         "out": [
@@ -4767,13 +4767,13 @@
           "2025 R1 (orig roster 6)"
         ],
         "out": [
-          "Anthony Richardson",
+          "Anthony Richardson Sr.",
           "2025 R4 (orig roster 5)"
         ]
       },
       "bigjberg": {
         "in": [
-          "Anthony Richardson",
+          "Anthony Richardson Sr.",
           "2025 R4 (orig roster 5)"
         ],
         "out": [
@@ -4945,7 +4945,7 @@
       "TrumanCooper": {
         "in": [
           "Terry McLaurin",
-          "Brian Robinson",
+          "Brian Robinson Jr.",
           "Bryce Young"
         ],
         "out": [
@@ -4960,7 +4960,7 @@
         ],
         "out": [
           "Terry McLaurin",
-          "Brian Robinson",
+          "Brian Robinson Jr.",
           "Bryce Young"
         ]
       }
@@ -5281,7 +5281,7 @@
           "Nico Collins"
         ],
         "out": [
-          "Travis Etienne",
+          "Travis Etienne Jr.",
           "Braelon Allen",
           "2026 R2 (orig roster 2)",
           "2027 R4 (orig roster 2)"
@@ -5289,7 +5289,7 @@
       },
       "TrumanCooper": {
         "in": [
-          "Travis Etienne",
+          "Travis Etienne Jr.",
           "Braelon Allen",
           "2026 R2 (orig roster 2)",
           "2027 R4 (orig roster 2)"
@@ -5447,7 +5447,7 @@
           "Bijan Robinson"
         ],
         "out": [
-          "Tyrone Tracy",
+          "Tyrone Tracy Jr.",
           "2025 R3 (orig roster 1)",
           "2026 R1 (orig roster 2)",
           "2027 R1 (orig roster 2)",
@@ -5456,7 +5456,7 @@
       },
       "ARae": {
         "in": [
-          "Tyrone Tracy",
+          "Tyrone Tracy Jr.",
           "2025 R3 (orig roster 1)",
           "2026 R1 (orig roster 2)",
           "2027 R1 (orig roster 2)",
@@ -5480,14 +5480,14 @@
         ],
         "out": [
           "Daniel Jones",
-          "Michael Pittman",
+          "Michael Pittman Jr.",
           "2026 R3 (orig roster 7)"
         ]
       },
       "TrumanCooper": {
         "in": [
           "Daniel Jones",
-          "Michael Pittman",
+          "Michael Pittman Jr.",
           "2026 R3 (orig roster 7)"
         ],
         "out": [
@@ -5721,13 +5721,13 @@
           "2027 R2 (orig roster 7)"
         ],
         "out": [
-          "Marvin Mims",
+          "Marvin Mims Jr.",
           "2027 R3 (orig roster 10)"
         ]
       },
       "TrumanCooper": {
         "in": [
-          "Marvin Mims",
+          "Marvin Mims Jr.",
           "2027 R3 (orig roster 10)"
         ],
         "out": [
@@ -5805,7 +5805,7 @@
     "sides": {
       "SF69erss": {
         "in": [
-          "Kenneth Walker"
+          "Kenneth Walker III"
         ],
         "out": [
           "Christian McCaffrey",
@@ -5818,7 +5818,7 @@
           "2026 R2 (orig roster 7)"
         ],
         "out": [
-          "Kenneth Walker"
+          "Kenneth Walker III"
         ]
       }
     }
@@ -5864,13 +5864,13 @@
           "Sam Darnold"
         ],
         "out": [
-          "Deebo Samuel",
+          "Deebo Samuel Sr.",
           "Ja'Lynn Polk"
         ]
       },
       "DarkWingDucks2023": {
         "in": [
-          "Deebo Samuel",
+          "Deebo Samuel Sr.",
           "Ja'Lynn Polk"
         ],
         "out": [
@@ -5941,7 +5941,7 @@
     "sides": {
       "TipsUp": {
         "in": [
-          "Travis Etienne",
+          "Travis Etienne Jr.",
           "2027 R3 (orig roster 10)",
           "2027 R4 (orig roster 7)"
         ],
@@ -5956,7 +5956,7 @@
           "2025 R3 (orig roster 7)"
         ],
         "out": [
-          "Travis Etienne",
+          "Travis Etienne Jr.",
           "2027 R3 (orig roster 10)",
           "2027 R4 (orig roster 7)"
         ]
@@ -6346,14 +6346,14 @@
           "2026 R1 (orig roster 10)"
         ],
         "out": [
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "Brashard Smith",
           "Jacory Croskey-Merritt"
         ]
       },
       "ChiefGumby": {
         "in": [
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "Brashard Smith",
           "Jacory Croskey-Merritt"
         ],
@@ -6517,8 +6517,8 @@
         ],
         "out": [
           "Christian McCaffrey",
-          "Brian Robinson",
-          "Marvin Mims",
+          "Brian Robinson Jr.",
+          "Marvin Mims Jr.",
           "2028 R1 (orig roster 7)",
           "2028 R2 (orig roster 7)",
           "2028 R4 (orig roster 7)"
@@ -6527,8 +6527,8 @@
       "TedCumberbatch": {
         "in": [
           "Christian McCaffrey",
-          "Brian Robinson",
-          "Marvin Mims",
+          "Brian Robinson Jr.",
+          "Marvin Mims Jr.",
           "2028 R1 (orig roster 7)",
           "2028 R2 (orig roster 7)",
           "2028 R4 (orig roster 7)"
@@ -6700,13 +6700,13 @@
           "2027 R1 (orig roster 1)"
         ],
         "out": [
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "2026 R4 (orig roster 10)"
         ]
       },
       "TrumanCooper": {
         "in": [
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "Chase Brown",
           "2028 R2 (orig roster 2)"
         ],
@@ -6751,7 +6751,7 @@
     "sides": {
       "bigjberg": {
         "in": [
-          "Marvin Mims"
+          "Marvin Mims Jr."
         ],
         "out": [
           "Tre Tucker"
@@ -6762,7 +6762,7 @@
           "Tre Tucker"
         ],
         "out": [
-          "Marvin Mims"
+          "Marvin Mims Jr."
         ]
       }
     }
@@ -6779,12 +6779,12 @@
           "2027 R4 (orig roster 6)"
         ],
         "out": [
-          "Chris Godwin"
+          "Chris Godwin Jr."
         ]
       },
       "bigjberg": {
         "in": [
-          "Chris Godwin"
+          "Chris Godwin Jr."
         ],
         "out": [
           "2026 R2 (orig roster 6)",
@@ -6801,7 +6801,7 @@
     "sides": {
       "bigjberg": {
         "in": [
-          "Michael Pittman"
+          "Michael Pittman Jr."
         ],
         "out": [
           "2027 R2 (orig roster 6)",
@@ -6814,7 +6814,7 @@
           "2028 R3 (orig roster 6)"
         ],
         "out": [
-          "Michael Pittman"
+          "Michael Pittman Jr."
         ]
       }
     }
@@ -6932,7 +6932,7 @@
       "KingHenryXXVI": {
         "in": [
           "Dak Prescott",
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "2028 R3 (orig roster 2)"
         ],
         "out": [
@@ -6947,7 +6947,7 @@
         ],
         "out": [
           "Dak Prescott",
-          "Kenneth Walker",
+          "Kenneth Walker III",
           "2028 R3 (orig roster 2)"
         ]
       }
@@ -6961,7 +6961,7 @@
     "sides": {
       "TrumanCooper": {
         "in": [
-          "Harold Fannin",
+          "Harold Fannin Jr.",
           "2026 R1 (orig roster 9)",
           "2027 R3 (orig roster 9)"
         ],
@@ -6974,7 +6974,7 @@
           "Trey McBride"
         ],
         "out": [
-          "Harold Fannin",
+          "Harold Fannin Jr.",
           "2026 R1 (orig roster 9)",
           "2027 R3 (orig roster 9)"
         ]
@@ -7104,14 +7104,14 @@
           "2026 R2 (orig roster 7)"
         ],
         "out": [
-          "Tyrone Tracy",
+          "Tyrone Tracy Jr.",
           "2028 R4 (orig roster 4)",
           "2027 R4 (orig roster 7)"
         ]
       },
       "TrumanCooper": {
         "in": [
-          "Tyrone Tracy",
+          "Tyrone Tracy Jr.",
           "2028 R4 (orig roster 4)",
           "2027 R4 (orig roster 7)"
         ],
@@ -7705,13 +7705,13 @@
         ],
         "out": [
           "Isaiah Bond",
-          "LeQuint Allen"
+          "LeQuint Allen Jr."
         ]
       },
       "DarkWingDucks2023": {
         "in": [
           "Isaiah Bond",
-          "LeQuint Allen"
+          "LeQuint Allen Jr."
         ],
         "out": [
           "Rachaad White"
@@ -8074,7 +8074,7 @@
       "SF69erss": {
         "in": [
           "Isaiah Bond",
-          "LeQuint Allen",
+          "LeQuint Allen Jr.",
           "2028 R3 (orig roster 1)"
         ],
         "out": [
@@ -8089,7 +8089,7 @@
         ],
         "out": [
           "Isaiah Bond",
-          "LeQuint Allen",
+          "LeQuint Allen Jr.",
           "2028 R3 (orig roster 1)"
         ]
       }
@@ -8104,7 +8104,7 @@
       "TrumanCooper": {
         "in": [
           "Isaiah Bond",
-          "LeQuint Allen",
+          "LeQuint Allen Jr.",
           "2028 R3 (orig roster 1)",
           "2029 R4 (orig roster 9)"
         ],
@@ -8118,7 +8118,7 @@
         ],
         "out": [
           "Isaiah Bond",
-          "LeQuint Allen",
+          "LeQuint Allen Jr.",
           "2028 R3 (orig roster 1)",
           "2029 R4 (orig roster 9)"
         ]
@@ -8134,7 +8134,7 @@
       "KingHenryXXVI": {
         "in": [
           "CeeDee Lamb",
-          "Harold Fannin",
+          "Harold Fannin Jr.",
           "2027 R2 (orig roster 1)"
         ],
         "out": [
@@ -8153,7 +8153,7 @@
         ],
         "out": [
           "CeeDee Lamb",
-          "Harold Fannin",
+          "Harold Fannin Jr.",
           "2027 R2 (orig roster 1)"
         ]
       }
@@ -8305,7 +8305,7 @@
     "sides": {
       "TrumanCooper": {
         "in": [
-          "Marvin Harrison",
+          "Marvin Harrison Jr.",
           "2027 R2 (orig roster 9)",
           "2028 R1 (orig roster 9)",
           "2028 R2 (orig roster 9)"
@@ -8321,7 +8321,7 @@
           "Keaton Mitchell"
         ],
         "out": [
-          "Marvin Harrison",
+          "Marvin Harrison Jr.",
           "2027 R2 (orig roster 9)",
           "2028 R1 (orig roster 9)",
           "2028 R2 (orig roster 9)"
@@ -8723,7 +8723,7 @@
     "sides": {
       "bigjberg": {
         "in": [
-          "Mike Washington"
+          "Mike Washington Jr."
         ],
         "out": [
           "Tyler Allgeier",
@@ -8736,7 +8736,7 @@
           "2027 R4 (orig roster 3)"
         ],
         "out": [
-          "Mike Washington"
+          "Mike Washington Jr."
         ]
       }
     }

@@ -1,7 +1,14 @@
 {
-  "as_of": "2026-10-21",
-  "n": 30,
+  "as_of": "2026-10-22",
+  "n": 42,
   "players": {
+    "1466": {
+      "name": "Travis Kelce",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "KC",
+      "pos": "TE"
+    },
     "2133": {
       "name": "Davante Adams",
       "injury_status": "IR",
@@ -22,6 +29,13 @@
       "status": "Active",
       "team": null,
       "pos": "WR"
+    },
+    "4035": {
+      "name": "Alvin Kamara",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NO",
+      "pos": "RB"
     },
     "4866": {
       "name": "Saquon Barkley",
@@ -51,15 +65,8 @@
       "team": "MIN",
       "pos": "TE"
     },
-    "5859": {
-      "name": "A.J. Brown",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "WR"
-    },
     "5872": {
-      "name": "Deebo Samuel",
+      "name": "Deebo Samuel Sr.",
       "injury_status": "Out",
       "status": "Active",
       "team": "SF",
@@ -72,8 +79,36 @@
       "team": "HOU",
       "pos": "RB"
     },
+    "6794": {
+      "name": "Justin Jefferson",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIN",
+      "pos": "WR"
+    },
+    "6804": {
+      "name": "Jordan Love",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "GB",
+      "pos": "QB"
+    },
+    "7021": {
+      "name": "Rico Dowdle",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PIT",
+      "pos": "RB"
+    },
+    "7526": {
+      "name": "Jaylen Waddle",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DEN",
+      "pos": "WR"
+    },
     "7543": {
-      "name": "Travis Etienne",
+      "name": "Travis Etienne Jr.",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "NO",
@@ -93,12 +128,26 @@
       "team": "IND",
       "pos": "WR"
     },
+    "8154": {
+      "name": "Brian Robinson Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "ATL",
+      "pos": "RB"
+    },
     "8155": {
       "name": "Breece Hall",
       "injury_status": "Questionable",
       "status": "Active",
       "team": "NYJ",
       "pos": "RB"
+    },
+    "8167": {
+      "name": "Christian Watson",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "GB",
+      "pos": "WR"
     },
     "8408": {
       "name": "Jordan Mason",
@@ -114,13 +163,6 @@
       "team": "SEA",
       "pos": "RB"
     },
-    "9756": {
-      "name": "Jordan Addison",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIN",
-      "pos": "WR"
-    },
     "10229": {
       "name": "Rashee Rice",
       "injury_status": "Questionable",
@@ -135,9 +177,23 @@
       "team": "BUF",
       "pos": "TE"
     },
+    "11584": {
+      "name": "Bucky Irving",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "TB",
+      "pos": "RB"
+    },
+    "11604": {
+      "name": "Brock Bowers",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LV",
+      "pos": "TE"
+    },
     "11625": {
       "name": "Adonai Mitchell",
-      "injury_status": "Doubtful",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
@@ -156,12 +212,26 @@
       "team": "CLE",
       "pos": "RB"
     },
+    "12501": {
+      "name": "Matthew Golden",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "GB",
+      "pos": "WR"
+    },
     "12512": {
       "name": "Quinshon Judkins",
       "injury_status": "Questionable",
       "status": "Active",
       "team": "CLE",
       "pos": "RB"
+    },
+    "12514": {
+      "name": "Emeka Egbuka",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "TB",
+      "pos": "WR"
     },
     "12518": {
       "name": "Tyler Warren",
@@ -179,7 +249,7 @@
     },
     "12534": {
       "name": "Kyle Monangai",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "CHI",
       "pos": "RB"
@@ -210,6 +280,20 @@
       "injury_status": "Questionable",
       "status": "Active",
       "team": "MIA",
+      "pos": "WR"
+    },
+    "13298": {
+      "name": "KC Concepcion Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CLE",
+      "pos": "WR"
+    },
+    "13346": {
+      "name": "Denzel Boston",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CLE",
       "pos": "WR"
     }
   }

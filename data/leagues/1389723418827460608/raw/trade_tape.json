@@ -35,14 +35,14 @@
           "Daniel Jones"
         ],
         "out": [
-          "Kyle Pitts",
-          "Calvin Austin"
+          "Kyle Pitts Sr.",
+          "Calvin Austin III"
         ]
       },
       "collinmccaskill": {
         "in": [
-          "Kyle Pitts",
-          "Calvin Austin"
+          "Kyle Pitts Sr.",
+          "Calvin Austin III"
         ],
         "out": [
           "Jonnu Smith",
@@ -59,7 +59,7 @@
     "sides": {
       "TrumanCooper": {
         "in": [
-          "Michael Pittman",
+          "Michael Pittman Jr.",
           "Tyler Warren"
         ],
         "out": [
@@ -73,7 +73,7 @@
           "Dalton Kincaid"
         ],
         "out": [
-          "Michael Pittman",
+          "Michael Pittman Jr.",
           "Tyler Warren"
         ]
       }
@@ -139,21 +139,21 @@
     "sides": {
       "TrumanCooper": {
         "in": [
-          "Tyrone Tracy",
+          "Tyrone Tracy Jr.",
           "Tetairoa McMillan"
         ],
         "out": [
-          "Michael Pittman",
+          "Michael Pittman Jr.",
           "Zach Charbonnet"
         ]
       },
       "Aballers": {
         "in": [
-          "Michael Pittman",
+          "Michael Pittman Jr.",
           "Zach Charbonnet"
         ],
         "out": [
-          "Tyrone Tracy",
+          "Tyrone Tracy Jr.",
           "Tetairoa McMillan"
         ]
       }
@@ -265,24 +265,24 @@
         "in": [
           "Wan'Dale Robinson",
           "Woody Marks",
-          "Ollie Gordon"
+          "Ollie Gordon II"
         ],
         "out": [
-          "Aaron Jones",
+          "Aaron Jones Sr.",
           "Jacory Croskey-Merritt",
           "Denzel Boston"
         ]
       },
       "fatassmexican": {
         "in": [
-          "Aaron Jones",
+          "Aaron Jones Sr.",
           "Jacory Croskey-Merritt",
           "Denzel Boston"
         ],
         "out": [
           "Wan'Dale Robinson",
           "Woody Marks",
-          "Ollie Gordon"
+          "Ollie Gordon II"
         ]
       }
     }

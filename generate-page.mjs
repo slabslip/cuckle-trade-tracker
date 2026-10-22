@@ -11371,8 +11371,10 @@ const html = `<!DOCTYPE html>
         try {
           const thq0 = String(params.get("thq") || "");
           const thpick0 = String(params.get("thpick") || "");
+          const thfactor0 = String(params.get("thfactor") || "");
           if (thq0) sessionStorage.setItem("cuckle.pending.thq", thq0);
           if (thpick0) sessionStorage.setItem("cuckle.pending.thpick", thpick0);
+          if (thfactor0) sessionStorage.setItem("cuckle.pending.thfactor", thfactor0);
         } catch (err) { /* private */ }
       }
       // syncUrl writes ?me=<display name>; accept either that or a user_id.
@@ -36518,8 +36520,10 @@ const html = `<!DOCTYPE html>
     try {
       const thq0 = String(params.get("thq") || "");
       const thpick0 = String(params.get("thpick") || "");
+      const thfactor0 = String(params.get("thfactor") || "");
       if (thq0) sessionStorage.setItem("cuckle.pending.thq", thq0);
       if (thpick0) sessionStorage.setItem("cuckle.pending.thpick", thpick0);
+      if (thfactor0) sessionStorage.setItem("cuckle.pending.thfactor", thfactor0);
     } catch (err) { /* private */ }
     if (inviteParam) {
       redeemCode = inviteParam.toUpperCase();

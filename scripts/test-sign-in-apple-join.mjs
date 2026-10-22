@@ -30,6 +30,9 @@ const need = [
   "Join a league",
   "ensure_league",
   "release_seat",
+  "match_seat",
+  "Find my team",
+  "claimSleeperUser",
   "Wrong team — unclaim",
   "authEnsureProfile(",
 ];
@@ -56,14 +59,14 @@ for (const s of need) {
 if (!ents.includes("com.apple.developer.applesignin")) {
   throw new Error("ios entitlements must enable Sign in with Apple");
 }
-if (!sw.includes("peer-join-claim")
-  && !sw.includes("sign-in-apple-join")
-  && !sw.includes("sign-in-apple-wipe")) {
+if (!sw.includes("peer-join-username")
+  && !sw.includes("peer-join-claim")
+  && !sw.includes("sign-in-apple-join")) {
   throw new Error("sw.js must bump cache for peer join / Apple ship");
 }
-if (!page.includes("peerJoinClaim")
-  && !page.includes("signInAppleJoin")
-  && !page.includes("signInAppleWipe")) {
+if (!page.includes("peerJoinUsernameMatch")
+  && !page.includes("peerJoinClaim")
+  && !page.includes("signInAppleJoin")) {
   throw new Error("DATA_V must bump for peer join / Apple ship");
 }
 if (!page.includes('cuckle.auth.v2') || !page.includes('cuckle.votes.v5')) {

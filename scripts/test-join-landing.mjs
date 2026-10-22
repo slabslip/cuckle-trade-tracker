@@ -37,6 +37,9 @@ const need = [
   'claim_open_seat',
   "ensure_league",
   "release_seat",
+  "match_seat",
+  "Find my team",
+  "claimSleeperUser",
   "league_claim_preview",
   "name-history.json",
   "League added. Team claimed.",
@@ -55,8 +58,11 @@ if (missingGen.length) {
 if (!fn.includes('action === "league_claim_preview"')
   || !fn.includes('action === "claim_open_seat"')
   || !fn.includes('action === "ensure_league"')
-  || !fn.includes('action === "release_seat"')) {
-  throw new Error("join-league must expose peer ensure_league, release_seat, and claim_open_seat");
+  || !fn.includes('action === "release_seat"')
+  || !fn.includes('action === "match_seat"')
+  || !fn.includes("scoreHandleMatch")
+  || !fn.includes("resolveSleeperUsername")) {
+  throw new Error("join-league must expose match_seat (Sleeper username → seat) plus peer claim");
 }
 
 if (page.includes("openLeagueDashboard(leagueInfo)") && page.includes("await onRedeemInvite")) {

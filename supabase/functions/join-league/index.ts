@@ -12,6 +12,8 @@
 //                   → public: unused CF- ticket sets a new login and claims the seat
 //   preview         { sleeper_league_id }
 //   ensure_league   { sleeper_league_id }  → register from Sleeper if needed, mint seats, return claim list
+//   match_seat      { sleeper_league_id, sleeper_username }
+//                   → resolve Sleeper username (API + fuzzy) to a seat in the league
 //   create          { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
 //                   → same mint path; if league already exists, peer-join (no commissioner lock)
 //   rebuild         { sleeper_league_id, sleeper_extra_ids?, espn_league_id? }
@@ -112,10 +114,17 @@ async function loadTeams(leagueId: string) {
   );
   const teams = users
     .filter((u: { user_id: string }) => ownerIds.has(u.user_id))
-    .map((u: { user_id: string; display_name?: string; metadata?: { team_name?: string } }) => ({
+    .map((u: {
+      user_id: string;
+      display_name?: string;
+      username?: string;
+      metadata?: { team_name?: string };
+    }) => ({
       sleeper_user_id: u.user_id,
       team_name: (u.metadata && u.metadata.team_name) || u.display_name || u.user_id,
       display_name: u.display_name || null,
+      // League payload often omits username; /user/{name} fills it on match_seat.
+      username: u.username || null,
     }))
     .sort((a: { team_name: string }, b: { team_name: string }) =>
       a.team_name.localeCompare(b.team_name),
@@ -435,14 +444,121 @@ async function freeSeat(
 
 function seatsFromInvites(
   invites: Array<{ sleeper_user_id: string; team_name: string; claimed_by: string | null }>,
+  teamMeta?: Array<{
+    sleeper_user_id: string;
+    display_name?: string | null;
+    username?: string | null;
+  }>,
 ) {
-  return (invites || []).map((inv) => ({
-    sleeper_user_id: inv.sleeper_user_id,
-    team_name: inv.team_name,
-    claimed: !!inv.claimed_by,
-    claimed_by: inv.claimed_by || null,
-    suggested_username: suggestUsername(inv.team_name),
-  })).sort((a, b) => a.team_name.localeCompare(b.team_name));
+  const metaById = new Map(
+    (teamMeta || []).map((t) => [String(t.sleeper_user_id), t]),
+  );
+  return (invites || []).map((inv) => {
+    const meta = metaById.get(String(inv.sleeper_user_id));
+    return {
+      sleeper_user_id: inv.sleeper_user_id,
+      team_name: inv.team_name,
+      display_name: (meta && meta.display_name) || null,
+      username: (meta && meta.username) || null,
+      claimed: !!inv.claimed_by,
+      claimed_by: inv.claimed_by || null,
+      suggested_username: suggestUsername(
+        (meta && meta.display_name) || inv.team_name,
+      ),
+    };
+  }).sort((a, b) => a.team_name.localeCompare(b.team_name));
+}
+
+/** Collapse to a-z0-9 so TrumanCooper ≈ truman_cooper ≈ truman cooper. */
+function normHandle(raw: string) {
+  return String(raw || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+function editDistance(a: string, b: string) {
+  const m = a.length;
+  const n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  const prev = new Array(n + 1);
+  const cur = new Array(n + 1);
+  for (let j = 0; j <= n; j++) prev[j] = j;
+  for (let i = 1; i <= m; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      cur[j] = Math.min(cur[j - 1] + 1, prev[j] + 1, prev[j - 1] + cost);
+    }
+    for (let j = 0; j <= n; j++) prev[j] = cur[j];
+  }
+  return prev[n];
+}
+
+/**
+ * Score how well `typed` matches a seat handle. 100 = Sleeper API user_id hit.
+ * Fuzzy uses display_name / username (not fantasy team_name — those diverge).
+ */
+function scoreHandleMatch(typedRaw: string, candidates: string[]) {
+  const typed = normHandle(typedRaw);
+  if (!typed || typed.length < 2) return 0;
+  let best = 0;
+  for (const cand of candidates) {
+    const n = normHandle(cand);
+    if (!n) continue;
+    if (n === typed) {
+      best = Math.max(best, 95);
+      continue;
+    }
+    if (n.startsWith(typed) || typed.startsWith(n)) {
+      const ratio = Math.min(n.length, typed.length) / Math.max(n.length, typed.length);
+      // Sleeper handles often add digits (TaylorJohnson → TaylorJohnson16).
+      const prefixBoost = (n.startsWith(typed) && typed.length >= 5) ? 14 : 0;
+      best = Math.max(best, Math.min(94, Math.round(82 * ratio) + prefixBoost));
+      continue;
+    }
+    if (n.includes(typed) || typed.includes(n)) {
+      const ratio = Math.min(n.length, typed.length) / Math.max(n.length, typed.length);
+      best = Math.max(best, Math.round(74 * ratio));
+      continue;
+    }
+    const dist = editDistance(typed, n);
+    const maxLen = Math.max(typed.length, n.length);
+    const similarity = 1 - dist / maxLen;
+    // Allow ~1 typo on short names, ~2 on longer (trumancooper vs trumancoopr).
+    const maxDist = typed.length <= 6 ? 1 : typed.length <= 12 ? 2 : 3;
+    if (dist <= maxDist && similarity >= 0.72) {
+      best = Math.max(best, Math.round(60 + 30 * similarity));
+    }
+  }
+  return best;
+}
+
+async function resolveSleeperUsername(typed: string) {
+  const raw = String(typed || "").trim();
+  if (!raw || raw.length < 2 || raw.length > 40) return null;
+  // Sleeper usernames are lowercase; try as typed and collapsed.
+  const tries = [
+    raw,
+    raw.toLowerCase(),
+    normHandle(raw),
+  ];
+  const seen = new Set<string>();
+  for (const t of tries) {
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    try {
+      const user = await sleeperGet("/user/" + encodeURIComponent(t));
+      if (user && user.user_id) {
+        return {
+          user_id: String(user.user_id),
+          username: user.username ? String(user.username) : null,
+          display_name: user.display_name ? String(user.display_name) : null,
+        };
+      }
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
 }
 
 async function ensureLeagueRegistered(
@@ -778,11 +894,138 @@ Deno.serve(async (req) => {
       sleeper_league_id: preview.sleeper_league_id,
       league_name: preview.name,
       status: reg.status,
-      seats: seatsFromInvites(invites || []),
+      seats: seatsFromInvites(invites || [], preview.teams),
       my_seat: myMem
         ? { sleeper_user_id: myMem.sleeper_user_id, team_name: myMem.team_name }
         : null,
-      note: "Pick your team. You can unclaim and switch if you pick the wrong one.",
+      note: "Type your Sleeper username to find your team, or pick it below.",
+    });
+  }
+
+  // ---- match_seat: Sleeper username → league seat (API resolve + fuzzy) ----
+  if (action === "match_seat") {
+    const leagueId = String(body.sleeper_league_id || "").trim();
+    const typed = String(body.sleeper_username || body.username || "").trim();
+    if (!/^\d{6,64}$/.test(leagueId)) {
+      return json(400, { ok: false, error: "Missing league" });
+    }
+    if (typed.length < 2) {
+      return json(400, { ok: false, error: "Type your Sleeper username" });
+    }
+    let preview;
+    try {
+      preview = await loadTeams(leagueId);
+    } catch (err) {
+      return json(502, { ok: false, error: String(err && (err as Error).message || err) });
+    }
+    if (!preview) return json(404, { ok: false, error: "No Sleeper league with that ID" });
+
+    const { data: invites } = await admin.from("seat_invites")
+      .select("sleeper_user_id, team_name, claimed_by")
+      .eq("sleeper_league_id", leagueId);
+    const seats = seatsFromInvites(invites || [], preview.teams);
+    // Prefer live Sleeper roster meta when invite rows are stale/missing.
+    const byId = new Map(seats.map((s) => [String(s.sleeper_user_id), s]));
+    for (const t of preview.teams) {
+      if (!byId.has(String(t.sleeper_user_id))) {
+        seats.push({
+          sleeper_user_id: t.sleeper_user_id,
+          team_name: t.team_name,
+          display_name: t.display_name,
+          username: t.username,
+          claimed: false,
+          claimed_by: null,
+          suggested_username: suggestUsername(t.display_name || t.team_name),
+        });
+      } else {
+        const row = byId.get(String(t.sleeper_user_id))!;
+        if (!row.display_name && t.display_name) row.display_name = t.display_name;
+        if (!row.username && t.username) row.username = t.username;
+      }
+    }
+
+    const resolved = await resolveSleeperUsername(typed);
+    type Scored = {
+      sleeper_user_id: string;
+      team_name: string;
+      display_name: string | null;
+      username: string | null;
+      claimed: boolean;
+      score: number;
+      how: string;
+    };
+    const scored: Scored[] = [];
+
+    if (resolved) {
+      const hit = seats.find((s) => String(s.sleeper_user_id) === resolved.user_id);
+      if (hit) {
+        scored.push({
+          sleeper_user_id: hit.sleeper_user_id,
+          team_name: hit.team_name,
+          display_name: hit.display_name || resolved.display_name,
+          username: resolved.username || hit.username,
+          claimed: hit.claimed,
+          score: 100,
+          how: "sleeper_username",
+        });
+      }
+    }
+
+    for (const s of seats) {
+      if (scored.some((x) => x.sleeper_user_id === s.sleeper_user_id)) continue;
+      const score = scoreHandleMatch(typed, [
+        s.display_name || "",
+        s.username || "",
+        // Team name only as a weak hint (fantasy names ≠ Sleeper handles).
+        s.team_name || "",
+      ].filter(Boolean));
+      // Down-weight pure team_name hits so "Troy" doesn't steal kotula69's seat.
+      let adj = score;
+      const handleScore = scoreHandleMatch(typed, [s.display_name || "", s.username || ""].filter(Boolean));
+      if (handleScore > 0) adj = handleScore;
+      else if (score > 0) adj = Math.min(score, 68);
+      if (adj >= 68) {
+        scored.push({
+          sleeper_user_id: s.sleeper_user_id,
+          team_name: s.team_name,
+          display_name: s.display_name,
+          username: s.username,
+          claimed: s.claimed,
+          score: adj,
+          how: handleScore > 0 ? "fuzzy_handle" : "fuzzy_team",
+        });
+      }
+    }
+
+    scored.sort((a, b) => b.score - a.score || a.team_name.localeCompare(b.team_name));
+    const best = scored[0] || null;
+    const second = scored[1] || null;
+    // Auto-connect only when clearly unique (API hit, or fuzzy with gap).
+    const confident = !!(best && (
+      best.score >= 95
+      || (best.score >= 80 && (!second || best.score - second.score >= 8))
+      || (best.score >= 72 && (!second || best.score - second.score >= 12))
+    ));
+
+    return json(200, {
+      ok: true,
+      typed,
+      resolved: resolved
+        ? {
+          user_id: resolved.user_id,
+          username: resolved.username,
+          display_name: resolved.display_name,
+          in_league: scored.some((s) => s.score === 100),
+        }
+        : null,
+      best: confident ? best : null,
+      candidates: scored.slice(0, 5),
+      note: confident && best
+        ? ("Matched " + (best.display_name || best.username || best.team_name)
+          + " — claim that seat when you are ready.")
+        : (scored.length
+          ? "A few teams are close — pick yours from the list."
+          : "No Sleeper username like that in this league. Check the spelling, or pick your team below."),
     });
   }
 
@@ -849,9 +1092,9 @@ Deno.serve(async (req) => {
           espn_league_id: prior.espn_league_id || espnId,
           teams: preview.teams,
         },
-        seats: seatsFromInvites(invites || []),
+        seats: seatsFromInvites(invites || [], preview.teams),
         invites: [],
-        note: "League already on Chuckle. Pick your team to join — no commissioner step.",
+        note: "League already on Chuckle. Type your Sleeper username or pick your team.",
       });
     }
 

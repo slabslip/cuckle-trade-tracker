@@ -3292,7 +3292,8 @@ const html = `<!DOCTYPE html>
     .trade-helper-factor-chips .chip.on {
       border-color: var(--lh-gold, #e0b44c); color: var(--lh-gold, #e0b44c);
     }
-    .trade-helper-found {
+    .trade-helper-found,
+    .trade-helper-riser {
       display: inline-block; margin: 0 0 0 6px; padding: 1px 6px;
       border: 1px solid #6b5a2e; border-radius: 999px;
       font-size: 0.62rem; font-weight: 750; letter-spacing: 0.06em;
@@ -3300,6 +3301,10 @@ const html = `<!DOCTYPE html>
       vertical-align: 0.12em;
     }
     .trade-helper-found.is-user { border-color: #8fb59a; color: #8fb59a; }
+    .trade-helper-riser {
+      border-color: #4a6b8a; color: #9db8d4;
+    }
+    .trade-helper-class-badges { display: inline; }
     .trade-helper-depth {
       display: inline-block; margin-left: 6px; color: var(--dim);
       font-size: 0.72rem; font-weight: 650;
@@ -4848,7 +4853,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeHelperFactors20261022";
+    const DATA_V = "tradeHelperClass20261022";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15125,25 +15130,144 @@ const html = `<!DOCTYPE html>
       return seatFoundationalReadLocal().indexOf(String(a.id)) >= 0;
     }
 
+    function tradeHelperStudCut() {
+      const cuts = typeof deskCuts === "function" ? deskCuts() : { stud: 5500, start: 2200, mid: 1800 };
+      return {
+        stud: Number(cuts.stud) || 5500,
+        start: Number(cuts.start) || 2200,
+        mid: Number(cuts.mid) || 1800,
+        near: (Number(cuts.stud) || 5500) * 0.92,
+      };
+    }
+
     /**
-     * Cornerstone piece: user mark, or auto stud / near-stud book.
+     * Full player class for Trade helper — foundational / riser / neither.
+     * Applied to every rostered player (picks excluded). User foundational marks win.
+     */
+    function tradeHelperClassOf(a) {
+      const empty = {
+        foundational: false,
+        riser: false,
+        userFoundational: false,
+        aging: false,
+        reasons: [],
+        badges: [],
+      };
+      if (!a || !a.id || tradeHelperIsPick(a)) return empty;
+      const cuts = tradeHelperStudCut();
+      const v = calcValueNum(a);
+      const age = Number(a.age);
+      const hasAge = Number.isFinite(age);
+      const aging = typeof dataDashIsAging === "function" ? !!dataDashIsAging(a) : false;
+      const young = typeof dataDashIsYoung === "function"
+        ? !!dataDashIsYoung(a)
+        : (hasAge && age < 24.5);
+      const user = tradeHelperIsFoundationalUser(a);
+      const stud = typeof homeDeskIsStud === "function"
+        ? homeDeskIsStud(a)
+        : (v >= cuts.stud);
+      const nearStud = v >= cuts.near;
+      // Pos-top only when already near cornerstone value — avoids promoting a weak-room TE1/RB1.
+      let bagTop = false;
+      if (!stud && !nearStud && v >= cuts.stud * 0.85) {
+        const bags = (typeof homeDeskBags === "function") ? homeDeskBags() : null;
+        const uid = String(a.owner_id || "");
+        const bag = bags && uid ? (bags.get(uid) || []) : [];
+        const pos = String(a.pos || "").toUpperCase();
+        if (pos && bag.length) {
+          let best = -1;
+          let second = -1;
+          for (let i = 0; i < bag.length; i++) {
+            const o = bag[i];
+            if (!o || tradeHelperIsPick(o)) continue;
+            if (String(o.pos || "").toUpperCase() !== pos) continue;
+            const ov = calcValueNum(o);
+            if (ov > best) { second = best; best = ov; }
+            else if (ov > second) second = ov;
+          }
+          const isTop = best >= 0 && Math.abs(best - v) < 1;
+          const clearLead = second < 0 || v >= second * 1.12;
+          bagTop = isTop && clearLead;
+        }
+      }
+      const foundational = !!(user || stud || nearStud || bagTop);
+      const reasons = [];
+      if (user) reasons.push("you marked foundational");
+      else if (stud) reasons.push("stud book value");
+      else if (nearStud) reasons.push("near-stud cornerstone");
+      else if (bagTop) reasons.push("clear top " + String(a.pos || "").toUpperCase() + " on their roster");
+      if (aging && foundational) reasons.push("aging cornerstone — sell-high only");
+
+      // Riser / young upside — can stack on young foundations (Nabers, Bowers, Jeanty…).
+      let riser = false;
+      const flat = Number(a.value_flat);
+      const marketUp = Number.isFinite(flat) && flat > 0
+        && ((v - flat) / Math.max(v, flat)) >= 0.12;
+      if (!aging) {
+        if (young && v >= cuts.mid) {
+          riser = true;
+          reasons.push(hasAge ? ("young upside · age " + age.toFixed(1)) : "young upside");
+        } else if (hasAge && age <= 25 && marketUp && v >= Math.max(1400, cuts.mid * 0.75)) {
+          riser = true;
+          reasons.push("market riser vs flat book");
+        } else if (hasAge && age <= 23.5 && v >= cuts.start && String(a.roster_slot || "") === "taxi") {
+          // Taxi stash with start-tier book — still an upside dart.
+          riser = true;
+          reasons.push("taxi upside stash");
+        }
+      }
+      // Edge: missing age — never invent a riser; foundations still OK from value.
+      const badges = [];
+      if (foundational) badges.push("Foundational");
+      if (riser) badges.push(young || (hasAge && age <= 23.5) ? "Riser" : "Upside");
+      return {
+        foundational: foundational,
+        riser: riser,
+        userFoundational: user,
+        aging: aging,
+        reasons: reasons,
+        badges: badges,
+      };
+    }
+
+    /**
+     * Cornerstone piece: user mark, or auto stud / near-stud / bag-top.
      * Auto foundations stay out of filler legs; user marks are never auto-sent.
      */
     function tradeHelperIsFoundational(a) {
-      if (!a || !a.id || tradeHelperIsPick(a)) return false;
-      if (tradeHelperIsFoundationalUser(a)) return true;
-      if (typeof homeDeskIsStud === "function" && homeDeskIsStud(a)) return true;
-      const cuts = typeof deskCuts === "function" ? deskCuts() : { stud: 5500 };
-      const v = calcValueNum(a);
-      return v >= (Number(cuts.stud) || 5500) * 0.92;
+      return !!tradeHelperClassOf(a).foundational;
+    }
+
+    function tradeHelperIsRiser(a) {
+      return !!tradeHelperClassOf(a).riser;
     }
 
     /** True if this asset may be used as filler in a multi-piece send. */
     function tradeHelperCanSendFiller(a) {
       if (!a || !a.id) return false;
-      if (tradeHelperIsFoundationalUser(a)) return false;
-      if (tradeHelperIsFoundational(a)) return false;
+      const cls = tradeHelperClassOf(a);
+      if (cls.userFoundational || cls.foundational) return false;
       return calcValueNum(a) >= 500;
+    }
+
+    function tradeHelperClassBadgesHtml(a, opts) {
+      const cls = tradeHelperClassOf(a);
+      if (!cls.badges.length) return "";
+      const tight = opts && opts.tight;
+      let html = tight ? "" : '<span class="trade-helper-class-badges">';
+      if (cls.foundational) {
+        html += '<span class="trade-helper-found'
+          + (cls.userFoundational ? " is-user" : "")
+          + '" title="' + esc(cls.reasons.join(" · ") || "Cornerstone") + '">Foundational</span>';
+      }
+      if (cls.riser) {
+        const lab = cls.badges.indexOf("Upside") >= 0 ? "Upside" : "Riser";
+        html += '<span class="trade-helper-riser" title="'
+          + esc(cls.reasons.join(" · ") || "Young / rising upside") + '">'
+          + lab + "</span>";
+      }
+      if (!tight) html += "</span>";
+      return html;
     }
 
     function tradeHelperDepthOf(uid) {
@@ -15215,18 +15339,15 @@ const html = `<!DOCTYPE html>
     function tradeHelperFoundationalBtnHtml(asset) {
       if (!asset || !asset.id || tradeHelperIsPick(asset)) return "";
       const mine = tradeHelperIsMine(asset);
-      const user = tradeHelperIsFoundationalUser(asset);
-      const auto = !user && tradeHelperIsFoundational(asset);
-      if (!mine && !user && !auto) return "";
-      if (!mine) {
-        return auto || user
-          ? '<span class="trade-helper-found" title="Cornerstone book piece">Foundational</span>'
-          : "";
-      }
-      return '<button type="button" class="chip' + (user || auto ? " on" : "") + '"'
+      const cls = tradeHelperClassOf(asset);
+      if (!mine) return tradeHelperClassBadgesHtml(asset);
+      return tradeHelperClassBadgesHtml(asset)
+        + ' <button type="button" class="chip' + (cls.userFoundational || cls.foundational ? " on" : "") + '"'
         + ' data-trade-helper-found-toggle="' + esc(asset.id) + '"'
-        + ' aria-pressed="' + (user ? "true" : "false") + '">'
-        + (user ? "Foundational ✓" : (auto ? "Foundational (auto)" : "Mark foundational"))
+        + ' aria-pressed="' + (cls.userFoundational ? "true" : "false") + '">'
+        + (cls.userFoundational
+          ? "Foundational ✓"
+          : (cls.foundational ? "Keep foundational mark" : "Mark foundational"))
         + "</button>";
     }
 
@@ -15580,11 +15701,14 @@ const html = `<!DOCTYPE html>
           if (!a || tradeHelperIsPick(a)) return false;
           const v = calcValueNum(a);
           if (v < 1800) return false;
-          return tradeHelperIsFoundational(a) || v >= (typeof deskCuts === "function" ? deskCuts().start : 2200) * 1.15;
-        }).slice(0, 6);
+          const cls = tradeHelperClassOf(a);
+          return cls.foundational || cls.riser
+            || v >= (typeof deskCuts === "function" ? deskCuts().start : 2200) * 1.15;
+        }).slice(0, 8);
         targets.forEach(function (tgt) {
           const tv = calcValueNum(tgt);
           if (tv <= 0) return;
+          const tgtClass = tradeHelperClassOf(tgt);
           const push = function (legsA, kind, note) {
             if (!legsA || legsA.length < 2) return;
             if (typeof homeDeskTheyAccept === "function"
@@ -15603,7 +15727,8 @@ const html = `<!DOCTYPE html>
             if (kind === "3for1" || kind === "2plusPick") score -= 25;
             if (theirDepth.band === "shallow") score -= 55;
             if (theirDepth.band === "deep") score += 70;
-            if (tradeHelperIsFoundational(tgt)) score -= 20;
+            if (tgtClass.foundational) score -= 20;
+            if (tgtClass.riser) score -= 15;
             out.push({
               kind: kind,
               legsA: legsA,
@@ -15845,16 +15970,24 @@ const html = `<!DOCTYPE html>
         if (myDepth && myDepth.band === "deep") {
           flags.push("Your roster reads deep overall — clear-space consolidations fit.");
         }
-        if (tradeHelperIsFoundational(target)) {
-          flags.push(tradeHelperIsFoundationalUser(target)
+        const sellClass = tradeHelperClassOf(target);
+        if (sellClass.foundational) {
+          flags.push(sellClass.userFoundational
             ? "You marked him Foundational — only move him for multi-first / foundation-plus value."
-            : "Book reads Foundational — treat as a cornerstone, not filler.");
+            : ("Foundational — " + (sellClass.reasons[0] || "cornerstone")
+              + " · not filler in multi-piece sends."));
+        }
+        if (sellClass.riser) {
+          flags.push("Riser / young upside — buyers pay for the age curve"
+            + (sellClass.foundational ? " on top of cornerstone value." : "."));
         }
         if (target && target.injury) {
           flags.push((target.name || "Player") + " is on " + target.injury
             + " — buyers may shade the ask.");
         }
-        if (typeof dataDashIsAging === "function" && dataDashIsAging(target)) {
+        if (sellClass.aging) {
+          flags.push("Aging cornerstone — sell-high windows close faster.");
+        } else if (typeof dataDashIsAging === "function" && dataDashIsAging(target)) {
           flags.push("Aging piece — sell-high windows close faster.");
         }
         const interest = tradeHelperInterest(target);
@@ -15901,7 +16034,9 @@ const html = `<!DOCTYPE html>
           interest: interest,
           alts: alts,
           needPos: false,
-          foundational: tradeHelperIsFoundational(target),
+          foundational: sellClass.foundational,
+          riser: sellClass.riser,
+          classReasons: sellClass.reasons,
           factor: tradeHelperFactorCanon(tradeHelperFactor),
         };
       }
@@ -15911,13 +16046,18 @@ const html = `<!DOCTYPE html>
       const theirProj = themId && typeof projSeatOf === "function" ? projSeatOf(themId) : null;
       const theirArch = themId && typeof archSeatOf === "function" ? archSeatOf(themId) : null;
       const theirDepth = themId ? tradeHelperDepthOf(themId) : null;
+      const buyClass = tradeHelperClassOf(target);
       const needPos = !!(myProf && myProf.holes && myProf.holes.indexOf(pos) >= 0);
       const thinPos = !!(myProf && myProf.thin && myProf.thin.indexOf(pos) >= 0);
       if (needPos) flags.push("You look thin at " + pos + " — fair hunt.");
       else if (thinPos) flags.push("You could use " + pos + " depth.");
       else if (pos) flags.push("Not a clear " + pos + " hole on your team — upgrade only if the price is right.");
-      if (tradeHelperIsFoundational(target)) {
-        flags.push("Foundational target — expect multi-piece or multi-first value to pry him loose.");
+      if (buyClass.foundational) {
+        flags.push("Foundational target — expect multi-piece or multi-first value to pry him loose"
+          + (buyClass.reasons[0] ? (" (" + buyClass.reasons[0] + ")") : "") + ".");
+      }
+      if (buyClass.riser) {
+        flags.push("Riser / young upside — age curve supports paying up if the package clears space.");
       }
       if (theirDepth) {
         flags.push((target.owner || "Them") + " depth: " + theirDepth.label
@@ -15965,7 +16105,9 @@ const html = `<!DOCTYPE html>
         interest: [],
         alts: alts,
         needPos: needPos,
-        foundational: tradeHelperIsFoundational(target),
+        foundational: buyClass.foundational,
+        riser: buyClass.riser,
+        classReasons: buyClass.reasons,
         factor: tradeHelperFactorCanon(tradeHelperFactor),
       };
     }
@@ -16110,14 +16252,19 @@ const html = `<!DOCTYPE html>
             const name = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
             const mine = tradeHelperIsMine(a);
             const side = mine ? "sell" : "buy";
+            const cls = tradeHelperClassOf(a);
             const bits = [a.pos, a.team,
               mine ? "Your team" : a.owner,
-              a.injury ? ("hurt " + a.injury) : ""]
+              a.injury ? ("hurt " + a.injury) : "",
+              cls.foundational ? "foundational" : "",
+              cls.riser ? "riser" : ""]
               .filter(Boolean).join(" · ");
             return '<button type="button" class="data-xrow" data-trade-helper-pick="' + esc(a.id) + '">'
               + '<div class="data-xrow-main"><span class="data-xrow-name">'
               + '<span class="trade-helper-side ' + side + '">' + (mine ? "Sell" : "Buy") + "</span>"
-              + esc(name) + "</span>"
+              + esc(name)
+              + tradeHelperClassBadgesHtml(a, { tight: true })
+              + "</span>"
               + '<span class="data-xrow-meta">' + esc(bits) + "</span></div></button>";
           }).join("");
         } else if (!q) {
@@ -16137,11 +16284,7 @@ const html = `<!DOCTYPE html>
           + '<div class="trade-helper-mode ' + (selling ? "sell" : "buy") + '">'
           + (selling ? "Sell — trade him out" : "Buy — trade for him") + "</div>"
           + '<h3 class="ds-lists-h">' + esc(name)
-          + (anal.foundational
-            ? ('<span class="trade-helper-found'
-              + (tradeHelperIsFoundationalUser(target) ? " is-user" : "")
-              + '">Foundational</span>')
-            : "")
+          + tradeHelperClassBadgesHtml(target, { tight: true })
           + "</h3>"
           + '<p class="data-dash-sub">' + esc(bits) + "</p>"
           + '<p class="trade-helper-verdict">' + esc(anal.verdict) + "</p>"
@@ -16219,12 +16362,16 @@ const html = `<!DOCTYPE html>
           body += anal.alts.map(function (row) {
             const a = row.asset;
             const an = (typeof calcDisplayName === "function" ? calcDisplayName(a) : a.name) || a.name;
+            const aClass = tradeHelperClassOf(a);
             const meta = [a.pos, a.team,
               selling ? "Your team" : (row.themName || a.owner),
-              a.injury ? ("hurt " + a.injury) : ""]
+              a.injury ? ("hurt " + a.injury) : "",
+              aClass.foundational ? "foundational" : "",
+              aClass.riser ? "riser" : ""]
               .filter(Boolean).join(" · ");
             return '<button type="button" class="data-xrow" data-trade-helper-pick="' + esc(a.id) + '">'
-              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(an) + "</span>"
+              + '<div class="data-xrow-main"><span class="data-xrow-name">' + esc(an)
+              + tradeHelperClassBadgesHtml(a, { tight: true }) + "</span>"
               + '<span class="data-xrow-meta">' + esc(meta) + "</span>"
               + '<span class="data-hunt-why">' + esc(row.why) + "</span>"
               + "</div></button>";
@@ -36579,7 +36726,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v346-trade-helper-factors")
+  || !swSrc.includes("chuckle-shell-v347-trade-helper-class")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -38155,9 +38302,12 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function tradeHelperSellSeatsHtml(")
     || !inline.includes("function tradeHelperSellSeatAllowed(")
     || !inline.includes("function tradeHelperIsFoundational(")
+    || !inline.includes("function tradeHelperClassOf(")
+    || !inline.includes("function tradeHelperIsRiser(")
     || !inline.includes("function tradeHelperConsolidatePackages(")
     || !inline.includes("function tradeHelperDepthOf(")
     || !inline.includes("function tradeHelperFactorHtml(")
+    || !inline.includes("trade-helper-riser")
     || !inline.includes("Kickstart ideas")
     || !inline.includes('placeholder="Search for player or trade partner"')
     || !inline.includes("Sell — trade him out")

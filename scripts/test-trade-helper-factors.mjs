@@ -11,15 +11,18 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "tradeHelperFactors20261022"')
-  || !gen.includes('const DATA_V = "tradeHelperFactors20261022"')
-  || !sw.includes("chuckle-shell-v346-trade-helper-factors")) {
+if (!page.includes('const DATA_V = "tradeHelperClass20261022"')
+  || !gen.includes('const DATA_V = "tradeHelperClass20261022"')
+  || !sw.includes("chuckle-shell-v347-trade-helper-class")) {
   fail("factors ship must bust DATA_V and SW");
 }
 
 for (const need of [
   "function tradeHelperIsFoundational(",
   "function tradeHelperIsFoundationalUser(",
+  "function tradeHelperClassOf(",
+  "function tradeHelperIsRiser(",
+  "function tradeHelperClassBadgesHtml(",
   "function tradeHelperCanSendFiller(",
   "function tradeHelperDepthOf(",
   "function tradeHelperConsolidatePackages(",
@@ -27,10 +30,12 @@ for (const need of [
   "function seatFoundationalToggle(",
   "Clear space",
   "Foundational",
+  "Riser",
   "Consolidate for a foundation",
   "Needs depth",
   "3for1",
   "2plusPick",
+  "trade-helper-riser",
   'data-trade-helper-factor="',
   'data-trade-helper-found-toggle="',
   "cuckle.foundational.v1.",
@@ -64,6 +69,6 @@ if (!consol.includes("shallow") || !consol.includes("2plusPick")) {
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "tradeHelperFactors20261022",
-  CACHE: "chuckle-shell-v346-trade-helper-factors",
+  DATA_V: "tradeHelperClass20261022",
+  CACHE: "chuckle-shell-v347-trade-helper-class",
 }));

@@ -11,9 +11,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "tradeHelperFactors20261022"')
-  || !gen.includes('const DATA_V = "tradeHelperFactors20261022"')
-  || !sw.includes("chuckle-shell-v346-trade-helper-factors")) {
+if (!page.includes('const DATA_V = "tradeHelperClass20261022"')
+  || !gen.includes('const DATA_V = "tradeHelperClass20261022"')
+  || !sw.includes("chuckle-shell-v347-trade-helper-class")) {
   fail("buy/sell trade helper must bust DATA_V and SW");
 }
 
@@ -91,6 +91,6 @@ if (!sellPk.includes("tradeHelperSellSeatAllowed(")
 
 console.log(JSON.stringify({
   ok: true,
-  DATA_V: "tradeHelperFactors20261022",
-  CACHE: "chuckle-shell-v346-trade-helper-factors",
+  DATA_V: "tradeHelperClass20261022",
+  CACHE: "chuckle-shell-v347-trade-helper-class",
 }));

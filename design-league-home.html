@@ -53,7 +53,7 @@
         team_name: seat.name
       };
       try {
-        localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
+        localStorage.setItem("cuckle.auth.v2", JSON.stringify(user));
         localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
         localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
         // Sticky for the tab: boot + openLeagueDashboard keep reading this after syncUrl
@@ -67,7 +67,7 @@
       }
       var go = function () {
         // Unique cache-bust so a stale document / SW shell is not reused.
-        location.replace("./index.html?design=league-home&v=run-lens-1803&_=" + Date.now());
+        location.replace("./index.html?design=league-home&v=board-reorder-simple&_=" + Date.now());
       };
       if (!("serviceWorker" in navigator)) {
         go();

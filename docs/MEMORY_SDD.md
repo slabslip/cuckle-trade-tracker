@@ -133,8 +133,8 @@ It does not live on the door.
 
 ### L0 — Your board (History / Data)
 
-Heading: **Your board**. Two-column doors. Hold a tile, then drag to
-move it. Face is
+Heading: **Your board**. Two-column doors. Tap **Reorder** to rearrange
+(list + ↑ ↓ / Top). Face is
 **house icon + label only**. No verdict sentence, no gold example number,
 no who-line, no share icon on the door. Icons exist so a thumb can find
 the room at a glance.
@@ -166,12 +166,14 @@ filters by a Team dropdown, not a type-in.
 12. Season arcs (`season_arcs`) — slow start → finish strong
 13. Manager type (`manager_archetypes`) is catalog + team-home caption (pin via Edit)
 
-**Hold, then drag** is how they reorder. Mouse can drag without a long
-press. The first four doors wear a gold ring — that is the top 4, and
+**Reorder** is button-first: tap Reorder → board becomes a one-column
+list with ↑ ↓ and Top (pin to Home #1). Optional drag only while already
+reordering. The first four doors wear a gold ring — that is the top 4, and
 those four also sit on Home for instant access. Hint on the board:
-`Top 4 wear gold. Hold a tile, then drag to move it.` shows only in **Edit**. **Edit** still adds or removes a door
-from the catalog. Unsigned / outsider: default thirteen. A shared link opens
-one public ticket, not someone’s private layout.
+`Tap Reorder to rearrange the board. Top 4 wear gold on Home.` **Done**
+exits. Reorder still adds or removes a door from the catalog. Unsigned /
+outsider: default thirteen. A shared link opens one public ticket, not
+someone’s private layout.
 
 **Door face (every tile)**
 
@@ -432,7 +434,7 @@ demo. That is the point.
 
 | Surface | Proof job |
 |---------|-----------|
-| **Home** | No personal bag hero. Calling card + flair/name/place + **race pulse** (proj · band · manager type · bag window) — no trade-tape line. Team Ideas / calc stay *today’s* deal (Ideas meta may name race/archetype tips). Default top 4: Projected finish · Draft picks · Who has firsts · Season arcs. Hero title/emblem/calc-door load eager; barracks thumbs warm on idle. A proof chip does not remount News. |
+| **Home** | No personal bag hero. Calling card + flair/name/place + Expected finish line — no slipped/climbed or Race movers blurb, no trade-tape line. Team Ideas / calc stay *today’s* deal (Ideas meta may name race/archetype tips). Default top 4: Projected finish · Draft picks · Who has firsts · Season arcs. Hero title/emblem/calc-door load eager; barracks thumbs warm on idle. A proof chip does not remount News. |
 | **Teams** | Seat place + titles already argue “historically good.” L3 sheet is a peek, not a bag-total page. |
 | **History / Data** | Home of **Your board**. Cold load is the doors only. Still one Data cell. |
 | **Open trade** | Long receipt. Share proof. `Remember it differently?` → same L1 ticket. |
@@ -444,7 +446,8 @@ No + FAB. No sixth pill. No SwiftUI port of this. No Chart.js.
 
 ## 8. Edit board
 
-Hold a tile, then drag to reorder. Edit still hides or adds from the catalog.
+Tap **Reorder**, then ↑ ↓ / Top (or drag while reordering). Done exits.
+Reorder still hides or adds from the catalog.
 Persist per seat per league
 (`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
 default thirteen, no edit. Shared link still opens one ticket, not the

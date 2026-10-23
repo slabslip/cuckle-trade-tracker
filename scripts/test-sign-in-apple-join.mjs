@@ -62,19 +62,21 @@ for (const s of need) {
 if (!ents.includes("com.apple.developer.applesignin")) {
   throw new Error("ios entitlements must enable Sign in with Apple");
 }
-if (!sw.includes("join-clean")
+if (!sw.includes("join-welcome")
+  && !sw.includes("join-clean")
   && !sw.includes("claim-username-only")
   && !sw.includes("join-cleanup")
   && !sw.includes("peer-join-username")
   && !sw.includes("peer-join-claim")) {
-  throw new Error("sw.js must bump cache for join-clean ship");
+  throw new Error("sw.js must bump cache for join-welcome ship");
 }
-if (!page.includes("joinClean")
+if (!page.includes("joinWelcome")
+  && !page.includes("joinClean")
   && !page.includes("claimUsernameOnly")
   && !page.includes("joinCleanup")
   && !page.includes("peerJoinUsernameMatch")
   && !page.includes("peerJoinClaim")) {
-  throw new Error("DATA_V must bump for join-clean ship");
+  throw new Error("DATA_V must bump for join-welcome ship");
 }
 if (!page.includes('cuckle.auth.v2') || !page.includes('cuckle.votes.v5')) {
   throw new Error("client keys must bump after account wipe (auth.v2 / votes.v5)");

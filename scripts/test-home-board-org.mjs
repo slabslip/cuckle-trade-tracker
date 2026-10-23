@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Home digest cleanup + League Data organization mode (long-press reorder).
+ * Home digest cleanup + League Data button-first board reorder.
  */
 import fs from "node:fs";
 
@@ -20,11 +20,11 @@ function fnSrc(name) {
   return page.slice(start, end < 0 ? start + 4000 : end);
 }
 
-if (!page.includes('const DATA_V = "homeBoardOrg20261023"')) {
-  fail("DATA_V must bump for home board org ship");
+if (!page.includes('const DATA_V = "boardReorderSimple20261023"')) {
+  fail("DATA_V must bump for board reorder simple ship");
 }
-if (!sw.includes("chuckle-shell-v361-home-board-org")) {
-  fail("sw.js must bump CACHE for home board org ship");
+if (!sw.includes("chuckle-shell-v363-board-reorder-simple")) {
+  fail("sw.js must bump CACHE for board reorder simple ship");
 }
 
 {
@@ -69,33 +69,32 @@ if (!sw.includes("chuckle-shell-v361-home-board-org")) {
   if (!page.includes("function dataDashEnterOrgMode(")
     || !page.includes("function dataDashMarkOrganizing(")
     || !page.includes("is-organizing")
-    || !page.includes("Hold a tile to organize")
-    || !page.includes("Tap a tile to finish")) {
-    fail("organization mode helpers + copy must ship");
-  }
-  const endDrag = fnSrc("dataDashEndDrag");
-  if (!endDrag.includes("!drag.enteredOrg")
-    || !endDrag.includes("dataDashEdit = false")
-    || !endDrag.includes("dataDashDragDid = true")) {
-    fail("quick tap while organizing must exit edit and swallow open");
+    || !page.includes("Tap Reorder to rearrange")
+    || !page.includes("Tap ↑ ↓ to move")
+    || !page.includes("button-first")
+    || !page.includes("data-dash-org-bar")
+    || !page.includes('data-dash-to="')
+    || !fnSrc("dataDashTileHtml").includes("data-dash-move=")
+    || !fnSrc("dataDashTileHtml").includes(">Top</button>")
+    || !fnSrc("dataDashHtml").includes('data-dash-edit="1"')
+    || !fnSrc("dataDashHtml").includes(': "Reorder")')
+    || !fnSrc("dataDashHtml").includes("data-dash-org-bar")) {
+    fail("button-first Reorder + ↑↓ / Top must ship");
   }
   const down = page.slice(page.indexOf('document.addEventListener("pointerdown"'));
-  if (!down.includes("holdMs") || !down.includes("420") || !down.includes("160")) {
-    fail("pointerdown must use longer hold to enter org, shorter when already organizing");
+  if (!down.includes("if (!dataDashEdit || !dataDashCanEdit()) return")) {
+    fail("pointerdown drag must require edit mode already on (button-first)");
   }
-  const move = page.slice(page.indexOf('document.addEventListener("pointermove"'));
-  if (!move.includes("organizing") || !move.includes("dist2 > 36")) {
-    fail("pointermove must lift freely while organizing (no vertical cancel)");
+  if (down.includes("holdMs") && down.includes("420")) {
+    fail("long-press enter-org must stay removed");
   }
 }
 
-// Edge: vertical cancel only outside org mode
 {
-  const moveStart = page.indexOf('document.addEventListener("pointermove"');
-  const moveFn = page.slice(moveStart, moveStart + 1800);
-  if (!moveFn.includes("Math.abs(dy) > Math.abs(dx) + 6")
-    || !moveFn.includes("Outside org mode")) {
-    fail("scroll cancel must remain for non-organizing touches");
+  if (!gen.includes(".receipt-board.is-organizing")
+    || !gen.includes("grid-template-columns: 1fr")
+    || !gen.includes("min-height: 44px")) {
+    fail("organizing board must be one-column list with 44px move taps");
   }
 }
 

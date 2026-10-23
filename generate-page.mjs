@@ -3934,6 +3934,16 @@ const html = `<!DOCTYPE html>
     .data-dash-drag-hint {
       margin: 0 0 12px; font-size: 0.72rem; font-weight: 650; color: var(--dim); line-height: 1.35;
     }
+    .data-dash-org-bar {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      margin: 0 0 10px;
+    }
+    .data-dash-org-bar .chip {
+      min-height: 44px; padding: 0 16px; font-weight: 750;
+    }
+    .data-dash-org-bar .chip.on {
+      color: #111; background: #e0b44c; border-color: #e0b44c;
+    }
     .data-panes {
       display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;
       margin: 0 0 14px;
@@ -4067,19 +4077,39 @@ const html = `<!DOCTYPE html>
     .data-tile-peek .data-xrow:last-child { margin: 0; }
     .data-tile-peek .row { margin: 0 0 6px; }
     .data-tile-edit {
-      display: flex; gap: 6px; justify-content: flex-end; margin: 0 0 6px;
+      display: contents;
+    }
+    .data-tile-rank {
+      flex: 0 0 auto; font-size: 0.8rem; font-weight: 800; letter-spacing: 0.02em;
+      color: var(--dim); min-width: 2.4rem; text-align: center;
+    }
+    .door.door-top .data-tile-rank { color: #e0b44c; }
+    .data-tile-moves {
+      display: flex; gap: 6px; justify-content: flex-end; flex: 0 0 auto; flex-wrap: nowrap;
     }
     button.data-tile-ico {
-      appearance: none; font: inherit; font-size: 0.78rem; font-weight: 750;
+      appearance: none; font: inherit; font-size: 0.9rem; font-weight: 800;
       color: var(--text); background: #141418; border: 1px solid var(--line);
-      border-radius: 8px; min-height: 32px; min-width: 32px; padding: 0 8px; cursor: pointer;
+      border-radius: 10px; min-height: 44px; min-width: 44px; padding: 0 12px; cursor: pointer;
+    }
+    button.data-tile-ico:disabled { opacity: 0.35; cursor: default; }
+    button.data-tile-ico.is-pin {
+      color: #e0b44c; border-color: rgba(224, 180, 76, 0.55); min-width: 52px;
     }
     button.data-tile-swap {
       appearance: none; font: inherit; color: inherit; text-align: left;
-      background: transparent; border: 0; padding: 0; margin: 0; width: 100%; cursor: pointer;
+      background: transparent; border: 0; padding: 0; margin: 0; flex: 1 1 auto;
+      min-width: 0; cursor: pointer;
     }
+    .door.is-edit button.data-tile-swap {
+      display: flex; flex-direction: row; align-items: center; gap: 10px;
+      text-align: left;
+    }
+    .door.is-edit .door-ico { width: 22px; height: 22px; }
+    .door.is-edit .door-lab { font-size: 0.86rem; text-align: left; }
+    .door.is-edit .door-fig { display: none; }
     button.data-tile-add {
-      min-height: 64px; display: grid; place-items: center; color: var(--muted);
+      min-height: 56px; display: grid; place-items: center; color: var(--muted);
       font-weight: 650; letter-spacing: 0; text-transform: none;
     }
     .receipt-board {
@@ -4095,9 +4125,13 @@ const html = `<!DOCTYPE html>
       gap: 8px; touch-action: pan-y;
       user-select: none; -webkit-user-select: none;
     }
-    .door.is-edit { position: relative; padding-top: 36px; min-height: 112px; }
+    .door.is-edit {
+      flex-direction: row; align-items: center; justify-content: flex-start;
+      text-align: left; min-height: 64px; padding: 8px 10px; gap: 8px;
+      cursor: default; touch-action: pan-y;
+    }
     .door.is-lift {
-      opacity: 0.62; transform: scale(1.04); border-color: #e0b44c; cursor: grabbing;
+      opacity: 0.62; transform: scale(1.02); border-color: #e0b44c; cursor: grabbing;
       box-shadow: 0 10px 22px rgba(0, 0, 0, 0.45); z-index: 2; touch-action: none;
       pointer-events: none;
     }
@@ -4107,7 +4141,9 @@ const html = `<!DOCTYPE html>
       box-shadow: 0 0 0 1px #c9a227, 0 0 10px rgba(224, 180, 76, 0.28);
     }
     .receipt-board.is-organizing {
-      touch-action: none;
+      grid-template-columns: 1fr;
+      gap: 6px;
+      touch-action: pan-y;
     }
     .receipt-board.is-organizing .door,
     .door.is-org {
@@ -4921,7 +4957,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeBoardOrg20261023";
+    const DATA_V = "boardReorderSimple20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9053,7 +9089,7 @@ const html = `<!DOCTYPE html>
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
           + (dataDashEdit
-            ? '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
+            ? '<p class="data-dash-drag-hint">Tap ↑ ↓ to move. Gold = Home top 4.</p>'
             : "")
           + dataDashBoardHtml();
       }
@@ -12988,7 +13024,7 @@ const html = `<!DOCTYPE html>
     function dataDashDoorNode(el) {
       if (!el || !el.closest) return null;
       if (!el.closest("[data-dash-board]")) return null;
-      if (el.closest("[data-dash-move], [data-dash-remove], [data-dash-add], [data-dash-edit], [data-dash-use], [data-dash-lib-close]")) return null;
+      if (el.closest("[data-dash-move], [data-dash-to], [data-dash-remove], [data-dash-add], [data-dash-edit], [data-dash-use], [data-dash-lib-close]")) return null;
       return el.closest("[data-dash-id]");
     }
 
@@ -13113,29 +13149,7 @@ const html = `<!DOCTYPE html>
       if (commit && lifted) changed = dataDashCommitFromBoard();
       dataDashClearDragClasses();
       if (commit && lifted) dataDashDragDid = true;
-
-      // Quick tap while organizing (no drag) exits organization mode.
-      if (commit && !lifted && dataDashEdit && !drag.enteredOrg) {
-        dataDashEdit = false;
-        dataDashLibOpen = false;
-        dataDashSwapId = "";
-        dataDashMarkOrganizing(false);
-        dataDashDragDid = true; // swallow the click that would open the tile
-        const board = document.querySelector("[data-dash-board]");
-        if (board) board.style.touchAction = "";
-        render();
-        return;
-      }
-
-      // Long-press entered org with no move — stay organizing; paint edit chrome.
-      if (commit && !lifted && drag.enteredOrg) {
-        focusNext = ".screen-h";
-        render();
-        return;
-      }
-
-      if (changed || drag.enteredOrg) {
-        if (!dataDashEdit) dataDashEdit = true;
+      if (changed) {
         render();
         return;
       }
@@ -13147,11 +13161,15 @@ const html = `<!DOCTYPE html>
       }
     }
 
+
     document.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
       if (dataDashLibOpen) return;
+      // Reorder is button-first (Reorder → ↑↓ / Top). Optional drag only while already editing.
+      if (!dataDashEdit || !dataDashCanEdit()) return;
       if (e.target && e.target.closest && e.target.closest("[data-tile-share]")) return;
-      if (e.target && e.target.closest && e.target.closest("[data-dash-remove], [data-dash-add]")) return;
+      if (e.target && e.target.closest
+        && e.target.closest("[data-dash-remove], [data-dash-add], [data-dash-move], [data-dash-to]")) return;
       const door = dataDashDoorNode(e.target);
       if (!door) return;
       const id = door.getAttribute("data-dash-id") || "";
@@ -13167,51 +13185,27 @@ const html = `<!DOCTYPE html>
         lifted: false,
         kind: e.pointerType || "",
         enteredOrg: false,
-        wasEditing: !!dataDashEdit,
+        wasEditing: true,
       };
-      // Longer hold enters organization mode; shorter hold when already organizing.
-      const holdMs = dataDashEdit ? 160 : 420;
       dataDashDragTimer = setTimeout(function () {
-        if (!dataDashDrag) return;
-        if (!dataDashDrag.wasEditing) {
-          dataDashEnterOrgMode();
-          dataDashDrag.enteredOrg = true;
-        } else {
-          dataDashMarkOrganizing(true);
-        }
+        if (!dataDashDrag || !dataDashEdit) return;
+        dataDashMarkOrganizing(true);
         dataDashLiftDoor();
-      }, holdMs);
+      }, 160);
     });
     document.addEventListener("pointermove", function (e) {
       if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
+      if (!dataDashEdit) {
+        dataDashEndDrag(false);
+        return;
+      }
       const dx = e.clientX - dataDashDrag.x;
       const dy = e.clientY - dataDashDrag.y;
       if (!dataDashDrag.lifted) {
         const dist2 = dx * dx + dy * dy;
-        const mouse = dataDashDrag.kind === "mouse";
-        const organizing = !!dataDashEdit || !!dataDashDrag.enteredOrg;
-        if (organizing) {
-          // In org mode, any small move lifts — vertical scroll must not cancel reorder.
-          if (dist2 > 36) {
-            dataDashStopDragTimer();
-            if (!dataDashEdit) {
-              dataDashEnterOrgMode();
-              dataDashDrag.enteredOrg = true;
-            }
-            dataDashLiftDoor();
-          }
-        } else if (mouse && dist2 > 36) {
+        if (dist2 > 36) {
           dataDashStopDragTimer();
           dataDashLiftDoor();
-        } else if (!mouse && dist2 > 324) {
-          // Outside org mode, vertical-dominant motion is page scroll.
-          if (Math.abs(dy) > Math.abs(dx) + 6) dataDashEndDrag(false);
-          else {
-            dataDashStopDragTimer();
-            dataDashEnterOrgMode();
-            dataDashDrag.enteredOrg = true;
-            dataDashLiftDoor();
-          }
         }
         if (!dataDashDrag || !dataDashDrag.lifted) return;
       }
@@ -17115,15 +17109,30 @@ const html = `<!DOCTYPE html>
       const top = dataDashIsTop(id) ? " door-top" : "";
       if (dataDashEdit) {
         const tiles = dataDashBoardTiles();
+        const at = tiles.indexOf(id);
         const canCut = tiles.length > DATA_DASH_MIN;
+        const canUp = at > 0;
+        const canDown = at >= 0 && at < tiles.length - 1;
+        const rank = at >= 0 ? String(at + 1) : "";
+        const rankLab = at >= 0 && at < 4 ? ("H" + rank) : rank;
         return '<div class="door is-edit' + top + '" data-dash-id="' + esc(id) + '">'
-          + '<div class="data-tile-edit">'
+          + '<span class="data-tile-rank" aria-label="'
+          + (at >= 0 && at < 4 ? ("Home slot " + rank) : ("Board slot " + rank))
+          + '">' + esc(rankLab) + "</span>"
+          + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + face + "</button>"
+          + '<span class="data-tile-moves">'
+          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="-1"'
+          + (canUp ? "" : " disabled") + ' aria-label="Move up">↑</button>'
+          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="1"'
+          + (canDown ? "" : " disabled") + ' aria-label="Move down">↓</button>'
+          + (at === 0
+            ? ""
+            : '<button type="button" class="data-tile-ico is-pin" data-dash-to="' + esc(id)
+              + '" data-dash-index="0" aria-label="Pin to Home top 1">Top</button>')
           + (canCut
             ? '<button type="button" class="data-tile-ico" data-dash-remove="' + esc(id) + '" aria-label="Remove">−</button>'
             : "")
-          + "</div>"
-          + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + face + "</button>"
-          + "</div>";
+          + "</span></div>";
       }
       return '<div class="door' + top + '" data-dash-id="' + esc(id) + '">'
         + '<button type="button" class="door-open" data-dash-open="' + esc(id) + '">' + face + "</button>"
@@ -17764,7 +17773,13 @@ const html = `<!DOCTYPE html>
           + "</section>";
       }
       const editBtn = dataDashCanEdit()
-        ? '<button type="button" class="chip" data-dash-edit="1">' + (dataDashEdit ? "Done" : "Edit") + "</button>"
+        ? ('<div class="data-dash-org-bar">'
+          + '<button type="button" class="chip' + (dataDashEdit ? " on" : "") + '" data-dash-edit="1">'
+          + (dataDashEdit ? "Done" : "Reorder") + "</button>"
+          + (dataDashEdit
+            ? '<span class="caption">↑ ↓ move · Top = Home #1 · gold = Home top 4</span>'
+            : '<span class="caption">Top 4 wear gold on Home</span>')
+          + "</div>")
         : "";
       const tradeChip = (!dataDashEdit
         && !(typeof isRedraftLeague === "function" && isRedraftLeague())
@@ -17775,12 +17790,12 @@ const html = `<!DOCTYPE html>
         : "";
       return '<section class="data-dash" aria-label="Your board">'
         + '<h2 class="screen-h" tabindex="-1">Your board</h2>'
-        + '<p class="data-dash-sub">Votes never enter these numbers. '
-        + editBtn + "</p>"
+        + '<p class="data-dash-sub">Votes never enter these numbers.</p>'
+        + editBtn
         + tradeChip
         + (dataDashEdit
-          ? '<p class="data-dash-drag-hint">Organizing — drag tiles to reorder. Top 4 wear gold. Tap a tile to finish.</p>'
-          : '<p class="data-dash-drag-hint">Hold a tile to organize the board.</p>')
+          ? '<p class="data-dash-drag-hint">Tap ↑ ↓ to move. Top pins a tile to Home #1. Gold = Home top 4. Done when finished.</p>'
+          : '<p class="data-dash-drag-hint">Tap Reorder to rearrange the board. Top 4 wear gold on Home.</p>')
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
         + "</section>";
@@ -35746,6 +35761,7 @@ const html = `<!DOCTYPE html>
       }
       const dashMoveBtn = e.target.closest("[data-dash-move]");
       if (dashMoveBtn) {
+        if (dashMoveBtn.disabled) return;
         const id = dashMoveBtn.getAttribute("data-dash-move") || "";
         const dir = Number(dashMoveBtn.getAttribute("data-dash-dir") || 0);
         const next = dataDashBoardTiles().slice();
@@ -35755,6 +35771,20 @@ const html = `<!DOCTYPE html>
           const swap = next[to];
           next[to] = next[at];
           next[at] = swap;
+          dataDashCommit(next);
+        }
+        render();
+        return;
+      }
+      const dashToBtn = e.target.closest("[data-dash-to]");
+      if (dashToBtn) {
+        const id = dashToBtn.getAttribute("data-dash-to") || "";
+        const to = Number(dashToBtn.getAttribute("data-dash-index"));
+        const next = dataDashBoardTiles().slice();
+        const at = next.indexOf(id);
+        if (at >= 0 && Number.isFinite(to) && to >= 0 && to < next.length && at !== to) {
+          next.splice(at, 1);
+          next.splice(to, 0, id);
           dataDashCommit(next);
         }
         render();
@@ -37934,7 +37964,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v361-home-board-org")
+  || !swSrc.includes("chuckle-shell-v363-board-reorder-simple")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39260,8 +39290,16 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !inline.includes("function dataDashEnterOrgMode(")
     || !inline.includes("function dataDashMarkOrganizing(")
     || !inline.includes("is-organizing")
-    || !inline.includes("Hold a tile to organize")
-    || !inline.includes("Tap a tile to finish")
+    || !inline.includes("Tap Reorder to rearrange")
+    || !inline.includes("Tap ↑ ↓ to move")
+    || !inline.includes('data-dash-to="')
+    || !fnSrc("dataDashTileHtml").includes("data-dash-move=")
+    || !fnSrc("dataDashTileHtml").includes(">Top</button>")
+    || !fnSrc("dataDashHtml").includes('data-dash-edit="1"')
+    || !fnSrc("dataDashHtml").includes(': "Reorder")')
+    || !fnSrc("dataDashHtml").includes("data-dash-org-bar")
+    || !inline.includes("button-first")
+    || !inline.includes("grid-template-columns: 1fr")
     || !inline.includes('cuckle.team.home.layout.v1')
     || !inline.includes("Format page")
     || !inline.includes("Show off")
@@ -39700,7 +39738,7 @@ if (!inline.includes("function dataDashHtml(")
     || fnSrc("homeTopDoorsHtml").includes("Your top 4")
     || fnSrc("homeTopDoorsHtml").includes("home-desk-h")
     || !inline.includes("Top 4 wear gold")
-    || !inline.includes("Hold a tile, then drag to move it.")
+    || !inline.includes("Tap ↑ ↓ to move")
     || !inline.includes("Every pick ")
     || !inline.includes("class=\"door")
     || !fnSrc("dataDashHtml").includes("receiptPickKey")

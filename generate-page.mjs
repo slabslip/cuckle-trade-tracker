@@ -4880,7 +4880,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "claimUsernameOnly20261023";
+    const DATA_V = "joinClean20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -23945,15 +23945,15 @@ const html = `<!DOCTYPE html>
       const league = gateInviteLeague || claimLeagueName || "this league";
       const team = gateInviteTeam || "";
       if (team) {
-        return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
-          + "</b>. Claim your team <b>" + esc(team) + "</b>.</p>";
+        return '<p class="join-land-hero">Invited to <b>' + esc(league)
+          + "</b> as <b>" + esc(team) + "</b>.</p>";
       }
       if (typeof shareAccessPending === "function" && shareAccessPending()) {
-        return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
-          + "</b>. Sign in with Apple (or a username), then claim a remaining team to open it.</p>";
+        return '<p class="join-land-hero">Shared view in <b>' + esc(league)
+          + "</b>. Sign in, then claim a team to open it.</p>";
       }
-      return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
-        + "</b>. Sign in with Apple (or a username), then pick your team.</p>";
+      return '<p class="join-land-hero">Invited to <b>' + esc(league)
+        + "</b>. Sign in, then claim your team.</p>";
     }
 
     function joinLandSeat(uid) {
@@ -25322,8 +25322,7 @@ const html = `<!DOCTYPE html>
         );
         if (mine && mine.sleeper_user_id && mine.sleeper_user_id !== gateInviteSeatId) {
           joinError = "You already sit as " + (mine.team_name || "another team")
-            + " in this league. Open Claim your team and switch, or tap Wrong team — unclaim first. "
-            + "Do not redeem another manager's invite onto your account.";
+            + " in this league. Open Wrong team? in Settings to switch or unclaim first.";
           if (appScreen !== "inviteConfirm") appScreen = "inviteConfirm";
           render();
           return;
@@ -33407,7 +33406,7 @@ const html = `<!DOCTYPE html>
       const shared = !invited && typeof shareAccessPending === "function" && shareAccessPending();
       const forgot = gateMode === "forgot";
       const nativeApple = !forgot && authHasNativeApple();
-      // Apple-first gate. After sign-in, Chuckle opens Add a league (ID or invite).
+      // Apple-first. Password stays behind "Use username and password".
       const title = forgot
         ? "Reset login"
         : invited
@@ -33422,6 +33421,11 @@ const html = `<!DOCTYPE html>
           : shared
             ? (gateMode === "signup" ? "Create account & claim" : "Sign in & claim")
           : (gateMode === "signup" ? "Create account" : "Sign in");
+      const appleNext = invited
+        ? "Then join your invited team."
+        : shared
+          ? "Then claim your seat to open the shared view."
+        : "Then add your league.";
       const appleBtn = forgot ? ""
         : ('<button type="button" class="gate-apple" data-apple-go="1"'
           + (authBusy ? " disabled" : "") + ">"
@@ -33429,15 +33433,12 @@ const html = `<!DOCTYPE html>
           + (authBusy ? "Connecting…" : "Sign in with Apple")
           + "</button>"
           + '<p class="caption" style="margin:10px 0 0">'
-          + (nativeApple
-            ? "Face ID or your passcode. "
-            : "")
-          + "Then add a Sleeper league ID or an invite code."
+          + (nativeApple ? "Face ID or passcode. " : "")
+          + appleNext
           + "</p>");
       const forgotForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
-        + '<p class="caption" style="margin:0 0 8px">Ask your commissioner to tap <b>Reset login</b> '
-        + "on your seat and send you a new CF- ticket. Paste it here, pick a username and a new password, "
-        + "and reclaim the team.</p>"
+        + '<p class="caption" style="margin:0 0 8px">Paste the CF- ticket from your commissioner. '
+        + "New username and password reclaim the seat.</p>"
         + '<label>Seat ticket<input id="forgotCode" name="invite" autocomplete="off"'
         + ' autocapitalize="characters" spellcheck="false" placeholder="CF-XXXX-XXXX"'
         + ' value="' + esc(redeemCode || "") + '"'
@@ -33458,8 +33459,7 @@ const html = `<!DOCTYPE html>
         + (authBusy ? "Working…" : go) + "</button>"
         + "</div></form>"
         + '<form class="app-form" data-gate-form="1" action="#" method="post" style="margin-top:16px">'
-        + '<p class="caption" style="margin:0 0 8px">Or email a reset if you already saved a recovery inbox '
-        + "on this account.</p>"
+        + '<p class="caption" style="margin:0 0 8px">Or email a reset link.</p>'
         + '<label>Recovery email<input id="forgotMail" name="reset-email" type="email" autocomplete="email"'
         + ' placeholder="you@email.com"'
         + (authBusy ? " disabled" : "") + " /></label>"
@@ -33476,7 +33476,7 @@ const html = `<!DOCTYPE html>
         + (authBusy ? " disabled" : "") + " /></label>"
         + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
         + (gateMode === "signup" ? "new-password" : "current-password") + '"'
-        + ' minlength="6" placeholder="At least 6 characters — not the invite code"'
+        + ' minlength="6" placeholder="At least 6 characters"'
         + (authBusy ? " disabled" : "") + " /></label>"
         + (gateMode === "signup"
           ? ('<label>Recovery email (optional)<input id="gateEmail" name="email" type="email" autocomplete="email"'
@@ -33492,13 +33492,12 @@ const html = `<!DOCTYPE html>
       const passBlock = forgot ? forgotForm
         : (gatePassOpen
           ? ('<div class="gate-or" aria-hidden="true">or username</div>'
-            + "<h3>" + esc(title) + "</h3>"
             + signForm
             + '<p class="caption" style="margin:12px 0 0">'
             + (gateMode === "signup"
-              ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-              : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>'
-                + ' · <button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>')
+              ? 'Have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
+              : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create account</button>'
+                + ' · <button type="button" class="linkish" data-gate-mode="forgot">Forgot</button>')
             + ' · <button type="button" class="linkish" data-gate-pass="0">Hide</button>'
             + "</p>")
           : ('<div class="gate-or" aria-hidden="true">or</div>'
@@ -33508,7 +33507,7 @@ const html = `<!DOCTYPE html>
               ? '<p class="err" role="alert" style="margin-top:8px">' + esc(joinError) + "</p>"
               : "")
             + '<p class="caption" style="margin:12px 0 0">'
-            + '<button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>'
+            + '<button type="button" class="linkish" data-gate-mode="forgot">Forgot</button>'
             + "</p>"));
       return '<div class="app-shell gate-shell">'
         + '<div class="gate-brand">'
@@ -33517,13 +33516,14 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + '<h2 class="screen-h" tabindex="-1">' + esc(title) + "</h2>"
         + (invited && !forgot
-          ? ('<p class="caption" style="margin:0 0 12px">Invite ready for '
-            + esc(gateInviteTeam || "your team")
-            + (gateInviteLeague ? (" in " + esc(gateInviteLeague)) : "")
-            + ".</p>")
-          : "")
+          ? ('<p class="caption" style="margin:0 0 12px">'
+            + esc(gateInviteTeam || "Your team")
+            + (gateInviteLeague ? (" · " + esc(gateInviteLeague)) : "")
+            + "</p>")
+          : (shared && !forgot
+            ? '<p class="caption" style="margin:0 0 12px">A shared league view is waiting.</p>'
+            : ""))
         + '<div class="app-card">'
-        + (forgot ? ("<h3>" + esc(title) + "</h3>") : "")
         + appleBtn
         + passBlock
         + "</div>"
@@ -33534,12 +33534,11 @@ const html = `<!DOCTYPE html>
       const uname = (authSession && authSession.username) || "you";
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Add a league</h2>'
-        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
-        + "Enter a Sleeper league ID, or paste an invite code from a manager already in.</p>"
+        + '<p class="caption"><b>' + esc(uname) + "</b> · Sleeper league ID or invite code.</p>"
         + '<div class="app-card">'
         + '<div class="app-form">'
         + '<label>Sleeper league ID<input id="joinLeagueIdInput" name="league" inputmode="numeric"'
-        + ' autocomplete="off" placeholder="Long number from the Sleeper URL"'
+        + ' autocomplete="off" placeholder="From the Sleeper league URL"'
         + ' value="' + esc(claimLeagueId || joinLeagueId || "") + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
@@ -33547,7 +33546,7 @@ const html = `<!DOCTYPE html>
         + (joinBusy ? "Looking…" : "Continue") + "</button>"
         + "</div>"
         + '<div class="gate-or" aria-hidden="true" style="margin:16px 0">or</div>'
-        + '<label>League invite code<input id="joinInviteCode" name="invite" autocomplete="off"'
+        + '<label>Invite code<input id="joinInviteCode" name="invite" autocomplete="off"'
         + ' autocapitalize="characters" spellcheck="false" placeholder="CF-XXXX-XXXX"'
         + ' value="' + esc(redeemCode || "") + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
@@ -33752,7 +33751,7 @@ const html = `<!DOCTYPE html>
       const equipped = cosmeticsEquipNames();
       const seatLine = profileSeat
         ? '<p class="caption" style="margin:4px 0 0">Seat / team <b>' + esc(profileSeat) + "</b></p>"
-        : '<p class="caption" style="margin:4px 0 0">No seat claimed yet — redeem an invite from the Leagues tab.</p>';
+        : '<p class="caption" style="margin:4px 0 0">No seat yet — add a league and claim your team.</p>';
       const memList = (memberships || []).map((m) => {
         const leagueLab = m.name || (m.leagues && m.leagues.name) || m.sleeper_league_id || "League";
         return '<p class="caption" style="margin:6px 0 0"><b>' + esc(String(leagueLab)) + "</b> — "
@@ -33887,11 +33886,6 @@ const html = `<!DOCTYPE html>
       const picked = (claimSeats || []).find(function (s) {
         return String(s.sleeper_user_id) === String(claimPickId);
       });
-      const pickShow = picked
-        ? ((picked.display_name || claimSleeperUser || "You")
-          + (picked.team_name ? (" · " + picked.team_name) : ""))
-        : "";
-
       if (claimStep !== "username") {
         return '<div class="app-shell">'
           + '<h2 class="screen-h" tabindex="-1">Confirm league</h2>'
@@ -33911,9 +33905,7 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Your Sleeper username</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">Type the Sleeper username for your team in <b>'
-        + esc(league) + "</b>.</p>"
-        + '<p class="caption">No hints — enter it exactly as you sign into Sleeper.</p>'
+        + '<p class="caption" style="margin:0 0 10px"><b>' + esc(league) + "</b></p>"
         + '<div class="app-form">'
         + '<label>Sleeper username<input id="claimSleeperUser" name="sleeper_user"'
         + ' autocomplete="off" autocapitalize="off" spellcheck="false" placeholder=""'
@@ -33925,13 +33917,8 @@ const html = `<!DOCTYPE html>
         + (claimMatchBusy ? "Looking up…" : "Find my team") + "</button>"
         + "</div></div>"
         + (claimMatchNote ? '<p class="caption" role="status" style="margin-top:10px">' + claimMatchNote + "</p>" : "")
-        + (picked
-          ? ('<p class="caption" style="margin-top:12px">Confirm: <b>' + esc(pickShow)
-            + "</b>"
-            + (picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
-              ? " (currently claimed — continuing moves it to you)."
-              : "")
-            + "</p>")
+        + (picked && picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
+          ? '<p class="caption" style="margin-top:8px">Currently claimed — continuing moves it to you.</p>'
           : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + '<div class="app-actions" style="margin-top:12px">'
@@ -33940,11 +33927,11 @@ const html = `<!DOCTYPE html>
             + (joinBusy ? " disabled" : "") + ">"
             + (joinBusy ? "Claiming…" : "Yes — this is my team") + "</button>"
             + '<button type="button" class="linkish" data-claim-username-retry="1"'
-            + (joinBusy ? " disabled" : "") + ">Try a different username</button>")
+            + (joinBusy ? " disabled" : "") + ">Different username</button>")
           : "")
         + (mine
           ? ('<button type="button" class="linkish" data-release-seat="1"'
-            + (joinBusy ? " disabled" : "") + ">Wrong team — unclaim</button>")
+            + (joinBusy ? " disabled" : "") + ">Unclaim</button>")
           : "")
         + '<button type="button" class="linkish" data-claim-league-back="1">Back</button>'
         + "</div></div></div>";
@@ -33970,12 +33957,12 @@ const html = `<!DOCTYPE html>
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Your team</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">You joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
-        + '<p class="caption">Best achievements and a quick look at your book. Tap Next for your home dashboard.</p></div>'
-        + '<div class="app-card"><h3>Crowning achievements</h3>'
+        + '<p class="join-land-hero"><b>' + esc(team) + "</b> · " + esc(league) + "</p>"
+        + "</div>"
+        + '<div class="app-card"><h3>Best achievements</h3>'
         + joinLandCrownsHtml(seat, uid)
         + "</div>"
-        + '<div class="app-card"><h3>Your book so far</h3>'
+        + '<div class="app-card"><h3>Team stats</h3>'
         + '<div class="join-land-stats">'
         + '<div class="join-land-stat"><b>' + esc(avg) + "</b><span>Career avg</span></div>"
         + '<div class="join-land-stat"><b>' + esc(rs) + "</b><span>Regular season avg</span></div>"
@@ -33984,7 +33971,7 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + (years
           ? ('<h3>Past names and finishes</h3>' + years)
-          : '<p class="caption">No completed seasons on this book yet.</p>')
+          : '<p class="caption">No completed seasons yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
         + '<button type="button" class="chip" data-join-enter-dash="1">Next</button>'
         + "</div></div></div>";
@@ -34020,28 +34007,21 @@ const html = `<!DOCTYPE html>
       const sameSeat = !!(mySeat && gateInviteSeatId && mySeat.sleeper_user_id === gateInviteSeatId);
       let body = "";
       if (gateInviteClaimed) {
-        body = '<p class="caption">This invite for <b>' + esc(team) + "</b> in "
-          + esc(league) + " was already used. It is not a link to send anymore.</p>"
+        body = '<p class="caption">Invite for <b>' + esc(team) + '</b> was already used.</p>'
           + (mySeat
-            ? ('<p class="caption">You currently sit as <b>' + esc(mySeat.team_name) + "</b>. "
-              + "If you meant to invite another manager, open <b>Manage invites</b>, "
-              + "<b>Reissue</b> their seat, then <b>Copy invite link</b> — paste it to them "
-              + "without opening it while signed in.</p>")
-            : '<p class="caption">Sign out only if this invite is for a different account.</p>');
+            ? ('<p class="caption">You sit as <b>' + esc(mySeat.team_name) + '</b>. '
+              + 'Reissue from Generate invite codes, then send the new link. Do not open it signed in.</p>')
+            : '<p class="caption">Sign out if this invite is for another account.</p>');
       } else if (mySeat && !sameSeat) {
-        body = '<p class="caption">You are signed in as <b>' + esc(uname) + "</b> and already sit as "
-          + "<b>" + esc(mySeat.team_name) + "</b> in " + esc(league) + ".</p>"
-          + '<p class="caption">This link is for <b>' + esc(team) + "</b>. Opening it does not send "
-          + "the invite — redeeming would try to move your account onto that seat. "
-          + "Copy the link from Manage invites and send it to the other manager instead.</p>";
+        body = '<p class="caption">Signed in as <b>' + esc(uname) + '</b>; you sit as '
+          + '<b>' + esc(mySeat.team_name) + '</b>. This link is for <b>' + esc(team) + '</b>. '
+          + 'Send it to them. Do not redeem it on your account.</p>';
       } else if (sameSeat) {
-        body = '<p class="caption">You already sit as <b>' + esc(team) + "</b>. "
-          + "Open Your leagues to continue.</p>";
+        body = '<p class="caption">You already sit as <b>' + esc(team) + '</b>.</p>';
       } else {
         body = joinInviteLeadHtml()
-          + '<p class="caption">You are signed in as <b>' + esc(uname) + "</b>. "
-          + "Only redeem if <b>you</b> are joining that seat. "
-          + "If you are the commissioner sending this link, go back and paste it to the other manager.</p>";
+          + '<p class="caption">Signed in as <b>' + esc(uname) + '</b>. '
+          + 'Redeem only if this seat is yours.</p>';
       }
       const canRedeem = !gateInviteClaimed && !mySeat;
       return '<div class="app-shell">'
@@ -37401,9 +37381,10 @@ const html = `<!DOCTYPE html>
             return;
           }
           appScreen = "gate";
+          // Apple-first: do not force the username/password form open on deep links.
           if (inviteParam || (leagueParam && !inviteParam)) {
             gateMode = "signup";
-            gatePassOpen = true;
+            gatePassOpen = false;
           }
           focusNext = ".screen-h";
           render();
@@ -37638,7 +37619,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v357-claim-username-only")
+  || !swSrc.includes("chuckle-shell-v358-join-clean")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39988,19 +39969,22 @@ if (!inline.includes("gate-brand") || !inline.includes("data/ui/gate-logo.png")
 }
 
 if (!inline.includes('let gateMode = "signin"')
-  || !inline.includes("No account yet?")
-  || !inline.includes('data-gate-mode="signup">Create an account</button>')) {
-  throw new Error("cold landing must default to Sign in with a Create an account prompt");
+  || !inline.includes("New here?")
+  || !inline.includes('data-gate-mode="signup">Create account</button>')) {
+  throw new Error("cold landing must default to Sign in with a Create account prompt");
 }
 if (!inline.includes('data-gate-mode="forgot"')
   || !inline.includes("function onForgotSubmit(")
   || !inline.includes("reclaim_seat")
   || !inline.includes("request_reset")
   || !inline.includes("Reset login")
-  || !inline.includes("Forgot username or password")
+  || !inline.includes('data-gate-mode="forgot">Forgot')
   || !inline.includes('if (gateMode === "forgot")')
-  || !inline.includes("Email me a reset")) {
-  throw new Error("gate must offer Forgot username or password and reclaim via a new seat ticket");
+  || !inline.includes("Email me a reset")
+  || !inline.includes("Then add your league.")
+  || !inline.includes("Then claim your seat to open the shared view.")
+  || !inline.includes("Then join your invited team.")) {
+  throw new Error("gate must offer Forgot + reclaim ticket, with short Apple next-step copy");
 }
 if (!inline.includes("Sign in with Apple")
   || !inline.includes("Add a league")
@@ -40022,12 +40006,14 @@ if (!inline.includes("Sign in with Apple")
   || !inline.includes("Use username and password")
   || !inline.includes("ensure_league")
   || !inline.includes("release_seat")
-  || !inline.includes("Wrong team — unclaim")
+  || !inline.includes(">Unclaim</button>")
+  || !inline.includes("Wrong team?")
   || !inline.includes("match_seat")
   || !inline.includes("Find my team")
   || !inline.includes("claimSleeperUser")
+  || !inline.includes("gatePassOpen = false")
   || inline.includes(">Create as commissioner</button>")) {
-  throw new Error("gate must offer Sign in with Apple and Add a league (ID or invite)");
+  throw new Error("gate must offer Sign in with Apple and Add a league (ID or invite), Apple-first");
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");
@@ -40043,10 +40029,10 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("function openClaimPick(")
   || !inline.includes("Your Sleeper username")
   || !inline.includes("Confirm league")
-  || !inline.includes("joined <b>")
   || !inline.includes("Yes — this is my team")
   || !inline.includes("data-join-enter-dash=\"1\">Next")
-  || !inline.includes("Crowning achievements")
+  || !inline.includes("Best achievements")
+  || !inline.includes("Team stats")
   || !inline.includes("Past names and finishes")
   || !inline.includes("Career net")
   || !inline.includes("Regular season avg")
@@ -40060,11 +40046,11 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("release_seat")
   || !inline.includes("league_claim_preview")
   || !inline.includes("name-history.json")
-  || !inline.includes("No hints — enter it exactly")
   || !inline.includes('data-claim-league-yes="1"')
   || inline.includes('data-claim-pick="')
   || inline.includes("Or pick from the league list")
-  || inline.includes("scheduleClaimMatch")) {
+  || inline.includes("scheduleClaimMatch")
+  || inline.includes("No hints — enter it exactly")) {
   throw new Error("join landing must ship league confirm → username (no list) → achievements → Next");
 }
 {

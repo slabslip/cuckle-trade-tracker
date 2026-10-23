@@ -35,10 +35,11 @@ need(page, "index.html", [
   "function readPendingDataTile(",
   "function dataTileSeatReady(",
   "function honorPendingDataTile(",
-  "claim a remaining team to open it",
+  "claim a team to open it",
   "Confirm league",
   "Your Sleeper username",
   "Sign in to open",
+  "Then claim your seat to open the shared view.",
   "function leagueNameForId(",
   "cuckle.pending.tile",
   "right: 6px; bottom: 6px",
@@ -46,9 +47,10 @@ need(page, "index.html", [
 need(gen, "generate-page.mjs", [
   "function shareAccessPending(",
   "function dataTileSeatReady(",
-  "claim a remaining team to open it",
+  "claim a team to open it",
   "Confirm league",
   "Sign in to open",
+  "Then claim your seat to open the shared view.",
 ]);
 
 if (fnSrc(page, "dataTileShareBtn").includes("<span>Share</span>")
@@ -68,9 +70,9 @@ if (!claim.includes("claimSleeperUser") || !claim.includes("Find my team")
   throw new Error("claim flow must confirm league then require Sleeper username (no team list)");
 }
 const welcome = fnSrc(page, "renderJoinWelcome");
-if (!welcome.includes("Crowning achievements") || !welcome.includes(">Next</button>")
-  || !welcome.includes("data-join-enter-dash=")) {
-  throw new Error("after claim, welcome must show achievements then Next into the dashboard");
+if (!welcome.includes("Best achievements") || !welcome.includes("Team stats")
+  || !welcome.includes(">Next</button>") || !welcome.includes("data-join-enter-dash=")) {
+  throw new Error("after claim, welcome must show achievements + stats then Next into the dashboard");
 }
 
 const afterAuth = fnSrc(page, "routeAfterAuth");

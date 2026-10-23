@@ -20,11 +20,11 @@ function fnSrc(name) {
   return page.slice(start, end < 0 ? start + 4000 : end);
 }
 
-if (!page.includes('const DATA_V = "boardReorderSeatGate20261023"')) {
-  fail("DATA_V must bump for board reorder seat gate ship");
+if (!page.includes('const DATA_V = "boardReorderScrollFix20261023"')) {
+  fail("DATA_V must bump for board reorder scroll fix ship");
 }
-if (!sw.includes("chuckle-shell-v365-board-reorder-seat-gate")) {
-  fail("sw.js must bump CACHE for board reorder seat gate ship");
+if (!sw.includes("chuckle-shell-v366-board-reorder-scroll-fix")) {
+  fail("sw.js must bump CACHE for board reorder scroll fix ship");
 }
 
 {
@@ -91,6 +91,14 @@ if (!sw.includes("chuckle-shell-v365-board-reorder-seat-gate")) {
   }
   if (down.includes("holdMs") && down.includes("420")) {
     fail("long-press enter-org must stay removed");
+  }
+  if (fnSrc("dataDashMarkOrganizing").includes('touchAction = on ? "none"')
+    || !fnSrc("dataDashMarkOrganizing").includes('touchAction = ""')) {
+    fail("organizing must not pin touch-action:none (list scroll lock)");
+  }
+  if (!page.includes("No auto-lift on a timer")
+    || !page.includes("Vertical-dominant motion is list scroll")) {
+    fail("optional drag must not auto-lift on hold; vertical = scroll");
   }
   // Click handlers for mutate paths must refuse unsigned / no-seat.
   const clickAt = page.indexOf('const dashRemoveBtn = e.target.closest("[data-dash-remove]")');

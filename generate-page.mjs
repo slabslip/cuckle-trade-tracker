@@ -4957,7 +4957,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "boardReorderSeatGate20261023";
+    const DATA_V = "boardReorderScrollFix20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13053,7 +13053,9 @@ const html = `<!DOCTYPE html>
       const board = document.querySelector("[data-dash-board]");
       if (!board) return;
       board.classList.toggle("is-organizing", !!on);
-      board.style.touchAction = on ? "none" : "";
+      // List Reorder scrolls with CSS pan-y. Never pin touch-action:none here —
+      // a short hold used to lock the board until Done. Only an active lift locks.
+      board.style.touchAction = "";
       const nodes = board.querySelectorAll("[data-dash-id]");
       for (let i = 0; i < nodes.length; i++) {
         nodes[i].classList.toggle("is-org", !!on);
@@ -13156,12 +13158,10 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const board = document.querySelector("[data-dash-board]");
+      if (board) board.style.touchAction = "";
       if (dataDashEdit) dataDashMarkOrganizing(true);
-      else {
-        const board = document.querySelector("[data-dash-board]");
-        if (board) board.style.touchAction = "";
-        dataDashPaintTop();
-      }
+      else dataDashPaintTop();
     }
 
 
@@ -13190,11 +13190,9 @@ const html = `<!DOCTYPE html>
         enteredOrg: false,
         wasEditing: true,
       };
-      dataDashDragTimer = setTimeout(function () {
-        if (!dataDashDrag || !dataDashEdit) return;
-        dataDashMarkOrganizing(true);
-        dataDashLiftDoor();
-      }, 160);
+      // No auto-lift on a timer — that locked scroll after a short hold.
+      // Optional drag starts only after real movement (pointermove).
+      dataDashDragTimer = 0;
     });
     document.addEventListener("pointermove", function (e) {
       if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
@@ -13207,6 +13205,11 @@ const html = `<!DOCTYPE html>
       if (!dataDashDrag.lifted) {
         const dist2 = dx * dx + dy * dy;
         if (dist2 > 36) {
+          // Vertical-dominant motion is list scroll, not a drag.
+          if (Math.abs(dy) > Math.abs(dx) + 6) {
+            dataDashEndDrag(false);
+            return;
+          }
           dataDashStopDragTimer();
           dataDashLiftDoor();
         }
@@ -37959,7 +37962,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v365-board-reorder-seat-gate")
+  || !swSrc.includes("chuckle-shell-v366-board-reorder-scroll-fix")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39300,6 +39303,10 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("dataDashHtml").includes("data-dash-org-bar")
     || !inline.includes("button-first")
     || !inline.includes("grid-template-columns: 1fr")
+    || fnSrc("dataDashMarkOrganizing").includes('touchAction = on ? "none"')
+    || !fnSrc("dataDashMarkOrganizing").includes('touchAction = ""')
+    || !inline.includes("No auto-lift on a timer")
+    || !inline.includes("Vertical-dominant motion is list scroll")
     || !inline.includes('cuckle.team.home.layout.v1')
     || !inline.includes("Format page")
     || !inline.includes("Show off")

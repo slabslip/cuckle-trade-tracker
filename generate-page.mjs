@@ -4921,7 +4921,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeBoardOrg20261023";
+    const DATA_V = "homeBoardOrgUnsigned20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13032,6 +13032,8 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashEnterOrgMode() {
+      // Unsigned / no-seat: Edit chip is hidden — long-press must not invent organize chrome.
+      if (!dataDashCanEdit()) return false;
       if (dataDashEdit) {
         dataDashMarkOrganizing(true);
         return false;
@@ -13085,6 +13087,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashCommitFromBoard() {
+      if (!dataDashCanEdit()) return false;
       const board = document.querySelector("[data-dash-board]");
       if (!board) return false;
       const ids = [];
@@ -13150,6 +13153,7 @@ const html = `<!DOCTYPE html>
     document.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
       if (dataDashLibOpen) return;
+      if (!dataDashCanEdit()) return;
       if (e.target && e.target.closest && e.target.closest("[data-tile-share]")) return;
       if (e.target && e.target.closest && e.target.closest("[data-dash-remove], [data-dash-add]")) return;
       const door = dataDashDoorNode(e.target);
@@ -13173,8 +13177,15 @@ const html = `<!DOCTYPE html>
       const holdMs = dataDashEdit ? 160 : 420;
       dataDashDragTimer = setTimeout(function () {
         if (!dataDashDrag) return;
+        if (!dataDashCanEdit()) {
+          dataDashEndDrag(false);
+          return;
+        }
         if (!dataDashDrag.wasEditing) {
-          dataDashEnterOrgMode();
+          if (!dataDashEnterOrgMode()) {
+            dataDashEndDrag(false);
+            return;
+          }
           dataDashDrag.enteredOrg = true;
         } else {
           dataDashMarkOrganizing(true);
@@ -13195,20 +13206,32 @@ const html = `<!DOCTYPE html>
           if (dist2 > 36) {
             dataDashStopDragTimer();
             if (!dataDashEdit) {
-              dataDashEnterOrgMode();
+              if (!dataDashEnterOrgMode()) {
+                dataDashEndDrag(false);
+                return;
+              }
               dataDashDrag.enteredOrg = true;
             }
             dataDashLiftDoor();
           }
         } else if (mouse && dist2 > 36) {
+          // Mouse drag is intentional reorder — enter org so every tile highlights.
           dataDashStopDragTimer();
+          if (!dataDashEnterOrgMode()) {
+            dataDashEndDrag(false);
+            return;
+          }
+          dataDashDrag.enteredOrg = true;
           dataDashLiftDoor();
         } else if (!mouse && dist2 > 324) {
           // Outside org mode, vertical-dominant motion is page scroll.
           if (Math.abs(dy) > Math.abs(dx) + 6) dataDashEndDrag(false);
           else {
             dataDashStopDragTimer();
-            dataDashEnterOrgMode();
+            if (!dataDashEnterOrgMode()) {
+              dataDashEndDrag(false);
+              return;
+            }
             dataDashDrag.enteredOrg = true;
             dataDashLiftDoor();
           }
@@ -35738,6 +35761,7 @@ const html = `<!DOCTYPE html>
       }
       const dashRemoveBtn = e.target.closest("[data-dash-remove]");
       if (dashRemoveBtn) {
+        if (!dataDashCanEdit()) return;
         const id = dashRemoveBtn.getAttribute("data-dash-remove") || "";
         const next = dataDashBoardTiles().filter(function (x) { return x !== id; });
         if (next.length >= DATA_DASH_MIN) dataDashCommit(next);
@@ -35762,6 +35786,7 @@ const html = `<!DOCTYPE html>
       }
       const dashAddBtn = e.target.closest("[data-dash-add]");
       if (dashAddBtn) {
+        if (!dataDashCanEdit()) return;
         if (dataDashBoardTiles().length >= DATA_DASH_MAX) return;
         dataDashSwapId = "";
         dataDashLibOpen = true;
@@ -35771,6 +35796,7 @@ const html = `<!DOCTYPE html>
       const dashSwapBtn = e.target.closest("[data-dash-swap]");
       if (dashSwapBtn) {
         if (dataDashDragDid) { dataDashDragDid = false; return; }
+        if (!dataDashCanEdit()) return;
         dataDashSwapId = dashSwapBtn.getAttribute("data-dash-swap") || "";
         dataDashLibOpen = true;
         render();
@@ -35778,6 +35804,7 @@ const html = `<!DOCTYPE html>
       }
       const dashUseBtn = e.target.closest("[data-dash-use]");
       if (dashUseBtn) {
+        if (!dataDashCanEdit()) return;
         const id = dashUseBtn.getAttribute("data-dash-use") || "";
         if (!dataDashById(id) || dataDashHas(id)) return;
         const next = dataDashBoardTiles().slice();
@@ -37934,7 +37961,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v361-home-board-org")
+  || !swSrc.includes("chuckle-shell-v362-home-board-org-unsigned")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39259,9 +39286,12 @@ if (!inline.includes('"cosmetics", "news"')) {
     || fnSrc("homePulseHtml").includes("calcValueNum(")
     || !inline.includes("function dataDashEnterOrgMode(")
     || !inline.includes("function dataDashMarkOrganizing(")
+    || !fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")
+    || !fnSrc("dataDashCommitFromBoard").includes("dataDashCanEdit()")
     || !inline.includes("is-organizing")
     || !inline.includes("Hold a tile to organize")
     || !inline.includes("Tap a tile to finish")
+    || !inline.includes("Mouse drag is intentional reorder")
     || !inline.includes('cuckle.team.home.layout.v1')
     || !inline.includes("Format page")
     || !inline.includes("Show off")

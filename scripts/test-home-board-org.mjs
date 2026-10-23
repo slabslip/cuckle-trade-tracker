@@ -5,7 +5,6 @@
 import fs from "node:fs";
 
 const page = fs.readFileSync("index.html", "utf8");
-const gen = fs.readFileSync("generate-page.mjs", "utf8");
 const sw = fs.readFileSync("sw.js", "utf8");
 
 function fail(msg) {
@@ -20,11 +19,14 @@ function fnSrc(name) {
   return page.slice(start, end < 0 ? start + 4000 : end);
 }
 
-if (!page.includes('const DATA_V = "homeBoardOrg20261023"')) {
-  fail("DATA_V must bump for home board org ship");
+if (!page.includes('const DATA_V = "homeBoardOrgUnsigned20261023"')) {
+  fail("DATA_V must bump for home board org unsigned gate");
 }
-if (!sw.includes("chuckle-shell-v361-home-board-org")) {
-  fail("sw.js must bump CACHE for home board org ship");
+if (!sw.includes("chuckle-shell-v362-home-board-org-unsigned")) {
+  fail("sw.js must bump CACHE for home board org unsigned gate");
+}
+if (page.includes("Tap Reorder to rearrange") || page.includes("button-first")) {
+  fail("long-press org must not be replaced by button-first reorder");
 }
 
 {
@@ -39,9 +41,7 @@ if (!sw.includes("chuckle-shell-v361-home-board-org")) {
 
 {
   const lip = fnSrc("leagueInProgress");
-  if (lip.includes("homeCapitalStripHtml()")) {
-    fail("Home must not mount Your firsts");
-  }
+  if (lip.includes("homeCapitalStripHtml()")) fail("Home must not mount Your firsts");
   if (!lip.includes("homePulseHtml()") || !lip.includes("homeYouHtml()")) {
     fail("Home must keep Expected finish + movers pulse");
   }
@@ -56,9 +56,7 @@ if (!sw.includes("chuckle-shell-v361-home-board-org")) {
 
 {
   const chase = fnSrc("homeChaseTip");
-  if (chase.includes("Defend held Early")) {
-    fail("Defend held Early chase tip must be removed");
-  }
+  if (chase.includes("Defend held Early")) fail("Defend held Early chase tip must be removed");
   const pulse = fnSrc("homePulseHtml");
   if (pulse.includes("homeChaseTip(") || pulse.includes("home-pulse-chase")) {
     fail("Home pulse must not mount chase banners");
@@ -73,6 +71,12 @@ if (!sw.includes("chuckle-shell-v361-home-board-org")) {
     || !page.includes("Tap a tile to finish")) {
     fail("organization mode helpers + copy must ship");
   }
+  if (!fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")) {
+    fail("organization mode must refuse unsigned / no-seat");
+  }
+  if (!fnSrc("dataDashCommitFromBoard").includes("dataDashCanEdit()")) {
+    fail("board commit must refuse unsigned / no-seat");
+  }
   const endDrag = fnSrc("dataDashEndDrag");
   if (!endDrag.includes("!drag.enteredOrg")
     || !endDrag.includes("dataDashEdit = false")
@@ -83,18 +87,22 @@ if (!sw.includes("chuckle-shell-v361-home-board-org")) {
   if (!down.includes("holdMs") || !down.includes("420") || !down.includes("160")) {
     fail("pointerdown must use longer hold to enter org, shorter when already organizing");
   }
+  if (!down.includes("dataDashCanEdit()")) {
+    fail("pointerdown must not start organize drag when unsigned");
+  }
   const move = page.slice(page.indexOf('document.addEventListener("pointermove"'));
   if (!move.includes("organizing") || !move.includes("dist2 > 36")) {
     fail("pointermove must lift freely while organizing (no vertical cancel)");
   }
+  if (!move.includes("Mouse drag is intentional reorder") || !move.includes("dataDashEnterOrgMode()")) {
+    fail("mouse drag outside org must enter organize (all highlight), not silent lift");
+  }
 }
 
-// Edge: vertical cancel only outside org mode
 {
   const moveStart = page.indexOf('document.addEventListener("pointermove"');
   const moveFn = page.slice(moveStart, moveStart + 1800);
-  if (!moveFn.includes("Math.abs(dy) > Math.abs(dx) + 6")
-    || !moveFn.includes("Outside org mode")) {
+  if (!moveFn.includes("Math.abs(dy) > Math.abs(dx) + 6") || !moveFn.includes("Outside org mode")) {
     fail("scroll cancel must remain for non-organizing touches");
   }
 }

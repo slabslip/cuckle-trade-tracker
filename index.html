@@ -4913,7 +4913,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeBoardOrg20261023";
+    const DATA_V = "homeBoardOrgUnsigned20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13024,6 +13024,8 @@
     }
 
     function dataDashEnterOrgMode() {
+      // Unsigned / no-seat: Edit chip is hidden — long-press must not invent organize chrome.
+      if (!dataDashCanEdit()) return false;
       if (dataDashEdit) {
         dataDashMarkOrganizing(true);
         return false;
@@ -13077,6 +13079,7 @@
     }
 
     function dataDashCommitFromBoard() {
+      if (!dataDashCanEdit()) return false;
       const board = document.querySelector("[data-dash-board]");
       if (!board) return false;
       const ids = [];
@@ -13142,6 +13145,7 @@
     document.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
       if (dataDashLibOpen) return;
+      if (!dataDashCanEdit()) return;
       if (e.target && e.target.closest && e.target.closest("[data-tile-share]")) return;
       if (e.target && e.target.closest && e.target.closest("[data-dash-remove], [data-dash-add]")) return;
       const door = dataDashDoorNode(e.target);
@@ -13165,8 +13169,15 @@
       const holdMs = dataDashEdit ? 160 : 420;
       dataDashDragTimer = setTimeout(function () {
         if (!dataDashDrag) return;
+        if (!dataDashCanEdit()) {
+          dataDashEndDrag(false);
+          return;
+        }
         if (!dataDashDrag.wasEditing) {
-          dataDashEnterOrgMode();
+          if (!dataDashEnterOrgMode()) {
+            dataDashEndDrag(false);
+            return;
+          }
           dataDashDrag.enteredOrg = true;
         } else {
           dataDashMarkOrganizing(true);
@@ -13187,20 +13198,32 @@
           if (dist2 > 36) {
             dataDashStopDragTimer();
             if (!dataDashEdit) {
-              dataDashEnterOrgMode();
+              if (!dataDashEnterOrgMode()) {
+                dataDashEndDrag(false);
+                return;
+              }
               dataDashDrag.enteredOrg = true;
             }
             dataDashLiftDoor();
           }
         } else if (mouse && dist2 > 36) {
+          // Mouse drag is intentional reorder — enter org so every tile highlights.
           dataDashStopDragTimer();
+          if (!dataDashEnterOrgMode()) {
+            dataDashEndDrag(false);
+            return;
+          }
+          dataDashDrag.enteredOrg = true;
           dataDashLiftDoor();
         } else if (!mouse && dist2 > 324) {
           // Outside org mode, vertical-dominant motion is page scroll.
           if (Math.abs(dy) > Math.abs(dx) + 6) dataDashEndDrag(false);
           else {
             dataDashStopDragTimer();
-            dataDashEnterOrgMode();
+            if (!dataDashEnterOrgMode()) {
+              dataDashEndDrag(false);
+              return;
+            }
             dataDashDrag.enteredOrg = true;
             dataDashLiftDoor();
           }
@@ -35730,6 +35753,7 @@
       }
       const dashRemoveBtn = e.target.closest("[data-dash-remove]");
       if (dashRemoveBtn) {
+        if (!dataDashCanEdit()) return;
         const id = dashRemoveBtn.getAttribute("data-dash-remove") || "";
         const next = dataDashBoardTiles().filter(function (x) { return x !== id; });
         if (next.length >= DATA_DASH_MIN) dataDashCommit(next);
@@ -35754,6 +35778,7 @@
       }
       const dashAddBtn = e.target.closest("[data-dash-add]");
       if (dashAddBtn) {
+        if (!dataDashCanEdit()) return;
         if (dataDashBoardTiles().length >= DATA_DASH_MAX) return;
         dataDashSwapId = "";
         dataDashLibOpen = true;
@@ -35763,6 +35788,7 @@
       const dashSwapBtn = e.target.closest("[data-dash-swap]");
       if (dashSwapBtn) {
         if (dataDashDragDid) { dataDashDragDid = false; return; }
+        if (!dataDashCanEdit()) return;
         dataDashSwapId = dashSwapBtn.getAttribute("data-dash-swap") || "";
         dataDashLibOpen = true;
         render();
@@ -35770,6 +35796,7 @@
       }
       const dashUseBtn = e.target.closest("[data-dash-use]");
       if (dashUseBtn) {
+        if (!dataDashCanEdit()) return;
         const id = dashUseBtn.getAttribute("data-dash-use") || "";
         if (!dataDashById(id) || dataDashHas(id)) return;
         const next = dataDashBoardTiles().slice();

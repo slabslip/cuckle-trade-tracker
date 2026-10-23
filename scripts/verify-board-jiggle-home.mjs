@@ -73,7 +73,7 @@ await page.screenshot({ path: path.join(OUT, "board-jiggle-drag.png"), fullPage:
 
 const cutId = afterDrag[afterDrag.length - 1];
 const nBefore = afterDrag.length;
-await page.locator(`[data-tile-del][data-dash-remove="${cutId}"]`).first().click();
+await page.locator(`.data-tile-del[data-dash-remove="${cutId}"]`).first().click();
 await page.waitForTimeout(150);
 const afterCut = await page.evaluate(() => dataDashBoardTiles().slice());
 if (afterCut.length !== nBefore - 1 || afterCut.includes(cutId)) {

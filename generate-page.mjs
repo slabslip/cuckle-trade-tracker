@@ -1668,7 +1668,7 @@ const html = `<!DOCTYPE html>
     .lh-calc-slot {
       display: block;
       width: 100%;
-      margin: 0 0 18px;
+      margin: 0 0 10px;
     }
     .your3 { margin: 0 0 16px; }
     .your3.is-empty { min-height: 0; }
@@ -1686,16 +1686,16 @@ const html = `<!DOCTYPE html>
     }
     button.your3-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
     button.your3-row:last-child { margin-bottom: 0; }
-    .home-desk { margin: 0 0 16px; }
+    .home-desk { margin: 0 0 10px; }
     .home-desk-h {
       margin: 0 0 4px; font-size: 0.75rem; font-weight: 650; letter-spacing: 0.04em;
       text-transform: uppercase; color: var(--dim);
     }
-    .home-desk > .home-desk-h { margin-bottom: 10px; }
+    .home-desk > .home-desk-h { margin-bottom: 6px; }
     .home-desk-sub {
       margin: 0 0 8px; font-size: 0.75rem; line-height: 1.35; color: var(--muted);
     }
-    .home-you { margin: 0 0 12px; }
+    .home-you { margin: 0 0 8px; }
     .home-you-stack { display: flex; flex-direction: column; align-items: flex-start; }
     button.home-you-plate {
       appearance: none; font: inherit; color: inherit;
@@ -1752,7 +1752,7 @@ const html = `<!DOCTYPE html>
       font-size: 0.8125rem; font-weight: 600; color: var(--muted); line-height: 1.3;
     }
     .home-capital {
-      margin: 0 0 12px; padding: 10px 12px;
+      margin: 0 0 8px; padding: 8px 12px;
       border: 1px solid var(--line); border-radius: 12px;
       background: linear-gradient(180deg, rgba(224,180,76,0.08), transparent 70%);
     }
@@ -1765,7 +1765,7 @@ const html = `<!DOCTYPE html>
     }
     .home-capital-line .chip { margin-left: 4px; vertical-align: baseline; }
     .home-pulse {
-      margin: 0 0 14px; padding: 0 2px;
+      margin: 0 0 8px; padding: 0 2px;
     }
     .home-pulse-chase {
       margin: 0 0 4px; font-size: 1.02rem; font-weight: 750;
@@ -1775,7 +1775,7 @@ const html = `<!DOCTYPE html>
       margin: 0; font-size: 0.78rem; color: var(--muted); line-height: 1.35;
     }
     .home-wire {
-      margin: 0 0 14px;
+      margin: 0 0 8px;
       background: #121214;
       border: 1px solid var(--line);
       border-radius: 14px;
@@ -4106,7 +4106,7 @@ const html = `<!DOCTYPE html>
       border-color: #e0b44c;
       box-shadow: 0 0 0 1px #c9a227, 0 0 10px rgba(224, 180, 76, 0.28);
     }
-    .home-top-doors { margin: 0 0 16px; }
+    .home-top-doors { margin: 0 0 10px; }
     .home-top-board { margin: 0; }
     .door-ico {
       width: 28px; height: 28px; color: #e0b44c; flex: 0 0 auto;
@@ -31788,7 +31788,7 @@ const html = `<!DOCTYPE html>
 
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
-      // Manager OS: race → capital → chase pulse → wire bar → Ideas → doors → calc.
+      // Manager OS: race → capital → chase pulse → wire bar → doors → calc → Ideas.
       // Full overnight letter stays on ?r=overnight / share — Home only gets the icon bar.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="' + esc(calcDoorLabel()) + ', click here">'
@@ -31801,9 +31801,9 @@ const html = `<!DOCTYPE html>
         + homePulseHtml()
         + homeWireBarHtml()
         + leagueTapeHtml()
-        + homeDeskHtml()
         + homeTopDoorsHtml()
-        + '<div class="lh-calc-slot">' + door + "</div>";
+        + '<div class="lh-calc-slot">' + door + "</div>"
+        + homeDeskHtml();
     }
 
     function homeTopDoorsHtml() {
@@ -37963,19 +37963,19 @@ if (inline.includes('day-alert-h">Champions Path')) {
     || !prog.includes("homeTopDoorsHtml()") || !prog.includes("lh-calc-slot")
     || !prog.includes("homeCapitalStripHtml()") || !prog.includes("homePulseHtml()")
     || !prog.includes("homeWireBarHtml()")) {
-    throw new Error("Home digest is race + capital + pulse + wire bar + Ideas + top 4 + calc");
+    throw new Error("Home digest is race + capital + pulse + wire bar + top 4 + calc + Ideas");
   }
   if (prog.includes("overnightSlipHtml()")) {
     throw new Error("Home digest must not mount the full overnight letter — wire bar owns the pulse");
   }
-  if (prog.indexOf("homeDeskHtml()") > prog.indexOf("homeTopDoorsHtml()")) {
-    throw new Error("Team Ideas must sit above top 4 on Home");
+  if (prog.indexOf("homeTopDoorsHtml()") > prog.indexOf("lh-calc-slot")) {
+    throw new Error("home calc must sit below top 4");
+  }
+  if (prog.indexOf("lh-calc-slot") > prog.indexOf("homeDeskHtml()")) {
+    throw new Error("Team Ideas must sit below the trade calculator on Home");
   }
   if (prog.indexOf("homeCapitalStripHtml()") > prog.indexOf("homePulseHtml()")) {
     throw new Error("capital strip must sit above race pulse on Home");
-  }
-  if (prog.indexOf("homeTopDoorsHtml()") > prog.indexOf("lh-calc-slot")) {
-    throw new Error("home calc must sit below top 4");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")

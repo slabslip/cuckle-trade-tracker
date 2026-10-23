@@ -65,7 +65,10 @@ const need = [
   "function dataDashLiftDoor(",
   "function dataDashCommitFromBoard(",
   "data-dash-board",
-  "Tap Arrange to reorganize",
+  "Hold a door to edit",
+  "Drag doors to rearrange like the Home Screen",
+  "data-tile-del",
+  "is-jiggle",
   "Arrange board",
   "Top 4 wear gold",
   "home-top-board",
@@ -114,9 +117,14 @@ if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
   throw new Error("Trade THEN/NOW player list must not include pick-became names");
 }
 
+// Unsigned share: receiptQboot opens the public ticket before the signed-out gate.
+// (An earlier appScreen = "gate" in the Apple OAuth catch must not trip this.)
 const bootAt = page.indexOf("const receiptQboot = receiptQueryFrom(params);");
-const gateAt = page.indexOf('appScreen = "gate"', bootAt);
-if (bootAt < 0 || gateAt < 0 || page.indexOf("openPublicReceipt(receiptQboot)", bootAt) > gateAt) {
+const unsignedAt = page.indexOf("if (receiptQboot)", bootAt);
+const openAt = page.indexOf("openPublicReceipt(receiptQboot)", unsignedAt);
+const signedOutGateAt = page.indexOf('appScreen = "gate"', openAt);
+if (bootAt < 0 || unsignedAt < 0 || openAt < 0 || signedOutGateAt < 0
+  || openAt > signedOutGateAt) {
   throw new Error("unsigned receipt query must skip the gate");
 }
 

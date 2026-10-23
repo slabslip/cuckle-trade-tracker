@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Home digest cleanup + Your board Arrange hub (List/Board/Pick/Home4/Catalog).
+ * Home digest cleanup + Your board Apple Home–style jiggle edit
+ * (Edit/Done, drag reflow, − remove; More → List/Pick/Home4/Catalog hub).
  */
 import fs from "node:fs";
 
@@ -20,11 +21,11 @@ function fnSrc(name) {
   return page.slice(start, end < 0 ? start + 4000 : end);
 }
 
-if (!page.includes('const DATA_V = "boardArrangeAll20261023"')) {
-  fail("DATA_V must bump for board arrange all ship");
+if (!page.includes('const DATA_V = "boardJiggleEdge20261023"')) {
+  fail("DATA_V must bump for board jiggle edge ship");
 }
-if (!sw.includes("chuckle-shell-v368-board-arrange-all")) {
-  fail("sw.js must bump CACHE for board arrange all ship");
+if (!sw.includes("chuckle-shell-v370-board-jiggle-edge")) {
+  fail("sw.js must bump CACHE for board jiggle edge ship");
 }
 
 {
@@ -50,25 +51,31 @@ if (!sw.includes("chuckle-shell-v368-board-arrange-all")) {
 }
 
 {
-  if (!page.includes("function dataDashBeginArrange(")
+  if (!page.includes("function dataDashEnterJiggle(")
+    || !page.includes("function dataDashExitJiggle(")
+    || !page.includes("function dataDashBeginArrange(")
     || !page.includes("function dataDashArrangeHtml(")
-    || !page.includes("function dataDashSaveArrange(")
-    || !page.includes("Tap Arrange to reorganize")
-    || !page.includes('data-dash-arrange="list"')
+    || !page.includes("Hold a door to edit")
+    || !page.includes("Drag doors to rearrange like the Home Screen")
+    || !page.includes("data-tile-del")
+    || !page.includes("is-jiggle-face")
+    || !page.includes("is-jiggle")
+    || !fnSrc("dataDashTileHtml").includes("data-dash-remove=")
+    || !fnSrc("dataDashTileHtml").includes("data-tile-del")
+    || !fnSrc("dataDashHtml").includes("data-dash-org-bar")
+    || !fnSrc("dataDashHtml").includes(': "Edit")')
+    || !fnSrc("dataDashHtml").includes('? "Done"')
+    || !fnSrc("dataDashHtml").includes('data-dash-arrange="list"')
+    || !fnSrc("dataDashBeginArrange").includes("dataDashEnterJiggle")
     || !page.includes('data-dash-arrange-mode="')
     || !fnSrc("dataDashArrangeHtml").includes('"List")')
-    || !fnSrc("dataDashArrangeHtml").includes('"Board")')
     || !fnSrc("dataDashArrangeHtml").includes('"Pick")')
-    || !fnSrc("dataDashArrangeHtml").includes('"Home 4")')
     || !fnSrc("dataDashArrangeHtml").includes('"Catalog")')
-    || !page.includes("data-dash-pick=")
-    || !page.includes("data-dash-home-slot=")
-    || !page.includes("data-dash-catalog=")
-    || !page.includes("is-jiggle")
-    || !fnSrc("dataDashHtml").includes(">Arrange</button>")
+    || !fnSrc("dataDashEnterOrgMode").includes("dataDashEnterJiggle")
+    || !fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")
     || !fnSrc("dataDashCommitFromBoard").includes("dataDashArrangeOpen()")
-    || !fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")) {
-    fail("Arrange hub with five modes must ship");
+    || !page.includes("Long-press enters Apple-style jiggle")) {
+    fail("Apple Home jiggle edit + More arrange hub must ship");
   }
 }
 

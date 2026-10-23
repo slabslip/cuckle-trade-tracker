@@ -4880,7 +4880,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261023000205";
+    const DATA_V = "joinClean20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22552,6 +22552,7 @@ const html = `<!DOCTYPE html>
     let claimMatchNote = "";
     let claimMatchBusy = false;
     let claimMatchTimer = null;
+    let claimStep = "league"; // league confirm → username (no team-list hints)
     let nameHistoryBook = null;
     let gateSuggestedUser = null;
     let gateMode = "signin"; // signin | signup | forgot — returning users land on Sign in
@@ -22798,10 +22799,6 @@ const html = `<!DOCTYPE html>
           + (m.season ? " · " + esc(m.season) : "")
           + "</span></div>"
           + '<span class="chev" aria-hidden="true">›</span></button>'
-          + '<button type="button" class="linkish" data-change-team="' + esc(m.sleeper_league_id) + '"'
-          + ' data-change-team-name="' + esc(m.name || "") + '">Wrong team?</button>'
-          + '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
-          + '">Share invites</button>'
           + "</div>";
       }).join("");
       const pendingClaim = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
@@ -22810,21 +22807,18 @@ const html = `<!DOCTYPE html>
           + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
           + "<span>" + st
           + (o.season ? " · " + esc(o.season) : "")
-          + " · claim your team to open the meter</span></div></div>"
+          + " · claim your team</span></div></div>"
           + '<button type="button" class="chip" data-change-team="' + esc(o.sleeper_league_id) + '"'
           + ' data-change-team-name="' + esc(o.name || "") + '">Claim your team</button>'
-          + '<button type="button" class="linkish" data-manage-invites="' + esc(o.sleeper_league_id)
-          + '">Share invites</button>'
           + "</div>";
       }).join("");
       const body = rows + pendingClaim + readyAddBooksHtml();
       return '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
         + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
         + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (body || '<p class="caption">No leagues yet. Join with a Sleeper ID or invite code.</p>')
+        + (body || '<p class="caption">No leagues yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-app-join="1">Join a league</button>'
-        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + '<button type="button" class="chip" data-app-join="1">Add a league</button>'
         + "</div>";
     }
 
@@ -23951,15 +23945,15 @@ const html = `<!DOCTYPE html>
       const league = gateInviteLeague || claimLeagueName || "this league";
       const team = gateInviteTeam || "";
       if (team) {
-        return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
-          + "</b>. Claim your team <b>" + esc(team) + "</b>.</p>";
+        return '<p class="join-land-hero">Invited to <b>' + esc(league)
+          + "</b> as <b>" + esc(team) + "</b>.</p>";
       }
       if (typeof shareAccessPending === "function" && shareAccessPending()) {
-        return '<p class="join-land-hero">A member shared a view in <b>' + esc(league)
-          + "</b>. Sign in with Apple (or a username), then claim a remaining team to open it.</p>";
+        return '<p class="join-land-hero">Shared view in <b>' + esc(league)
+          + "</b>. Sign in, then claim a team to open it.</p>";
       }
-      return '<p class="join-land-hero">You have been invited to join <b>' + esc(league)
-        + "</b>. Sign in with Apple (or a username), then pick your team.</p>";
+      return '<p class="join-land-hero">Invited to <b>' + esc(league)
+        + "</b>. Sign in, then claim your team.</p>";
     }
 
     function joinLandSeat(uid) {
@@ -24037,65 +24031,53 @@ const html = `<!DOCTYPE html>
       }) || null;
     }
 
-    function scheduleClaimMatch() {
-      if (claimMatchTimer) clearTimeout(claimMatchTimer);
-      claimMatchTimer = setTimeout(function () {
-        claimMatchTimer = null;
-        onMatchSleeperUser({ quiet: true }).catch(function (err) { console.warn(err); });
-      }, 380);
-    }
-
     /**
-     * Resolve typed Sleeper username → seat. Uses Sleeper /user/{name} on the
-     * server, then fuzzy display_name so close spellings still auto-select.
+     * Resolve typed Sleeper username → seat. Security step: no team list / hints.
+     * Only accept a confident Sleeper username hit (API or exact handle).
      */
-    async function onMatchSleeperUser(opts) {
-      const quiet = !!(opts && opts.quiet);
+    async function onMatchSleeperUser() {
       const lid = claimLeagueId || gateInviteLeagueId || "";
       const el = document.getElementById("claimSleeperUser");
       if (el) claimSleeperUser = String(el.value || "").trim();
       const typed = claimSleeperUser;
+      claimPickId = "";
       if (!lid) return;
       if (typed.length < 2) {
-        if (!quiet) {
-          claimMatchNote = "Type the Sleeper username you sign into Sleeper with.";
-          render();
-        }
+        claimMatchNote = "Type your Sleeper username.";
+        render();
         return;
       }
       if (!authSession) {
-        claimMatchNote = "Sign in first, then we can match your Sleeper username.";
+        claimMatchNote = "Sign in first, then enter your Sleeper username.";
         render();
         return;
       }
       if (claimMatchBusy || joinBusy) return;
       claimMatchBusy = true;
-      if (!quiet) claimMatchNote = "Looking up…";
+      claimMatchNote = "Looking up…";
       render();
       try {
         const data = await joinLeagueCall("match_seat", {
           sleeper_league_id: lid,
           sleeper_username: typed,
         });
-        if (data.best && data.best.sleeper_user_id) {
-          claimPickId = String(data.best.sleeper_user_id);
-          const label = data.best.display_name || data.best.username || data.best.team_name;
-          const team = data.best.team_name && data.best.team_name !== label
-            ? (" · team " + data.best.team_name)
-            : "";
-          claimMatchNote = "Matched you as <b>" + esc(label) + "</b>" + esc(team)
-            + ". Confirm below to claim.";
+        const best = data.best;
+        // Security: only lock a seat on a real Sleeper username resolve or exact handle.
+        const solid = !!(best && best.sleeper_user_id
+          && (best.score >= 95 || best.how === "sleeper_username"));
+        if (solid) {
+          claimPickId = String(best.sleeper_user_id);
+          const handle = best.display_name || best.username || typed;
+          const team = best.team_name || "your team";
+          claimMatchNote = "We found <b>" + esc(handle) + "</b>"
+            + (team && team !== handle ? (" · <b>" + esc(team) + "</b>") : "")
+            + ". Confirm this is your team.";
         } else {
-          claimPickId = claimPickId || "";
-          claimMatchNote = esc(data.note || "No clear match — pick your team from the list.");
-          if (data.candidates && data.candidates.length === 1 && data.candidates[0].sleeper_user_id) {
-            claimPickId = String(data.candidates[0].sleeper_user_id);
-            const c = data.candidates[0];
-            claimMatchNote = "Closest match: <b>" + esc(c.display_name || c.team_name) + "</b>. "
-              + "Confirm if that is you.";
-          }
+          claimPickId = "";
+          claimMatchNote = "No team matched that Sleeper username. Check the spelling and try again.";
         }
       } catch (err) {
+        claimPickId = "";
         claimMatchNote = esc((err && err.message) || "Could not match that username.");
       } finally {
         claimMatchBusy = false;
@@ -24108,9 +24090,11 @@ const html = `<!DOCTYPE html>
       claimLeagueName = leagueName || claimLeagueName || "";
       claimPickId = "";
       claimMatchNote = "";
+      claimSleeperUser = "";
+      claimStep = "league";
       joinError = "";
       appScreen = "claimTeam";
-      focusNext = "#claimSleeperUser";
+      focusNext = ".screen-h";
       if (preloaded && Array.isArray(preloaded.seats)) {
         claimSeats = preloaded.seats;
         claimLeagueName = preloaded.league_name || claimLeagueName || claimLeagueId;
@@ -24134,7 +24118,7 @@ const html = `<!DOCTYPE html>
           claimSeats = data.seats || [];
           claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
         } catch (err2) {
-          joinError = (err && err.message) || "Could not load teams. Check the Sleeper league ID.";
+          joinError = (err && err.message) || "Could not load that league. Check the Sleeper league ID.";
         }
       }
       render();
@@ -24178,7 +24162,8 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (!seatId || !lid) {
-        joinError = "Pick the team that is yours.";
+        joinError = "Enter your Sleeper username and find your team first.";
+        claimStep = "username";
         appScreen = "claimTeam";
         render();
         return;
@@ -25182,8 +25167,9 @@ const html = `<!DOCTYPE html>
           throw new Error("Could not build an invite link for that team.");
         }
         const team = (inv && inv.team_name) || "that team";
-        await copyText(inviteShareLink(code));
-        settingsCopyNote = "Invite link for " + team + " copied — send it to that manager.";
+        // Managers share the CF- code; the link also works if they paste a URL.
+        await copyText(code);
+        settingsCopyNote = "Invite code for " + team + " copied (" + code + "). Send it to that manager.";
       } catch (err) {
         joinError = (err && err.message) || "Could not copy invite link.";
         console.error(err);
@@ -25336,8 +25322,7 @@ const html = `<!DOCTYPE html>
         );
         if (mine && mine.sleeper_user_id && mine.sleeper_user_id !== gateInviteSeatId) {
           joinError = "You already sit as " + (mine.team_name || "another team")
-            + " in this league. Open Claim your team and switch, or tap Wrong team — unclaim first. "
-            + "Do not redeem another manager's invite onto your account.";
+            + " in this league. Open Wrong team? in Settings to switch or unclaim first.";
           if (appScreen !== "inviteConfirm") appScreen = "inviteConfirm";
           render();
           return;
@@ -33421,15 +33406,14 @@ const html = `<!DOCTYPE html>
       const shared = !invited && typeof shareAccessPending === "function" && shareAccessPending();
       const forgot = gateMode === "forgot";
       const nativeApple = !forgot && authHasNativeApple();
-      // Apple is create + sign-in. Visible title always says create/get started so the
-      // store gate does not look like a password form is required.
+      // Apple-first. Password stays behind "Use username and password".
       const title = forgot
         ? "Reset login"
         : invited
-          ? "Create account to join"
+          ? "Sign in to join"
           : shared
-            ? "Create account to open this view"
-          : "Create your account";
+            ? "Sign in to open"
+          : "Sign in";
       const go = forgot
         ? "Reclaim seat"
         : invited
@@ -33437,26 +33421,24 @@ const html = `<!DOCTYPE html>
           : shared
             ? (gateMode === "signup" ? "Create account & claim" : "Sign in & claim")
           : (gateMode === "signup" ? "Create account" : "Sign in");
+      const appleNext = invited
+        ? "Then join your invited team."
+        : shared
+          ? "Then claim your seat to open the shared view."
+        : "Then add your league.";
       const appleBtn = forgot ? ""
-        : ('<h3 style="margin:0 0 10px">' + esc(title) + "</h3>"
-          + '<button type="button" class="gate-apple" data-apple-go="1"'
+        : ('<button type="button" class="gate-apple" data-apple-go="1"'
           + (authBusy ? " disabled" : "") + ">"
           + '<span class="gate-apple-mark" aria-hidden="true"></span>'
           + (authBusy ? "Connecting…" : "Sign in with Apple")
           + "</button>"
-          + '<p class="caption" style="margin:0 0 8px">'
-          + (nativeApple
-            ? "One tap with your Apple ID — Face ID or your phone passcode. "
-              + "New here? That creates your account."
-            : "One tap with your Apple ID. New here? That creates your account. ")
-          + (invited
-            ? " Your seat invite stays ready."
-            : " Then join with an invite code or a Sleeper league ID.")
+          + '<p class="caption" style="margin:10px 0 0">'
+          + (nativeApple ? "Face ID or passcode. " : "")
+          + appleNext
           + "</p>");
       const forgotForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
-        + '<p class="caption" style="margin:0 0 8px">Ask your commissioner to tap <b>Reset login</b> '
-        + "on your seat and send you a new CF- ticket. Paste it here, pick a username and a new password, "
-        + "and reclaim the team.</p>"
+        + '<p class="caption" style="margin:0 0 8px">Paste the CF- ticket from your commissioner. '
+        + "New username and password reclaim the seat.</p>"
         + '<label>Seat ticket<input id="forgotCode" name="invite" autocomplete="off"'
         + ' autocapitalize="characters" spellcheck="false" placeholder="CF-XXXX-XXXX"'
         + ' value="' + esc(redeemCode || "") + '"'
@@ -33477,8 +33459,7 @@ const html = `<!DOCTYPE html>
         + (authBusy ? "Working…" : go) + "</button>"
         + "</div></form>"
         + '<form class="app-form" data-gate-form="1" action="#" method="post" style="margin-top:16px">'
-        + '<p class="caption" style="margin:0 0 8px">Or email a reset if you already saved a recovery inbox '
-        + "on this account.</p>"
+        + '<p class="caption" style="margin:0 0 8px">Or email a reset link.</p>'
         + '<label>Recovery email<input id="forgotMail" name="reset-email" type="email" autocomplete="email"'
         + ' placeholder="you@email.com"'
         + (authBusy ? " disabled" : "") + " /></label>"
@@ -33495,7 +33476,7 @@ const html = `<!DOCTYPE html>
         + (authBusy ? " disabled" : "") + " /></label>"
         + '<label>Password<input id="gatePass" name="password" type="password" autocomplete="'
         + (gateMode === "signup" ? "new-password" : "current-password") + '"'
-        + ' minlength="6" placeholder="At least 6 characters — not the invite code"'
+        + ' minlength="6" placeholder="At least 6 characters"'
         + (authBusy ? " disabled" : "") + " /></label>"
         + (gateMode === "signup"
           ? ('<label>Recovery email (optional)<input id="gateEmail" name="email" type="email" autocomplete="email"'
@@ -33511,13 +33492,12 @@ const html = `<!DOCTYPE html>
       const passBlock = forgot ? forgotForm
         : (gatePassOpen
           ? ('<div class="gate-or" aria-hidden="true">or username</div>'
-            + "<h3>" + esc(title) + "</h3>"
             + signForm
             + '<p class="caption" style="margin:12px 0 0">'
             + (gateMode === "signup"
-              ? 'Already have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
-              : 'No account yet? <button type="button" class="linkish" data-gate-mode="signup">Create an account</button>'
-                + ' · <button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>')
+              ? 'Have an account? <button type="button" class="linkish" data-gate-mode="signin">Sign in</button>'
+              : 'New here? <button type="button" class="linkish" data-gate-mode="signup">Create account</button>'
+                + ' · <button type="button" class="linkish" data-gate-mode="forgot">Forgot</button>')
             + ' · <button type="button" class="linkish" data-gate-pass="0">Hide</button>'
             + "</p>")
           : ('<div class="gate-or" aria-hidden="true">or</div>'
@@ -33527,30 +33507,23 @@ const html = `<!DOCTYPE html>
               ? '<p class="err" role="alert" style="margin-top:8px">' + esc(joinError) + "</p>"
               : "")
             + '<p class="caption" style="margin:12px 0 0">'
-            + '<button type="button" class="linkish" data-gate-mode="forgot">Forgot username or password</button>'
+            + '<button type="button" class="linkish" data-gate-mode="forgot">Forgot</button>'
             + "</p>"));
       return '<div class="app-shell gate-shell">'
         + '<div class="gate-brand">'
         + '<img src="data/ui/gate-logo.png?' + DATA_V + '" width="128" height="128"'
         + ' alt="Chuckle Fantasy" decoding="async" />'
         + "</div>"
-        + '<h2 class="screen-h sr-only" tabindex="-1">' + esc(title) + "</h2>"
+        + '<h2 class="screen-h" tabindex="-1">' + esc(title) + "</h2>"
         + (invited && !forgot
-          ? (joinStepsHtml("account")
-            + joinInviteLeadHtml()
-            + '<p class="caption">Seat invite <code style="user-select:all">'
-            + esc(String(redeemCode).toUpperCase()) + "</code>"
-            + " — this is your <b>seat ticket</b>, not your account password. "
-            + "Sign in with Apple, or pick a username and a <b>new password</b>.</p>")
-          : ((claimLeagueId || shared) && !forgot
-            ? (joinStepsHtml("account") + joinInviteLeadHtml())
+          ? ('<p class="caption" style="margin:0 0 12px">'
+            + esc(gateInviteTeam || "Your team")
+            + (gateInviteLeague ? (" · " + esc(gateInviteLeague)) : "")
+            + "</p>")
+          : (shared && !forgot
+            ? '<p class="caption" style="margin:0 0 12px">A shared league view is waiting.</p>'
             : ""))
-        + (gateSuggestedUser && invited && !forgot && gatePassOpen
-          ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
-            + "</b> — change it if you like.</p>")
-          : "")
         + '<div class="app-card">'
-        + (forgot ? ("<h3>" + esc(title) + "</h3>") : "")
         + appleBtn
         + passBlock
         + "</div>"
@@ -33560,33 +33533,29 @@ const html = `<!DOCTYPE html>
     function renderAppJoin() {
       const uname = (authSession && authSession.username) || "you";
       return '<div class="app-shell">'
-        + '<h2 class="screen-h" tabindex="-1">Join a league</h2>'
-        + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
-        + "Paste an invite code from a league mate, or enter a Sleeper league ID and claim your team.</p>"
-        + '<div class="app-card"><h3>Invite code</h3>'
+        + '<h2 class="screen-h" tabindex="-1">Add a league</h2>'
+        + '<p class="caption"><b>' + esc(uname) + "</b> · Sleeper league ID or invite code.</p>"
+        + '<div class="app-card">'
         + '<div class="app-form">'
-        + '<label>CF- code<input id="joinInviteCode" name="invite" autocomplete="off"'
+        + '<label>Sleeper league ID<input id="joinLeagueIdInput" name="league" inputmode="numeric"'
+        + ' autocomplete="off" placeholder="From the Sleeper league URL"'
+        + ' value="' + esc(claimLeagueId || joinLeagueId || "") + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-join-league-go="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Looking…" : "Continue") + "</button>"
+        + "</div>"
+        + '<div class="gate-or" aria-hidden="true" style="margin:16px 0">or</div>'
+        + '<label>Invite code<input id="joinInviteCode" name="invite" autocomplete="off"'
         + ' autocapitalize="characters" spellcheck="false" placeholder="CF-XXXX-XXXX"'
         + ' value="' + esc(redeemCode || "") + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-join-invite-go="1"' + (joinBusy ? " disabled" : "") + ">"
-        + (joinBusy ? "Joining…" : "Redeem invite") + "</button>"
-        + "</div></div></div>"
-        + '<div class="app-card"><h3>Sleeper league ID</h3>'
-        + '<p class="caption" style="margin:0 0 8px">From the Sleeper app URL. Everyone joins the same way '
-        + "and claims their own team — no commissioner setup.</p>"
-        + '<div class="app-form">'
-        + '<label>League ID<input id="joinLeagueIdInput" name="league" inputmode="numeric"'
-        + ' autocomplete="off" placeholder="e.g. 1315431339301806080"'
-        + ' value="' + esc(claimLeagueId || joinLeagueId || "") + '"'
-        + (joinBusy ? " disabled" : "") + " /></label>"
-        + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-join-league-go="1"' + (joinBusy ? " disabled" : "") + ">"
-        + (joinBusy ? "Looking…" : "Find teams") + "</button>"
-        + "</div></div>"
-        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + (joinBusy ? "Joining…" : "Join with code") + "</button>"
         + "</div>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></div>"
         + '<p class="caption"><button type="button" class="linkish" data-app-home="1">Your leagues</button>'
         + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
         + "</div>";
@@ -33682,8 +33651,6 @@ const html = `<!DOCTYPE html>
       const myMembership = (memberships || []).find(
         (m) => m.sleeper_league_id === L.sleeper_league_id,
       );
-      const meId = authSession && authSession.user_id;
-      const transferCandidates = (leagueMembers || []).filter((m) => m.auth_user_id && m.auth_user_id !== meId);
       const all = createdInvites || [];
       const unclaimed = all.filter((inv) => !inv.claimed);
       const claimed = all.filter((inv) => inv.claimed);
@@ -33693,75 +33660,59 @@ const html = `<!DOCTYPE html>
         const claimer = inv.claimed_username
           ? "@" + inv.claimed_username
           : (inv.claimed ? "a member" : null);
-        const orphanNote = inv.orphan
-          ? " Stale claim (no active membership) — Reissue to free this seat."
-          : "";
+        const codePlain = inviteCodeVisible(inv) ? String(inv.code) : "";
         return '<div class="app-card" style="margin-bottom:8px">'
           + "<b>" + esc(inv.team_name) + "</b>"
           + (inv.claimed
             ? ('<p class="caption" style="margin:4px 0 8px">Joined'
-              + (claimer ? " as " + esc(claimer) : "") + "."
-              + esc(orphanNote) + "</p>"
+              + (claimer ? " as " + esc(claimer) : "") + ".</p>"
               + '<div class="app-actions">'
-              + '<button type="button" class="chip" data-reset-login="' + esc(inv.sleeper_user_id) + '"'
-              + (joinBusy ? " disabled" : "") + ">Reset login</button>"
-              + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
-              + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
+              + '<button type="button" class="linkish" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
+              + (joinBusy ? " disabled" : "") + ">Generate new invite</button>"
               + "</div>")
-            : ('<p class="caption" style="margin:4px 0 8px">Copy the invite link and send it to that manager. '
-              + "Opening it while signed in claims the seat onto your account.</p>"
+            : ('<p class="caption" style="margin:4px 0 8px">'
+              + (codePlain
+                ? ('Code <code style="user-select:all">' + esc(codePlain) + "</code>")
+                : "Tap Generate to mint a CF- invite for this team.")
+              + "</p>"
               + '<div class="app-actions">'
               + '<button type="button" class="chip" data-copy-invite-link="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">"
-              + (joinBusy ? "Working…" : "Copy invite link") + "</button>"
+              + (joinBusy ? "Working…" : (codePlain ? "Copy invite code" : "Generate invite code"))
+              + "</button>"
               + (!myMembership
                 ? '<button type="button" class="linkish" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
-                  + (joinBusy ? " disabled" : "") + ">Claim this seat (you)</button>"
+                  + (joinBusy ? " disabled" : "") + ">This is my team</button>"
                 : "")
               + "</div>"))
           + "</div>";
       }).join("");
       const empty = all.length === 0
-        ? '<p class="caption">No seats yet — reopen this screen to load teams from Sleeper. If it stays empty, run wave5 SQL and redeploy join-league.</p>'
+        ? '<p class="caption">No seats yet. Add this league with its full Sleeper ID first.</p>'
         : (tab === "claimed"
-          ? '<p class="caption">No one has redeemed yet. Share invite links from the Unclaimed tab.</p>'
-          : '<p class="caption">Every seat is claimed.</p>');
+          ? '<p class="caption">No one has joined yet. Generate codes on Open.</p>'
+          : '<p class="caption">Every seat has joined.</p>');
       const tabs = '<div class="nav" role="tablist" aria-label="Invite groups" style="margin-top:8px">'
         + '<button type="button" role="tab" class="tab' + (tab === "unclaimed" ? " on" : "") + '"'
         + ' aria-selected="' + (tab === "unclaimed" ? "true" : "false") + '"'
-        + ' data-invite-tab="unclaimed">Unclaimed (' + unclaimed.length + ")</button>"
+        + ' data-invite-tab="unclaimed">Open (' + unclaimed.length + ")</button>"
         + '<button type="button" role="tab" class="tab' + (tab === "claimed" ? " on" : "") + '"'
         + ' aria-selected="' + (tab === "claimed" ? "true" : "false") + '"'
-        + ' data-invite-tab="claimed">Claimed (' + claimed.length + ")</button>"
+        + ' data-invite-tab="claimed">Joined (' + claimed.length + ")</button>"
         + "</div>";
-      const transferBlock = "";
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-settings="leagues">← Settings</button>'
-        + '<h2 class="screen-h" tabindex="-1">Share invites</h2>'
-        + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
+        + '<h2 class="screen-h" tabindex="-1">Invite codes</h2>'
+        + '<p class="caption">' + esc(L.name || "League")
+        + (L.sleeper_league_id
+          ? (' · ID <code style="user-select:all">' + esc(L.sleeper_league_id) + "</code>")
+          : "")
+        + ". Generate a code per team and send it to that manager.</p>"
+        + (joinBusy ? '<p class="caption" role="status">Loading…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + tabs
         + (rows || empty)
-        + (tab === "claimed"
-          ? '<p class="caption" style="margin-top:12px">Forgot username or password: tap <b>Reset login</b>, copy the new ticket from Unclaimed, and send it. They open Forgot on the sign-in screen and reclaim the seat. '
-            + "If a manager leaves for good, <b>Reissue for new manager</b> instead. Stale claims also need Reset or Reissue.</p>"
-          : (!myMembership
-            ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
-            : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
-        + transferBlock
-        + (L.sleeper_league_id
-          ? ('<div class="app-card" style="margin-top:12px"><h3>Merge IDs and build</h3>'
-            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
-            + joinIdsFormHtml(L.sleeper_league_id)
-            + '<div class="app-actions">'
-            + '<button type="button" class="chip" data-rebuild-league="' + esc(L.sleeper_league_id) + '"'
-            + (joinBusy ? " disabled" : "") + ">"
-            + (joinBusy ? "Working…" : "Rebuild dashboard from these IDs") + "</button>"
-            + "</div></div>")
-          : "")
-        + (isGmLeague() && league && league.providers && !league.providers.espn_authorized
-          ? espnUnlockStepsHtml()
-          : "")
         + "</div>";
     }
 
@@ -33800,7 +33751,7 @@ const html = `<!DOCTYPE html>
       const equipped = cosmeticsEquipNames();
       const seatLine = profileSeat
         ? '<p class="caption" style="margin:4px 0 0">Seat / team <b>' + esc(profileSeat) + "</b></p>"
-        : '<p class="caption" style="margin:4px 0 0">No seat claimed yet — redeem an invite from the Leagues tab.</p>';
+        : '<p class="caption" style="margin:4px 0 0">No seat yet — add a league and claim your team.</p>';
       const memList = (memberships || []).map((m) => {
         const leagueLab = m.name || (m.leagues && m.leagues.name) || m.sleeper_league_id || "League";
         return '<p class="caption" style="margin:6px 0 0"><b>' + esc(String(leagueLab)) + "</b> — "
@@ -33863,44 +33814,43 @@ const html = `<!DOCTYPE html>
     }
 
     function renderSettingsLeaguesTab() {
-      const owned = ownedLeagues || [];
-      const memById = {};
-      for (const m of memberships || []) memById[m.sleeper_league_id] = m;
-      const adminRows = owned.length
-        ? owned.map((o) => {
-          const mem = memById[o.sleeper_league_id];
-          const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
-          return '<div class="app-card">'
-            + "<h3>" + esc(o.name) + "</h3>"
-            + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
-            + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
-            + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
-            + "</p>"
-            + "<h3>Merge IDs and build</h3>"
-            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
-            + joinIdsFormHtml(o.sleeper_league_id)
-            + '<div class="app-actions">'
-            + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
-              + '">Send / manage invites</button>'
-            + '<button type="button" class="chip" data-rebuild-league="' + esc(o.sleeper_league_id) + '">Rebuild dashboard</button>'
-            + (mem
-              ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
-                + '">Open dashboard</button>'
-              : "")
-            + "</div>"
-            + "</div>";
-        }).join("")
-        : '<div class="app-card"><p class="caption" style="margin:0">No leagues created yet.</p></div>';
+      const mems = memberships || [];
+      const memIds = new Set(mems.map((m) => m.sleeper_league_id));
+      const pending = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id));
+      const leagueRows = mems.map((m) => {
+        const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
+        return '<div class="app-card">'
+          + "<h3>" + esc(m.name) + "</h3>"
+          + '<p class="caption" style="margin:0 0 8px">Your team <b>' + esc(m.team_name || "—") + "</b>"
+          + " · " + st
+          + '<br/>Sleeper ID <code style="user-select:all">' + esc(m.sleeper_league_id) + "</code></p>"
+          + '<div class="app-actions">'
+          + '<button type="button" class="chip" data-manage-invites="' + esc(m.sleeper_league_id)
+          + '">Generate invite codes</button>'
+          + '<button type="button" class="linkish" data-change-team="' + esc(m.sleeper_league_id) + '"'
+          + ' data-change-team-name="' + esc(m.name || "") + '">Wrong team?</button>'
+          + '<button type="button" class="linkish" data-open-league="' + esc(m.sleeper_league_id)
+          + '">Open league</button>'
+          + "</div></div>";
+      }).join("");
+      const pendingRows = pending.map((o) => {
+        return '<div class="app-card">'
+          + "<h3>" + esc(o.name) + "</h3>"
+          + '<p class="caption" style="margin:0 0 8px">League added — claim your team to finish.</p>'
+          + '<div class="app-actions">'
+          + '<button type="button" class="chip" data-change-team="' + esc(o.sleeper_league_id) + '"'
+          + ' data-change-team-name="' + esc(o.name || "") + '">Claim your team</button>'
+          + '<button type="button" class="linkish" data-manage-invites="' + esc(o.sleeper_league_id)
+          + '">Generate invite codes</button>'
+          + "</div></div>";
+      }).join("");
+      const body = leagueRows + pendingRows
+        || '<div class="app-card"><p class="caption" style="margin:0">No leagues yet. Add one with a Sleeper ID or invite code.</p></div>';
       return (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
-        + adminRows
-        + (isGmLeague() && league && league.providers && !league.providers.espn_authorized
-          ? espnUnlockStepsHtml()
-          : "")
-        + readyAddBooksHtml()
+        + body
         + '<div class="app-actions" style="margin-top:8px">'
-        + '<button type="button" class="chip" data-app-join="1">Join a league</button>'
-        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + '<button type="button" class="chip" data-app-join="1">Add a league</button>'
         + "</div>";
     }
 
@@ -33931,90 +33881,59 @@ const html = `<!DOCTYPE html>
 
     function renderClaimTeam() {
       const league = claimLeagueName || gateInviteLeague || "this league";
+      const lid = claimLeagueId || gateInviteLeagueId || "";
       const mine = mySeatInClaimLeague();
-      const myId = mine ? String(mine.sleeper_user_id) : "";
-      const takenN = (claimSeats || []).filter(function (s) { return s.claimed; }).length;
       const picked = (claimSeats || []).find(function (s) {
         return String(s.sleeper_user_id) === String(claimPickId);
       });
-      const hero = (typeof shareAccessPending === "function" && shareAccessPending())
-        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim your team to open it.")
-        : ("Join <b>" + esc(league) + "</b>. Type your Sleeper username and we will find your team.");
-      const hint = !claimSeats.length
-        ? "Could not load teams yet. Check the Sleeper league ID."
-        : (mine
-          ? ("You currently sit as <b>" + esc(mine.team_name || "a team")
-            + "</b>. Wrong team? Unclaim, or match a different Sleeper username.")
-          : (takenN
-            ? (takenN + " marked taken — matching your username still finds the right seat.")
-            : "Use the username you sign into Sleeper with (not your fantasy team name). Close spellings still match."));
-      const claimLabel = picked && picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
-        ? "Take this team"
-        : (mine && picked && String(mine.sleeper_user_id) !== String(picked.sleeper_user_id)
-          ? "Switch to this team"
-          : "Yes — this is my team");
-      const pickLabel = picked
-        ? ((picked.display_name || "") && (picked.display_name !== picked.team_name)
-          ? (picked.display_name + " · " + picked.team_name)
-          : (picked.team_name || picked.display_name || "this team"))
-        : "";
-      const rowsLabeled = (claimSeats || []).map(function (s) {
-        const on = String(s.sleeper_user_id) === String(claimPickId);
-        const isMine = myId && String(s.sleeper_user_id) === myId;
-        const handle = s.display_name || s.username || "";
-        const label = (handle && handle !== s.team_name)
-          ? (esc(handle) + " · " + esc(s.team_name))
-          : esc(s.team_name || handle || s.sleeper_user_id);
-        return '<button type="button" class="chip'
-          + (on ? " claim-team-on" : "")
-          + (isMine ? " claim-team-mine" : "") + '"'
-          + ' data-claim-pick="' + esc(s.sleeper_user_id) + '"'
-          + (joinBusy ? " disabled" : "") + ">"
-          + label
-          + (isMine ? " · yours" : (s.claimed ? " · taken" : ""))
-          + "</button>";
-      }).join("");
+      if (claimStep !== "username") {
+        return '<div class="app-shell">'
+          + '<h2 class="screen-h" tabindex="-1">Confirm league</h2>'
+          + '<div class="app-card">'
+          + '<p class="join-land-hero">Is this your Sleeper league?</p>'
+          + '<p class="caption" style="margin:0 0 8px"><b>' + esc(league) + "</b>"
+          + (lid ? ('<br/>ID <code style="user-select:all">' + esc(lid) + "</code>") : "")
+          + "</p>"
+          + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+          + '<div class="app-actions">'
+          + '<button type="button" class="chip" data-claim-league-yes="1"'
+          + (joinBusy ? " disabled" : "") + ">Yes — continue</button>"
+          + '<button type="button" class="linkish" data-app-join="1">Wrong league</button>'
+          + "</div></div></div>";
+      }
+
       return '<div class="app-shell">'
-        + joinStepsHtml("team")
-        + '<h2 class="screen-h" tabindex="-1">Claim your team</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Your Sleeper username</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">' + hero + "</p>"
-        + '<p class="caption">' + hint + "</p>"
+        + '<p class="caption" style="margin:0 0 10px"><b>' + esc(league) + "</b></p>"
         + '<div class="app-form">'
-        + '<label>Sleeper username<input id="claimSleeperUser" name="sleeper_user" autocomplete="username"'
-        + ' autocapitalize="off" spellcheck="false" placeholder="e.g. TrumanCooper"'
+        + '<label>Sleeper username<input id="claimSleeperUser" name="sleeper_user"'
+        + ' autocomplete="off" autocapitalize="off" spellcheck="false" placeholder=""'
         + ' value="' + esc(claimSleeperUser || "") + '"'
         + (joinBusy || claimMatchBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-claim-match-go="1"'
         + (joinBusy || claimMatchBusy ? " disabled" : "") + ">"
-        + (claimMatchBusy ? "Matching…" : "Find my team") + "</button>"
+        + (claimMatchBusy ? "Looking up…" : "Find my team") + "</button>"
         + "</div></div>"
-        + (claimMatchNote ? '<p class="caption" role="status" style="margin-top:8px">' + claimMatchNote + "</p>" : "")
-        + '<p class="caption" style="margin:12px 0 6px">Or pick from the league list</p>'
-        + '<div class="claim-team-list">'
-        + (rowsLabeled || "")
-        + "</div>"
-        + (picked
-          ? ('<p class="caption" style="margin-top:12px">You picked <b>' + esc(pickLabel)
-            + "</b>"
-            + (picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
-              ? " (currently taken — claiming moves it to you)."
-              : ". Only claim it if that is your team.")
-            + "</p>")
+        + (claimMatchNote ? '<p class="caption" role="status" style="margin-top:10px">' + claimMatchNote + "</p>" : "")
+        + (picked && picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
+          ? '<p class="caption" style="margin-top:8px">Currently claimed — continuing moves it to you.</p>'
           : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + '<div class="app-actions" style="margin-top:12px">'
         + (picked
           ? ('<button type="button" class="chip" data-claim-open-go="1"'
             + (joinBusy ? " disabled" : "") + ">"
-            + (joinBusy ? "Claiming…" : claimLabel) + "</button>")
-          : '<p class="caption">Find your team with your Sleeper username, or tap it above.</p>')
+            + (joinBusy ? "Claiming…" : "Yes — this is my team") + "</button>"
+            + '<button type="button" class="linkish" data-claim-username-retry="1"'
+            + (joinBusy ? " disabled" : "") + ">Different username</button>")
+          : "")
         + (mine
           ? ('<button type="button" class="linkish" data-release-seat="1"'
-            + (joinBusy ? " disabled" : "") + ">Wrong team — unclaim</button>")
+            + (joinBusy ? " disabled" : "") + ">Unclaim</button>")
           : "")
-        + '<button type="button" class="linkish" data-app-home="1">Your leagues</button>'
+        + '<button type="button" class="linkish" data-claim-league-back="1">Back</button>'
         + "</div></div></div>";
     }
 
@@ -34036,17 +33955,14 @@ const html = `<!DOCTYPE html>
       const po = seat && seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
       const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
       return '<div class="app-shell">'
-        + joinStepsHtml("land")
-        + '<h2 class="screen-h" tabindex="-1">You are in</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Your team</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">You have joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
-        + '<p class="caption">League added. Team claimed.'
-        + (L.auto ? " This invite linked the seat for you." : " You picked this team.")
-        + "</p></div>"
-        + '<div class="app-card"><h3>Crowning achievements</h3>'
+        + '<p class="join-land-hero"><b>' + esc(team) + "</b> · " + esc(league) + "</p>"
+        + "</div>"
+        + '<div class="app-card"><h3>Best achievements</h3>'
         + joinLandCrownsHtml(seat, uid)
         + "</div>"
-        + '<div class="app-card"><h3>Your book so far</h3>'
+        + '<div class="app-card"><h3>Team stats</h3>'
         + '<div class="join-land-stats">'
         + '<div class="join-land-stat"><b>' + esc(avg) + "</b><span>Career avg</span></div>"
         + '<div class="join-land-stat"><b>' + esc(rs) + "</b><span>Regular season avg</span></div>"
@@ -34055,9 +33971,9 @@ const html = `<!DOCTYPE html>
         + "</div>"
         + (years
           ? ('<h3>Past names and finishes</h3>' + years)
-          : '<p class="caption">No completed seasons on this book yet.</p>')
+          : '<p class="caption">No completed seasons yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-join-enter-dash="1">Enter the dashboard</button>'
+        + '<button type="button" class="chip" data-join-enter-dash="1">Next</button>'
         + "</div></div></div>";
     }
 
@@ -34091,28 +34007,21 @@ const html = `<!DOCTYPE html>
       const sameSeat = !!(mySeat && gateInviteSeatId && mySeat.sleeper_user_id === gateInviteSeatId);
       let body = "";
       if (gateInviteClaimed) {
-        body = '<p class="caption">This invite for <b>' + esc(team) + "</b> in "
-          + esc(league) + " was already used. It is not a link to send anymore.</p>"
+        body = '<p class="caption">Invite for <b>' + esc(team) + '</b> was already used.</p>'
           + (mySeat
-            ? ('<p class="caption">You currently sit as <b>' + esc(mySeat.team_name) + "</b>. "
-              + "If you meant to invite another manager, open <b>Manage invites</b>, "
-              + "<b>Reissue</b> their seat, then <b>Copy invite link</b> — paste it to them "
-              + "without opening it while signed in.</p>")
-            : '<p class="caption">Sign out only if this invite is for a different account.</p>');
+            ? ('<p class="caption">You sit as <b>' + esc(mySeat.team_name) + '</b>. '
+              + 'Reissue from Generate invite codes, then send the new link. Do not open it signed in.</p>')
+            : '<p class="caption">Sign out if this invite is for another account.</p>');
       } else if (mySeat && !sameSeat) {
-        body = '<p class="caption">You are signed in as <b>' + esc(uname) + "</b> and already sit as "
-          + "<b>" + esc(mySeat.team_name) + "</b> in " + esc(league) + ".</p>"
-          + '<p class="caption">This link is for <b>' + esc(team) + "</b>. Opening it does not send "
-          + "the invite — redeeming would try to move your account onto that seat. "
-          + "Copy the link from Manage invites and send it to the other manager instead.</p>";
+        body = '<p class="caption">Signed in as <b>' + esc(uname) + '</b>; you sit as '
+          + '<b>' + esc(mySeat.team_name) + '</b>. This link is for <b>' + esc(team) + '</b>. '
+          + 'Send it to them. Do not redeem it on your account.</p>';
       } else if (sameSeat) {
-        body = '<p class="caption">You already sit as <b>' + esc(team) + "</b>. "
-          + "Open Your leagues to continue.</p>";
+        body = '<p class="caption">You already sit as <b>' + esc(team) + '</b>.</p>';
       } else {
         body = joinInviteLeadHtml()
-          + '<p class="caption">You are signed in as <b>' + esc(uname) + "</b>. "
-          + "Only redeem if <b>you</b> are joining that seat. "
-          + "If you are the commissioner sending this link, go back and paste it to the other manager.</p>";
+          + '<p class="caption">Signed in as <b>' + esc(uname) + '</b>. '
+          + 'Redeem only if this seat is yours.</p>';
       }
       const canRedeem = !gateInviteClaimed && !mySeat;
       return '<div class="app-shell">'
@@ -36313,17 +36222,40 @@ const html = `<!DOCTYPE html>
         onRedeemInvite();
         return;
       }
-      const claimPick = e.target.closest("[data-claim-pick]");
-      if (claimPick) {
-        claimPickId = claimPick.getAttribute("data-claim-pick") || "";
-        joinError = "";
+      const claimLeagueYes = e.target.closest("[data-claim-league-yes]");
+      if (claimLeagueYes) {
+        claimStep = "username";
+        claimPickId = "";
         claimMatchNote = "";
+        claimSleeperUser = "";
+        joinError = "";
+        focusNext = "#claimSleeperUser";
+        render();
+        return;
+      }
+      const claimLeagueBack = e.target.closest("[data-claim-league-back]");
+      if (claimLeagueBack) {
+        claimStep = "league";
+        claimPickId = "";
+        claimMatchNote = "";
+        joinError = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const claimUserRetry = e.target.closest("[data-claim-username-retry]");
+      if (claimUserRetry) {
+        claimPickId = "";
+        claimMatchNote = "";
+        claimSleeperUser = "";
+        joinError = "";
+        focusNext = "#claimSleeperUser";
         render();
         return;
       }
       const claimMatchGo = e.target.closest("[data-claim-match-go]");
       if (claimMatchGo) {
-        onMatchSleeperUser({ quiet: false }).catch(function (err) { console.error(err); });
+        onMatchSleeperUser().catch(function (err) { console.error(err); });
         return;
       }
       const claimOpenGo = e.target.closest("[data-claim-open-go]");
@@ -37259,7 +37191,6 @@ const html = `<!DOCTYPE html>
       }
       if (e.target && e.target.id === "claimSleeperUser") {
         claimSleeperUser = String(e.target.value || "");
-        scheduleClaimMatch();
         return;
       }
       if (e.target && (e.target.id === "profileZoom" || e.target.dataset.profileZoom)) {
@@ -37450,9 +37381,10 @@ const html = `<!DOCTYPE html>
             return;
           }
           appScreen = "gate";
+          // Apple-first: do not force the username/password form open on deep links.
           if (inviteParam || (leagueParam && !inviteParam)) {
             gateMode = "signup";
-            gatePassOpen = true;
+            gatePassOpen = false;
           }
           focusNext = ".screen-h";
           render();
@@ -37687,7 +37619,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v355-peer-join-username")
+  || !swSrc.includes("chuckle-shell-v358-join-clean")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -40037,22 +39969,27 @@ if (!inline.includes("gate-brand") || !inline.includes("data/ui/gate-logo.png")
 }
 
 if (!inline.includes('let gateMode = "signin"')
-  || !inline.includes("No account yet?")
-  || !inline.includes('data-gate-mode="signup">Create an account</button>')) {
-  throw new Error("cold landing must default to Sign in with a Create an account prompt");
+  || !inline.includes("New here?")
+  || !inline.includes('data-gate-mode="signup">Create account</button>')) {
+  throw new Error("cold landing must default to Sign in with a Create account prompt");
 }
 if (!inline.includes('data-gate-mode="forgot"')
   || !inline.includes("function onForgotSubmit(")
   || !inline.includes("reclaim_seat")
   || !inline.includes("request_reset")
   || !inline.includes("Reset login")
-  || !inline.includes("Forgot username or password")
+  || !inline.includes('data-gate-mode="forgot">Forgot')
   || !inline.includes('if (gateMode === "forgot")')
-  || !inline.includes("Email me a reset")) {
-  throw new Error("gate must offer Forgot username or password and reclaim via a new seat ticket");
+  || !inline.includes("Email me a reset")
+  || !inline.includes("Then add your league.")
+  || !inline.includes("Then claim your seat to open the shared view.")
+  || !inline.includes("Then join your invited team.")) {
+  throw new Error("gate must offer Forgot + reclaim ticket, with short Apple next-step copy");
 }
 if (!inline.includes("Sign in with Apple")
-  || !inline.includes("Create your account")
+  || !inline.includes("Add a league")
+  || !inline.includes("Join with code")
+  || !inline.includes("Generate invite codes")
   || !inline.includes('data-apple-go="1"')
   || !inline.includes("function authSignInWithApple(")
   || !inline.includes("function authHasNativeApple(")
@@ -40066,16 +40003,17 @@ if (!inline.includes("Sign in with Apple")
   || !inline.includes('appScreen === "join"')
   || !inline.includes('data-join-invite-go="1"')
   || !inline.includes('data-join-league-go="1"')
-  || !inline.includes("Find teams")
   || !inline.includes("Use username and password")
   || !inline.includes("ensure_league")
   || !inline.includes("release_seat")
-  || !inline.includes("Wrong team — unclaim")
+  || !inline.includes(">Unclaim</button>")
+  || !inline.includes("Wrong team?")
   || !inline.includes("match_seat")
   || !inline.includes("Find my team")
   || !inline.includes("claimSleeperUser")
+  || !inline.includes("gatePassOpen = false")
   || inline.includes(">Create as commissioner</button>")) {
-  throw new Error("gate must offer Sign in with Apple and peer join (invite or Sleeper ID, no commissioner create)");
+  throw new Error("gate must offer Sign in with Apple and Add a league (ID or invite), Apple-first");
 }
 if (!inline.includes('searchParams.delete("invite")')) {
   throw new Error("boot must strip ?invite= so password managers do not save the seat code as the password");
@@ -40089,10 +40027,12 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("function renderJoinWelcome()")
   || !inline.includes("function openJoinWelcome(")
   || !inline.includes("function openClaimPick(")
-  || !inline.includes("Pick the team that is yours")
-  || !inline.includes("joined <b>")
-  || !inline.includes("Claim your team")
-  || !inline.includes("Crowning achievements")
+  || !inline.includes("Your Sleeper username")
+  || !inline.includes("Confirm league")
+  || !inline.includes("Yes — this is my team")
+  || !inline.includes("data-join-enter-dash=\"1\">Next")
+  || !inline.includes("Best achievements")
+  || !inline.includes("Team stats")
   || !inline.includes("Past names and finishes")
   || !inline.includes("Career net")
   || !inline.includes("Regular season avg")
@@ -40105,8 +40045,13 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("ensure_league")
   || !inline.includes("release_seat")
   || !inline.includes("league_claim_preview")
-  || !inline.includes("name-history.json")) {
-  throw new Error("join landing must ship invite copy, team picker, and pre-dash welcome");
+  || !inline.includes("name-history.json")
+  || !inline.includes('data-claim-league-yes="1"')
+  || inline.includes('data-claim-pick="')
+  || inline.includes("Or pick from the league list")
+  || inline.includes("scheduleClaimMatch")
+  || inline.includes("No hints — enter it exactly")) {
+  throw new Error("join landing must ship league confirm → username (no list) → achievements → Next");
 }
 {
   if (!inline.includes("function authSeatCanonName()")
@@ -40580,10 +40525,10 @@ if (!inline.includes("function readJoinSourcesFromDom(")
   || !inline.includes("sleeper_extra_ids: ids.sleeper.slice(1)")
   || !inline.includes("function espnUnlockStepsHtml(")
   || !inline.includes("Unlock ESPN history")
-  || fnSrc("renderSettingsLeaguesTab").indexOf("joinIdsFormHtml(") < 0
-  || fnSrc("renderSettingsLeaguesTab").indexOf("espnUnlockStepsHtml(") < 0
-  || fnSrc("renderInvites").indexOf("joinIdsFormHtml(") < 0) {
-  throw new Error("Create a league must accept multiple Sleeper and ESPN IDs and rebuild the book");
+  || fnSrc("renderSettingsLeaguesTab").indexOf("Generate invite codes") < 0
+  || fnSrc("renderInvites").indexOf("Generate invite code") < 0
+  || fnSrc("renderInvites").indexOf("Copy invite code") < 0) {
+  throw new Error("Settings must let any manager generate invite codes; create/merge IDs stay on the create path");
 }
 if (!html.includes('id="leaguesDrawer"') || !html.includes("leagues-drawer-panel")
   || !inline.includes("function openLeaguesDrawer(")

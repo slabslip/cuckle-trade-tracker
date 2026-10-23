@@ -13,9 +13,10 @@ const hist = JSON.parse(fs.readFileSync(
 ));
 
 const need = [
-  "Pick the team that is yours",
-  "Claim your team",
-  "You have joined",
+  "Confirm league",
+  "Your Sleeper username",
+  "Yes — this is my team",
+  "Then add your league.",
   "function renderClaimTeam()",
   "function renderJoinWelcome()",
   "function openJoinWelcome(",
@@ -23,14 +24,15 @@ const need = [
   "function joinInviteLeadHtml()",
   "function joinStepsHtml(",
   "function onReleaseSeat(",
-  "Crowning achievements",
+  "Best achievements",
+  "Team stats",
   "Past names and finishes",
   "Regular season avg",
   "Playoff avg",
   "Career net",
   'data-join-enter-dash="1"',
   'data-claim-open-go="1"',
-  'data-claim-pick="',
+  'data-claim-league-yes="1"',
   'data-release-seat="1"',
   'appScreen === "claimTeam"',
   'appScreen === "joinWelcome"',
@@ -40,10 +42,12 @@ const need = [
   "match_seat",
   "Find my team",
   "claimSleeperUser",
+  "claimStep",
   "league_claim_preview",
   "name-history.json",
-  "League added. Team claimed.",
-  "Wrong team — unclaim",
+  ">Unclaim</button>",
+  "Wrong team?",
+  'data-join-enter-dash="1">Next',
   "joinLandSafeName",
 ];
 const missingPage = need.filter((s) => !page.includes(s));
@@ -53,6 +57,25 @@ if (missingPage.length) {
 const missingGen = need.filter((s) => !gen.includes(s));
 if (missingGen.length) {
   throw new Error("generate-page.mjs missing join landing: " + missingGen.join(", "));
+}
+function fnSrc(src, name) {
+  const start = src.indexOf("function " + name + "(");
+  if (start < 0) throw new Error("missing function " + name);
+  let i = src.indexOf("{", start);
+  let depth = 0;
+  for (; i < src.length; i++) {
+    if (src[i] === "{") depth += 1;
+    else if (src[i] === "}") {
+      depth -= 1;
+      if (depth === 0) return src.slice(start, i + 1);
+    }
+  }
+  throw new Error("unclosed function " + name);
+}
+const claimFn = fnSrc(page, "renderClaimTeam");
+if (claimFn.includes("data-claim-pick=") || claimFn.includes("Or pick from the league list")
+  || page.includes("scheduleClaimMatch")) {
+  throw new Error("claim must not list teams, live-match, or offer pick-from-list hints");
 }
 
 if (!fn.includes('action === "league_claim_preview"')

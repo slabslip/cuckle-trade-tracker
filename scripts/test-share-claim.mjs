@@ -35,9 +35,11 @@ need(page, "index.html", [
   "function readPendingDataTile(",
   "function dataTileSeatReady(",
   "function honorPendingDataTile(",
-  "claim a remaining team to open it",
-  "Claim your team to open it",
-  "Create account to open this view",
+  "claim a team to open it",
+  "Confirm league",
+  "Your Sleeper username",
+  "Sign in to open",
+  "Then claim your seat to open the shared view.",
   "function leagueNameForId(",
   "cuckle.pending.tile",
   "right: 6px; bottom: 6px",
@@ -45,8 +47,10 @@ need(page, "index.html", [
 need(gen, "generate-page.mjs", [
   "function shareAccessPending(",
   "function dataTileSeatReady(",
-  "claim a remaining team to open it",
-  "Create account to open this view",
+  "claim a team to open it",
+  "Confirm league",
+  "Sign in to open",
+  "Then claim your seat to open the shared view.",
 ]);
 
 if (fnSrc(page, "dataTileShareBtn").includes("<span>Share</span>")
@@ -60,9 +64,15 @@ if (!honor.includes("dataTileSeatReady(") || !honor.includes("readPendingDataTil
 }
 
 const claim = fnSrc(page, "renderClaimTeam");
-if (!claim.includes("claimSeats") || !claim.includes("data-claim-pick=")
-  || !claim.includes("Wrong team — unclaim")) {
-  throw new Error("claim picker must list teams and allow unclaim / take-over");
+if (!claim.includes("claimSleeperUser") || !claim.includes("Find my team")
+  || !claim.includes("Confirm league") || !claim.includes("Yes — this is my team")
+  || claim.includes("data-claim-pick=") || claim.includes("Or pick from the league list")) {
+  throw new Error("claim flow must confirm league then require Sleeper username (no team list)");
+}
+const welcome = fnSrc(page, "renderJoinWelcome");
+if (!welcome.includes("Best achievements") || !welcome.includes("Team stats")
+  || !welcome.includes(">Next</button>") || !welcome.includes("data-join-enter-dash=")) {
+  throw new Error("after claim, welcome must show achievements + stats then Next into the dashboard");
 }
 
 const afterAuth = fnSrc(page, "routeAfterAuth");

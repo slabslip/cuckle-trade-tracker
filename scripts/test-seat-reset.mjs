@@ -16,7 +16,7 @@ if (!page.includes("function onForgotSubmit(")) fail("Forgot submit missing");
 if (!page.includes("reclaim_seat")) fail("page must call reclaim_seat");
 if (!page.includes("request_reset")) fail("page must call request_reset");
 if (!page.includes("Reset login")) fail("commissioner Reset login missing");
-if (!page.includes("Forgot username or password")) fail("sign-in Forgot link missing");
+if (!page.includes('data-gate-mode="forgot">Forgot')) fail("sign-in Forgot link missing");
 if (!page.includes("saveProfileLogin")) fail("profile Save login missing");
 if (!fn.includes('action === "reclaim_seat"')) fail("join-league reclaim_seat missing");
 if (!fn.includes('action === "request_reset"')) fail("join-league request_reset missing");

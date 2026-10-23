@@ -4913,7 +4913,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "joinWelcome20261023";
+    const DATA_V = "designAuthV2Seed20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -37892,7 +37892,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v359-join-welcome")
+  || !swSrc.includes("chuckle-shell-v360-design-auth-v2")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -38926,6 +38926,13 @@ for (const ban of [
   }
   if (!inline.includes('const AUTH_KEY = "cuckle.auth.v2"')) {
     throw new Error("AUTH_KEY must be cuckle.auth.v2 so stale web logins are dropped after the account wipe");
+  }
+  {
+    const designHome = fs.readFileSync(`${ROOT}design-league-home.html`, "utf8");
+    if (!designHome.includes('localStorage.setItem("cuckle.auth.v2"')
+      || designHome.includes('cuckle.auth.v1')) {
+      throw new Error("design-league-home.html must seed cuckle.auth.v2 (matches AUTH_KEY)");
+    }
   }
   if (!inline.includes("const VOTE_EDIT_MS = 24 * 60 * 60 * 1000")
     || !inline.includes("function voteIsLocked(")

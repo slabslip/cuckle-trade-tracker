@@ -21,7 +21,7 @@
         status: "ready", sleeper_user_id: seat.id, team_name: seat.name
       };
       try {
-        localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
+        localStorage.setItem("cuckle.auth.v2", JSON.stringify(user));
         localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
         localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
         sessionStorage.setItem("cuckle.design.league_home", "1");

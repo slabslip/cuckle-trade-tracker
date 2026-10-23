@@ -27,7 +27,12 @@ struct StoreWebView: UIViewRepresentable {
         context.coordinator.appleSignIn.webView = view
         context.coordinator.webView = view
         if let url = StoreOrigin.startURL {
-            view.load(URLRequest(url: url))
+            // Always hit the network for the document. Default WKWebView caching was
+            // keeping a stale Home after Pages deploys (Safari "Website Data" clear
+            // does not wipe this store).
+            var req = URLRequest(url: url, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 60)
+            req.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+            view.load(req)
         }
         return view
     }
@@ -90,7 +95,9 @@ enum StoreOrigin {
     }
 
     static var startURL: URL? {
-        URL(string: origin + "/?store=1")
+        // Bust CDN / intermediary document caches after UI ships.
+        let stamp = Int(Date().timeIntervalSince1970)
+        return URL(string: origin + "/?store=1&_=\(stamp)")
     }
 
     static func isBlocked(_ url: URL) -> Bool {

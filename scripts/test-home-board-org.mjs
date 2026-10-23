@@ -23,7 +23,7 @@ function fnSrc(name) {
 if (!page.includes('const DATA_V = "boardArrangeAll20261023"')) {
   fail("DATA_V must bump for board arrange all ship");
 }
-if (!sw.includes("chuckle-shell-v367-board-arrange-all")) {
+if (!sw.includes("chuckle-shell-v368-board-arrange-all")) {
   fail("sw.js must bump CACHE for board arrange all ship");
 }
 

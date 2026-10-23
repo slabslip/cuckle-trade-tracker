@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-22",
-  "n": 41,
+  "as_of": "2026-10-23",
+  "n": 43,
   "players": {
     "1466": {
       "name": "Travis Kelce",
@@ -30,6 +30,13 @@
       "team": "NO",
       "pos": "RB"
     },
+    "4137": {
+      "name": "James Conner",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "ARI",
+      "pos": "RB"
+    },
     "4866": {
       "name": "Saquon Barkley",
       "injury_status": "Questionable",
@@ -44,19 +51,19 @@
       "team": "BAL",
       "pos": "QB"
     },
-    "4950": {
-      "name": "Christian Kirk",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "SF",
-      "pos": "WR"
-    },
     "4983": {
       "name": "DJ Moore",
       "injury_status": "Out",
       "status": "Active",
       "team": "BUF",
       "pos": "WR"
+    },
+    "5022": {
+      "name": "Dallas Goedert",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "TE"
     },
     "5844": {
       "name": "T.J. Hockenson",
@@ -74,24 +81,10 @@
     },
     "5892": {
       "name": "David Montgomery",
-      "injury_status": "Questionable",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
-    },
-    "6794": {
-      "name": "Justin Jefferson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIN",
-      "pos": "WR"
-    },
-    "6804": {
-      "name": "Jordan Love",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "GB",
-      "pos": "QB"
     },
     "7021": {
       "name": "Rico Dowdle",
@@ -99,6 +92,13 @@
       "status": "Active",
       "team": "PIT",
       "pos": "RB"
+    },
+    "7525": {
+      "name": "DeVonta Smith",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "WR"
     },
     "7526": {
       "name": "Jaylen Waddle",
@@ -121,11 +121,11 @@
       "team": "NE",
       "pos": "WR"
     },
-    "8142": {
-      "name": "Alec Pierce",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "IND",
+    "8137": {
+      "name": "George Pickens",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DAL",
       "pos": "WR"
     },
     "8154": {
@@ -156,10 +156,17 @@
       "team": "MIN",
       "pos": "RB"
     },
+    "9493": {
+      "name": "Puka Nacua",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "WR"
+    },
     "9753": {
       "name": "Zach Charbonnet",
-      "injury_status": "PUP",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "SEA",
       "pos": "RB"
     },
@@ -183,13 +190,6 @@
       "status": "Active",
       "team": "TB",
       "pos": "RB"
-    },
-    "11604": {
-      "name": "Brock Bowers",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "LV",
-      "pos": "TE"
     },
     "11625": {
       "name": "Adonai Mitchell",
@@ -281,6 +281,20 @@
       "status": "Active",
       "team": "CLE",
       "pos": "WR"
+    },
+    "13305": {
+      "name": "Mike Washington Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LV",
+      "pos": "RB"
+    },
+    "13345": {
+      "name": "Jonah Coleman",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "DEN",
+      "pos": "RB"
     },
     "13346": {
       "name": "Denzel Boston",

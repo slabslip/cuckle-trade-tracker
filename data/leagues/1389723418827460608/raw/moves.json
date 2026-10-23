@@ -8716,6 +8716,94 @@
     }
   },
   {
+    "transaction_id": "1419138461633441792",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792711484872,
+    "date": "2026-10-22",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "12718": 7
+    },
+    "drops": {
+      "4950": 7
+    }
+  },
+  {
+    "transaction_id": "1419102998273011712",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792703029748,
+    "date": "2026-10-22",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "4137": 2
+    },
+    "drops": {
+      "8142": 2
+    }
+  },
+  {
+    "transaction_id": "1419065965307514880",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792694200402,
+    "date": "2026-10-22",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "13305": 10
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1419064534810812416",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792693859345,
+    "date": "2026-10-22",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "11792": 10
+    },
+    "drops": {
+      "5189": 10
+    }
+  },
+  {
+    "transaction_id": "1419024066215526400",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792684210880,
+    "date": "2026-10-22",
+    "roster_ids": [
+      3
+    ],
+    "adds": {
+      "13345": 3
+    },
+    "drops": {
+      "13293": 3
+    }
+  },
+  {
     "transaction_id": "1418812803296296960",
     "type": "free_agent",
     "league_id": "1389723418827460608",
@@ -8731,6 +8819,40 @@
     },
     "drops": {
       "13296": 7
+    }
+  },
+  {
+    "transaction_id": "1418811574746980352",
+    "type": "waiver",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792633548965,
+    "date": "2026-10-22",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "CLE": 7
+    },
+    "drops": {
+      "DAL": 7
+    }
+  },
+  {
+    "transaction_id": "1419185426593304576",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 7,
+    "created": 1792722682191,
+    "date": "2026-10-23",
+    "roster_ids": [
+      12
+    ],
+    "adds": {},
+    "drops": {
+      "8110": 12
     }
   }
 ]

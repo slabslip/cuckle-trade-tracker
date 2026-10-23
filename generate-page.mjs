@@ -4106,6 +4106,14 @@ const html = `<!DOCTYPE html>
       border-color: #e0b44c;
       box-shadow: 0 0 0 1px #c9a227, 0 0 10px rgba(224, 180, 76, 0.28);
     }
+    .receipt-board.is-organizing {
+      touch-action: none;
+    }
+    .receipt-board.is-organizing .door,
+    .door.is-org {
+      border-color: #e0b44c;
+      box-shadow: 0 0 0 1px rgba(224, 180, 76, 0.45), 0 0 12px rgba(224, 180, 76, 0.22);
+    }
     .home-top-doors { margin: 0 0 10px; }
     .home-top-board { margin: 0; }
     .door-ico {
@@ -4913,7 +4921,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "joinWelcome20261023";
+    const DATA_V = "homeBoardOrg20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13005,11 +13013,33 @@ const html = `<!DOCTYPE html>
       }
     }
 
+    function dataDashMarkOrganizing(on) {
+      const board = document.querySelector("[data-dash-board]");
+      if (!board) return;
+      board.classList.toggle("is-organizing", !!on);
+      board.style.touchAction = on ? "none" : "";
+      const nodes = board.querySelectorAll("[data-dash-id]");
+      for (let i = 0; i < nodes.length; i++) {
+        nodes[i].classList.toggle("is-org", !!on);
+      }
+    }
+
     function dataDashStopDragTimer() {
       if (dataDashDragTimer) {
         clearTimeout(dataDashDragTimer);
         dataDashDragTimer = 0;
       }
+    }
+
+    function dataDashEnterOrgMode() {
+      if (dataDashEdit) {
+        dataDashMarkOrganizing(true);
+        return false;
+      }
+      dataDashEdit = true;
+      dataDashMarkOrganizing(true);
+      try { if (navigator.vibrate) navigator.vibrate([10, 30, 10]); } catch (err) { /* ignore */ }
+      return true;
     }
 
     function dataDashLiftDoor() {
@@ -13074,8 +13104,6 @@ const html = `<!DOCTYPE html>
       dataDashStopDragTimer();
       const drag = dataDashDrag;
       dataDashDrag = null;
-      const board = document.querySelector("[data-dash-board]");
-      if (board) board.style.touchAction = "";
       if (!drag) return;
       if (drag.el) {
         try { drag.el.releasePointerCapture(drag.pointerId); } catch (err) { /* ignore */ }
@@ -13085,14 +13113,45 @@ const html = `<!DOCTYPE html>
       if (commit && lifted) changed = dataDashCommitFromBoard();
       dataDashClearDragClasses();
       if (commit && lifted) dataDashDragDid = true;
-      if (changed) render();
-      else dataDashPaintTop();
+
+      // Quick tap while organizing (no drag) exits organization mode.
+      if (commit && !lifted && dataDashEdit && !drag.enteredOrg) {
+        dataDashEdit = false;
+        dataDashLibOpen = false;
+        dataDashSwapId = "";
+        dataDashMarkOrganizing(false);
+        dataDashDragDid = true; // swallow the click that would open the tile
+        const board = document.querySelector("[data-dash-board]");
+        if (board) board.style.touchAction = "";
+        render();
+        return;
+      }
+
+      // Long-press entered org with no move — stay organizing; paint edit chrome.
+      if (commit && !lifted && drag.enteredOrg) {
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+
+      if (changed || drag.enteredOrg) {
+        if (!dataDashEdit) dataDashEdit = true;
+        render();
+        return;
+      }
+      if (dataDashEdit) dataDashMarkOrganizing(true);
+      else {
+        const board = document.querySelector("[data-dash-board]");
+        if (board) board.style.touchAction = "";
+        dataDashPaintTop();
+      }
     }
 
     document.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
       if (dataDashLibOpen) return;
       if (e.target && e.target.closest && e.target.closest("[data-tile-share]")) return;
+      if (e.target && e.target.closest && e.target.closest("[data-dash-remove], [data-dash-add]")) return;
       const door = dataDashDoorNode(e.target);
       if (!door) return;
       const id = door.getAttribute("data-dash-id") || "";
@@ -13107,8 +13166,21 @@ const html = `<!DOCTYPE html>
         y: e.clientY,
         lifted: false,
         kind: e.pointerType || "",
+        enteredOrg: false,
+        wasEditing: !!dataDashEdit,
       };
-      dataDashDragTimer = setTimeout(function () { dataDashLiftDoor(); }, 220);
+      // Longer hold enters organization mode; shorter hold when already organizing.
+      const holdMs = dataDashEdit ? 160 : 420;
+      dataDashDragTimer = setTimeout(function () {
+        if (!dataDashDrag) return;
+        if (!dataDashDrag.wasEditing) {
+          dataDashEnterOrgMode();
+          dataDashDrag.enteredOrg = true;
+        } else {
+          dataDashMarkOrganizing(true);
+        }
+        dataDashLiftDoor();
+      }, holdMs);
     });
     document.addEventListener("pointermove", function (e) {
       if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
@@ -13117,13 +13189,27 @@ const html = `<!DOCTYPE html>
       if (!dataDashDrag.lifted) {
         const dist2 = dx * dx + dy * dy;
         const mouse = dataDashDrag.kind === "mouse";
-        if (mouse && dist2 > 36) {
+        const organizing = !!dataDashEdit || !!dataDashDrag.enteredOrg;
+        if (organizing) {
+          // In org mode, any small move lifts — vertical scroll must not cancel reorder.
+          if (dist2 > 36) {
+            dataDashStopDragTimer();
+            if (!dataDashEdit) {
+              dataDashEnterOrgMode();
+              dataDashDrag.enteredOrg = true;
+            }
+            dataDashLiftDoor();
+          }
+        } else if (mouse && dist2 > 36) {
           dataDashStopDragTimer();
           dataDashLiftDoor();
         } else if (!mouse && dist2 > 324) {
+          // Outside org mode, vertical-dominant motion is page scroll.
           if (Math.abs(dy) > Math.abs(dx) + 6) dataDashEndDrag(false);
           else {
             dataDashStopDragTimer();
+            dataDashEnterOrgMode();
+            dataDashDrag.enteredOrg = true;
             dataDashLiftDoor();
           }
         }
@@ -17050,7 +17136,8 @@ const html = `<!DOCTYPE html>
       if (typeof ensurePicks === "function") ensurePicks();
       if (typeof ensureCuffs === "function") ensureCuffs();
       let html = dataDashPresetHtml();
-      html += '<div class="receipt-board" data-dash-board="1" aria-label="Your board">';
+      html += '<div class="receipt-board' + (dataDashEdit ? " is-organizing" : "")
+        + '" data-dash-board="1" aria-label="Your board">';
       if (typeof isRedraftLeague === "function" && isRedraftLeague() && typeof ensureWeekScores === "function") {
         ensureWeekScores();
       }
@@ -17692,8 +17779,8 @@ const html = `<!DOCTYPE html>
         + editBtn + "</p>"
         + tradeChip
         + (dataDashEdit
-          ? '<p class="data-dash-drag-hint">Top 4 wear gold. Hold a tile, then drag to move it.</p>'
-          : "")
+          ? '<p class="data-dash-drag-hint">Organizing — drag tiles to reorder. Top 4 wear gold. Tap a tile to finish.</p>'
+          : '<p class="data-dash-drag-hint">Hold a tile to organize the board.</p>')
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
         + "</section>";
@@ -31444,7 +31531,6 @@ const html = `<!DOCTYPE html>
             + '<span class="home-you-race-h">Expected finish</span>'
             + '<span class="home-you-race-main">Loading race…</span>'
             + "</button>"
-            + '<button type="button" class="chip" ' + openAttr + ">Race</button>"
             + "</div>";
         }
         return "";
@@ -31456,8 +31542,6 @@ const html = `<!DOCTYPE html>
         + (main.length ? '<span class="home-you-race-main">' + esc(main.join(" · ")) + "</span>" : "")
         + (sub.length ? '<span class="home-you-race-sub">' + esc(sub.join(" · ")) + "</span>" : "")
         + "</button>"
-        + '<button type="button" class="chip" ' + openAttr + ">Race</button>"
-        + '<button type="button" class="chip" data-home-door="manager_archetypes">Type</button>'
         + "</div>";
     }
 
@@ -31561,48 +31645,8 @@ const html = `<!DOCTYPE html>
     }
 
     function homeCapitalStripHtml() {
-      if (!authSession || !authSeatId()) return "";
-      const bag = homeCapitalHeldRows();
-      if (!bag) return "";
-      if (bag.loading) {
-        return '<section class="home-capital" aria-label="Your firsts">'
-          + '<p class="home-capital-h">Your firsts</p>'
-          + '<p class="home-capital-line">Loading firsts…</p>'
-          + "</section>";
-      }
-      const bits = bag.held.map(function (r) { return r.lab; });
-      const stack = homeCapitalStackLab(bag.held);
-      let line = "";
-      if (bits.length) {
-        // Stack summary first so hoarders see 4 firsts · 1 Early · 3 Mid in one glance.
-        // Keep up to 4 slot lines (a full 10-team first round) before +N.
-        line = (stack ? stack + " · " : "")
-          + bits.slice(0, 4).join(" · ")
-          + (bits.length > 4 ? (" · +" + (bits.length - 4)) : "");
-      } else {
-        line = "No " + (bag.year || "future") + " first held";
-      }
-      if (bag.ownSold) {
-        const own = homeOwnFirstStatus();
-        if (own && own.band === "Late") line += " · own Late 1st sold";
-        else if (own && own.band === "Early") line += " · own Early 1st sold";
-        else line += " · own 1st sold";
-      }
-      if (!bits.length) {
-        // Slow burn / proxy: empty bag is not a shopping cue — hold the race.
-        const arch = typeof archSeatOf === "function" ? archSeatOf(authSeatId()) : null;
-        const skipShop = arch && (arch.archetype === "slow_burn"
-          || arch.archetype === "proxy_contender");
-        if (!skipShop) {
-          const shop = homeEarlyShopBits(2);
-          if (shop.length) line += " · shop " + shop.join(" · ");
-        }
-      }
-      return '<section class="home-capital" aria-label="Your firsts">'
-        + '<p class="home-capital-h">Your firsts'
-        + (bag.year ? (" · " + esc(bag.year)) : "")
-        + "</p>"
-        + '<p class="home-capital-line">' + esc(line) + "</p></section>";
+      // Removed from Home — firsts live on Draft capital / board doors.
+      return "";
     }
 
     function homeLateBuyerBits(limit) {
@@ -31662,7 +31706,8 @@ const html = `<!DOCTYPE html>
         ? heldBag.held.filter(function (r) { return r.band === "Early"; }).length
         : 0;
       if (arch && arch.archetype === "proxy_contender") {
-        return "Defend held Early — keep competing";
+        // No Home chase banner for proxy — Expected finish + board doors cover it.
+        return "";
       }
       if (arch && arch.archetype === "tank_sculptor") {
         const lock = homeOwnFirstStatus();
@@ -31742,21 +31787,18 @@ const html = `<!DOCTYPE html>
     function homePulseHtml() {
       if (!authSession || !authSeatId()) return "";
       const proj = typeof projSeatOf === "function" ? projSeatOf(authSeatId()) : null;
-      const chase = homeChaseTip();
+      // Chase banners (e.g. Defend held Early) removed from Home — keep movers only.
       const movers = typeof raceMoversLines === "function" ? raceMoversLines().slice(0, 3) : [];
       const selfBits = [];
       if (proj && Math.abs(Number(proj.delta_place) || 0) >= 1) {
         const d = Number(proj.delta_place) || 0;
         selfBits.push(d > 0 ? ("You climbed " + d) : ("You slipped " + (-d)));
       }
-      if (!chase && !movers.length && !selfBits.length) return "";
+      if (!movers.length && !selfBits.length) return "";
       return '<section class="home-pulse" aria-label="Race pulse">'
-        + (chase ? '<p class="home-pulse-chase">' + esc(chase) + "</p>" : "")
-        + ((selfBits.length || movers.length)
-          ? '<p class="home-pulse-movers">'
-            + esc([].concat(selfBits, movers.length ? ["Race movers · " + movers.join(" · ")] : []).join(" · "))
-            + "</p>"
-          : "")
+        + '<p class="home-pulse-movers">'
+        + esc([].concat(selfBits, movers.length ? ["Race movers · " + movers.join(" · ")] : []).join(" · "))
+        + "</p>"
         + "</section>";
     }
 
@@ -31788,7 +31830,8 @@ const html = `<!DOCTYPE html>
 
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
-      // Manager OS: race → capital → chase pulse → wire bar → doors → calc → Ideas.
+      // Manager OS: Expected finish → movers → wire bar → doors → calc → Ideas.
+      // Your firsts + chase banners are off Home (board doors own capital).
       // Full overnight letter stays on ?r=overnight / share — Home only gets the icon bar.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="' + esc(calcDoorLabel()) + ', click here">'
@@ -31797,7 +31840,6 @@ const html = `<!DOCTYPE html>
         + '<span class="lh-calc-click" aria-hidden="true">click here</span>'
         + '<span class="lh-calc-door-sr">' + esc(calcDoorLabel()) + "</span></button>";
       return homeYouHtml()
-        + homeCapitalStripHtml()
         + homePulseHtml()
         + homeWireBarHtml()
         + leagueTapeHtml()
@@ -37892,7 +37934,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v359-join-welcome")
+  || !swSrc.includes("chuckle-shell-v361-home-board-org")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -37961,9 +38003,12 @@ if (inline.includes('day-alert-h">Champions Path')) {
   }
   if (!prog.includes("lh-calc-door") || !prog.includes("homeDeskHtml()")
     || !prog.includes("homeTopDoorsHtml()") || !prog.includes("lh-calc-slot")
-    || !prog.includes("homeCapitalStripHtml()") || !prog.includes("homePulseHtml()")
+    || !prog.includes("homePulseHtml()")
     || !prog.includes("homeWireBarHtml()")) {
-    throw new Error("Home digest is race + capital + pulse + wire bar + top 4 + calc + Ideas");
+    throw new Error("Home digest is Expected finish + movers + wire bar + top 4 + calc + Ideas");
+  }
+  if (prog.includes("homeCapitalStripHtml()")) {
+    throw new Error("Home digest must not mount Your firsts (homeCapitalStripHtml)");
   }
   if (prog.includes("overnightSlipHtml()")) {
     throw new Error("Home digest must not mount the full overnight letter — wire bar owns the pulse");
@@ -37973,9 +38018,6 @@ if (inline.includes('day-alert-h">Champions Path')) {
   }
   if (prog.indexOf("lh-calc-slot") > prog.indexOf("homeDeskHtml()")) {
     throw new Error("Team Ideas must sit below the trade calculator on Home");
-  }
-  if (prog.indexOf("homeCapitalStripHtml()") > prog.indexOf("homePulseHtml()")) {
-    throw new Error("capital strip must sit above race pulse on Home");
   }
   if (!inline.includes("function tradeVoteOpenHtml(") || !inline.includes('lh-trade-vote-lab">vote</span>')
     || !inline.includes("data-vote-open=")
@@ -39162,7 +39204,7 @@ if (!inline.includes('"cosmetics", "news"')) {
   }
   if (!fnSrc("leagueInProgress").includes("homeYouHtml()")
     || !fnSrc("leagueInProgress").includes("homeTopDoorsHtml()")
-    || !fnSrc("leagueInProgress").includes("homeCapitalStripHtml()")
+    || fnSrc("leagueInProgress").includes("homeCapitalStripHtml()")
     || !fnSrc("leagueInProgress").includes("homePulseHtml()")
     || !fnSrc("leagueInProgress").includes("homeDeskHtml()")
     || !inline.includes("function homeCapitalStripHtml(")
@@ -39183,10 +39225,11 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeChaseTip").includes("Fade history")
     || !fnSrc("homeChaseTip").includes("fast_fade_rate")
     || !fnSrc("homeEarlyShopBits").includes("holder === mine")
-    || !fnSrc("homeCapitalStripHtml").includes("homeCapitalStackLab(")
-    || !fnSrc("homeCapitalStripHtml").includes("homeEarlyShopBits(")
-    || !fnSrc("homeCapitalStripHtml").includes("slow_burn")
-    || !fnSrc("homeCapitalStripHtml").includes("own Late 1st sold")
+    || !fnSrc("homeCapitalStripHtml").includes('return ""')
+    || fnSrc("homeCapitalStripHtml").includes("Your firsts")
+    || fnSrc("homeChaseTip").includes("Defend held Early")
+    || fnSrc("homePulseHtml").includes("homeChaseTip(")
+    || fnSrc("homePulseHtml").includes("home-pulse-chase")
     || !fnSrc("homeChaseTip").includes("Buy Early — ")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")
     || !fnSrc("homeYouHtml").includes("data-home-awards")
@@ -39203,6 +39246,8 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("homeYouRaceLine").includes("Expected finish")
     || !fnSrc("homeYouRaceLine").includes("Loading race")
     || !fnSrc("homeYouRaceLine").includes("PF ")
+    || fnSrc("homeYouRaceLine").includes(">Race</button>")
+    || fnSrc("homeYouRaceLine").includes(">Type</button>")
     || !fnSrc("receiptDoorFace").includes("projSeatOf(authSeatId())")
     || fnSrc("homeYouHtml").includes("Open my team")
     || fnSrc("homeYouHtml").includes("home-desk-h")
@@ -39210,10 +39255,13 @@ if (!inline.includes('"cosmetics", "news"')) {
     || fnSrc("homeYouHtml").includes("homeYouTapeLine")
     || fnSrc("homeYouHtml").includes("calcFmt(")
     || fnSrc("homeYouHtml").includes("calcValueNum(")
-    || fnSrc("homeCapitalStripHtml").includes("calcFmt(")
-    || fnSrc("homeCapitalStripHtml").includes("calcValueNum(")
     || fnSrc("homePulseHtml").includes("calcFmt(")
     || fnSrc("homePulseHtml").includes("calcValueNum(")
+    || !inline.includes("function dataDashEnterOrgMode(")
+    || !inline.includes("function dataDashMarkOrganizing(")
+    || !inline.includes("is-organizing")
+    || !inline.includes("Hold a tile to organize")
+    || !inline.includes("Tap a tile to finish")
     || !inline.includes('cuckle.team.home.layout.v1')
     || !inline.includes("Format page")
     || !inline.includes("Show off")

@@ -67,7 +67,8 @@ if (!sw.includes("join-welcome")
   && !sw.includes("claim-username-only")
   && !sw.includes("join-cleanup")
   && !sw.includes("peer-join-username")
-  && !sw.includes("peer-join-claim")) {
+  && !sw.includes("peer-join-claim")
+  && !sw.includes("home-board-org")) {
   throw new Error("sw.js must bump cache for join-welcome ship");
 }
 if (!page.includes("joinWelcome")
@@ -75,7 +76,8 @@ if (!page.includes("joinWelcome")
   && !page.includes("claimUsernameOnly")
   && !page.includes("joinCleanup")
   && !page.includes("peerJoinUsernameMatch")
-  && !page.includes("peerJoinClaim")) {
+  && !page.includes("peerJoinClaim")
+  && !page.includes("homeBoardOrg")) {
   throw new Error("DATA_V must bump for join-welcome ship");
 }
 if (!page.includes('cuckle.auth.v2') || !page.includes('cuckle.votes.v5')) {

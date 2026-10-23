@@ -20,11 +20,11 @@ function fnSrc(name) {
   return page.slice(start, end < 0 ? start + 4000 : end);
 }
 
-if (!page.includes('const DATA_V = "boardReorderSimple20261023"')) {
-  fail("DATA_V must bump for board reorder simple ship");
+if (!page.includes('const DATA_V = "homeNoRaceMovers20261023"')) {
+  fail("DATA_V must bump for home no race movers ship");
 }
-if (!sw.includes("chuckle-shell-v363-board-reorder-simple")) {
-  fail("sw.js must bump CACHE for board reorder simple ship");
+if (!sw.includes("chuckle-shell-v364-home-no-race-movers")) {
+  fail("sw.js must bump CACHE for home no race movers ship");
 }
 
 {
@@ -43,7 +43,7 @@ if (!sw.includes("chuckle-shell-v363-board-reorder-simple")) {
     fail("Home must not mount Your firsts");
   }
   if (!lip.includes("homePulseHtml()") || !lip.includes("homeYouHtml()")) {
-    fail("Home must keep Expected finish + movers pulse");
+    fail("Home must keep Expected finish (pulse is a no-op mount)");
   }
 }
 
@@ -60,8 +60,10 @@ if (!sw.includes("chuckle-shell-v363-board-reorder-simple")) {
     fail("Defend held Early chase tip must be removed");
   }
   const pulse = fnSrc("homePulseHtml");
-  if (pulse.includes("homeChaseTip(") || pulse.includes("home-pulse-chase")) {
-    fail("Home pulse must not mount chase banners");
+  if (pulse.includes("homeChaseTip(") || pulse.includes("home-pulse-chase")
+    || pulse.includes("You slipped") || pulse.includes("Race movers")
+    || !pulse.includes('return ""')) {
+    fail("Home pulse must be empty (no slipped / Race movers)");
   }
 }
 

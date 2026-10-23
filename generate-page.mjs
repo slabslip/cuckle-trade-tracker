@@ -4957,7 +4957,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "boardReorderSimple20261023";
+    const DATA_V = "homeNoRaceMovers20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -31800,21 +31800,8 @@ const html = `<!DOCTYPE html>
     }
 
     function homePulseHtml() {
-      if (!authSession || !authSeatId()) return "";
-      const proj = typeof projSeatOf === "function" ? projSeatOf(authSeatId()) : null;
-      // Chase banners (e.g. Defend held Early) removed from Home — keep movers only.
-      const movers = typeof raceMoversLines === "function" ? raceMoversLines().slice(0, 3) : [];
-      const selfBits = [];
-      if (proj && Math.abs(Number(proj.delta_place) || 0) >= 1) {
-        const d = Number(proj.delta_place) || 0;
-        selfBits.push(d > 0 ? ("You climbed " + d) : ("You slipped " + (-d)));
-      }
-      if (!movers.length && !selfBits.length) return "";
-      return '<section class="home-pulse" aria-label="Race pulse">'
-        + '<p class="home-pulse-movers">'
-        + esc([].concat(selfBits, movers.length ? ["Race movers · " + movers.join(" · ")] : []).join(" · "))
-        + "</p>"
-        + "</section>";
+      // Home no longer mounts climbed/slipped or league-mover blurbs.
+      return "";
     }
 
     function homeYouHtml() {
@@ -31845,8 +31832,8 @@ const html = `<!DOCTYPE html>
 
     function leagueInProgress() {
       // Vote lives in Alerts. Do not remount the Recent Trade chip on Home.
-      // Manager OS: Expected finish → movers → wire bar → doors → calc → Ideas.
-      // Your firsts + chase banners are off Home (board doors own capital).
+      // Manager OS: Expected finish → wire bar → doors → calc → Ideas.
+      // Your firsts, chase banners, and slipped/race-movers pulse are off Home.
       // Full overnight letter stays on ?r=overnight / share — Home only gets the icon bar.
       const door = '<button type="button" class="lh-calc-door" data-view="calc"'
         + ' aria-label="' + esc(calcDoorLabel()) + ', click here">'
@@ -37964,7 +37951,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v363-board-reorder-simple")
+  || !swSrc.includes("chuckle-shell-v364-home-no-race-movers")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39260,6 +39247,9 @@ if (!inline.includes('"cosmetics", "news"')) {
     || fnSrc("homeChaseTip").includes("Defend held Early")
     || fnSrc("homePulseHtml").includes("homeChaseTip(")
     || fnSrc("homePulseHtml").includes("home-pulse-chase")
+    || fnSrc("homePulseHtml").includes("You slipped")
+    || fnSrc("homePulseHtml").includes("Race movers")
+    || !fnSrc("homePulseHtml").includes('return ""')
     || !fnSrc("homeChaseTip").includes("Buy Early — ")
     || !fnSrc("homeYouHtml").includes("data-home-my-team")
     || !fnSrc("homeYouHtml").includes("data-home-awards")

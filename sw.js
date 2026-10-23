@@ -4,7 +4,7 @@
  * Deploys: merge to main → GitHub Pages. Clients reg.update() on load/focus; skipWaiting
  * + claim then controllerchange reloads once.
  */
-const CACHE = "chuckle-shell-v359-join-welcome";
+const CACHE = "chuckle-shell-v360-join-welcome";
 /* Icons + manifest only. brand-mark / gate-logo are loaded with ?DATA_V from the page. */
 const SHELL = [
   "./manifest.webmanifest",
@@ -47,10 +47,12 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.hostname.includes("supabase.co")) return;
 
-  // HTML: network only. Never read or write document responses in Cache Storage.
+  // HTML: network only, bypass HTTP cache. Never read or write document responses
+  // in Cache Storage. Default fetch() was honoring Pages max-age and left the
+  // iOS WKWebView on a stale Home for up to 10 minutes after deploy.
   if (req.destination === "document" || isAppDocument(url)) {
     event.respondWith(
-      fetch(req).catch(() => new Response(
+      fetch(req, { cache: "no-store" }).catch(() => new Response(
         "<!doctype html><meta charset=utf-8><title>Offline</title>"
           + "<p>Chuckle Fantasy needs a network connection. "
           + "<a href='./'>Retry</a></p>",

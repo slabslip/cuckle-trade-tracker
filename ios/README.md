@@ -15,6 +15,10 @@ make testflight
 
 Bundle id: `com.chuckle.fantasy`. Portrait only. Design Mode URLs are blocked.
 App icon: `data/ui/icon-1024.png` copied into the asset catalog.
+Signing: Debug/Release use **Automatic** signing with team `44RJM54LSJ` (override
+in Xcode if your seat is on another team). `CODE_SIGNING_ALLOWED` must stay **Yes**
+for device runs — otherwise Sign in with Apple fails with `AKAuthenticationError -7026`
+/ `ASAuthorizationError 1000` because the entitlement never lands in the binary.
 Sign in with Apple: enable the capability on the App ID; entitlements are in
 `Chuckle/Chuckle.entitlements`. The gate’s **Sign in with Apple** button calls
 native `ASAuthorizationAppleIDProvider` via `AppleSignIn.swift` (one-tap sheet),

@@ -95,7 +95,9 @@ enum StoreOrigin {
     }
 
     static var startURL: URL? {
-        URL(string: origin + "/?store=1")
+        // Bust CDN / intermediary document caches after UI ships.
+        let stamp = Int(Date().timeIntervalSince1970)
+        return URL(string: origin + "/?store=1&_=\(stamp)")
     }
 
     static func isBlocked(_ url: URL) -> Bool {

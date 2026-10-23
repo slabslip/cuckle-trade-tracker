@@ -3990,12 +3990,40 @@ const html = `<!DOCTYPE html>
       min-width: 44px; min-height: 44px; cursor: grab; font-weight: 800;
     }
     .receipt-board.is-jiggle {
-      grid-template-columns: 1fr 1fr; gap: 8px; touch-action: pan-y;
+      grid-template-columns: 1fr 1fr; gap: 8px; touch-action: none;
     }
     .receipt-board.is-jiggle .door {
-      cursor: grab;
+      position: relative; cursor: grab;
       border-color: #e0b44c;
       box-shadow: 0 0 0 1px rgba(224, 180, 76, 0.45);
+      transition: transform 0.12s ease, opacity 0.12s ease, box-shadow 0.12s ease;
+    }
+    .receipt-board.is-jiggle .door:nth-child(odd) { transform: rotate(-1.1deg); }
+    .receipt-board.is-jiggle .door:nth-child(even) { transform: rotate(1.1deg); }
+    .receipt-board.is-jiggle:has(.is-lift) .door:not(.is-lift) { opacity: 0.55; }
+    .receipt-board.is-jiggle .door.is-lift {
+      opacity: 1; transform: scale(1.08) rotate(0deg);
+      box-shadow: 0 14px 28px rgba(0, 0, 0, 0.5);
+      border-color: #e0b44c; z-index: 3;
+    }
+    .receipt-board.is-jiggle .door.is-drop {
+      border-color: #e0b44c; background: #2a2414;
+      box-shadow: 0 0 0 2px rgba(224, 180, 76, 0.65);
+    }
+    button.data-tile-del {
+      appearance: none; position: absolute; top: 6px; left: 6px; z-index: 2;
+      width: 28px; height: 28px; border-radius: 999px; padding: 0;
+      font: inherit; font-size: 1.05rem; font-weight: 800; line-height: 1;
+      color: #111; background: #e0b44c; border: 0; cursor: pointer;
+    }
+    .door.is-jiggle-face {
+      flex-direction: column; align-items: center; justify-content: center;
+      min-height: 96px; padding: 14px 10px 10px; text-align: center;
+    }
+    .door.is-jiggle-face .door-open,
+    .door.is-jiggle-face .data-tile-swap {
+      pointer-events: none; width: 100%;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
     .door.is-pick {
       border-color: #e0b44c;
@@ -4206,7 +4234,7 @@ const html = `<!DOCTYPE html>
       border-color: #e0b44c;
       box-shadow: 0 0 0 1px #c9a227, 0 0 10px rgba(224, 180, 76, 0.28);
     }
-    .receipt-board.is-organizing {
+    .receipt-board.is-organizing:not(.is-jiggle) {
       grid-template-columns: 1fr;
       gap: 6px;
       touch-action: pan-y;
@@ -5023,7 +5051,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261023142427";
+    const DATA_V = "boardJiggleHome20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13148,16 +13176,9 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashEnterOrgMode() {
-      // Unsigned / no-seat: Reorder chip is hidden — do not invent organize chrome.
+      // Unsigned / no-seat: Edit chip is hidden — do not invent organize chrome.
       if (!dataDashCanEdit()) return false;
-      if (dataDashEdit) {
-        dataDashMarkOrganizing(true);
-        return false;
-      }
-      dataDashEdit = true;
-      dataDashMarkOrganizing(true);
-      try { if (navigator.vibrate) navigator.vibrate([10, 30, 10]); } catch (err) { /* ignore */ }
-      return true;
+      return dataDashEnterJiggle();
     }
 
     function dataDashLiftDoor() {
@@ -13246,6 +13267,9 @@ const html = `<!DOCTYPE html>
       if (board) board.style.touchAction = "";
       if (dataDashEdit || (dataDashArrangeOpen() && (dataDashArrange === "board" || dataDashArrange === "list"))) {
         dataDashMarkOrganizing(true);
+        if (lifted) {
+          try { if (navigator.vibrate) navigator.vibrate(8); } catch (err) { /* ignore */ }
+        }
       } else dataDashPaintTop();
     }
 
@@ -13253,17 +13277,17 @@ const html = `<!DOCTYPE html>
     document.addEventListener("pointerdown", function (e) {
       if (e.button != null && e.button !== 0) return;
       if (dataDashLibOpen) return;
-      // Arrange Board jiggle (or legacy edit): drag only while arranging/editing.
-      const arrangeBoard = dataDashArrangeOpen() && (dataDashArrange === "board" || dataDashArrange === "list");
-      if ((!dataDashEdit && !arrangeBoard) || !dataDashCanEdit()) return;
+      if (!dataDashCanEdit()) return;
       if (dataDashArrange === "pick" || dataDashArrange === "home4" || dataDashArrange === "catalog") return;
       if (e.target && e.target.closest && e.target.closest("[data-tile-share]")) return;
       if (e.target && e.target.closest
-        && e.target.closest("[data-dash-remove], [data-dash-add], [data-dash-move], [data-dash-to], [data-dash-pick], [data-dash-catalog], [data-dash-home-pick], [data-dash-home-slot]")) return;
+        && e.target.closest("[data-dash-remove], [data-dash-add], [data-dash-move], [data-dash-to], [data-dash-pick], [data-dash-catalog], [data-dash-home-pick], [data-dash-home-slot], [data-dash-edit], [data-dash-arrange], [data-tile-del]")) return;
       const door = dataDashDoorNode(e.target);
       if (!door) return;
       const id = door.getAttribute("data-dash-id") || "";
       if (!id) return;
+      const arrangeBoard = dataDashArrangeOpen() && (dataDashArrange === "board" || dataDashArrange === "list");
+      const jiggleOn = dataDashEdit || arrangeBoard;
       dataDashStopDragTimer();
       dataDashDragDid = false;
       dataDashDrag = {
@@ -13275,15 +13299,46 @@ const html = `<!DOCTYPE html>
         lifted: false,
         kind: e.pointerType || "",
         enteredOrg: false,
-        wasEditing: true,
+        wasEditing: jiggleOn,
       };
-      // No auto-lift on a timer — that locked scroll after a short hold.
-      // Optional drag starts only after real movement (pointermove).
-      dataDashDragTimer = 0;
+      if (jiggleOn) {
+        // Already editing — lift after a short intentional press, then drag any direction.
+        dataDashDragTimer = setTimeout(function () {
+          if (!dataDashDrag || (!dataDashEdit && !arrangeBoard)) return;
+          dataDashLiftDoor();
+          try { if (navigator.vibrate) navigator.vibrate(10); } catch (err) { /* ignore */ }
+        }, 140);
+        return;
+      }
+      // Long-press enters Apple-style jiggle edit (prevents scroll from becoming a drag).
+      dataDashDragTimer = setTimeout(function () {
+        if (!dataDashDrag) return;
+        if (!dataDashEnterJiggle()) {
+          dataDashEndDrag(false);
+          return;
+        }
+        dataDashDrag.enteredOrg = true;
+        dataDashDrag.wasEditing = true;
+        // Re-find the door after render.
+        const el = document.querySelector('[data-dash-board] [data-dash-id="' + dataDashDrag.id + '"]');
+        if (el) dataDashDrag.el = el;
+        dataDashLiftDoor();
+      }, 420);
     });
     document.addEventListener("pointermove", function (e) {
       if (!dataDashDrag || e.pointerId !== dataDashDrag.pointerId) return;
-      if (!dataDashEdit && !(dataDashArrangeOpen() && (dataDashArrange === "board" || dataDashArrange === "list"))) {
+      const arrangeBoard = dataDashArrangeOpen() && (dataDashArrange === "board" || dataDashArrange === "list");
+      const jiggleOn = dataDashEdit || arrangeBoard;
+      if (!jiggleOn && !dataDashDrag.enteredOrg) {
+        // Outside edit: cancel long-press if the finger scrolls.
+        const dx0 = e.clientX - dataDashDrag.x;
+        const dy0 = e.clientY - dataDashDrag.y;
+        if (dx0 * dx0 + dy0 * dy0 > 64) {
+          dataDashEndDrag(false);
+        }
+        return;
+      }
+      if (!jiggleOn) {
         dataDashEndDrag(false);
         return;
       }
@@ -13292,8 +13347,8 @@ const html = `<!DOCTYPE html>
       if (!dataDashDrag.lifted) {
         const dist2 = dx * dx + dy * dy;
         if (dist2 > 36) {
-          // Vertical-dominant motion is list scroll, not a drag.
-          if (Math.abs(dy) > Math.abs(dx) + 6) {
+          // List arrange still treats vertical as scroll; jiggle board allows any direction.
+          if (dataDashArrange === "list" && Math.abs(dy) > Math.abs(dx) + 6) {
             dataDashEndDrag(false);
             return;
           }
@@ -17202,30 +17257,15 @@ const html = `<!DOCTYPE html>
       const top = dataDashIsTop(id) ? " door-top" : "";
       if (dataDashEdit) {
         const tiles = dataDashBoardTiles();
-        const at = tiles.indexOf(id);
         const canCut = tiles.length > DATA_DASH_MIN;
-        const canUp = at > 0;
-        const canDown = at >= 0 && at < tiles.length - 1;
-        const rank = at >= 0 ? String(at + 1) : "";
-        const rankLab = at >= 0 && at < 4 ? ("H" + rank) : rank;
-        return '<div class="door is-edit' + top + '" data-dash-id="' + esc(id) + '">'
-          + '<span class="data-tile-rank" aria-label="'
-          + (at >= 0 && at < 4 ? ("Home slot " + rank) : ("Board slot " + rank))
-          + '">' + esc(rankLab) + "</span>"
-          + '<button type="button" class="data-tile-swap" data-dash-swap="' + esc(id) + '">' + face + "</button>"
-          + '<span class="data-tile-moves">'
-          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="-1"'
-          + (canUp ? "" : " disabled") + ' aria-label="Move up">↑</button>'
-          + '<button type="button" class="data-tile-ico" data-dash-move="' + esc(id) + '" data-dash-dir="1"'
-          + (canDown ? "" : " disabled") + ' aria-label="Move down">↓</button>'
-          + (at === 0
-            ? ""
-            : '<button type="button" class="data-tile-ico is-pin" data-dash-to="' + esc(id)
-              + '" data-dash-index="0" aria-label="Pin to Home top 1">Top</button>')
+        // Apple Home style: face + − remove. Drag the tile; no ↑↓ chrome.
+        return '<div class="door is-jiggle-face' + top + '" data-dash-id="' + esc(id) + '">'
           + (canCut
-            ? '<button type="button" class="data-tile-ico" data-dash-remove="' + esc(id) + '" aria-label="Remove">−</button>'
+            ? '<button type="button" class="data-tile-del" data-dash-remove="' + esc(id)
+              + '" aria-label="Remove ' + esc(spec.lab) + '">−</button>'
             : "")
-          + "</span></div>";
+          + '<div class="data-tile-swap" aria-hidden="true">' + face + "</div>"
+          + "</div>";
       }
       return '<div class="door' + top + '" data-dash-id="' + esc(id) + '">'
         + '<button type="button" class="door-open" data-dash-open="' + esc(id) + '">' + face + "</button>"
@@ -17237,15 +17277,17 @@ const html = `<!DOCTYPE html>
       const tiles = dataDashBoardTiles();
       if (typeof ensurePicks === "function") ensurePicks();
       if (typeof ensureCuffs === "function") ensureCuffs();
-      let html = dataDashPresetHtml();
-      html += '<div class="receipt-board' + (dataDashEdit ? " is-organizing" : "")
-        + '" data-dash-board="1" aria-label="Your board">';
+      let html = dataDashEdit ? "" : dataDashPresetHtml();
+      html += '<div class="receipt-board'
+        + (dataDashEdit ? " is-jiggle is-organizing" : "")
+        + '" data-dash-board="1" aria-label="'
+        + (dataDashEdit ? "Editing your board" : "Your board") + '">';
       if (typeof isRedraftLeague === "function" && isRedraftLeague() && typeof ensureWeekScores === "function") {
         ensureWeekScores();
       }
       html += tiles.map(dataDashTileHtml).join("");
       if (dataDashEdit && dataDashBoardTiles().length < DATA_DASH_MAX) {
-        html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add a door</button>';
+        html += '<button type="button" class="data-tile data-tile-add" data-dash-add="1">+ Add</button>';
       }
       return html + "</div>";
     }
@@ -17853,7 +17895,12 @@ const html = `<!DOCTYPE html>
 
     function dataDashBeginArrange(mode) {
       if (!dataDashCanEdit()) return;
-      const m = mode || "list";
+      const m = mode || "board";
+      // Apple Home default: edit the live 2-col board in place (jiggle).
+      if (m === "board" || m === "jiggle" || m === "edit") {
+        dataDashEnterJiggle();
+        return;
+      }
       dataDashArrange = ({ list: 1, board: 1, pick: 1, home4: 1, catalog: 1 }[m]) ? m : "list";
       dataDashArrangeDraft = dataDashBoardTiles().slice();
       dataDashPickId = "";
@@ -17861,6 +17908,34 @@ const html = `<!DOCTYPE html>
       dataDashEdit = false;
       dataDashLibOpen = false;
       dataDashSwapId = "";
+      focusNext = ".screen-h";
+      render();
+    }
+
+    function dataDashEnterJiggle() {
+      if (!dataDashCanEdit()) return false;
+      dataDashArrange = "";
+      dataDashArrangeDraft = null;
+      dataDashPickId = "";
+      dataDashHomeSlot = 0;
+      dataDashLibOpen = false;
+      dataDashSwapId = "";
+      if (dataDashEdit) {
+        dataDashMarkOrganizing(true);
+        return false;
+      }
+      dataDashEdit = true;
+      try { if (navigator.vibrate) navigator.vibrate([12, 24, 12]); } catch (err) { /* ignore */ }
+      focusNext = ".screen-h";
+      render();
+      return true;
+    }
+
+    function dataDashExitJiggle() {
+      dataDashEdit = false;
+      dataDashLibOpen = false;
+      dataDashSwapId = "";
+      dataDashMarkOrganizing(false);
       focusNext = ".screen-h";
       render();
     }
@@ -18079,11 +18154,16 @@ const html = `<!DOCTYPE html>
       if (dataDashArrangeOpen()) return dataDashArrangeHtml();
       const editBtn = dataDashCanEdit()
         ? ('<div class="data-dash-org-bar">'
-          + '<button type="button" class="chip" data-dash-arrange="list">Arrange</button>'
-          + '<span class="caption">List · Board · Pick · Home 4 · Catalog</span>'
+          + '<button type="button" class="chip' + (dataDashEdit ? " on" : "")
+          + '" data-dash-edit="1">' + (dataDashEdit ? "Done" : "Edit") + "</button>"
+          + (dataDashEdit
+            ? '<button type="button" class="chip" data-dash-arrange="list">More</button>'
+              + '<span class="caption">Hold a door, drag to move · − removes</span>'
+            : '<span class="caption">Hold a door or tap Edit · Top 4 wear gold on Home</span>')
           + "</div>")
         : "";
-      const tradeChip = (!(typeof isRedraftLeague === "function" && isRedraftLeague())
+      const tradeChip = (!dataDashEdit
+        && !(typeof isRedraftLeague === "function" && isRedraftLeague())
         && dataDashById("trade_helper"))
         ? ('<p class="caption">'
           + '<button type="button" class="chip" data-dash-open="trade_helper">Trade helper</button>'
@@ -18094,7 +18174,9 @@ const html = `<!DOCTYPE html>
         + '<p class="data-dash-sub">Votes never enter these numbers.</p>'
         + editBtn
         + tradeChip
-        + '<p class="data-dash-drag-hint">Tap Arrange to reorganize. Top 4 wear gold on Home.</p>'
+        + (dataDashEdit
+          ? '<p class="data-dash-drag-hint">Drag doors to rearrange like the Home Screen. − removes. Done when finished.</p>'
+          : '<p class="data-dash-drag-hint">Hold a door to edit, or tap Edit. Top 4 wear gold on Home.</p>')
         + dataDashBoardHtml()
         + dataDashLibraryHtml()
         + "</section>";
@@ -36030,7 +36112,7 @@ const html = `<!DOCTYPE html>
         dataHuntPos = "";
         dataSeat = "";
         dataBlockAddOpen = false;
-        dataDashBeginArrange(dashArrangeOpenBtn.getAttribute("data-dash-arrange") || "list");
+        dataDashBeginArrange(dashArrangeOpenBtn.getAttribute("data-dash-arrange") || "board");
         return;
       }
       const dashArrangeModeBtn = e.target.closest("[data-dash-arrange-mode]");
@@ -36125,7 +36207,14 @@ const html = `<!DOCTYPE html>
       const dashEditBtn = e.target.closest("[data-dash-edit]");
       if (dashEditBtn) {
         if (!dataDashCanEdit()) return;
-        dataDashBeginArrange("list");
+        dataRoom = "overview";
+        dataSet = null;
+        dataHunt = "";
+        dataHuntPos = "";
+        dataSeat = "";
+        dataBlockAddOpen = false;
+        if (dataDashEdit) dataDashExitJiggle();
+        else dataDashEnterJiggle();
         return;
       }
       const dashRemoveBtn = e.target.closest("[data-dash-remove]");
@@ -38365,7 +38454,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v368-board-arrange-all")
+  || !swSrc.includes("chuckle-shell-v369-board-jiggle-home")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39696,30 +39785,32 @@ if (!inline.includes('"cosmetics", "news"')) {
     || !fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")
     || !fnSrc("dataDashCommitFromBoard").includes("dataDashCanEdit()")
     || !inline.includes("is-organizing")
-    || !inline.includes("Tap Arrange to reorganize")
+    || !inline.includes("function dataDashEnterJiggle(")
+    || !inline.includes("function dataDashExitJiggle(")
     || !inline.includes("function dataDashBeginArrange(")
     || !inline.includes("function dataDashArrangeHtml(")
-    || !inline.includes("function dataDashSaveArrange(")
-    || !inline.includes('data-dash-arrange="list"')
+    || !inline.includes("Hold a door to edit")
+    || !inline.includes("Drag doors to rearrange like the Home Screen")
+    || !inline.includes("data-tile-del")
+    || !inline.includes("is-jiggle-face")
+    || !inline.includes("is-jiggle")
+    || !fnSrc("dataDashTileHtml").includes("data-dash-remove=")
+    || !fnSrc("dataDashTileHtml").includes("data-tile-del")
+    || !fnSrc("dataDashHtml").includes("data-dash-org-bar")
+    || !fnSrc("dataDashHtml").includes(': "Edit")')
+    || !fnSrc("dataDashHtml").includes('? "Done"')
+    || !fnSrc("dataDashHtml").includes('data-dash-arrange="list"')
+    || !fnSrc("dataDashBeginArrange").includes("dataDashEnterJiggle")
     || !inline.includes('data-dash-arrange-mode="')
     || !fnSrc("dataDashArrangeHtml").includes('"List")')
-    || !fnSrc("dataDashArrangeHtml").includes('"Board")')
     || !fnSrc("dataDashArrangeHtml").includes('"Pick")')
-    || !fnSrc("dataDashArrangeHtml").includes('"Home 4")')
     || !fnSrc("dataDashArrangeHtml").includes('"Catalog")')
-    || !inline.includes("data-dash-arrange-save")
-    || !inline.includes("data-dash-pick=")
-    || !inline.includes("data-dash-home-slot=")
-    || !inline.includes("data-dash-catalog=")
-    || !inline.includes("is-jiggle")
-    || !fnSrc("dataDashHtml").includes("data-dash-org-bar")
-    || !fnSrc("dataDashHtml").includes(">Arrange</button>")
     || fnSrc("dataDashMarkOrganizing").includes('touchAction = on ? "none"')
     || !fnSrc("dataDashMarkOrganizing").includes('touchAction = ""')
-    || !inline.includes("No auto-lift on a timer")
-    || !inline.includes("Vertical-dominant motion is list scroll")
     || !fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")
+    || !fnSrc("dataDashEnterOrgMode").includes("dataDashEnterJiggle")
     || !fnSrc("dataDashCommitFromBoard").includes("dataDashArrangeOpen()")
+    || !inline.includes("Long-press enters Apple-style jiggle")
     || !inline.includes('cuckle.team.home.layout.v1')
     || !inline.includes("Format page")
     || !inline.includes("Show off")

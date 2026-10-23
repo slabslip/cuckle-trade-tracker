@@ -133,11 +133,12 @@ It does not live on the door.
 
 ### L0 — Your board (History / Data)
 
-Heading: **Your board**. Two-column doors. Tap **Arrange** for List /
-Board / Pick / Home 4 / Catalog (draft + Save). Face is
-**house icon + label only**. No verdict sentence, no gold example number,
-no who-line, no share icon on the door. Icons exist so a thumb can find
-the room at a glance.
+Heading: **Your board**. Two-column doors. Tap **Edit** (or long-press a
+door) for Apple Home–style jiggle: drag to reflow, **−** removes, **Done**
+exits. **More** opens the draft hub (List / Board / Pick / Home 4 /
+Catalog + Save). Face is **house icon + label only**. No verdict sentence,
+no gold example number, no who-line, no share icon on the door. Icons exist
+so a thumb can find the room at a glance.
 
 Search and filter do **not** live on the board — they live inside the
 portal after you tap. Every filter is a labeled dropdown (`receiptLookSelect`).
@@ -166,12 +167,14 @@ filters by a Team dropdown, not a type-in.
 12. Season arcs (`season_arcs`) — slow start → finish strong
 13. Manager type (`manager_archetypes`) is catalog + team-home caption (pin via Edit)
 
-**Arrange** opens a draft hub with five methods: **List** (≡ / ↑↓),
+**Edit / long-press** enters in-place jiggle on the live two-column board
+(static tilt, lift shadow, real-time reflow, haptic when available).
+**More** opens the draft hub with five methods: **List** (≡ / ↑↓),
 **Board** (jiggle grid drag), **Pick** (tap then place), **Home 4**
 (set the gold Home slots), **Catalog** (add/remove + Deal/Research).
 **Save** commits; **Cancel** discards. The first four doors wear a gold
 ring — that is the top 4, and those four also sit on Home. Hint:
-`Tap Arrange to reorganize. Top 4 wear gold on Home.` Unsigned /
+`Hold a door to edit, or tap Edit. Top 4 wear gold on Home.` Unsigned /
 outsider: default thirteen. A shared link opens one public ticket, not
 someone’s private layout.
 
@@ -446,9 +449,11 @@ No + FAB. No sixth pill. No SwiftUI port of this. No Chart.js.
 
 ## 8. Edit board
 
-Tap **Arrange**, pick a method (List / Board / Pick / Home 4 / Catalog),
-then **Save**. Cancel discards the draft. Catalog still hides or adds
-from the library; Deal/Research presets apply to the draft.
+Tap **Edit** or long-press a door for Apple Home jiggle on the live board;
+drag to rearrange, **−** removes, **Done** exits (order persists as you
+move). **More** opens Arrange: pick a method (List / Board / Pick /
+Home 4 / Catalog), then **Save**. Cancel discards the draft. Catalog still
+hides or adds from the library; Deal/Research presets apply to the draft.
 Persist per seat per league
 (`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
 default thirteen, no edit. Shared link still opens one ticket, not the

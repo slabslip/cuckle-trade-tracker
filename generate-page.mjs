@@ -4957,7 +4957,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "homeNoRaceMovers20261023";
+    const DATA_V = "boardReorderSeatGate20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -13068,6 +13068,8 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashEnterOrgMode() {
+      // Unsigned / no-seat: Reorder chip is hidden — do not invent organize chrome.
+      if (!dataDashCanEdit()) return false;
       if (dataDashEdit) {
         dataDashMarkOrganizing(true);
         return false;
@@ -13121,6 +13123,7 @@ const html = `<!DOCTYPE html>
     }
 
     function dataDashCommitFromBoard() {
+      if (!dataDashCanEdit()) return false;
       const board = document.querySelector("[data-dash-board]");
       if (!board) return false;
       const ids = [];
@@ -35740,6 +35743,7 @@ const html = `<!DOCTYPE html>
       }
       const dashRemoveBtn = e.target.closest("[data-dash-remove]");
       if (dashRemoveBtn) {
+        if (!dataDashCanEdit()) return;
         const id = dashRemoveBtn.getAttribute("data-dash-remove") || "";
         const next = dataDashBoardTiles().filter(function (x) { return x !== id; });
         if (next.length >= DATA_DASH_MIN) dataDashCommit(next);
@@ -35748,7 +35752,7 @@ const html = `<!DOCTYPE html>
       }
       const dashMoveBtn = e.target.closest("[data-dash-move]");
       if (dashMoveBtn) {
-        if (dashMoveBtn.disabled) return;
+        if (!dataDashCanEdit() || dashMoveBtn.disabled) return;
         const id = dashMoveBtn.getAttribute("data-dash-move") || "";
         const dir = Number(dashMoveBtn.getAttribute("data-dash-dir") || 0);
         const next = dataDashBoardTiles().slice();
@@ -35765,6 +35769,7 @@ const html = `<!DOCTYPE html>
       }
       const dashToBtn = e.target.closest("[data-dash-to]");
       if (dashToBtn) {
+        if (!dataDashCanEdit()) return;
         const id = dashToBtn.getAttribute("data-dash-to") || "";
         const to = Number(dashToBtn.getAttribute("data-dash-index"));
         const next = dataDashBoardTiles().slice();
@@ -35779,6 +35784,7 @@ const html = `<!DOCTYPE html>
       }
       const dashAddBtn = e.target.closest("[data-dash-add]");
       if (dashAddBtn) {
+        if (!dataDashCanEdit()) return;
         if (dataDashBoardTiles().length >= DATA_DASH_MAX) return;
         dataDashSwapId = "";
         dataDashLibOpen = true;
@@ -35788,6 +35794,7 @@ const html = `<!DOCTYPE html>
       const dashSwapBtn = e.target.closest("[data-dash-swap]");
       if (dashSwapBtn) {
         if (dataDashDragDid) { dataDashDragDid = false; return; }
+        if (!dataDashCanEdit()) return;
         dataDashSwapId = dashSwapBtn.getAttribute("data-dash-swap") || "";
         dataDashLibOpen = true;
         render();
@@ -35795,6 +35802,7 @@ const html = `<!DOCTYPE html>
       }
       const dashUseBtn = e.target.closest("[data-dash-use]");
       if (dashUseBtn) {
+        if (!dataDashCanEdit()) return;
         const id = dashUseBtn.getAttribute("data-dash-use") || "";
         if (!dataDashById(id) || dataDashHas(id)) return;
         const next = dataDashBoardTiles().slice();
@@ -37951,7 +37959,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v364-home-no-race-movers")
+  || !swSrc.includes("chuckle-shell-v365-board-reorder-seat-gate")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -39279,6 +39287,8 @@ if (!inline.includes('"cosmetics", "news"')) {
     || fnSrc("homePulseHtml").includes("calcValueNum(")
     || !inline.includes("function dataDashEnterOrgMode(")
     || !inline.includes("function dataDashMarkOrganizing(")
+    || !fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")
+    || !fnSrc("dataDashCommitFromBoard").includes("dataDashCanEdit()")
     || !inline.includes("is-organizing")
     || !inline.includes("Tap Reorder to rearrange")
     || !inline.includes("Tap ↑ ↓ to move")

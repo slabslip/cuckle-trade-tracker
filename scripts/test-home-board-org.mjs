@@ -20,11 +20,11 @@ function fnSrc(name) {
   return page.slice(start, end < 0 ? start + 4000 : end);
 }
 
-if (!page.includes('const DATA_V = "homeNoRaceMovers20261023"')) {
-  fail("DATA_V must bump for home no race movers ship");
+if (!page.includes('const DATA_V = "boardReorderSeatGate20261023"')) {
+  fail("DATA_V must bump for board reorder seat gate ship");
 }
-if (!sw.includes("chuckle-shell-v364-home-no-race-movers")) {
-  fail("sw.js must bump CACHE for home no race movers ship");
+if (!sw.includes("chuckle-shell-v365-board-reorder-seat-gate")) {
+  fail("sw.js must bump CACHE for board reorder seat gate ship");
 }
 
 {
@@ -80,8 +80,10 @@ if (!sw.includes("chuckle-shell-v364-home-no-race-movers")) {
     || !fnSrc("dataDashTileHtml").includes(">Top</button>")
     || !fnSrc("dataDashHtml").includes('data-dash-edit="1"')
     || !fnSrc("dataDashHtml").includes(': "Reorder")')
-    || !fnSrc("dataDashHtml").includes("data-dash-org-bar")) {
-    fail("button-first Reorder + ↑↓ / Top must ship");
+    || !fnSrc("dataDashHtml").includes("data-dash-org-bar")
+    || !fnSrc("dataDashEnterOrgMode").includes("dataDashCanEdit()")
+    || !fnSrc("dataDashCommitFromBoard").includes("dataDashCanEdit()")) {
+    fail("button-first Reorder + ↑↓ / Top must ship; seat gate required");
   }
   const down = page.slice(page.indexOf('document.addEventListener("pointerdown"'));
   if (!down.includes("if (!dataDashEdit || !dataDashCanEdit()) return")) {
@@ -89,6 +91,15 @@ if (!sw.includes("chuckle-shell-v364-home-no-race-movers")) {
   }
   if (down.includes("holdMs") && down.includes("420")) {
     fail("long-press enter-org must stay removed");
+  }
+  // Click handlers for mutate paths must refuse unsigned / no-seat.
+  const clickAt = page.indexOf('const dashRemoveBtn = e.target.closest("[data-dash-remove]")');
+  const clickChunk = page.slice(clickAt, clickAt + 4000);
+  for (const need of ["dashRemoveBtn", "dashMoveBtn", "dashToBtn", "dashAddBtn", "dashSwapBtn", "dashUseBtn"]) {
+    if (!clickChunk.includes(need)) fail("missing board mutate handler " + need);
+  }
+  if ((clickChunk.match(/if \(!dataDashCanEdit\(\)\) return;/g) || []).length < 5) {
+    fail("remove/move/to/add/swap/use must gate on dataDashCanEdit");
   }
 }
 

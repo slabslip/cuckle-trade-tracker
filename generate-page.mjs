@@ -5051,7 +5051,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "boardJiggleHome20261023";
+    const DATA_V = "boardJiggleEdge20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9191,7 +9191,7 @@ const html = `<!DOCTYPE html>
       else {
         body = '<h2 class="screen-h" tabindex="-1">Your board</h2>'
           + (dataDashEdit
-            ? '<p class="data-dash-drag-hint">Tap ↑ ↓ to move. Gold = Home top 4.</p>'
+            ? '<p class="data-dash-drag-hint">Drag doors to rearrange like the Home Screen. − removes. Done when finished.</p>'
             : "")
           + dataDashBoardHtml();
       }
@@ -38454,7 +38454,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v369-board-jiggle-home")
+  || !swSrc.includes("chuckle-shell-v370-board-jiggle-edge")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -40249,7 +40249,7 @@ if (!inline.includes("function dataDashHtml(")
     || fnSrc("homeTopDoorsHtml").includes("Your top 4")
     || fnSrc("homeTopDoorsHtml").includes("home-desk-h")
     || !inline.includes("Top 4 wear gold")
-    || !inline.includes("Tap ↑ ↓ to move")
+    || !inline.includes("Drag doors to rearrange like the Home Screen")
     || !inline.includes("Every pick ")
     || !inline.includes("class=\"door")
     || !fnSrc("dataDashHtml").includes("receiptPickKey")

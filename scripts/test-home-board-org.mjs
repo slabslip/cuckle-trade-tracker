@@ -21,11 +21,11 @@ function fnSrc(name) {
   return page.slice(start, end < 0 ? start + 4000 : end);
 }
 
-if (!page.includes('const DATA_V = "boardJiggleHome20261023"')) {
-  fail("DATA_V must bump for board jiggle home ship");
+if (!page.includes('const DATA_V = "boardJiggleEdge20261023"')) {
+  fail("DATA_V must bump for board jiggle edge ship");
 }
-if (!sw.includes("chuckle-shell-v369-board-jiggle-home")) {
-  fail("sw.js must bump CACHE for board jiggle home ship");
+if (!sw.includes("chuckle-shell-v370-board-jiggle-edge")) {
+  fail("sw.js must bump CACHE for board jiggle edge ship");
 }
 
 {

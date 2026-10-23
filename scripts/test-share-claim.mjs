@@ -37,7 +37,7 @@ need(page, "index.html", [
   "function honorPendingDataTile(",
   "claim a remaining team to open it",
   "Claim your team to open it",
-  "Create account to open this view",
+  "Sign in to open",
   "function leagueNameForId(",
   "cuckle.pending.tile",
   "right: 6px; bottom: 6px",
@@ -46,7 +46,7 @@ need(gen, "generate-page.mjs", [
   "function shareAccessPending(",
   "function dataTileSeatReady(",
   "claim a remaining team to open it",
-  "Create account to open this view",
+  "Sign in to open",
 ]);
 
 if (fnSrc(page, "dataTileShareBtn").includes("<span>Share</span>")

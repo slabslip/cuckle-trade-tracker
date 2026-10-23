@@ -4872,7 +4872,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261023000205";
+    const DATA_V = "joinCleanup20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22790,10 +22790,6 @@
           + (m.season ? " · " + esc(m.season) : "")
           + "</span></div>"
           + '<span class="chev" aria-hidden="true">›</span></button>'
-          + '<button type="button" class="linkish" data-change-team="' + esc(m.sleeper_league_id) + '"'
-          + ' data-change-team-name="' + esc(m.name || "") + '">Wrong team?</button>'
-          + '<button type="button" class="linkish" data-manage-invites="' + esc(m.sleeper_league_id)
-          + '">Share invites</button>'
           + "</div>";
       }).join("");
       const pendingClaim = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id)).map((o) => {
@@ -22802,21 +22798,18 @@
           + '<div class="league-row static"><div><b>' + esc(o.name) + "</b>"
           + "<span>" + st
           + (o.season ? " · " + esc(o.season) : "")
-          + " · claim your team to open the meter</span></div></div>"
+          + " · claim your team</span></div></div>"
           + '<button type="button" class="chip" data-change-team="' + esc(o.sleeper_league_id) + '"'
           + ' data-change-team-name="' + esc(o.name || "") + '">Claim your team</button>'
-          + '<button type="button" class="linkish" data-manage-invites="' + esc(o.sleeper_league_id)
-          + '">Share invites</button>'
           + "</div>";
       }).join("");
       const body = rows + pendingClaim + readyAddBooksHtml();
       return '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
         + '<button type="button" class="linkish" data-app-settings="1">Settings</button>'
         + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
-        + (body || '<p class="caption">No leagues yet. Join with a Sleeper ID or invite code.</p>')
+        + (body || '<p class="caption">No leagues yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-app-join="1">Join a league</button>'
-        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + '<button type="button" class="chip" data-app-join="1">Add a league</button>'
         + "</div>";
     }
 
@@ -25174,8 +25167,9 @@
           throw new Error("Could not build an invite link for that team.");
         }
         const team = (inv && inv.team_name) || "that team";
-        await copyText(inviteShareLink(code));
-        settingsCopyNote = "Invite link for " + team + " copied — send it to that manager.";
+        // Managers share the CF- code; the link also works if they paste a URL.
+        await copyText(code);
+        settingsCopyNote = "Invite code for " + team + " copied (" + code + "). Send it to that manager.";
       } catch (err) {
         joinError = (err && err.message) || "Could not copy invite link.";
         console.error(err);
@@ -33413,15 +33407,14 @@
       const shared = !invited && typeof shareAccessPending === "function" && shareAccessPending();
       const forgot = gateMode === "forgot";
       const nativeApple = !forgot && authHasNativeApple();
-      // Apple is create + sign-in. Visible title always says create/get started so the
-      // store gate does not look like a password form is required.
+      // Apple-first gate. After sign-in, Chuckle opens Add a league (ID or invite).
       const title = forgot
         ? "Reset login"
         : invited
-          ? "Create account to join"
+          ? "Sign in to join"
           : shared
-            ? "Create account to open this view"
-          : "Create your account";
+            ? "Sign in to open"
+          : "Sign in";
       const go = forgot
         ? "Reclaim seat"
         : invited
@@ -33430,20 +33423,16 @@
             ? (gateMode === "signup" ? "Create account & claim" : "Sign in & claim")
           : (gateMode === "signup" ? "Create account" : "Sign in");
       const appleBtn = forgot ? ""
-        : ('<h3 style="margin:0 0 10px">' + esc(title) + "</h3>"
-          + '<button type="button" class="gate-apple" data-apple-go="1"'
+        : ('<button type="button" class="gate-apple" data-apple-go="1"'
           + (authBusy ? " disabled" : "") + ">"
           + '<span class="gate-apple-mark" aria-hidden="true"></span>'
           + (authBusy ? "Connecting…" : "Sign in with Apple")
           + "</button>"
-          + '<p class="caption" style="margin:0 0 8px">'
+          + '<p class="caption" style="margin:10px 0 0">'
           + (nativeApple
-            ? "One tap with your Apple ID — Face ID or your phone passcode. "
-              + "New here? That creates your account."
-            : "One tap with your Apple ID. New here? That creates your account. ")
-          + (invited
-            ? " Your seat invite stays ready."
-            : " Then join with an invite code or a Sleeper league ID.")
+            ? "Face ID or your passcode. "
+            : "")
+          + "Then add a Sleeper league ID or an invite code."
           + "</p>");
       const forgotForm = '<form class="app-form" data-gate-form="1" action="#" method="post">'
         + '<p class="caption" style="margin:0 0 8px">Ask your commissioner to tap <b>Reset login</b> '
@@ -33526,20 +33515,12 @@
         + '<img src="data/ui/gate-logo.png?' + DATA_V + '" width="128" height="128"'
         + ' alt="Chuckle Fantasy" decoding="async" />'
         + "</div>"
-        + '<h2 class="screen-h sr-only" tabindex="-1">' + esc(title) + "</h2>"
+        + '<h2 class="screen-h" tabindex="-1">' + esc(title) + "</h2>"
         + (invited && !forgot
-          ? (joinStepsHtml("account")
-            + joinInviteLeadHtml()
-            + '<p class="caption">Seat invite <code style="user-select:all">'
-            + esc(String(redeemCode).toUpperCase()) + "</code>"
-            + " — this is your <b>seat ticket</b>, not your account password. "
-            + "Sign in with Apple, or pick a username and a <b>new password</b>.</p>")
-          : ((claimLeagueId || shared) && !forgot
-            ? (joinStepsHtml("account") + joinInviteLeadHtml())
-            : ""))
-        + (gateSuggestedUser && invited && !forgot && gatePassOpen
-          ? ('<p class="caption">Suggested username from your team name: <b>' + esc(gateSuggestedUser)
-            + "</b> — change it if you like.</p>")
+          ? ('<p class="caption" style="margin:0 0 12px">Invite ready for '
+            + esc(gateInviteTeam || "your team")
+            + (gateInviteLeague ? (" in " + esc(gateInviteLeague)) : "")
+            + ".</p>")
           : "")
         + '<div class="app-card">'
         + (forgot ? ("<h3>" + esc(title) + "</h3>") : "")
@@ -33552,33 +33533,30 @@
     function renderAppJoin() {
       const uname = (authSession && authSession.username) || "you";
       return '<div class="app-shell">'
-        + '<h2 class="screen-h" tabindex="-1">Join a league</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Add a league</h2>'
         + '<p class="caption">Signed in as <b>' + esc(uname) + "</b>. "
-        + "Paste an invite code from a league mate, or enter a Sleeper league ID and claim your team.</p>"
-        + '<div class="app-card"><h3>Invite code</h3>'
+        + "Enter a Sleeper league ID, or paste an invite code from a manager already in.</p>"
+        + '<div class="app-card">'
         + '<div class="app-form">'
-        + '<label>CF- code<input id="joinInviteCode" name="invite" autocomplete="off"'
+        + '<label>Sleeper league ID<input id="joinLeagueIdInput" name="league" inputmode="numeric"'
+        + ' autocomplete="off" placeholder="Long number from the Sleeper URL"'
+        + ' value="' + esc(claimLeagueId || joinLeagueId || "") + '"'
+        + (joinBusy ? " disabled" : "") + " /></label>"
+        + '<div class="app-actions">'
+        + '<button type="button" class="chip" data-join-league-go="1"' + (joinBusy ? " disabled" : "") + ">"
+        + (joinBusy ? "Looking…" : "Continue") + "</button>"
+        + "</div>"
+        + '<div class="gate-or" aria-hidden="true" style="margin:16px 0">or</div>'
+        + '<label>League invite code<input id="joinInviteCode" name="invite" autocomplete="off"'
         + ' autocapitalize="characters" spellcheck="false" placeholder="CF-XXXX-XXXX"'
         + ' value="' + esc(redeemCode || "") + '"'
         + (joinBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-join-invite-go="1"' + (joinBusy ? " disabled" : "") + ">"
-        + (joinBusy ? "Joining…" : "Redeem invite") + "</button>"
-        + "</div></div></div>"
-        + '<div class="app-card"><h3>Sleeper league ID</h3>'
-        + '<p class="caption" style="margin:0 0 8px">From the Sleeper app URL. Everyone joins the same way '
-        + "and claims their own team — no commissioner setup.</p>"
-        + '<div class="app-form">'
-        + '<label>League ID<input id="joinLeagueIdInput" name="league" inputmode="numeric"'
-        + ' autocomplete="off" placeholder="e.g. 1315431339301806080"'
-        + ' value="' + esc(claimLeagueId || joinLeagueId || "") + '"'
-        + (joinBusy ? " disabled" : "") + " /></label>"
-        + '<div class="app-actions">'
-        + '<button type="button" class="chip" data-join-league-go="1"' + (joinBusy ? " disabled" : "") + ">"
-        + (joinBusy ? "Looking…" : "Find teams") + "</button>"
-        + "</div></div>"
-        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + (joinBusy ? "Joining…" : "Join with code") + "</button>"
         + "</div>"
+        + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + "</div></div>"
         + '<p class="caption"><button type="button" class="linkish" data-app-home="1">Your leagues</button>'
         + ' · <button type="button" class="linkish" data-auth-signout="1">Sign out</button></p>'
         + "</div>";
@@ -33674,8 +33652,6 @@
       const myMembership = (memberships || []).find(
         (m) => m.sleeper_league_id === L.sleeper_league_id,
       );
-      const meId = authSession && authSession.user_id;
-      const transferCandidates = (leagueMembers || []).filter((m) => m.auth_user_id && m.auth_user_id !== meId);
       const all = createdInvites || [];
       const unclaimed = all.filter((inv) => !inv.claimed);
       const claimed = all.filter((inv) => inv.claimed);
@@ -33685,75 +33661,59 @@
         const claimer = inv.claimed_username
           ? "@" + inv.claimed_username
           : (inv.claimed ? "a member" : null);
-        const orphanNote = inv.orphan
-          ? " Stale claim (no active membership) — Reissue to free this seat."
-          : "";
+        const codePlain = inviteCodeVisible(inv) ? String(inv.code) : "";
         return '<div class="app-card" style="margin-bottom:8px">'
           + "<b>" + esc(inv.team_name) + "</b>"
           + (inv.claimed
             ? ('<p class="caption" style="margin:4px 0 8px">Joined'
-              + (claimer ? " as " + esc(claimer) : "") + "."
-              + esc(orphanNote) + "</p>"
+              + (claimer ? " as " + esc(claimer) : "") + ".</p>"
               + '<div class="app-actions">'
-              + '<button type="button" class="chip" data-reset-login="' + esc(inv.sleeper_user_id) + '"'
-              + (joinBusy ? " disabled" : "") + ">Reset login</button>"
-              + '<button type="button" class="chip" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
-              + (joinBusy ? " disabled" : "") + ">Reissue for new manager</button>"
+              + '<button type="button" class="linkish" data-reissue-seat="' + esc(inv.sleeper_user_id) + '"'
+              + (joinBusy ? " disabled" : "") + ">Generate new invite</button>"
               + "</div>")
-            : ('<p class="caption" style="margin:4px 0 8px">Copy the invite link and send it to that manager. '
-              + "Opening it while signed in claims the seat onto your account.</p>"
+            : ('<p class="caption" style="margin:4px 0 8px">'
+              + (codePlain
+                ? ('Code <code style="user-select:all">' + esc(codePlain) + "</code>")
+                : "Tap Generate to mint a CF- invite for this team.")
+              + "</p>"
               + '<div class="app-actions">'
               + '<button type="button" class="chip" data-copy-invite-link="' + esc(inv.sleeper_user_id) + '"'
               + (joinBusy ? " disabled" : "") + ">"
-              + (joinBusy ? "Working…" : "Copy invite link") + "</button>"
+              + (joinBusy ? "Working…" : (codePlain ? "Copy invite code" : "Generate invite code"))
+              + "</button>"
               + (!myMembership
                 ? '<button type="button" class="linkish" data-claim-seat="' + esc(inv.sleeper_user_id) + '"'
-                  + (joinBusy ? " disabled" : "") + ">Claim this seat (you)</button>"
+                  + (joinBusy ? " disabled" : "") + ">This is my team</button>"
                 : "")
               + "</div>"))
           + "</div>";
       }).join("");
       const empty = all.length === 0
-        ? '<p class="caption">No seats yet — reopen this screen to load teams from Sleeper. If it stays empty, run wave5 SQL and redeploy join-league.</p>'
+        ? '<p class="caption">No seats yet. Add this league with its full Sleeper ID first.</p>'
         : (tab === "claimed"
-          ? '<p class="caption">No one has redeemed yet. Share invite links from the Unclaimed tab.</p>'
-          : '<p class="caption">Every seat is claimed.</p>');
+          ? '<p class="caption">No one has joined yet. Generate codes on Open.</p>'
+          : '<p class="caption">Every seat has joined.</p>');
       const tabs = '<div class="nav" role="tablist" aria-label="Invite groups" style="margin-top:8px">'
         + '<button type="button" role="tab" class="tab' + (tab === "unclaimed" ? " on" : "") + '"'
         + ' aria-selected="' + (tab === "unclaimed" ? "true" : "false") + '"'
-        + ' data-invite-tab="unclaimed">Unclaimed (' + unclaimed.length + ")</button>"
+        + ' data-invite-tab="unclaimed">Open (' + unclaimed.length + ")</button>"
         + '<button type="button" role="tab" class="tab' + (tab === "claimed" ? " on" : "") + '"'
         + ' aria-selected="' + (tab === "claimed" ? "true" : "false") + '"'
-        + ' data-invite-tab="claimed">Claimed (' + claimed.length + ")</button>"
+        + ' data-invite-tab="claimed">Joined (' + claimed.length + ")</button>"
         + "</div>";
-      const transferBlock = "";
       return '<div class="app-shell">'
         + '<button type="button" class="chip back" data-app-settings="leagues">← Settings</button>'
-        + '<h2 class="screen-h" tabindex="-1">Share invites</h2>'
-        + (joinBusy ? '<p class="caption" role="status">Loading invites…</p>' : "")
+        + '<h2 class="screen-h" tabindex="-1">Invite codes</h2>'
+        + '<p class="caption">' + esc(L.name || "League")
+        + (L.sleeper_league_id
+          ? (' · ID <code style="user-select:all">' + esc(L.sleeper_league_id) + "</code>")
+          : "")
+        + ". Generate a code per team and send it to that manager.</p>"
+        + (joinBusy ? '<p class="caption" role="status">Loading…</p>' : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+        + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
         + tabs
         + (rows || empty)
-        + (tab === "claimed"
-          ? '<p class="caption" style="margin-top:12px">Forgot username or password: tap <b>Reset login</b>, copy the new ticket from Unclaimed, and send it. They open Forgot on the sign-in screen and reclaim the seat. '
-            + "If a manager leaves for good, <b>Reissue for new manager</b> instead. Stale claims also need Reset or Reissue.</p>"
-          : (!myMembership
-            ? '<p class="caption" style="margin-top:12px">Claim your own seat with <b>Claim this seat (you)</b> so this league appears on Your leagues.</p>'
-            : '<p class="caption" style="margin-top:12px">Copy invite links to send — do not open them while signed in.</p>'))
-        + transferBlock
-        + (L.sleeper_league_id
-          ? ('<div class="app-card" style="margin-top:12px"><h3>Merge IDs and build</h3>'
-            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
-            + joinIdsFormHtml(L.sleeper_league_id)
-            + '<div class="app-actions">'
-            + '<button type="button" class="chip" data-rebuild-league="' + esc(L.sleeper_league_id) + '"'
-            + (joinBusy ? " disabled" : "") + ">"
-            + (joinBusy ? "Working…" : "Rebuild dashboard from these IDs") + "</button>"
-            + "</div></div>")
-          : "")
-        + (isGmLeague() && league && league.providers && !league.providers.espn_authorized
-          ? espnUnlockStepsHtml()
-          : "")
         + "</div>";
     }
 
@@ -33855,44 +33815,43 @@
     }
 
     function renderSettingsLeaguesTab() {
-      const owned = ownedLeagues || [];
-      const memById = {};
-      for (const m of memberships || []) memById[m.sleeper_league_id] = m;
-      const adminRows = owned.length
-        ? owned.map((o) => {
-          const mem = memById[o.sleeper_league_id];
-          const st = o.status === "ready" ? "Ready" : o.status === "error" ? "Sync error" : "Sync pending";
-          return '<div class="app-card">'
-            + "<h3>" + esc(o.name) + "</h3>"
-            + '<p class="caption" style="margin:0 0 8px">Sleeper league ID <code style="user-select:all">'
-            + esc(o.sleeper_league_id) + "</code><br/>Status: " + st
-            + (mem ? "<br/>Your seat: " + esc(mem.team_name) : "<br/>You have not claimed a seat yet")
-            + "</p>"
-            + "<h3>Merge IDs and build</h3>"
-            + '<p class="caption">Add each Sleeper season and each ESPN ID. They merge into this book.</p>'
-            + joinIdsFormHtml(o.sleeper_league_id)
-            + '<div class="app-actions">'
-            + '<button type="button" class="chip" data-manage-invites="' + esc(o.sleeper_league_id)
-              + '">Send / manage invites</button>'
-            + '<button type="button" class="chip" data-rebuild-league="' + esc(o.sleeper_league_id) + '">Rebuild dashboard</button>'
-            + (mem
-              ? '<button type="button" class="chip" data-open-league="' + esc(o.sleeper_league_id)
-                + '">Open dashboard</button>'
-              : "")
-            + "</div>"
-            + "</div>";
-        }).join("")
-        : '<div class="app-card"><p class="caption" style="margin:0">No leagues created yet.</p></div>';
+      const mems = memberships || [];
+      const memIds = new Set(mems.map((m) => m.sleeper_league_id));
+      const pending = (ownedLeagues || []).filter((o) => !memIds.has(o.sleeper_league_id));
+      const leagueRows = mems.map((m) => {
+        const st = m.status === "ready" ? "Ready" : m.status === "error" ? "Sync error" : "Sync pending";
+        return '<div class="app-card">'
+          + "<h3>" + esc(m.name) + "</h3>"
+          + '<p class="caption" style="margin:0 0 8px">Your team <b>' + esc(m.team_name || "—") + "</b>"
+          + " · " + st
+          + '<br/>Sleeper ID <code style="user-select:all">' + esc(m.sleeper_league_id) + "</code></p>"
+          + '<div class="app-actions">'
+          + '<button type="button" class="chip" data-manage-invites="' + esc(m.sleeper_league_id)
+          + '">Generate invite codes</button>'
+          + '<button type="button" class="linkish" data-change-team="' + esc(m.sleeper_league_id) + '"'
+          + ' data-change-team-name="' + esc(m.name || "") + '">Wrong team?</button>'
+          + '<button type="button" class="linkish" data-open-league="' + esc(m.sleeper_league_id)
+          + '">Open league</button>'
+          + "</div></div>";
+      }).join("");
+      const pendingRows = pending.map((o) => {
+        return '<div class="app-card">'
+          + "<h3>" + esc(o.name) + "</h3>"
+          + '<p class="caption" style="margin:0 0 8px">League added — claim your team to finish.</p>'
+          + '<div class="app-actions">'
+          + '<button type="button" class="chip" data-change-team="' + esc(o.sleeper_league_id) + '"'
+          + ' data-change-team-name="' + esc(o.name || "") + '">Claim your team</button>'
+          + '<button type="button" class="linkish" data-manage-invites="' + esc(o.sleeper_league_id)
+          + '">Generate invite codes</button>'
+          + "</div></div>";
+      }).join("");
+      const body = leagueRows + pendingRows
+        || '<div class="app-card"><p class="caption" style="margin:0">No leagues yet. Add one with a Sleeper ID or invite code.</p></div>';
       return (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
         + (settingsCopyNote ? '<p class="caption" role="status">' + esc(settingsCopyNote) + "</p>" : "")
-        + adminRows
-        + (isGmLeague() && league && league.providers && !league.providers.espn_authorized
-          ? espnUnlockStepsHtml()
-          : "")
-        + readyAddBooksHtml()
+        + body
         + '<div class="app-actions" style="margin-top:8px">'
-        + '<button type="button" class="chip" data-app-join="1">Join a league</button>'
-        + '<button type="button" class="chip" data-app-redeem="1">Redeem invite</button>'
+        + '<button type="button" class="chip" data-app-join="1">Add a league</button>'
         + "</div>";
     }
 

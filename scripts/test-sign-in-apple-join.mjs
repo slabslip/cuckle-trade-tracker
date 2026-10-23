@@ -11,7 +11,7 @@ const sw = fs.readFileSync(path.join(ROOT, "sw.js"), "utf8");
 
 const need = [
   "Sign in with Apple",
-  "Create your account",
+  "Sign in",
   'data-apple-go="1"',
   "function authSignInWithApple(",
   "function authHasNativeApple(",
@@ -25,15 +25,16 @@ const need = [
   'appScreen === "join"',
   'data-join-invite-go="1"',
   'data-join-league-go="1"',
-  "Find teams",
+  "Add a league",
+  "Join with code",
   "Use username and password",
-  "Join a league",
   "ensure_league",
   "release_seat",
   "match_seat",
   "Find my team",
   "claimSleeperUser",
   "Wrong team — unclaim",
+  "Generate invite codes",
   "authEnsureProfile(",
 ];
 if (page.includes(">Create as commissioner</button>")
@@ -59,15 +60,15 @@ for (const s of need) {
 if (!ents.includes("com.apple.developer.applesignin")) {
   throw new Error("ios entitlements must enable Sign in with Apple");
 }
-if (!sw.includes("peer-join-username")
-  && !sw.includes("peer-join-claim")
-  && !sw.includes("sign-in-apple-join")) {
-  throw new Error("sw.js must bump cache for peer join / Apple ship");
+if (!sw.includes("join-cleanup")
+  && !sw.includes("peer-join-username")
+  && !sw.includes("peer-join-claim")) {
+  throw new Error("sw.js must bump cache for join cleanup ship");
 }
-if (!page.includes("peerJoinUsernameMatch")
-  && !page.includes("peerJoinClaim")
-  && !page.includes("signInAppleJoin")) {
-  throw new Error("DATA_V must bump for peer join / Apple ship");
+if (!page.includes("joinCleanup")
+  && !page.includes("peerJoinUsernameMatch")
+  && !page.includes("peerJoinClaim")) {
+  throw new Error("DATA_V must bump for join cleanup ship");
 }
 if (!page.includes('cuckle.auth.v2') || !page.includes('cuckle.votes.v5')) {
   throw new Error("client keys must bump after account wipe (auth.v2 / votes.v5)");

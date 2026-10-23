@@ -1007,6 +1007,8 @@
     .join-step-done .join-step-n { border-color: #6b5a2e; background: #3a2e12; color: #f3d27a; }
     .join-step-now .join-step-lab, .join-step-done .join-step-lab { color: var(--text); }
     .join-land-hero { margin: 0 0 12px; font-size: 1.15rem; line-height: 1.4; }
+    .join-land-plate { margin: 0 0 12px; }
+    .join-land-plate .cos-plate { margin: 0; }
     .join-land-stats {
       display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0 0 12px;
     }
@@ -1024,6 +1026,37 @@
     @media (min-width: 420px) {
       .join-land-stats.is-wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     }
+    .join-land-achs {
+      display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 8px;
+    }
+    button.join-land-ach {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--line); background: var(--card); color: var(--text);
+      border-radius: 12px; padding: 8px 10px; font: inherit; cursor: pointer;
+      text-align: left; max-width: 100%;
+    }
+    button.join-land-ach.on {
+      border-color: #c9a227; background: #1a1810;
+    }
+    button.join-land-ach .cos-emoji,
+    button.join-land-ach .cos-emoji img {
+      width: 28px; height: 28px; flex: 0 0 auto;
+    }
+    button.join-land-ach b {
+      display: block; font-size: 0.85rem; line-height: 1.25;
+    }
+    button.join-land-ach span {
+      display: block; color: var(--dim); font-size: 0.7rem; margin-top: 2px;
+    }
+    .join-land-ach-note {
+      margin: 0 0 8px; color: var(--dim); font-size: 0.8rem; line-height: 1.4; min-height: 1.2em;
+    }
+    .join-land-years-panel[hidden] { display: none !important; }
+    .join-land-next {
+      position: sticky; bottom: 0; margin-top: 16px; padding: 12px 0 4px;
+      background: linear-gradient(180deg, transparent, var(--bg) 28%);
+    }
+    .join-land-next .chip { width: 100%; justify-content: center; }
     .team-book-year {
       padding: 10px 0; border-bottom: 1px solid var(--line);
     }
@@ -4872,7 +4905,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "joinClean20261023";
+    const DATA_V = "joinWelcome20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22536,6 +22569,8 @@
     let gateInviteSeatId = null;
     let gateInviteClaimed = false;
     let joinLand = null;
+    let joinLandYearsOpen = false;
+    let joinLandFocusId = "";
     let claimSeats = [];
     let claimPickId = "";
     let claimLeagueId = "";
@@ -23972,20 +24007,204 @@
       return joinLandSafeName((year && year.team_name) || fallback || (hist && hist.name) || "", fallback);
     }
 
-    function joinLandCrownsHtml(seat, uid) {
+    /** Career book for the join welcome — works on sparse finishes (place history) and rich GM seats. */
+    function joinLandDerive(seat, uid) {
+      const places = ((seat && seat.places) || []).map(function (p) {
+        return {
+          season: String(p.season || ""),
+          place: Number(p.place),
+          from: p.from || "",
+        };
+      }).filter(function (p) { return p.season && Number.isFinite(p.place) && p.place > 0; });
+      places.sort(function (a, b) { return String(b.season).localeCompare(String(a.season)); });
+      const n = places.length || (seat && seat.n) || 0;
+      let avg = seat && seat.avg != null ? Number(seat.avg) : null;
+      if ((avg == null || !Number.isFinite(avg)) && places.length) {
+        avg = places.reduce(function (a, p) { return a + p.place; }, 0) / places.length;
+      }
+      const best = places.length ? Math.min.apply(null, places.map(function (p) { return p.place; })) : null;
+      const worst = places.length ? Math.max.apply(null, places.map(function (p) { return p.place; })) : null;
+      const finals = places.filter(function (p) { return p.place <= 2; });
+      const top4 = places.filter(function (p) { return p.place <= 4; });
       const titlesWon = ((titles && titles.titles) || []).filter(function (t) {
         return t && String(t.user_id) === String(uid);
       });
-      const bits = [];
-      if (titlesWon.length) {
-        bits.push((titlesWon.length === 1 ? "Champion " : (titlesWon.length + " titles · "))
-          + titlesWon.map(function (t) { return t.season; }).join(", "));
+      const unlocks = (typeof cosmeticsUnlocksForSeat === "function")
+        ? cosmeticsUnlocksForSeat(uid)
+        : {};
+      const unlockN = Object.keys(unlocks || {}).length;
+      const emblemN = (typeof cosmeticsCatalog === "function" ? cosmeticsCatalog() : [])
+        .filter(function (c) { return c && c.kind === "emblem" && unlocks[c.id]; }).length;
+      return {
+        places: places,
+        n: n,
+        avg: avg,
+        best: best,
+        worst: worst,
+        finals: finals,
+        top4: top4,
+        titlesWon: titlesWon,
+        unlockN: unlockN,
+        emblemN: emblemN,
+        rs_avg: seat && seat.rs_avg != null ? Number(seat.rs_avg) : null,
+        playoff_avg: seat && seat.playoff_avg != null ? Number(seat.playoff_avg) : null,
+        net: seat && seat.net != null ? Number(seat.net) : null,
+        last_n: seat && seat.last_n ? Number(seat.last_n) : 0,
+        last_years: (seat && seat.last_years) || [],
+        playoff_n: seat && seat.playoff_n ? Number(seat.playoff_n) : 0,
+        playoff_years: (seat && seat.playoff_years) || [],
+        mp: ((seat && seat.payouts) || []).filter(function (p) { return p && p.kind === "mp"; }),
+      };
+    }
+
+    /** Prefer crown → finalist ladder → week peak for the welcome calling card. */
+    function joinLandShowcaseForSeat(uid) {
+      const got = (typeof cosmeticsUnlocksForSeat === "function")
+        ? cosmeticsUnlocksForSeat(uid)
+        : {};
+      const catalog = (typeof cosmeticsCatalog === "function") ? cosmeticsCatalog() : [];
+      const have = catalog.filter(function (c) { return c && c.kind === "title" && got[c.id]; });
+      if (!have.length) {
+        return (typeof cosmeticsShowcaseForSeat === "function")
+          ? cosmeticsShowcaseForSeat(uid)
+          : { title: null, emblem: null };
       }
-      if (seat && seat.last_n) bits.push((seat.last_n === 1 ? "Sacko " : (seat.last_n + " sackos · "))
-        + ((seat.last_years || []).join(", ") || ""));
-      const mp = (seat && seat.payouts || []).filter(function (p) { return p && p.kind === "mp"; });
-      if (mp.length) bits.push("Most points " + mp.map(function (p) { return p.season; }).join(", "));
-      if (seat && seat.playoff_n) bits.push(seat.playoff_n + (seat.playoff_n === 1 ? " playoff trip" : " playoff trips"));
+      const ladder = [
+        "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
+        "three_time_finalist_title", "two_time_finalist_title", "finalist_title",
+        "points_champ_title", "last_place_title",
+      ];
+      let pick = null;
+      for (let i = 0; i < ladder.length; i++) {
+        pick = have.find(function (c) { return c.id === ladder[i]; }) || null;
+        if (pick) break;
+      }
+      if (!pick && typeof cosmeticsWeekRank === "function") {
+        const weeks = have.filter(function (c) { return cosmeticsWeekRank(c.id) >= 0; })
+          .sort(function (a, b) { return cosmeticsWeekRank(b.id) - cosmeticsWeekRank(a.id); });
+        pick = weeks[0] || null;
+      }
+      if (!pick) {
+        pick = typeof cosmeticsSort === "function"
+          ? have.slice().sort(cosmeticsSort)[0]
+          : have[0];
+      }
+      const mate = catalog.find(function (c) {
+        return c && c.kind === "emblem" && pick && c.pair === pick.pair && got[c.id];
+      });
+      return { title: pick ? pick.id : null, emblem: mate ? mate.id : null };
+    }
+
+    function joinLandAchievementsHtml(seat, uid) {
+      const book = joinLandDerive(seat, uid);
+      const catalog = (typeof cosmeticsCatalog === "function") ? cosmeticsCatalog() : [];
+      const unlocks = (typeof cosmeticsUnlocksForSeat === "function")
+        ? cosmeticsUnlocksForSeat(uid)
+        : {};
+      const chips = [];
+      book.titlesWon.forEach(function (t) {
+        chips.push({
+          id: "champ-" + t.season,
+          kind: "champ",
+          label: "Champion " + t.season,
+          note: (t.thesis || ("League champion in " + t.season + ".")),
+          emblem: "champion_mark",
+        });
+      });
+      book.finals.filter(function (p) { return p.place === 2; }).forEach(function (p) {
+        chips.push({
+          id: "ru-" + p.season,
+          kind: "runner",
+          label: "Runner-up " + p.season,
+          note: "Reached the title game in " + p.season + ".",
+          emblem: "finalist",
+        });
+      });
+      if (book.mp.length) {
+        chips.push({
+          id: "mp",
+          kind: "mp",
+          label: "Most points",
+          note: "Regular-season points crown · " + book.mp.map(function (p) { return p.season; }).join(", "),
+          emblem: "points_champ",
+        });
+      }
+      if (book.last_n) {
+        chips.push({
+          id: "sacko",
+          kind: "sacko",
+          label: book.last_n === 1 ? "Sacko" : (book.last_n + " sackos"),
+          note: (book.last_years || []).join(", ") || "Finished last at least once.",
+          emblem: "last_place",
+        });
+      }
+      const finishIds = [
+        "five_time", "four_time", "three_peat", "three_time", "repeat", "two_time", "champion",
+        "three_time_finalist_title", "two_time_finalist_title", "finalist_title",
+        "points_champ_title", "bracket_thief_title", "last_place_title",
+        "perfect_chip", "blowout", "nailbiter", "climber",
+      ];
+      finishIds.forEach(function (id) {
+        if (!unlocks[id]) return;
+        if (chips.some(function (c) {
+          return (id.indexOf("finalist") >= 0 && c.kind === "runner")
+            || ((id === "champion" || id === "two_time" || id === "three_time"
+              || id === "three_peat" || id === "repeat" || id === "four_time"
+              || id === "five_time") && c.kind === "champ")
+            || (id.indexOf("points_champ") >= 0 && c.kind === "mp")
+            || (id.indexOf("last_place") >= 0 && c.kind === "sacko");
+        })) return;
+        const row = catalog.find(function (c) { return c && c.id === id; });
+        if (!row) return;
+        const mate = catalog.find(function (c) {
+          return c && c.kind === "emblem" && c.pair === row.pair && unlocks[c.id];
+        });
+        chips.push({
+          id: id,
+          kind: "cos",
+          label: row.name,
+          note: unlocks[id] || row.how || row.name,
+          emblem: mate ? mate.id : null,
+          titleId: id,
+        });
+      });
+      if (!chips.length) {
+        return '<p class="caption">First page of the book — crowns and emblems start here.</p>';
+      }
+      const shown = chips.slice(0, 8);
+      const focus = shown.find(function (c) { return c.id === joinLandFocusId; }) || shown[0];
+      const btns = shown.map(function (c) {
+        const on = focus && focus.id === c.id;
+        const mark = c.emblem && typeof cosmeticsEmblemMark === "function"
+          ? cosmeticsEmblemMark(c.emblem, "", true)
+          : "";
+        return '<button type="button" class="join-land-ach' + (on ? " on" : "") + '"'
+          + ' data-join-land-ach="' + esc(c.id) + '"'
+          + ' aria-pressed="' + (on ? "true" : "false") + '">'
+          + mark
+          + "<span><b>" + esc(c.label) + "</b>"
+          + (on ? "" : "<span>Tap</span>")
+          + "</span></button>";
+      }).join("");
+      return '<div class="join-land-achs">' + btns + "</div>"
+        + '<p class="join-land-ach-note" role="status">' + esc(focus ? focus.note : "") + "</p>";
+    }
+
+    function joinLandCrownsHtml(seat, uid) {
+      // Kept for GM team home / older callers — welcome uses joinLandAchievementsHtml.
+      const book = joinLandDerive(seat, uid);
+      const bits = [];
+      if (book.titlesWon.length) {
+        bits.push((book.titlesWon.length === 1 ? "Champion " : (book.titlesWon.length + " titles · "))
+          + book.titlesWon.map(function (t) { return t.season; }).join(", "));
+      }
+      const rus = book.finals.filter(function (p) { return p.place === 2; }).map(function (p) { return p.season; });
+      if (rus.length) bits.push("Runner-up " + rus.join(", "));
+      if (book.last_n) bits.push((book.last_n === 1 ? "Sacko " : (book.last_n + " sackos · "))
+        + ((book.last_years || []).join(", ") || ""));
+      if (book.mp.length) bits.push("Most points " + book.mp.map(function (p) { return p.season; }).join(", "));
+      if (book.playoff_n) bits.push(book.playoff_n + (book.playoff_n === 1 ? " playoff trip" : " playoff trips"));
+      if (book.n) bits.push(book.n + (book.n === 1 ? " season on the book" : " seasons on the book"));
       if (!bits.length) bits.push("First page of the book — the crowns start now.");
       return "<ul>" + bits.map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("") + "</ul>";
     }
@@ -23999,6 +24218,8 @@
         sleeper_user_id: L.sleeper_user_id,
         auto: !!(opts && opts.auto),
       };
+      joinLandYearsOpen = false;
+      joinLandFocusId = "";
       joinBusy = false;
       saveActiveLeague({
         sleeper_league_id: L.sleeper_league_id,
@@ -33932,41 +34153,81 @@
     function renderJoinWelcome() {
       const L = joinLand || activeLeague || {};
       const uid = L.sleeper_user_id || "";
-      const team = joinLandSafeName(L.team_name, "your team");
+      const team = joinLandSafeName(L.team_name || (joinLandSeat(uid) && joinLandSeat(uid).name), "your team");
       const league = L.name || "the league";
       const seat = joinLandSeat(uid);
-      const places = (seat && seat.places) || [];
-      const years = places.map(function (p) {
+      const book = joinLandDerive(seat, uid);
+      const showcase = (typeof joinLandShowcaseForSeat === "function")
+        ? joinLandShowcaseForSeat(uid)
+        : { title: null, emblem: null };
+      const plate = (typeof cosmeticsCallingCardHtml === "function")
+        ? cosmeticsCallingCardHtml(showcase, { empty: true, blank: !(showcase && (showcase.title || showcase.emblem)) })
+        : "";
+      const years = book.places.map(function (p) {
         const nm = joinLandTeamName(uid, p.season, team);
+        const tone = p.place === 1 ? " · title" : (p.place === 2 ? " · final" : "");
         return '<div class="join-land-year"><div>'
-          + "<b>" + esc(p.season) + "</b> · " + esc(nm) + "</div>"
+          + "<b>" + esc(p.season) + "</b> · " + esc(nm) + esc(tone) + "</div>"
           + "<span>" + esc(p.place ? nth(p.place) : "—") + "</span></div>";
       }).join("");
-      const avg = seat && seat.avg != null ? Number(seat.avg).toFixed(1) : "—";
-      const rs = seat && seat.rs_avg != null ? Number(seat.rs_avg).toFixed(1) : "—";
-      const po = seat && seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
-      const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
+      const avg = book.avg != null && Number.isFinite(book.avg) ? Number(book.avg).toFixed(1) : "—";
+      const best = book.best != null ? nth(book.best) : "—";
+      const finalsN = String(book.finals.length);
+      const seasons = book.n ? String(book.n) : "—";
+      const richRs = book.rs_avg != null && Number.isFinite(book.rs_avg);
+      const richPo = book.playoff_avg != null && Number.isFinite(book.playoff_avg);
+      const richNet = book.net != null && Number.isFinite(book.net);
+      const stats = richRs || richPo || richNet
+        ? ('<div class="join-land-stats is-wide">'
+          + '<div class="join-land-stat"><b>' + esc(avg) + "</b><span>Career finish avg</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(richRs ? Number(book.rs_avg).toFixed(1) : "—")
+          + "</b><span>Regular season avg</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(richPo ? Number(book.playoff_avg).toFixed(1) : "—")
+          + "</b><span>Playoff avg</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(richNet ? finishMoney(book.net) : "—")
+          + "</b><span>Career net</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(best) + "</b><span>Best finish</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(String(book.titlesWon.length))
+          + "</b><span>Titles</span></div>"
+          + "</div>")
+        : ('<div class="join-land-stats is-wide">'
+          + '<div class="join-land-stat"><b>' + esc(seasons) + "</b><span>Seasons on book</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(avg) + "</b><span>Career finish avg</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(best) + "</b><span>Best finish</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(finalsN) + "</b><span>Title games</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(String(book.titlesWon.length))
+          + "</b><span>Championships</span></div>"
+          + '<div class="join-land-stat"><b>' + esc(String(book.emblemN || 0))
+          + "</b><span>Emblems unlocked</span></div>"
+          + "</div>");
+      const yearsPanel = book.places.length
+        ? ('<button type="button" class="linkish" data-join-land-years="1" aria-expanded="'
+          + (joinLandYearsOpen ? "true" : "false") + '">'
+          + (joinLandYearsOpen ? "Hide season history" : "Show season history")
+          + "</button>"
+          + '<div class="join-land-years-panel"' + (joinLandYearsOpen ? "" : " hidden") + ">"
+          + '<h3 style="margin-top:12px">Past names and finishes</h3>'
+          + years
+          + "</div>")
+        : '<p class="caption">No completed seasons yet.</p>';
       return '<div class="app-shell">'
         + '<h2 class="screen-h" tabindex="-1">Your team</h2>'
         + '<div class="app-card">'
         + '<p class="join-land-hero"><b>' + esc(team) + "</b> · " + esc(league) + "</p>"
+        + (plate ? ('<div class="join-land-plate">' + plate + "</div>") : "")
+        + '<p class="caption" style="margin:0">Your dynasty calling card — titles and emblems you have earned.</p>'
         + "</div>"
         + '<div class="app-card"><h3>Best achievements</h3>'
-        + joinLandCrownsHtml(seat, uid)
+        + joinLandAchievementsHtml(seat, uid)
         + "</div>"
         + '<div class="app-card"><h3>Team stats</h3>'
-        + '<div class="join-land-stats">'
-        + '<div class="join-land-stat"><b>' + esc(avg) + "</b><span>Career avg</span></div>"
-        + '<div class="join-land-stat"><b>' + esc(rs) + "</b><span>Regular season avg</span></div>"
-        + '<div class="join-land-stat"><b>' + esc(po) + "</b><span>Playoff avg</span></div>"
-        + '<div class="join-land-stat"><b>' + esc(net) + "</b><span>Career net</span></div>"
+        + stats
+        + yearsPanel
         + "</div>"
-        + (years
-          ? ('<h3>Past names and finishes</h3>' + years)
-          : '<p class="caption">No completed seasons yet.</p>')
-        + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-join-enter-dash="1">Next</button>'
-        + "</div></div></div>";
+        + '<div class="join-land-next app-actions">'
+        + '<button type="button" class="chip" data-join-enter-dash="1">Open my dashboard</button>'
+        + '<p class="caption" style="margin:8px 0 0;text-align:center">Continue to your league home.</p>'
+        + "</div></div>";
     }
 
     function renderRedeemInvite() {
@@ -36253,6 +36514,18 @@
       const claimOpenGo = e.target.closest("[data-claim-open-go]");
       if (claimOpenGo) {
         onClaimOpenSeat(claimPickId).catch(function (err) { console.error(err); });
+        return;
+      }
+      const joinLandAch = e.target.closest("[data-join-land-ach]");
+      if (joinLandAch) {
+        joinLandFocusId = joinLandAch.getAttribute("data-join-land-ach") || "";
+        render();
+        return;
+      }
+      const joinLandYears = e.target.closest("[data-join-land-years]");
+      if (joinLandYears) {
+        joinLandYearsOpen = !joinLandYearsOpen;
+        render();
         return;
       }
       const joinEnterDash = e.target.closest("[data-join-enter-dash]");

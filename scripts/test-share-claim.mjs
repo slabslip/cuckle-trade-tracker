@@ -71,8 +71,14 @@ if (!claim.includes("claimSleeperUser") || !claim.includes("Find my team")
 }
 const welcome = fnSrc(page, "renderJoinWelcome");
 if (!welcome.includes("Best achievements") || !welcome.includes("Team stats")
-  || !welcome.includes(">Next</button>") || !welcome.includes("data-join-enter-dash=")) {
-  throw new Error("after claim, welcome must show achievements + stats then Next into the dashboard");
+  || !welcome.includes("Open my dashboard") || !welcome.includes("data-join-enter-dash=")
+  || !welcome.includes("joinLandAchievementsHtml(")) {
+  throw new Error("after claim, welcome must show achievements + stats then Open my dashboard");
+}
+if (!page.includes("function joinLandAchievementsHtml(")
+  || !page.includes("function joinLandDerive(")
+  || !page.includes("join-land-plate")) {
+  throw new Error("welcome must derive book stats and show title/emblem plate");
 }
 
 const afterAuth = fnSrc(page, "routeAfterAuth");

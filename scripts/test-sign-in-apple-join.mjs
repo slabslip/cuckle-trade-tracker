@@ -72,7 +72,8 @@ if (!sw.includes("join-welcome")
   && !sw.includes("board-reorder-simple")
   && !sw.includes("home-no-race-movers")
   && !sw.includes("board-reorder-seat-gate")
-  && !sw.includes("board-reorder-scroll-fix")) {
+  && !sw.includes("board-reorder-scroll-fix")
+  && !sw.includes("board-arrange-all")) {
   throw new Error("sw.js must bump cache for join-welcome ship");
 }
 if (!page.includes("joinWelcome")
@@ -85,7 +86,8 @@ if (!page.includes("joinWelcome")
   && !page.includes("boardReorderSimple")
   && !page.includes("homeNoRaceMovers")
   && !page.includes("boardReorderSeatGate")
-  && !page.includes("boardReorderScrollFix")) {
+  && !page.includes("boardReorderScrollFix")
+  && !page.includes("boardArrangeAll")) {
   throw new Error("DATA_V must bump for join-welcome ship");
 }
 if (!page.includes('cuckle.auth.v2') || !page.includes('cuckle.votes.v5')) {

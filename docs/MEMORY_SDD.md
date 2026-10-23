@@ -133,8 +133,8 @@ It does not live on the door.
 
 ### L0 — Your board (History / Data)
 
-Heading: **Your board**. Two-column doors. Tap **Reorder** to rearrange
-(list + ↑ ↓ / Top). Face is
+Heading: **Your board**. Two-column doors. Tap **Arrange** for List /
+Board / Pick / Home 4 / Catalog (draft + Save). Face is
 **house icon + label only**. No verdict sentence, no gold example number,
 no who-line, no share icon on the door. Icons exist so a thumb can find
 the room at a glance.
@@ -166,12 +166,12 @@ filters by a Team dropdown, not a type-in.
 12. Season arcs (`season_arcs`) — slow start → finish strong
 13. Manager type (`manager_archetypes`) is catalog + team-home caption (pin via Edit)
 
-**Reorder** is button-first: tap Reorder → board becomes a one-column
-list with ↑ ↓ and Top (pin to Home #1). Optional drag only while already
-reordering. The first four doors wear a gold ring — that is the top 4, and
-those four also sit on Home for instant access. Hint on the board:
-`Tap Reorder to rearrange the board. Top 4 wear gold on Home.` **Done**
-exits. Reorder still adds or removes a door from the catalog. Unsigned /
+**Arrange** opens a draft hub with five methods: **List** (≡ / ↑↓),
+**Board** (jiggle grid drag), **Pick** (tap then place), **Home 4**
+(set the gold Home slots), **Catalog** (add/remove + Deal/Research).
+**Save** commits; **Cancel** discards. The first four doors wear a gold
+ring — that is the top 4, and those four also sit on Home. Hint:
+`Tap Arrange to reorganize. Top 4 wear gold on Home.` Unsigned /
 outsider: default thirteen. A shared link opens one public ticket, not
 someone’s private layout.
 
@@ -446,8 +446,9 @@ No + FAB. No sixth pill. No SwiftUI port of this. No Chart.js.
 
 ## 8. Edit board
 
-Tap **Reorder**, then ↑ ↓ / Top (or drag while reordering). Done exits.
-Reorder still hides or adds from the catalog.
+Tap **Arrange**, pick a method (List / Board / Pick / Home 4 / Catalog),
+then **Save**. Cancel discards the draft. Catalog still hides or adds
+from the library; Deal/Research presets apply to the draft.
 Persist per seat per league
 (`seat_data_dash` + local `cuckle.data.dash.v2.<league>.<seat>`). Outsider:
 default thirteen, no edit. Shared link still opens one ticket, not the

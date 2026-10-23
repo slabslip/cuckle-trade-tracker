@@ -4880,7 +4880,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "joinCleanup20261023";
+    const DATA_V = "claimUsernameOnly20261023";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -22552,6 +22552,7 @@ const html = `<!DOCTYPE html>
     let claimMatchNote = "";
     let claimMatchBusy = false;
     let claimMatchTimer = null;
+    let claimStep = "league"; // league confirm → username (no team-list hints)
     let nameHistoryBook = null;
     let gateSuggestedUser = null;
     let gateMode = "signin"; // signin | signup | forgot — returning users land on Sign in
@@ -24030,65 +24031,53 @@ const html = `<!DOCTYPE html>
       }) || null;
     }
 
-    function scheduleClaimMatch() {
-      if (claimMatchTimer) clearTimeout(claimMatchTimer);
-      claimMatchTimer = setTimeout(function () {
-        claimMatchTimer = null;
-        onMatchSleeperUser({ quiet: true }).catch(function (err) { console.warn(err); });
-      }, 380);
-    }
-
     /**
-     * Resolve typed Sleeper username → seat. Uses Sleeper /user/{name} on the
-     * server, then fuzzy display_name so close spellings still auto-select.
+     * Resolve typed Sleeper username → seat. Security step: no team list / hints.
+     * Only accept a confident Sleeper username hit (API or exact handle).
      */
-    async function onMatchSleeperUser(opts) {
-      const quiet = !!(opts && opts.quiet);
+    async function onMatchSleeperUser() {
       const lid = claimLeagueId || gateInviteLeagueId || "";
       const el = document.getElementById("claimSleeperUser");
       if (el) claimSleeperUser = String(el.value || "").trim();
       const typed = claimSleeperUser;
+      claimPickId = "";
       if (!lid) return;
       if (typed.length < 2) {
-        if (!quiet) {
-          claimMatchNote = "Type the Sleeper username you sign into Sleeper with.";
-          render();
-        }
+        claimMatchNote = "Type your Sleeper username.";
+        render();
         return;
       }
       if (!authSession) {
-        claimMatchNote = "Sign in first, then we can match your Sleeper username.";
+        claimMatchNote = "Sign in first, then enter your Sleeper username.";
         render();
         return;
       }
       if (claimMatchBusy || joinBusy) return;
       claimMatchBusy = true;
-      if (!quiet) claimMatchNote = "Looking up…";
+      claimMatchNote = "Looking up…";
       render();
       try {
         const data = await joinLeagueCall("match_seat", {
           sleeper_league_id: lid,
           sleeper_username: typed,
         });
-        if (data.best && data.best.sleeper_user_id) {
-          claimPickId = String(data.best.sleeper_user_id);
-          const label = data.best.display_name || data.best.username || data.best.team_name;
-          const team = data.best.team_name && data.best.team_name !== label
-            ? (" · team " + data.best.team_name)
-            : "";
-          claimMatchNote = "Matched you as <b>" + esc(label) + "</b>" + esc(team)
-            + ". Confirm below to claim.";
+        const best = data.best;
+        // Security: only lock a seat on a real Sleeper username resolve or exact handle.
+        const solid = !!(best && best.sleeper_user_id
+          && (best.score >= 95 || best.how === "sleeper_username"));
+        if (solid) {
+          claimPickId = String(best.sleeper_user_id);
+          const handle = best.display_name || best.username || typed;
+          const team = best.team_name || "your team";
+          claimMatchNote = "We found <b>" + esc(handle) + "</b>"
+            + (team && team !== handle ? (" · <b>" + esc(team) + "</b>") : "")
+            + ". Confirm this is your team.";
         } else {
-          claimPickId = claimPickId || "";
-          claimMatchNote = esc(data.note || "No clear match — pick your team from the list.");
-          if (data.candidates && data.candidates.length === 1 && data.candidates[0].sleeper_user_id) {
-            claimPickId = String(data.candidates[0].sleeper_user_id);
-            const c = data.candidates[0];
-            claimMatchNote = "Closest match: <b>" + esc(c.display_name || c.team_name) + "</b>. "
-              + "Confirm if that is you.";
-          }
+          claimPickId = "";
+          claimMatchNote = "No team matched that Sleeper username. Check the spelling and try again.";
         }
       } catch (err) {
+        claimPickId = "";
         claimMatchNote = esc((err && err.message) || "Could not match that username.");
       } finally {
         claimMatchBusy = false;
@@ -24101,9 +24090,11 @@ const html = `<!DOCTYPE html>
       claimLeagueName = leagueName || claimLeagueName || "";
       claimPickId = "";
       claimMatchNote = "";
+      claimSleeperUser = "";
+      claimStep = "league";
       joinError = "";
       appScreen = "claimTeam";
-      focusNext = "#claimSleeperUser";
+      focusNext = ".screen-h";
       if (preloaded && Array.isArray(preloaded.seats)) {
         claimSeats = preloaded.seats;
         claimLeagueName = preloaded.league_name || claimLeagueName || claimLeagueId;
@@ -24127,7 +24118,7 @@ const html = `<!DOCTYPE html>
           claimSeats = data.seats || [];
           claimLeagueName = data.league_name || claimLeagueName || claimLeagueId;
         } catch (err2) {
-          joinError = (err && err.message) || "Could not load teams. Check the Sleeper league ID.";
+          joinError = (err && err.message) || "Could not load that league. Check the Sleeper league ID.";
         }
       }
       render();
@@ -24171,7 +24162,8 @@ const html = `<!DOCTYPE html>
         return;
       }
       if (!seatId || !lid) {
-        joinError = "Pick the team that is yours.";
+        joinError = "Enter your Sleeper username and find your team first.";
+        claimStep = "username";
         appScreen = "claimTeam";
         render();
         return;
@@ -33890,76 +33882,55 @@ const html = `<!DOCTYPE html>
 
     function renderClaimTeam() {
       const league = claimLeagueName || gateInviteLeague || "this league";
+      const lid = claimLeagueId || gateInviteLeagueId || "";
       const mine = mySeatInClaimLeague();
-      const myId = mine ? String(mine.sleeper_user_id) : "";
-      const takenN = (claimSeats || []).filter(function (s) { return s.claimed; }).length;
       const picked = (claimSeats || []).find(function (s) {
         return String(s.sleeper_user_id) === String(claimPickId);
       });
-      const hero = (typeof shareAccessPending === "function" && shareAccessPending())
-        ? ('A member shared a view in <b>' + esc(league) + "</b>. Claim your team to open it.")
-        : ("Join <b>" + esc(league) + "</b>. Type your Sleeper username and we will find your team.");
-      const hint = !claimSeats.length
-        ? "Could not load teams yet. Check the Sleeper league ID."
-        : (mine
-          ? ("You currently sit as <b>" + esc(mine.team_name || "a team")
-            + "</b>. Wrong team? Unclaim, or match a different Sleeper username.")
-          : (takenN
-            ? (takenN + " marked taken — matching your username still finds the right seat.")
-            : "Use the username you sign into Sleeper with (not your fantasy team name). Close spellings still match."));
-      const claimLabel = picked && picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
-        ? "Take this team"
-        : (mine && picked && String(mine.sleeper_user_id) !== String(picked.sleeper_user_id)
-          ? "Switch to this team"
-          : "Yes — this is my team");
-      const pickLabel = picked
-        ? ((picked.display_name || "") && (picked.display_name !== picked.team_name)
-          ? (picked.display_name + " · " + picked.team_name)
-          : (picked.team_name || picked.display_name || "this team"))
+      const pickShow = picked
+        ? ((picked.display_name || claimSleeperUser || "You")
+          + (picked.team_name ? (" · " + picked.team_name) : ""))
         : "";
-      const rowsLabeled = (claimSeats || []).map(function (s) {
-        const on = String(s.sleeper_user_id) === String(claimPickId);
-        const isMine = myId && String(s.sleeper_user_id) === myId;
-        const handle = s.display_name || s.username || "";
-        const label = (handle && handle !== s.team_name)
-          ? (esc(handle) + " · " + esc(s.team_name))
-          : esc(s.team_name || handle || s.sleeper_user_id);
-        return '<button type="button" class="chip'
-          + (on ? " claim-team-on" : "")
-          + (isMine ? " claim-team-mine" : "") + '"'
-          + ' data-claim-pick="' + esc(s.sleeper_user_id) + '"'
-          + (joinBusy ? " disabled" : "") + ">"
-          + label
-          + (isMine ? " · yours" : (s.claimed ? " · taken" : ""))
-          + "</button>";
-      }).join("");
+
+      if (claimStep !== "username") {
+        return '<div class="app-shell">'
+          + '<h2 class="screen-h" tabindex="-1">Confirm league</h2>'
+          + '<div class="app-card">'
+          + '<p class="join-land-hero">Is this your Sleeper league?</p>'
+          + '<p class="caption" style="margin:0 0 8px"><b>' + esc(league) + "</b>"
+          + (lid ? ('<br/>ID <code style="user-select:all">' + esc(lid) + "</code>") : "")
+          + "</p>"
+          + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
+          + '<div class="app-actions">'
+          + '<button type="button" class="chip" data-claim-league-yes="1"'
+          + (joinBusy ? " disabled" : "") + ">Yes — continue</button>"
+          + '<button type="button" class="linkish" data-app-join="1">Wrong league</button>'
+          + "</div></div></div>";
+      }
+
       return '<div class="app-shell">'
-        + joinStepsHtml("team")
-        + '<h2 class="screen-h" tabindex="-1">Claim your team</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Your Sleeper username</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">' + hero + "</p>"
-        + '<p class="caption">' + hint + "</p>"
+        + '<p class="join-land-hero">Type the Sleeper username for your team in <b>'
+        + esc(league) + "</b>.</p>"
+        + '<p class="caption">No hints — enter it exactly as you sign into Sleeper.</p>'
         + '<div class="app-form">'
-        + '<label>Sleeper username<input id="claimSleeperUser" name="sleeper_user" autocomplete="username"'
-        + ' autocapitalize="off" spellcheck="false" placeholder="e.g. TrumanCooper"'
+        + '<label>Sleeper username<input id="claimSleeperUser" name="sleeper_user"'
+        + ' autocomplete="off" autocapitalize="off" spellcheck="false" placeholder=""'
         + ' value="' + esc(claimSleeperUser || "") + '"'
         + (joinBusy || claimMatchBusy ? " disabled" : "") + " /></label>"
         + '<div class="app-actions">'
         + '<button type="button" class="chip" data-claim-match-go="1"'
         + (joinBusy || claimMatchBusy ? " disabled" : "") + ">"
-        + (claimMatchBusy ? "Matching…" : "Find my team") + "</button>"
+        + (claimMatchBusy ? "Looking up…" : "Find my team") + "</button>"
         + "</div></div>"
-        + (claimMatchNote ? '<p class="caption" role="status" style="margin-top:8px">' + claimMatchNote + "</p>" : "")
-        + '<p class="caption" style="margin:12px 0 6px">Or pick from the league list</p>'
-        + '<div class="claim-team-list">'
-        + (rowsLabeled || "")
-        + "</div>"
+        + (claimMatchNote ? '<p class="caption" role="status" style="margin-top:10px">' + claimMatchNote + "</p>" : "")
         + (picked
-          ? ('<p class="caption" style="margin-top:12px">You picked <b>' + esc(pickLabel)
+          ? ('<p class="caption" style="margin-top:12px">Confirm: <b>' + esc(pickShow)
             + "</b>"
             + (picked.claimed && (!mine || String(mine.sleeper_user_id) !== String(picked.sleeper_user_id))
-              ? " (currently taken — claiming moves it to you)."
-              : ". Only claim it if that is your team.")
+              ? " (currently claimed — continuing moves it to you)."
+              : "")
             + "</p>")
           : "")
         + (joinError ? '<p class="err" role="alert">' + esc(joinError) + "</p>" : "")
@@ -33967,13 +33938,15 @@ const html = `<!DOCTYPE html>
         + (picked
           ? ('<button type="button" class="chip" data-claim-open-go="1"'
             + (joinBusy ? " disabled" : "") + ">"
-            + (joinBusy ? "Claiming…" : claimLabel) + "</button>")
-          : '<p class="caption">Find your team with your Sleeper username, or tap it above.</p>')
+            + (joinBusy ? "Claiming…" : "Yes — this is my team") + "</button>"
+            + '<button type="button" class="linkish" data-claim-username-retry="1"'
+            + (joinBusy ? " disabled" : "") + ">Try a different username</button>")
+          : "")
         + (mine
           ? ('<button type="button" class="linkish" data-release-seat="1"'
             + (joinBusy ? " disabled" : "") + ">Wrong team — unclaim</button>")
           : "")
-        + '<button type="button" class="linkish" data-app-home="1">Your leagues</button>'
+        + '<button type="button" class="linkish" data-claim-league-back="1">Back</button>'
         + "</div></div></div>";
     }
 
@@ -33995,13 +33968,10 @@ const html = `<!DOCTYPE html>
       const po = seat && seat.playoff_avg != null ? Number(seat.playoff_avg).toFixed(1) : "—";
       const net = seat && seat.net != null ? finishMoney(seat.net) : "—";
       return '<div class="app-shell">'
-        + joinStepsHtml("land")
-        + '<h2 class="screen-h" tabindex="-1">You are in</h2>'
+        + '<h2 class="screen-h" tabindex="-1">Your team</h2>'
         + '<div class="app-card">'
-        + '<p class="join-land-hero">You have joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
-        + '<p class="caption">League added. Team claimed.'
-        + (L.auto ? " This invite linked the seat for you." : " You picked this team.")
-        + "</p></div>"
+        + '<p class="join-land-hero">You joined <b>' + esc(league) + "</b> as <b>" + esc(team) + "</b>.</p>"
+        + '<p class="caption">Best achievements and a quick look at your book. Tap Next for your home dashboard.</p></div>'
         + '<div class="app-card"><h3>Crowning achievements</h3>'
         + joinLandCrownsHtml(seat, uid)
         + "</div>"
@@ -34016,7 +33986,7 @@ const html = `<!DOCTYPE html>
           ? ('<h3>Past names and finishes</h3>' + years)
           : '<p class="caption">No completed seasons on this book yet.</p>')
         + '<div class="app-actions" style="margin-top:12px">'
-        + '<button type="button" class="chip" data-join-enter-dash="1">Enter the dashboard</button>'
+        + '<button type="button" class="chip" data-join-enter-dash="1">Next</button>'
         + "</div></div></div>";
     }
 
@@ -36272,17 +36242,40 @@ const html = `<!DOCTYPE html>
         onRedeemInvite();
         return;
       }
-      const claimPick = e.target.closest("[data-claim-pick]");
-      if (claimPick) {
-        claimPickId = claimPick.getAttribute("data-claim-pick") || "";
-        joinError = "";
+      const claimLeagueYes = e.target.closest("[data-claim-league-yes]");
+      if (claimLeagueYes) {
+        claimStep = "username";
+        claimPickId = "";
         claimMatchNote = "";
+        claimSleeperUser = "";
+        joinError = "";
+        focusNext = "#claimSleeperUser";
+        render();
+        return;
+      }
+      const claimLeagueBack = e.target.closest("[data-claim-league-back]");
+      if (claimLeagueBack) {
+        claimStep = "league";
+        claimPickId = "";
+        claimMatchNote = "";
+        joinError = "";
+        focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const claimUserRetry = e.target.closest("[data-claim-username-retry]");
+      if (claimUserRetry) {
+        claimPickId = "";
+        claimMatchNote = "";
+        claimSleeperUser = "";
+        joinError = "";
+        focusNext = "#claimSleeperUser";
         render();
         return;
       }
       const claimMatchGo = e.target.closest("[data-claim-match-go]");
       if (claimMatchGo) {
-        onMatchSleeperUser({ quiet: false }).catch(function (err) { console.error(err); });
+        onMatchSleeperUser().catch(function (err) { console.error(err); });
         return;
       }
       const claimOpenGo = e.target.closest("[data-claim-open-go]");
@@ -37218,7 +37211,6 @@ const html = `<!DOCTYPE html>
       }
       if (e.target && e.target.id === "claimSleeperUser") {
         claimSleeperUser = String(e.target.value || "");
-        scheduleClaimMatch();
         return;
       }
       if (e.target && (e.target.id === "profileZoom" || e.target.dataset.profileZoom)) {
@@ -37646,7 +37638,7 @@ if (!html.includes('updateViaCache: "none"')
 const swSrc = fs.readFileSync("sw.js", "utf8");
 if (swSrc.includes('caches.match("./index.html")')
   || swSrc.includes("brand-mark.png")
-  || !swSrc.includes("chuckle-shell-v356-join-cleanup")
+  || !swSrc.includes("chuckle-shell-v357-claim-username-only")
   || !swSrc.includes("isAppDocument")
   || !swSrc.includes("Chuckle Fantasy needs a network")
   || !swSrc.includes("isDataImg")
@@ -40049,9 +40041,11 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("function renderJoinWelcome()")
   || !inline.includes("function openJoinWelcome(")
   || !inline.includes("function openClaimPick(")
-  || !inline.includes("Pick the team that is yours")
+  || !inline.includes("Your Sleeper username")
+  || !inline.includes("Confirm league")
   || !inline.includes("joined <b>")
-  || !inline.includes("Claim your team")
+  || !inline.includes("Yes — this is my team")
+  || !inline.includes("data-join-enter-dash=\"1\">Next")
   || !inline.includes("Crowning achievements")
   || !inline.includes("Past names and finishes")
   || !inline.includes("Career net")
@@ -40065,8 +40059,13 @@ if (!inline.includes("function renderClaimTeam()")
   || !inline.includes("ensure_league")
   || !inline.includes("release_seat")
   || !inline.includes("league_claim_preview")
-  || !inline.includes("name-history.json")) {
-  throw new Error("join landing must ship invite copy, team picker, and pre-dash welcome");
+  || !inline.includes("name-history.json")
+  || !inline.includes("No hints — enter it exactly")
+  || !inline.includes('data-claim-league-yes="1"')
+  || inline.includes('data-claim-pick="')
+  || inline.includes("Or pick from the league list")
+  || inline.includes("scheduleClaimMatch")) {
+  throw new Error("join landing must ship league confirm → username (no list) → achievements → Next");
 }
 {
   if (!inline.includes("function authSeatCanonName()")

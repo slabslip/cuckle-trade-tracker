@@ -1,14 +1,7 @@
 {
-  "as_of": "2026-10-23",
-  "n": 43,
+  "as_of": "2026-10-24",
+  "n": 31,
   "players": {
-    "1466": {
-      "name": "Travis Kelce",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "KC",
-      "pos": "TE"
-    },
     "2133": {
       "name": "Davante Adams",
       "injury_status": "IR",
@@ -18,17 +11,10 @@
     },
     "2216": {
       "name": "Mike Evans",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "SF",
       "pos": "WR"
-    },
-    "4035": {
-      "name": "Alvin Kamara",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NO",
-      "pos": "RB"
     },
     "4137": {
       "name": "James Conner",
@@ -65,13 +51,6 @@
       "team": "PHI",
       "pos": "TE"
     },
-    "5844": {
-      "name": "T.J. Hockenson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIN",
-      "pos": "TE"
-    },
     "5872": {
       "name": "Deebo Samuel Sr.",
       "injury_status": "Out",
@@ -81,7 +60,7 @@
     },
     "5892": {
       "name": "David Montgomery",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
@@ -100,13 +79,6 @@
       "team": "PHI",
       "pos": "WR"
     },
-    "7526": {
-      "name": "Jaylen Waddle",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DEN",
-      "pos": "WR"
-    },
     "7543": {
       "name": "Travis Etienne Jr.",
       "injury_status": "IR",
@@ -121,16 +93,9 @@
       "team": "NE",
       "pos": "WR"
     },
-    "8137": {
-      "name": "George Pickens",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DAL",
-      "pos": "WR"
-    },
     "8154": {
       "name": "Brian Robinson Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "ATL",
       "pos": "RB"
@@ -141,13 +106,6 @@
       "status": "Active",
       "team": "NYJ",
       "pos": "RB"
-    },
-    "8167": {
-      "name": "Christian Watson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "GB",
-      "pos": "WR"
     },
     "8408": {
       "name": "Jordan Mason",
@@ -163,16 +121,23 @@
       "team": "LAR",
       "pos": "WR"
     },
+    "9508": {
+      "name": "Tyjae Spears",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "TEN",
+      "pos": "RB"
+    },
     "9753": {
       "name": "Zach Charbonnet",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "SEA",
       "pos": "RB"
     },
     "10229": {
       "name": "Rashee Rice",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "KC",
       "pos": "WR"
@@ -183,20 +148,6 @@
       "status": "Active",
       "team": "BUF",
       "pos": "TE"
-    },
-    "11584": {
-      "name": "Bucky Irving",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "TB",
-      "pos": "RB"
-    },
-    "11625": {
-      "name": "Adonai Mitchell",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NYJ",
-      "pos": "WR"
     },
     "11635": {
       "name": "Ladd McConkey",
@@ -212,30 +163,16 @@
       "team": "CLE",
       "pos": "RB"
     },
-    "12501": {
-      "name": "Matthew Golden",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "GB",
-      "pos": "WR"
-    },
-    "12512": {
-      "name": "Quinshon Judkins",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CLE",
-      "pos": "RB"
-    },
     "12514": {
       "name": "Emeka Egbuka",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "TB",
       "pos": "WR"
     },
     "12518": {
       "name": "Tyler Warren",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "IND",
       "pos": "TE"
@@ -270,17 +207,10 @@
     },
     "13287": {
       "name": "Jeremiyah Love",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "ARI",
       "pos": "RB"
-    },
-    "13298": {
-      "name": "KC Concepcion Jr.",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CLE",
-      "pos": "WR"
     },
     "13305": {
       "name": "Mike Washington Jr.",
@@ -288,20 +218,6 @@
       "status": "Active",
       "team": "LV",
       "pos": "RB"
-    },
-    "13345": {
-      "name": "Jonah Coleman",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "DEN",
-      "pos": "RB"
-    },
-    "13346": {
-      "name": "Denzel Boston",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CLE",
-      "pos": "WR"
     }
   }
 }

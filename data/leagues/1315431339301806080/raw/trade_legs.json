@@ -4054,6 +4054,192 @@
     }
   },
   {
+    "transaction_id": "1419826111914799104",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 7,
+    "kind": "player",
+    "asset_key": "player:7525",
+    "label": "DeVonta Smith"
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "in",
+    "to_user_id": "457784547094818816",
+    "to_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:11628",
+    "label": "Marvin Harrison Jr."
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "in",
+    "to_user_id": "457784547094818816",
+    "to_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:13274",
+    "label": "Germie Bernard"
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 7,
+    "kind": "player",
+    "asset_key": "player:13307",
+    "label": "Marlin Klein"
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "out",
+    "from_user_id": "457784547094818816",
+    "from_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:7525",
+    "label": "DeVonta Smith"
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "kind": "player",
+    "asset_key": "player:11628",
+    "label": "Marvin Harrison Jr."
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "kind": "player",
+    "asset_key": "player:13274",
+    "label": "Germie Bernard"
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "out",
+    "from_user_id": "457784547094818816",
+    "from_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:13307",
+    "label": "Marlin Klein"
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "in",
+    "to_user_id": "457784547094818816",
+    "to_roster_id": 2,
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "origin_roster_id": 4,
+    "kind": "pick",
+    "asset_key": "pick:2028:4:4",
+    "label": "2028 R4 (orig roster 4)",
+    "pick": {
+      "season": "2028",
+      "round": 4,
+      "roster_id": 4,
+      "previous_owner_id": 7,
+      "owner_id": 2
+    }
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "to_user_id": "457784547094818816",
+    "to_roster_id": 2,
+    "origin_roster_id": 4,
+    "kind": "pick",
+    "asset_key": "pick:2028:4:4",
+    "label": "2028 R4 (orig roster 4)",
+    "pick": {
+      "season": "2028",
+      "round": 4,
+      "roster_id": 4,
+      "previous_owner_id": 7,
+      "owner_id": 2
+    }
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "in",
+    "to_user_id": "457784547094818816",
+    "to_roster_id": 2,
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "origin_roster_id": 7,
+    "kind": "pick",
+    "asset_key": "pick:2029:3:7",
+    "label": "2029 R3 (orig roster 7)",
+    "pick": {
+      "season": "2029",
+      "round": 3,
+      "roster_id": 7,
+      "previous_owner_id": 7,
+      "owner_id": 2
+    }
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "to_user_id": "457784547094818816",
+    "to_roster_id": 2,
+    "origin_roster_id": 7,
+    "kind": "pick",
+    "asset_key": "pick:2029:3:7",
+    "label": "2029 R3 (orig roster 7)",
+    "pick": {
+      "season": "2029",
+      "round": 3,
+      "roster_id": 7,
+      "previous_owner_id": 7,
+      "owner_id": 2
+    }
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 7,
+    "from_user_id": "457784547094818816",
+    "from_roster_id": 2,
+    "origin_roster_id": 8,
+    "kind": "pick",
+    "asset_key": "pick:2027:3:8",
+    "label": "2027 R3 (orig roster 8)",
+    "pick": {
+      "season": "2027",
+      "round": 3,
+      "roster_id": 8,
+      "previous_owner_id": 2,
+      "owner_id": 7
+    }
+  },
+  {
+    "transaction_id": "1419826111914799104",
+    "direction": "out",
+    "from_user_id": "457784547094818816",
+    "from_roster_id": 2,
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 7,
+    "origin_roster_id": 8,
+    "kind": "pick",
+    "asset_key": "pick:2027:3:8",
+    "label": "2027 R3 (orig roster 8)",
+    "pick": {
+      "season": "2027",
+      "round": 3,
+      "roster_id": 8,
+      "previous_owner_id": 2,
+      "owner_id": 7
+    }
+  },
+  {
     "transaction_id": "1270932897498419200",
     "direction": "in",
     "to_user_id": "458715702119886848",

@@ -8782,5 +8782,39 @@
         "out": []
       }
     }
+  },
+  {
+    "date": "2026-10-24",
+    "season": "2026",
+    "week": 7,
+    "transaction_id": "1419826111914799104",
+    "sides": {
+      "TipsUp": {
+        "in": [
+          "Marvin Harrison Jr.",
+          "Germie Bernard",
+          "2028 R4 (orig roster 4)",
+          "2029 R3 (orig roster 7)"
+        ],
+        "out": [
+          "DeVonta Smith",
+          "Marlin Klein",
+          "2027 R3 (orig roster 8)"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "DeVonta Smith",
+          "Marlin Klein",
+          "2027 R3 (orig roster 8)"
+        ],
+        "out": [
+          "Marvin Harrison Jr.",
+          "Germie Bernard",
+          "2028 R4 (orig roster 4)",
+          "2029 R3 (orig roster 7)"
+        ]
+      }
+    }
   }
 ]

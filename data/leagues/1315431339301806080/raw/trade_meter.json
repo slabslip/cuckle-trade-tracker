@@ -35005,6 +35005,1515 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1419826111914799104",
+    "date": "2026-10-24",
+    "season": "2026",
+    "week": 7,
+    "user_ids": [
+      "457784547094818816",
+      "458342725222133760"
+    ],
+    "names": [
+      "TipsUp",
+      "TrumanCooper"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "457784547094818816": {
+            "name": "TipsUp",
+            "today": 1373,
+            "sent_today": 3727,
+            "today_delta": -2354,
+            "t0": 1373,
+            "t0_delta": -2354,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 1148,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 161,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 16,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 48,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 3647,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 21,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 1148,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 161,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 16,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 48,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 3727,
+            "sent_today": 1373,
+            "today_delta": 2354,
+            "t0": 3727,
+            "t0_delta": 2354,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 3647,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 21,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 1148,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 161,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 16,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 48,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 3647,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 21,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TipsUp": 1373,
+              "TrumanCooper": 3727
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "457784547094818816": {
+            "name": "TipsUp",
+            "today": 1373,
+            "sent_today": 3727,
+            "today_delta": -2354,
+            "t0": 1373,
+            "t0_delta": -2354,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 1148,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 161,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 16,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 48,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 3647,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 21,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 1148,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 161,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 16,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 48,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 3727,
+            "sent_today": 1373,
+            "today_delta": 2354,
+            "t0": 3727,
+            "t0_delta": 2354,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 3647,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 21,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 1148,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 161,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 16,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 48,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 3647,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 21,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TipsUp": 1373,
+              "TrumanCooper": 3727
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "457784547094818816": {
+            "name": "TipsUp",
+            "today": 9506,
+            "sent_today": 8222.9,
+            "today_delta": 1283.1000000000004,
+            "t0": 9619,
+            "t0_delta": 681.25,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3629,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3828
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 2985,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2538
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 1301,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1384
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 1591,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1869
+              }
+            ],
+            "sent": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 4812,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 5090
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 1156,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1493
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 1894,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1973
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 360.9,
+            "t0_value_adjust": 0
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 8222.9,
+            "sent_today": 9506,
+            "today_delta": -1283.1000000000004,
+            "t0": 8937.75,
+            "t0_delta": -681.25,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "DeVonta Smith",
+                "kind": "player",
+                "asset_key": "player:7525",
+                "value": 4812,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 5090
+              },
+              {
+                "label": "Marlin Klein",
+                "kind": "player",
+                "asset_key": "player:13307",
+                "value": 1156,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1493
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 1894,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1973
+              }
+            ],
+            "sent": [
+              {
+                "label": "Marvin Harrison Jr.",
+                "kind": "player",
+                "asset_key": "player:11628",
+                "value": 3629,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3828
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 2985,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2538
+              },
+              {
+                "label": "2028 4th (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2028:4:4",
+                "value": 1301,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1384
+              },
+              {
+                "label": "2029 3rd (TrumanCooper)",
+                "kind": "pick",
+                "asset_key": "pick:2029:3:7",
+                "value": 1591,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1869
+              }
+            ],
+            "value_adjust": 360.9,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 381.75
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TipsUp": 9619,
+              "TrumanCooper": 8556
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "457784547094818816": {
+              "name": "TipsUp",
+              "today": 9619,
+              "sent_today": 8937.75,
+              "today_delta": 681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 381.75
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 8937.75,
+              "sent_today": 9619,
+              "today_delta": -681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 381.75,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y1": {
+          "sides": {
+            "457784547094818816": {
+              "name": "TipsUp",
+              "today": 9619,
+              "sent_today": 8937.75,
+              "today_delta": 681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 381.75
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 8937.75,
+              "sent_today": 9619,
+              "today_delta": -681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 381.75,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y2": {
+          "sides": {
+            "457784547094818816": {
+              "name": "TipsUp",
+              "today": 9619,
+              "sent_today": 8937.75,
+              "today_delta": 681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 381.75
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 8937.75,
+              "sent_today": 9619,
+              "today_delta": -681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 381.75,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y3": {
+          "sides": {
+            "457784547094818816": {
+              "name": "TipsUp",
+              "today": 9619,
+              "sent_today": 8937.75,
+              "today_delta": 681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 381.75
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 8937.75,
+              "sent_today": 9619,
+              "today_delta": -681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 381.75,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "457784547094818816": {
+              "name": "TipsUp",
+              "today": 9619,
+              "sent_today": 8937.75,
+              "today_delta": 681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 381.75
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 8937.75,
+              "sent_today": 9619,
+              "today_delta": -681.25,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeVonta Smith",
+                  "kind": "player",
+                  "asset_key": "player:7525",
+                  "value": 5090,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Marlin Klein",
+                  "kind": "player",
+                  "asset_key": "player:13307",
+                  "value": 1493,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Marvin Harrison Jr.",
+                  "kind": "player",
+                  "asset_key": "player:11628",
+                  "value": 3828,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2538,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 4th (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:4:4",
+                  "value": 1384,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2029 3rd (TrumanCooper)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:3:7",
+                  "value": 1869,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 381.75,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1270932897498419200",
     "date": "2025-09-09",
     "season": "2025",

@@ -229,6 +229,9 @@ async function main() {
     window: 3,
   }));
 
+  const raceIntent = readUi("race-intent.json", null)
+    || readJson("race-intent.json", null);
+
   const book = projectFinishBook({
     rosters: rosters || [],
     ownerByRoster,
@@ -242,6 +245,7 @@ async function main() {
     formByRoster,
     trendByRoster,
     heatByRoster,
+    raceIntent,
   });
 
   // Monte Carlo remaining RS + playoffs — blend mean place into proj_finish

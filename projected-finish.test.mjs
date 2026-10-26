@@ -26,6 +26,7 @@ import {
   weekBlendScale,
   attachMonteCarloToBook,
   mcBlendWeight,
+  mcSeatBlendWeight,
   DEFAULT_MC_SIMS,
 } from "./lib/projected-finish-mc.mjs";
 
@@ -61,7 +62,7 @@ const book = projectFinishBook({
   playoffWeekStart: 15,
 });
 
-assert.equal(book.v, 5);
+assert.ok(book.v >= 5);
 assert.equal(book.seats[0].name, "Alpha");
 assert.equal(book.seats[0].proj_finish, 1);
 assert.equal(book.seats[0].proj_slot, 2);
@@ -313,6 +314,11 @@ const mc = runMonteCarlo({
 assert.ok(mc.by_roster["1"].mean_place < mc.by_roster["2"].mean_place);
 assert.ok(mc.by_roster["1"].p_top4 > 0.5);
 assert.ok(mcBlendWeight(12, 15) > mcBlendWeight(1, 15));
+// W6+ disagree≥2 ramps seat blend toward MC (calib playbook).
+assert.ok(mcSeatBlendWeight(7, 15, 9, 2.8) > mcBlendWeight(7, 15));
+assert.ok(mcSeatBlendWeight(7, 15, 9, 2.8) >= 0.8);
+assert.equal(mcSeatBlendWeight(7, 15, 4, 4.2), mcBlendWeight(7, 15));
+assert.equal(mcSeatBlendWeight(3, 15, 9, 2.8), mcBlendWeight(3, 15));
 
 const mcBook = attachMonteCarloToBook(
   projectFinishBook({
@@ -352,3 +358,39 @@ console.log("mc smoke", {
   w12path: w12.path,
   blend: mcBook.mc.blend_weight,
 });
+
+// Race intent: same talent, but Tanker must not project ahead of Hunter on path.
+const intentBook = projectFinishBook({
+  rosters: [
+    {
+      roster_id: 1,
+      owner_id: "tank",
+      settings: { wins: 4, losses: 3, fpts: 900, fpts_against: 880 },
+    },
+    {
+      roster_id: 2,
+      owner_id: "hunt",
+      settings: { wins: 3, losses: 4, fpts: 860, fpts_against: 900 },
+    },
+  ],
+  ownerByRoster: { 1: "tank", 2: "hunt" },
+  nameByUser: { tank: "TankSeat", hunt: "HuntSeat" },
+  remainingPairs: [[1, 2], [1, 2], [1, 2], [1, 2], [1, 2], [1, 2], [1, 2]],
+  teams: 2,
+  season: 2026,
+  week: 7,
+  playoffWeekStart: 15,
+  raceIntent: { by_name: { TankSeat: "tank", HuntSeat: "playoff_hunt" } },
+});
+const intentBy = Object.fromEntries(intentBook.seats.map((s) => [s.name, s]));
+assert.equal(intentBy.TankSeat.race_intent, "tank");
+assert.equal(intentBy.HuntSeat.race_intent, "playoff_hunt");
+assert.ok(
+  intentBy.HuntSeat.expected_remaining_wins > intentBy.TankSeat.expected_remaining_wins,
+  "playoff hunter must get more remaining wins than equal-talent tanker",
+);
+assert.ok(
+  intentBy.HuntSeat.proj_finish < intentBy.TankSeat.proj_finish,
+  "playoff hunter should project ahead of tanker",
+);
+assert.equal(intentBook.v, 6);

@@ -32,14 +32,19 @@ homepage “who to target” journeys.
 
 ---
 
-## 2. Calculus (v5 — week-scaled blend + Monte Carlo paths)
+## 2. Calculus (v6 — race intent + MC disagree override)
 
 v1 double-counted banked wins. v2 forecasts movement. v3 adds actual-vs-proj
 form. v4 downweights noisy weeks 1–4 and adds playoff-trend, form slope, and
-transaction heat. **v5** week-scales the blend from a 7-season × 2500-sim
+transaction heat. v5 week-scales the blend from a 7-season × 2500-sim
 Monte Carlo calibration and blends MC mean place into `proj_finish` (with
 p10–p90 path bands on each seat). See
 [`PROJECTED_FINISH_MC_CALIB.md`](./PROJECTED_FINISH_MC_CALIB.md).
+
+**v6** adds season **race intent** (`data/ui/race-intent.json`: `tank` /
+`win_now` / `playoff_hunt` / `contend`) that scales remaining-game effort and
+form/trend credit; soft-compresses path when it runs far ahead of race; and at
+W6+ prefers MC mean when book and MC disagree by ≥2 places.
 
 v4/v5 signals still include **form slope** and **transaction heat**:
 
@@ -64,22 +69,60 @@ base weights = race 0.28 / path 0.28 / ease 0.10 / arc 0.10 / form 0.12 / trend 
 week_scale   = early↑ race+arc · late↑ path+form+trend   (renormalized)
 proj_score   = Σ week_scaled_w × component
 mc_sims      = 2500 remaining H2H + 6-team playoff tree
-proj_finish  = rank( (1−mc_blend)×book_rank + mc_blend×mc_mean )
-mc_blend     ≈ 0.20 W1 → 0.40 W6 → 0.62 W12
+               + best-ball losers bracket for missed-playoff places 7..N
+proj_finish  = rank( (1−seat_blend)×book_rank + seat_blend×mc_mean )
+mc_blend     ≈ 0.22 W1 → 0.43 W6 → 0.68 W12
+seat_blend   = mc_blend; at W6+ if |book−mc|≥2 → ramp toward 0.85
+race_intent  = tank 0.62 / win_now 1.08 / playoff_hunt 1.04 / contend 1.0
+               (multiplies remaining effort_pyth; tank also ×0.35 form/trend)
+path_cap     = if path−race > 0.30 → soft compress toward race
+losers_bb    = missed playoffs → best-ball H2H bracket (μ_full × 1.10);
+               tank damp does NOT apply — cannot sit stars in consolation
 ```
+
+**Losers bracket (best ball).** Regular-season remaining games still honor race
+intent (tanks can miss the top six on purpose). Once a seat is out of the
+playoffs, places 7..N are settled by a best-ball losers bracket: each week’s
+score is the optimal lineup from the full roster (starters + bench), modeled as
+the undamped scoring mean × `BEST_BALL_LIFT` (1.10). Winners-bracket 5th/6th
+(first-round outs) stay by seed; only missed-playoff seats enter losers BB.
 
 Multi-season MC (2019–2025, 2500 sims): book MAE W1/W6/W12 = 2.94 / 1.74 / 1.71;
 MC MAE = 2.36 / 1.51 / 1.14; ~85–90% of actuals fall in the MC 80% band.
 2025 W6 grade vs actual: see
 [`PROJECTED_FINISH_W6_2025_RETRO.md`](./PROJECTED_FINISH_W6_2025_RETRO.md).
 
-- **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`.
+- **Remaining** = weeks after `last_scored_leg` through `playoff_week_start - 1`
+  (review script may bank the live NFL week from matchup points).
 - Trend from `raw/weekly_scores.json` for the live season.
 - Form from Sleeper weekly starter projections vs actuals.
 - Heat from `raw/trades.json` + `raw/moves.json` (last 3 scored weeks).
+- Race intent from `ui/race-intent.json` (review before each banked week).
 - Soft playoff bracket in expand stays opinion chrome.
 
-Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs).
+Lib: [`lib/projected-finish.mjs`](../lib/projected-finish.mjs),
+[`lib/race-intent.mjs`](../lib/race-intent.mjs),
+[`lib/projected-finish-mc.mjs`](../lib/projected-finish-mc.mjs).
+
+### Weekly review loop
+
+```bash
+# 1) Edit intents for the week (tank / win_now / playoff_hunt)
+$EDITOR data/ui/race-intent.json
+cp data/ui/race-intent.json data/leagues/<id>/ui/race-intent.json
+
+# 2) Dry-run: bank live week, 2500-sim MC, sanity vs intents
+node scripts/review-projected-finish-week.mjs
+
+# 3) Fix fails (intent mis-label or model), re-run until SANITY ok
+
+# 4) Write book + bust SW cache + ship Pages
+WRITE_PF=1 node scripts/review-projected-finish-week.mjs
+# bump DATA_V / CACHE in sw.js + generate-page.mjs, then push main
+```
+
+Sanity refuses Late/top-3 tankers, win_now seats buried vs MC top-4, and
+warns on playoff_hunt near the bottom.
 
 ---
 

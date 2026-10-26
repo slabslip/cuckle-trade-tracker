@@ -17,6 +17,19 @@ if (!page.includes('const DATA_V = "') || !sw.includes("chuckle-shell-v")) {
   fail("arcs/types expand page must keep DATA_V and SW cache");
 }
 
+for (const design of [
+  "design-manager-types-expand.html",
+  "design-season-arcs-expand.html",
+]) {
+  const html = fs.readFileSync(design, "utf8");
+  if (!html.includes('cuckle.auth.v2') || html.includes('cuckle.auth.v1')) {
+    fail(design + " must seed cuckle.auth.v2 (AUTH_KEY), not v1");
+  }
+  if (html.includes("src=share")) {
+    fail(design + " must not use src=share (that paints the unsigned share gate)");
+  }
+}
+
 for (const need of [
   "function seasonArcsDetailHtml(",
   "function seasonArcsVerdict(",

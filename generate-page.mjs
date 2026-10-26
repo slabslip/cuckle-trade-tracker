@@ -5025,7 +5025,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "arcsTypesEdge20261026";
+    const DATA_V = "arcsTypesDesignAuth20261026";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -40921,6 +40921,19 @@ if (!inline.includes("function managerArchetypesDetailHtml(")
   || !inline.includes("All manager types")
   || !fnSrc("receiptWhoListHtml").includes("Tap a seat for what the label means")) {
   throw new Error("Manager types must expand per seat with plain English, numbers, and type glossary");
+}
+{
+  const designSeeds = [
+    "design-manager-types-expand.html",
+    "design-season-arcs-expand.html",
+  ];
+  for (const path of designSeeds) {
+    const seed = fs.readFileSync(path, "utf8");
+    if (!seed.includes("cuckle.auth.v2") || seed.includes("cuckle.auth.v1")
+      || seed.includes("src=share")) {
+      throw new Error(path + " must seed AUTH_KEY cuckle.auth.v2 and skip src=share");
+    }
+  }
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

@@ -27,7 +27,8 @@
         team_name: seat.name
       };
       try {
-        localStorage.setItem("cuckle.auth.v1", JSON.stringify(user));
+        // AUTH_KEY is cuckle.auth.v2 — v1 seeds never paint Design Mode.
+        localStorage.setItem("cuckle.auth.v2", JSON.stringify(user));
         localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
         localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
         sessionStorage.setItem("cuckle.design.league_home", "1");
@@ -39,7 +40,7 @@
         return;
       }
       var q = "design=league-home&tile=manager_archetypes&who=" + encodeURIComponent(seat.id)
-        + "&src=share&v=manager-types-expand&_=" + Date.now();
+        + "&v=manager-types-expand&_=" + Date.now();
       var go = function () {
         location.replace("./index.html?" + q);
       };

@@ -5025,7 +5025,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "nightly20261026151039";
+    const DATA_V = "managerTypesGroup20261026";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5640,6 +5640,26 @@ const html = `<!DOCTYPE html>
         }
         return body;
       }
+      // Manager type: share grouped by archetype — never Top/Bottom 5 ranks.
+      if (id === "manager_archetypes" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "manager_archetypes")) {
+        let body = leagueName + " · " + lab + " (by type)";
+        const order = [];
+        const by = Object.create(null);
+        items.forEach(function (r) {
+          const k = String(r.typeId || (r.seat && r.seat.archetype) || r.typeLab || "other");
+          if (!by[k]) { by[k] = []; order.push(k); }
+          by[k].push(r);
+        });
+        order.forEach(function (k) {
+          const rows = by[k];
+          body += "\\n" + String((rows[0] && rows[0].typeLab) || k);
+          rows.forEach(function (r) {
+            body += "\\n· " + String(r.name || "") + (r.metric ? " · " + r.metric : "");
+          });
+        });
+        return body;
+      }
       if ((opts.slice === "top" || opts.slice === "bot") && picked.length) {
         const week = id === "week_scores" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "week_scores");
         const tag = week
@@ -5765,15 +5785,15 @@ const html = `<!DOCTYPE html>
           const proj = s.live_proj_finish != null
             ? (("proj " + (typeof nth === "function" ? nth(s.live_proj_finish) : s.live_proj_finish)))
             : "";
+          const typeLab = s.lab || s.archetype || "—";
+          const side = [s.live_band || "", proj].filter(Boolean).join(" · ") || "—";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
-            metric: s.lab || s.archetype || "—",
-            sub: (s.why || s.plain || "")
-              + (s.live_band ? (" · " + s.live_band) : "")
-              + (proj ? (" · " + proj) : "")
-              + " · tap for full read",
-            rank: i + 1,
+            metric: side,
+            typeLab: typeLab,
+            typeId: String(s.archetype || typeLab || "other"),
+            sub: (s.why || s.plain || "") + " · tap for full read",
             seat: s,
           };
         });
@@ -6037,17 +6057,37 @@ const html = `<!DOCTYPE html>
       const wrap = function (item, i) {
         return dataListRowWrap(id, item, rowFn(item, i));
       };
-      const band = function (lab, key, rows, offset) {
+      const band = function (lab, key, rows, offset, shareable) {
         if (!rows.length) return "";
         return '<div class="list-band" data-list-band="' + esc(key) + '">'
           + '<div class="list-band-h"><span>' + esc(lab) + "</span>"
-          + (key === "mid" ? "" : dataTileShareBtn(id, { slice: key }))
+          + (shareable === false || key === "mid" ? "" : dataTileShareBtn(id, { slice: key }))
           + "</div>"
           + rows.map(function (item, i) { return wrap(item, offset + i); }).join("")
           + "</div>";
       };
       if (who || slice === "top" || slice === "bot") {
         return picked.map(wrap).join("");
+      }
+      // Manager type: group by archetype — never Top/Bottom 5 rank bands.
+      if (id === "manager_archetypes" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "manager_archetypes")) {
+        const order = [];
+        const by = Object.create(null);
+        list.forEach(function (r) {
+          const k = String(r.typeId || (r.seat && r.seat.archetype) || r.typeLab || "other");
+          if (!by[k]) { by[k] = []; order.push(k); }
+          by[k].push(r);
+        });
+        let html = "";
+        let offset = 0;
+        order.forEach(function (k) {
+          const rows = by[k];
+          const lab = (rows[0] && (rows[0].typeLab || rows[0].metric)) || k;
+          html += band(lab, k, rows, offset, false);
+          offset += rows.length;
+        });
+        return html;
       }
       if (list[0] && list[0].band) {
         const highs = list.filter(function (r) { return r.band === "top"; });
@@ -8976,7 +9016,7 @@ const html = `<!DOCTYPE html>
             const open = String(managerArchetypesOpenKey || "") === String(r.key || "")
               || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
             const head = '<div class="row-top"><div><div class="names">'
-              + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + seatLabel(r.name, { link: false }) + "</div>"
               + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
               + "</div>"
               + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
@@ -9071,7 +9111,8 @@ const html = `<!DOCTYPE html>
           + " Tap a seat for plain English, the full scorecard, and every past season.";
       }
       else if (id === "manager_archetypes") {
-        caption = "One manager type per seat from career arcs + this year’s Expected Finish + team direction."
+        caption = "Seats grouped by the same manager type — not a ranked board."
+          + " Types come from career arcs + this year’s Expected Finish + team direction."
           + " Tap a seat for what the label means, the numbers behind it, and how to deal with them."
           + " Opinion only — never writes the trade needle.";
       }
@@ -40090,6 +40131,10 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes('getLeagueJson("week-scores.json")')
     || !fnSrc("dataListBandsHtml").includes("Highest weeks")
     || !fnSrc("dataListBandsHtml").includes("Lowest weeks")
+    || !fnSrc("dataListBandsHtml").includes("Manager type: group by archetype")
+    || !fnSrc("dataListBandsHtml").includes('id === "manager_archetypes"')
+    || !fnSrc("dataTileShareTextFor").includes("(by type)")
+    || !inline.includes("Seats grouped by the same manager type")
     || !fnSrc("receiptDoorFilterHtml").includes('id === "week_scores"')
     || fnSrc("homeDeskHtml").includes("weekScorePts(")
     || fnSrc("homeTopDoorsHtml").includes("weekScorePts(")

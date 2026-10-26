@@ -5025,7 +5025,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "arcsTypesExpand20261026";
+    const DATA_V = "arcsTypesEdge20261026";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7689,6 +7689,7 @@ const html = `<!DOCTYPE html>
       if (id === "my_draft" || id === "league_trades") return false;
       if (id === "trade_mark" || id === "lopsided" || id === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
+      if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
@@ -12790,6 +12791,9 @@ const html = `<!DOCTYPE html>
       receiptDraftSeat = "";
       receiptSeatWarming = "";
       receiptSeatFailed = "";
+      projectedFinishOpenKey = "";
+      seasonArcsOpenKey = "";
+      managerArchetypesOpenKey = "";
       if (typeof receiptPlReset === "function") receiptPlReset();
       if (typeof receiptResetPlayerFilter === "function") receiptResetPlayerFilter();
     }
@@ -17491,6 +17495,9 @@ const html = `<!DOCTYPE html>
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
+        projectedFinishOpenKey = "";
+        seasonArcsOpenKey = "";
+        managerArchetypesOpenKey = "";
         receiptResetPlayerFilter();
         if (typeof receiptPlReset === "function") receiptPlReset();
         if (receiptWhoList === "my_draft") {
@@ -23606,6 +23613,9 @@ const html = `<!DOCTYPE html>
         receiptDraftSeat = "";
         receiptVsWho = "";
         receiptNetWho = "";
+        projectedFinishOpenKey = "";
+        seasonArcsOpenKey = "";
+        managerArchetypesOpenKey = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         homeTab = "history";
@@ -36072,6 +36082,9 @@ const html = `<!DOCTYPE html>
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
+        projectedFinishOpenKey = "";
+        seasonArcsOpenKey = "";
+        managerArchetypesOpenKey = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         dataRoom = "overview";
@@ -40266,9 +40279,14 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function receiptIsDoor(")
     || !inline.includes("function receiptPortalNeedsSearch(")
     || !fnSrc("receiptPortalNeedsSearch").includes('key === "vs_you"')
+    || !fnSrc("receiptPortalNeedsSearch").includes('key === "season_arcs"')
+    || !fnSrc("receiptPortalNeedsSearch").includes('key === "manager_archetypes"')
+    || !fnSrc("receiptPortalNeedsSearch").includes('key === "projected_finish"')
     || !fnSrc("receiptPortalNeedsSearch").includes('id === "my_draft"')
     || !fnSrc("receiptPortalNeedsSearch").includes('id === "league_trades"')
     || !fnSrc("receiptWhoListHtml").includes("receiptPortalNeedsSearch(")
+    || !fnSrc("receiptPortalLeave").includes("seasonArcsOpenKey = \"\"")
+    || !fnSrc("receiptPortalLeave").includes("managerArchetypesOpenKey = \"\"")
     || !inline.includes("data-receipt-hist-team")
     || !inline.includes("function receiptHistTeamSelectHtml(")
     || !fnSrc("receiptHistTeamSelectHtml").includes("All teams")

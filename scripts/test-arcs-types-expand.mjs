@@ -33,8 +33,27 @@ for (const need of [
   "All manager types",
   "Tap a seat for plain English",
   "Tap a seat for what the label means",
+  'key === "season_arcs"',
+  'key === "manager_archetypes"',
 ]) {
   if (!page.includes(need)) fail("missing in index.html: " + need);
+}
+// Memory expand doors: no leftover type-in search (peer of season_place / week_scores).
+{
+  const re = /function receiptPortalNeedsSearch\(id\) \{[\s\S]*?\n    function /;
+  const m = page.match(re);
+  if (!m) fail("could not slice receiptPortalNeedsSearch");
+  const fn = m[0];
+  if (!fn.includes('key === "season_arcs"') || !fn.includes('key === "manager_archetypes"')
+    || !fn.includes('key === "projected_finish"') || !fn.includes("return false")) {
+    fail("arcs/types/projected finish must ban type-in search");
+  }
+}
+// Tab-away / ← Your board must drop expand open keys with the door.
+if (!page.includes("function receiptPortalLeave(")
+  || page.indexOf("seasonArcsOpenKey = \"\"") < 0
+  || page.indexOf("managerArchetypesOpenKey = \"\"") < 0) {
+  fail("portal leave must clear arcs/types expand keys");
 }
 
 const arcs = JSON.parse(

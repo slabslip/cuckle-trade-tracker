@@ -5017,7 +5017,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "arcsTypesExpand20261026";
+    const DATA_V = "arcsTypesEdge20261026";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -7681,6 +7681,7 @@
       if (id === "my_draft" || id === "league_trades") return false;
       if (id === "trade_mark" || id === "lopsided" || id === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
+      if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
@@ -12782,6 +12783,9 @@
       receiptDraftSeat = "";
       receiptSeatWarming = "";
       receiptSeatFailed = "";
+      projectedFinishOpenKey = "";
+      seasonArcsOpenKey = "";
+      managerArchetypesOpenKey = "";
       if (typeof receiptPlReset === "function") receiptPlReset();
       if (typeof receiptResetPlayerFilter === "function") receiptResetPlayerFilter();
     }
@@ -17483,6 +17487,9 @@
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
+        projectedFinishOpenKey = "";
+        seasonArcsOpenKey = "";
+        managerArchetypesOpenKey = "";
         receiptResetPlayerFilter();
         if (typeof receiptPlReset === "function") receiptPlReset();
         if (receiptWhoList === "my_draft") {
@@ -23598,6 +23605,9 @@
         receiptDraftSeat = "";
         receiptVsWho = "";
         receiptNetWho = "";
+        projectedFinishOpenKey = "";
+        seasonArcsOpenKey = "";
+        managerArchetypesOpenKey = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         homeTab = "history";
@@ -36064,6 +36074,9 @@
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
+        projectedFinishOpenKey = "";
+        seasonArcsOpenKey = "";
+        managerArchetypesOpenKey = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         dataRoom = "overview";

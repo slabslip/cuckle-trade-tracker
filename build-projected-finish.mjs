@@ -166,6 +166,74 @@ function scoringTrendByRoster(season, lastScored, ownerByRoster) {
   return scoreTrendLeague(summarizeScoringTrend(byRid));
 }
 
+function fptsOf(settings) {
+  const s = settings || {};
+  return {
+    pf: (s.fpts || 0) + (s.fpts_decimal || 0) / 100,
+    pa: (s.fpts_against || 0) + (s.fpts_against_decimal || 0) / 100,
+  };
+}
+
+function matchupsHavePoints(matchups) {
+  return (matchups || []).some((m) => Number(m && m.points) > 0);
+}
+
+/**
+ * Fold live matchup points into roster W/L + PF/PA when banking an in-flight
+ * NFL week (same path as scripts/review-projected-finish-week.mjs).
+ */
+function applyWeekResults(rosters, matchups) {
+  const byRid = Object.fromEntries(
+    (rosters || []).map((r) => [Number(r.roster_id), structuredClone(r)]),
+  );
+  const byM = new Map();
+  for (const row of matchups || []) {
+    if (row.matchup_id == null) continue;
+    if (!byM.has(row.matchup_id)) byM.set(row.matchup_id, []);
+    byM.get(row.matchup_id).push(row);
+  }
+  const livePtsByRid = Object.create(null);
+  for (const [, group] of byM) {
+    if (group.length < 2) continue;
+    const a = group[0];
+    const b = group[1];
+    const ap = Number(a.points) || 0;
+    const bp = Number(b.points) || 0;
+    livePtsByRid[Number(a.roster_id)] = ap;
+    livePtsByRid[Number(b.roster_id)] = bp;
+    const A = byRid[Number(a.roster_id)];
+    const B = byRid[Number(b.roster_id)];
+    if (!A || !B) continue;
+    const as = A.settings || (A.settings = {});
+    const bs = B.settings || (B.settings = {});
+    const aBase = fptsOf(as);
+    const bBase = fptsOf(bs);
+    const aPf = Math.round((aBase.pf + ap) * 100) / 100;
+    const bPf = Math.round((bBase.pf + bp) * 100) / 100;
+    const aPa = Math.round((aBase.pa + bp) * 100) / 100;
+    const bPa = Math.round((bBase.pa + ap) * 100) / 100;
+    as.fpts = Math.floor(aPf);
+    as.fpts_decimal = Math.round((aPf - Math.floor(aPf)) * 100);
+    as.fpts_against = Math.floor(aPa);
+    as.fpts_against_decimal = Math.round((aPa - Math.floor(aPa)) * 100);
+    bs.fpts = Math.floor(bPf);
+    bs.fpts_decimal = Math.round((bPf - Math.floor(bPf)) * 100);
+    bs.fpts_against = Math.floor(bPa);
+    bs.fpts_against_decimal = Math.round((bPa - Math.floor(bPa)) * 100);
+    if (ap > bp) {
+      as.wins = (as.wins || 0) + 1;
+      bs.losses = (bs.losses || 0) + 1;
+    } else if (bp > ap) {
+      bs.wins = (bs.wins || 0) + 1;
+      as.losses = (as.losses || 0) + 1;
+    } else {
+      as.ties = (as.ties || 0) + 1;
+      bs.ties = (bs.ties || 0) + 1;
+    }
+  }
+  return { rosters: Object.values(byRid), livePtsByRid };
+}
+
 async function main() {
   const leagueId = LEAGUE_ID;
   const live = (await sleeperGet(`/league/${leagueId}`)) || null;
@@ -187,18 +255,42 @@ async function main() {
   }
 
   const settings = live.settings || {};
-  const lastScored = Number(settings.last_scored_leg) || Number(settings.leg) || 0;
+  const lastOfficial = Number(settings.last_scored_leg) || Number(settings.leg) || 0;
   const playoffStart = Number(settings.playoff_week_start) || 15;
   const teams = Number(live.total_rosters) || Number(settings.num_teams) || 10;
+  const season = Number(live.season) || live.season;
 
-  const [rosters, users, rem, formByRoster] = await Promise.all([
+  // Bank the in-flight NFL week when matchups already have points — same as
+  // the weekly review loop. Nightly used to rebuild from last_scored_leg only
+  // and wipe a mid-week W7 race-intent board back to W6 (Truman #10 regression).
+  const state = await sleeperGet("/state/nfl");
+  const nflWeek = Number(state && state.week) || 0;
+  let bankWeek = Math.max(lastOfficial, nflWeek > 0 ? nflWeek : lastOfficial);
+  let liveMatchups = null;
+  if (bankWeek > lastOfficial) {
+    liveMatchups = await sleeperGet(`/league/${leagueId}/matchups/${bankWeek}`);
+    if (!matchupsHavePoints(liveMatchups)) bankWeek = lastOfficial;
+  }
+
+  const [rosters0, users] = await Promise.all([
     sleeperGet(`/league/${leagueId}/rosters`),
     sleeperGet(`/league/${leagueId}/users`),
-    remainingPairs(leagueId, lastScored, playoffStart),
+  ]);
+
+  let rosters = rosters0 || [];
+  let livePtsByRid = null;
+  if (bankWeek > lastOfficial && liveMatchups) {
+    const applied = applyWeekResults(rosters0, liveMatchups);
+    rosters = applied.rosters;
+    livePtsByRid = applied.livePtsByRid;
+  }
+
+  const [rem, formByRoster] = await Promise.all([
+    remainingPairs(leagueId, bankWeek, playoffStart),
     scoredFormByRoster(
       leagueId,
-      Number(live.season) || live.season,
-      lastScored,
+      season,
+      bankWeek,
       ptsKeyFromLeague(live),
     ),
   ]);
@@ -216,8 +308,34 @@ async function main() {
     }
   }
 
-  const season = Number(live.season) || live.season;
-  const trendByRoster = scoringTrendByRoster(season, lastScored, ownerByRoster);
+  // Trend: tape through lastOfficial, then fold banked live week points.
+  let trendByRoster = scoringTrendByRoster(season, lastOfficial, ownerByRoster);
+  if (livePtsByRid) {
+    const tape = readJson("weekly_scores.json", null);
+    const merged = Object.create(null);
+    for (const row of (tape && tape.scores) || []) {
+      if (!row || String(row.season) !== String(season)) continue;
+      if (row.phase && row.phase !== "regular") continue;
+      const w = Number(row.week) || 0;
+      if (w < 1 || w > lastOfficial) continue;
+      const rid = Number(row.roster_id);
+      if (!Number.isFinite(rid)) continue;
+      if (!merged[rid]) merged[rid] = [];
+      merged[rid].push({ week: w, points: Number(row.points) || 0 });
+    }
+    for (const [rid, pts] of Object.entries(livePtsByRid)) {
+      const r = Number(rid);
+      if (!merged[r]) merged[r] = [];
+      merged[r].push({ week: bankWeek, points: Number(pts) || 0 });
+    }
+    trendByRoster = scoreTrendLeague(summarizeScoringTrend(
+      Object.fromEntries(Object.entries(merged).map(([k, rows]) => [
+        k,
+        rows.sort((a, b) => a.week - b.week),
+      ])),
+    ));
+  }
+
   const tradesRaw = readJson("trades.json", []) || [];
   const movesRaw = readJson("moves.json", []) || [];
   const heatByRoster = scoreHeatLeague(summarizeHeatByRoster({
@@ -225,7 +343,7 @@ async function main() {
     moves: Array.isArray(movesRaw) ? movesRaw : Object.values(movesRaw),
     ownerByRoster,
     season,
-    week: lastScored,
+    week: bankWeek,
     window: 3,
   }));
 
@@ -239,7 +357,7 @@ async function main() {
     remainingPairs: rem.pairs,
     teams,
     season,
-    week: lastScored,
+    week: bankWeek,
     playoffWeekStart: playoffStart,
     arcByUser: arcByUser(),
     formByRoster,
@@ -254,9 +372,7 @@ async function main() {
   for (const r of rosters || []) {
     const rid = Number(r.roster_id);
     const st = r.settings || {};
-    const pf = (Number(st.fpts) || 0) + (Number(st.fpts_decimal) || 0) / 100;
-    const pa = (Number(st.fpts_against) || 0)
-      + (Number(st.fpts_against_decimal) || 0) / 100;
+    const { pf, pa } = fptsOf(st);
     const trend = trendByRoster[String(rid)] || {};
     const weekPts = Array.isArray(trend._week_pts)
       ? trend._week_pts
@@ -273,30 +389,24 @@ async function main() {
   // Prefer raw tape points when trend helper did not stash them.
   const tape = readJson("weekly_scores.json", null);
   if (tape && Array.isArray(tape.scores)) {
-    for (const row of tape.scores) {
-      if (!row || String(row.season) !== String(season)) continue;
-      if (row.phase && row.phase !== "regular") continue;
-      const w = Number(row.week) || 0;
-      if (w < 1 || w > lastScored) continue;
-      const rid = Number(row.roster_id);
-      if (!mcSeats[rid]) continue;
-      if (!mcSeats[rid].weekPts) mcSeats[rid].weekPts = [];
-      // Avoid dupes if already filled.
-      if (mcSeats[rid].weekPts.length < lastScored) {
-        mcSeats[rid].weekPts.push(Number(row.points) || 0);
-      }
-    }
-    // Tape push order may not be week-sorted per roster — rebuild sorted.
     const byRid = Object.create(null);
     for (const row of tape.scores) {
       if (!row || String(row.season) !== String(season)) continue;
       if (row.phase && row.phase !== "regular") continue;
       const w = Number(row.week) || 0;
-      if (w < 1 || w > lastScored) continue;
+      if (w < 1 || w > lastOfficial) continue;
       const rid = Number(row.roster_id);
       if (!mcSeats[rid]) continue;
       if (!byRid[rid]) byRid[rid] = [];
       byRid[rid].push({ week: w, points: Number(row.points) || 0 });
+    }
+    if (livePtsByRid) {
+      for (const [rid, pts] of Object.entries(livePtsByRid)) {
+        const r = Number(rid);
+        if (!mcSeats[r]) continue;
+        if (!byRid[r]) byRid[r] = [];
+        byRid[r].push({ week: bankWeek, points: Number(pts) || 0 });
+      }
     }
     for (const rid of Object.keys(byRid)) {
       mcSeats[rid].weekPts = byRid[rid]
@@ -305,11 +415,11 @@ async function main() {
     }
   }
 
-  if (lastScored >= 1 && rem.pairs.length) {
+  if (bankWeek >= 1 && rem.pairs.length) {
     attachMonteCarloToBook(book, {
       seats: mcSeats,
       remainingPairs: rem.pairs,
-      week: lastScored,
+      week: bankWeek,
       playoffWeekStart: playoffStart,
       nSims: DEFAULT_MC_SIMS,
     });
@@ -321,12 +431,17 @@ async function main() {
   book.remaining_weeks = rem.weeks;
   book.remaining_week_count = rem.weeks.length;
   book.remaining_games = rem.pairs.length;
+  if (bankWeek > lastOfficial) {
+    book.note = `W${bankWeek} banked from live Sleeper matchup points`
+      + ` + race intent v6 (official last_scored_leg=${lastOfficial}).`;
+  }
 
   writeUi("projected-finish.json", book);
   console.log(
     "projected-finish",
     book.season,
     "w" + book.week,
+    bankWeek > lastOfficial ? `(banked; official ${lastOfficial})` : "",
     book.seats.length + " seats",
     rem.weeks.length + " weeks left",
     "mc",

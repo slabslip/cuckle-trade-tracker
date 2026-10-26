@@ -146,8 +146,11 @@ Runs in `build.mjs` after seat-direction, before cosmetics:
 node build-projected-finish.mjs [league_id]
 ```
 
-Nightly Sleeper tape should keep this fresh (same cadence as standings). Safe to
-re-run anytime — network GETs only, no value book rewrite.
+Nightly Sleeper tape should keep this fresh (same cadence as standings). The
+builder banks the in-flight NFL week when matchups already have points (same as
+the review script) so a mid-week race-intent board is not wiped back to
+`last_scored_leg`. Safe to re-run anytime — network GETs only, no value book
+rewrite.
 
 ---
 

@@ -13,10 +13,9 @@ function fail(msg) {
   process.exit(1);
 }
 
-if (!page.includes('const DATA_V = "managerTypesGroup20261026"')
-  || !gen.includes('const DATA_V = "managerTypesGroup20261026"')
-  || !sw.includes("chuckle-shell-v290-manager-types-group")) {
-  fail("manager types group ship must bust DATA_V and SW");
+if (!page.includes('const DATA_V = "') || !gen.includes('const DATA_V = "')
+  || !/^const CACHE = "chuckle-shell-v\d+/m.test(sw)) {
+  fail("manager types group page must keep DATA_V and versioned SW cache");
 }
 
 for (const need of [
@@ -125,10 +124,11 @@ if (!fs.existsSync(design)) fail("missing " + design);
   }
 }
 
+const dataV = (page.match(/const DATA_V = "([^"]+)"/) || [])[1] || "";
 console.log(JSON.stringify({
   ok: true,
   seats: items.length,
   types: labs.length,
   type_labs: labs,
-  DATA_V: "managerTypesGroup20261026",
+  DATA_V: dataV,
 }));

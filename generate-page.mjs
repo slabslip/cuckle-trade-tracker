@@ -38363,19 +38363,14 @@ if (!html.includes('updateViaCache: "none"')
   throw new Error("service worker must auto-update on refresh and purge stale shell caches");
 }
 const swSrc = fs.readFileSync("sw.js", "utf8");
-{
-  const swBad = {
-    cachedIndex: swSrc.includes('caches.match("./index.html")'),
-    brandMarkPng: swSrc.includes("brand-mark.png"),
-    noVersionedCache: !/chuckle-shell-v\d+/.test(swSrc),
-    noAppDoc: !swSrc.includes("isAppDocument"),
-    noOffline: !swSrc.includes("Chuckle Fantasy needs a network"),
-    noDataImg: !swSrc.includes("isDataImg"),
-    noDataPath: !swSrc.includes("/data/"),
-  };
-  if (Object.values(swBad).some(Boolean)) {
-    throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents :: " + JSON.stringify(swBad));
-  }
+if (swSrc.includes('caches.match("./index.html")')
+  || swSrc.includes("brand-mark.png")
+  || !/chuckle-shell-v\d+/.test(swSrc)
+  || !swSrc.includes("isAppDocument")
+  || !swSrc.includes("Chuckle Fantasy needs a network")
+  || !swSrc.includes("isDataImg")
+  || !swSrc.includes("/data/")) {
+  throw new Error("sw.js must not cache HTML/brand-mark; use v175 network-only documents");
 }
 
 // A lone backslash inside the template literal above is swallowed before it reaches the browser,

@@ -1,6 +1,6 @@
 {
   "as_of": "2026-10-26",
-  "n": 94,
+  "n": 95,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -197,6 +197,13 @@
       "status": "Inactive",
       "team": "DET",
       "pos": "RB"
+    },
+    "8676": {
+      "name": "Rashid Shaheed",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "SEA",
+      "pos": "WR"
     },
     "8698": {
       "name": "Jake Tonges",

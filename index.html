@@ -14265,7 +14265,12 @@
       const fade = Math.round((Number(seat.fast_fade_rate) || 0) * 100);
       const name = seat.name || "This seat";
       if (n <= 0) return name + " has no completed seasons on this book yet.";
-      if (climb >= 1.5 || slow >= 40) {
+      if (seat.proxy_motive) {
+        return name + " sold their own next 1st but is still competing"
+          + " — Early picks they hold are leverage"
+          + " (career climb avg " + (climb > 0 ? "+" : "") + climb.toFixed(1) + ").";
+      }
+      if (climb >= 1.0 || slow >= 35) {
         return name + " usually starts quieter than the final board — a climber"
           + " (avg " + (climb > 0 ? "+" : "") + climb.toFixed(1) + " spots after week 4).";
       }

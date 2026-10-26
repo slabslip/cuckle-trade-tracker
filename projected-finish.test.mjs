@@ -27,6 +27,10 @@ import {
   attachMonteCarloToBook,
   mcBlendWeight,
   mcSeatBlendWeight,
+  bestBallScoreMu,
+  simulateLosersBracketBestBall,
+  mulberry32,
+  BEST_BALL_LIFT,
   DEFAULT_MC_SIMS,
 } from "./lib/projected-finish-mc.mjs";
 
@@ -394,3 +398,71 @@ assert.ok(
   "playoff hunter should project ahead of tanker",
 );
 assert.equal(intentBook.v, 6);
+
+// Best-ball losers bracket: tank effort must not apply; strong roster can climb
+// out of RS last among non-qualifiers.
+assert.ok(BEST_BALL_LIFT > 1);
+assert.ok(bestBallScoreMu(100, 130) > 100);
+assert.ok(bestBallScoreMu(100, 130) > bestBallScoreMu(100, 130, 1.0));
+
+{
+  // Talent tank (high mu_full, dampened RS mu) vs weak contend — RS order puts
+  // tank last, but best-ball should usually give tank the better consolation place.
+  let tankWins7th = 0;
+  const n = 400;
+  for (let i = 0; i < n; i++) {
+    const rng = mulberry32(1000 + i);
+    const models = {
+      1: { mu: 90, mu_full: 150, mu_bb: bestBallScoreMu(150, 130), sd: 20, league_mu: 130 },
+      2: { mu: 110, mu_full: 110, mu_bb: bestBallScoreMu(110, 130), sd: 20, league_mu: 130 },
+      3: { mu: 105, mu_full: 105, mu_bb: bestBallScoreMu(105, 130), sd: 20, league_mu: 130 },
+      4: { mu: 100, mu_full: 100, mu_bb: bestBallScoreMu(100, 130), sd: 20, league_mu: 130 },
+    };
+    // RS order among non-qualifiers: weak seats ahead of talent tank (id 1 last).
+    const places = simulateLosersBracketBestBall([2, 3, 4, 1], models, rng);
+    if (places.get(1) === 7) tankWins7th += 1;
+  }
+  assert.ok(
+    tankWins7th > n * 0.45,
+    "best-ball losers bracket must often promote talent tank over weak RS seats: " + tankWins7th,
+  );
+}
+
+{
+  // Full MC: tank effort on RS games, but losers BB uses mu_bb — mean place for a
+  // high-talent tank who misses playoffs should beat pure RS-last locking.
+  const mcBb = runMonteCarlo({
+    seats: {
+      1: { wins: 5, losses: 1, ties: 0, pf: 900, pa: 700, weekPts: [150, 155, 160, 145, 150, 148] },
+      2: { wins: 4, losses: 2, ties: 0, pf: 850, pa: 750, weekPts: [140, 142, 138, 145, 141, 139] },
+      3: { wins: 4, losses: 2, ties: 0, pf: 840, pa: 760, weekPts: [138, 140, 136, 142, 137, 135] },
+      4: { wins: 3, losses: 3, ties: 0, pf: 800, pa: 800, weekPts: [130, 132, 128, 131, 129, 127] },
+      5: { wins: 3, losses: 3, ties: 0, pf: 790, pa: 810, weekPts: [128, 126, 130, 125, 127, 124] },
+      6: { wins: 2, losses: 4, ties: 0, pf: 750, pa: 850, weekPts: [120, 118, 122, 119, 121, 117] },
+      // Talent tank: strong weekly pts but tank effort + bad record → often misses playoffs.
+      7: { wins: 1, losses: 5, ties: 0, pf: 880, pa: 900, weekPts: [155, 160, 158, 162, 157, 159] },
+      8: { wins: 1, losses: 5, ties: 0, pf: 620, pa: 900, weekPts: [95, 90, 92, 88, 91, 89] },
+      9: { wins: 1, losses: 5, ties: 0, pf: 610, pa: 910, weekPts: [93, 88, 90, 86, 89, 87] },
+      10: { wins: 0, losses: 6, ties: 0, pf: 580, pa: 950, weekPts: [85, 80, 82, 78, 81, 79] },
+    },
+    remainingPairs: [
+      [7, 8], [7, 9], [7, 10], [8, 9], [8, 10], [9, 10],
+      [1, 7], [2, 8], [3, 9], [4, 10], [5, 6],
+    ],
+    nSims: 800,
+    seed: 42,
+    week: 7,
+    effortByRoster: {
+      7: 0.62, // tank
+      8: 1, 9: 1, 10: 1,
+      1: 1.08, 2: 1.08, 3: 1, 4: 1, 5: 1, 6: 1,
+    },
+  });
+  assert.ok(mcBb.by_roster["7"].model.mu_bb > mcBb.by_roster["7"].model.mu);
+  assert.ok(mcBb.by_roster["7"].model.mu_bb > mcBb.by_roster["8"].model.mu_bb);
+  // Talent tank's final mean should beat the weak #10 seat's mean.
+  assert.ok(
+    mcBb.by_roster["7"].mean_place < mcBb.by_roster["10"].mean_place,
+    "talent tank must outrank empty roster after best-ball losers bracket",
+  );
+}

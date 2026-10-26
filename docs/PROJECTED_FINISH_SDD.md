@@ -69,13 +69,23 @@ base weights = race 0.28 / path 0.28 / ease 0.10 / arc 0.10 / form 0.12 / trend 
 week_scale   = early↑ race+arc · late↑ path+form+trend   (renormalized)
 proj_score   = Σ week_scaled_w × component
 mc_sims      = 2500 remaining H2H + 6-team playoff tree
+               + best-ball losers bracket for missed-playoff places 7..N
 proj_finish  = rank( (1−seat_blend)×book_rank + seat_blend×mc_mean )
 mc_blend     ≈ 0.22 W1 → 0.43 W6 → 0.68 W12
 seat_blend   = mc_blend; at W6+ if |book−mc|≥2 → ramp toward 0.85
 race_intent  = tank 0.62 / win_now 1.08 / playoff_hunt 1.04 / contend 1.0
                (multiplies remaining effort_pyth; tank also ×0.35 form/trend)
 path_cap     = if path−race > 0.30 → soft compress toward race
+losers_bb    = missed playoffs → best-ball H2H bracket (μ_full × 1.10);
+               tank damp does NOT apply — cannot sit stars in consolation
 ```
+
+**Losers bracket (best ball).** Regular-season remaining games still honor race
+intent (tanks can miss the top six on purpose). Once a seat is out of the
+playoffs, places 7..N are settled by a best-ball losers bracket: each week’s
+score is the optimal lineup from the full roster (starters + bench), modeled as
+the undamped scoring mean × `BEST_BALL_LIFT` (1.10). Winners-bracket 5th/6th
+(first-round outs) stay by seed; only missed-playoff seats enter losers BB.
 
 Multi-season MC (2019–2025, 2500 sims): book MAE W1/W6/W12 = 2.94 / 1.74 / 1.71;
 MC MAE = 2.36 / 1.51 / 1.14; ~85–90% of actuals fall in the MC 80% band.

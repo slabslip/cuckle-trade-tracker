@@ -5025,7 +5025,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "arcsTypesDesignAuth20261026";
+    const DATA_V = "arcsTypesWhoHonor20261026";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6185,6 +6185,13 @@ const html = `<!DOCTYPE html>
       rememberPendingDataTile(tile, { slice: slice, who: who });
       if (appScreen !== "dash") return false;
       if (!dataTileSeatReady()) return false;
+      // openLeagueDashboard honors twice (loadMembers + after). The second pass still sees
+      // ?tile= in the URL after syncUrl, with who already cleared — re-openReport would wipe
+      // expand keys / receiptListWho. Skip when this door is already open and nothing new.
+      if (receiptWhoList === tile && !who && !(slice === "top" || slice === "bot")) {
+        clearPendingDataTile();
+        return true;
+      }
       clearPendingDataTile();
       view = "home";
       me = null;
@@ -11783,6 +11790,11 @@ const html = `<!DOCTYPE html>
         q.set("tile", tile);
         const leagueId = (activeLeague && activeLeague.sleeper_league_id) || "";
         if (leagueId) q.set("league", leagueId);
+        // Keep expand-target who across syncUrl / second honorPending (Design Mode + share).
+        if (receiptListWho) q.set("who", String(receiptListWho));
+        else if (receiptListSlice === "top" || receiptListSlice === "bot") {
+          q.set("slice", receiptListSlice);
+        }
       } else if (view && view !== "home") {
         q.set("view", view);
       }
@@ -40934,6 +40946,11 @@ if (!inline.includes("function managerArchetypesDetailHtml(")
       throw new Error(path + " must seed AUTH_KEY cuckle.auth.v2 and skip src=share");
     }
   }
+}
+if (!fnSrc("honorPendingDataTile").includes("receiptWhoList === tile")
+  || !fnSrc("honorPendingDataTile").includes("!who")
+  || !fnSrc("urlNow").includes("receiptListWho")) {
+  throw new Error("honorPending must not re-openReport the same door without who (wipes expand keys)");
 }
 if (fnSrc("overnightSlipHtml").includes("Text this") || fnSrc("overnightShareText").includes("Text this")) {
   throw new Error("overnight must not ship a Text this poke");

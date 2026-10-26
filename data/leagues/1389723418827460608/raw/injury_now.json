@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-24",
-  "n": 31,
+  "as_of": "2026-10-26",
+  "n": 32,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -16,11 +16,25 @@
       "team": "SF",
       "pos": "WR"
     },
+    "4034": {
+      "name": "Christian McCaffrey",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "SF",
+      "pos": "RB"
+    },
     "4137": {
       "name": "James Conner",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "ARI",
+      "pos": "RB"
+    },
+    "4199": {
+      "name": "Aaron Jones Sr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIN",
       "pos": "RB"
     },
     "4866": {
@@ -32,7 +46,7 @@
     },
     "4881": {
       "name": "Lamar Jackson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "BAL",
       "pos": "QB"
@@ -43,13 +57,6 @@
       "status": "Active",
       "team": "BUF",
       "pos": "WR"
-    },
-    "5022": {
-      "name": "Dallas Goedert",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PHI",
-      "pos": "TE"
     },
     "5872": {
       "name": "Deebo Samuel Sr.",
@@ -65,18 +72,18 @@
       "team": "HOU",
       "pos": "RB"
     },
-    "7021": {
-      "name": "Rico Dowdle",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PIT",
-      "pos": "RB"
-    },
     "7525": {
       "name": "DeVonta Smith",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "PHI",
+      "pos": "WR"
+    },
+    "7526": {
+      "name": "Jaylen Waddle",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DEN",
       "pos": "WR"
     },
     "7543": {
@@ -85,6 +92,20 @@
       "status": "Inactive",
       "team": "NO",
       "pos": "RB"
+    },
+    "7567": {
+      "name": "Kenny Gainwell",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "TB",
+      "pos": "RB"
+    },
+    "8112": {
+      "name": "Drake London",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "ATL",
+      "pos": "WR"
     },
     "8121": {
       "name": "Romeo Doubs",
@@ -102,30 +123,9 @@
     },
     "8155": {
       "name": "Breece Hall",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NYJ",
-      "pos": "RB"
-    },
-    "8408": {
-      "name": "Jordan Mason",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "MIN",
-      "pos": "RB"
-    },
-    "9493": {
-      "name": "Puka Nacua",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "LAR",
-      "pos": "WR"
-    },
-    "9508": {
-      "name": "Tyjae Spears",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "TEN",
       "pos": "RB"
     },
     "9753": {
@@ -156,11 +156,25 @@
       "team": "LAC",
       "pos": "WR"
     },
-    "12469": {
-      "name": "Dylan Sampson",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "CLE",
+    "11655": {
+      "name": "Tyrone Tracy Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NYG",
+      "pos": "RB"
+    },
+    "12474": {
+      "name": "Woody Marks",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "HOU",
+      "pos": "RB"
+    },
+    "12481": {
+      "name": "Cam Skattebo",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NYG",
       "pos": "RB"
     },
     "12514": {
@@ -210,13 +224,6 @@
       "injury_status": "Out",
       "status": "Active",
       "team": "ARI",
-      "pos": "RB"
-    },
-    "13305": {
-      "name": "Mike Washington Jr.",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "LV",
       "pos": "RB"
     }
   }

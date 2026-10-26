@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-25",
-  "n": 92,
+  "as_of": "2026-10-26",
+  "n": 94,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -119,6 +119,13 @@
       "injury_status": "Out",
       "status": "Active",
       "team": "PHI",
+      "pos": "WR"
+    },
+    "7526": {
+      "name": "Jaylen Waddle",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DEN",
       "pos": "WR"
     },
     "7543": {
@@ -624,6 +631,13 @@
       "status": "Active",
       "team": "LAC",
       "pos": "WR"
+    },
+    "13404": {
+      "name": "Garrett Nussmeier",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "KC",
+      "pos": "QB"
     },
     "13417": {
       "name": "De'Zhaun Stribling",

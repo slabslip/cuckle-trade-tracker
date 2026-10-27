@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-26",
-  "n": 32,
+  "as_of": "2026-10-27",
+  "n": 34,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -35,13 +35,6 @@
       "injury_status": "Questionable",
       "status": "Active",
       "team": "MIN",
-      "pos": "RB"
-    },
-    "4866": {
-      "name": "Saquon Barkley",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PHI",
       "pos": "RB"
     },
     "4881": {
@@ -92,6 +85,13 @@
       "status": "Inactive",
       "team": "NO",
       "pos": "RB"
+    },
+    "7547": {
+      "name": "Amon-Ra St. Brown",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DET",
+      "pos": "WR"
     },
     "7567": {
       "name": "Kenny Gainwell",
@@ -156,6 +156,13 @@
       "team": "LAC",
       "pos": "WR"
     },
+    "11646": {
+      "name": "Jalen Coker",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CAR",
+      "pos": "WR"
+    },
     "11655": {
       "name": "Tyrone Tracy Jr.",
       "injury_status": "Questionable",
@@ -176,6 +183,13 @@
       "status": "Active",
       "team": "NYG",
       "pos": "RB"
+    },
+    "12501": {
+      "name": "Matthew Golden",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "GB",
+      "pos": "WR"
     },
     "12514": {
       "name": "Emeka Egbuka",

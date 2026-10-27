@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-26",
-  "n": 95,
+  "as_of": "2026-10-27",
+  "n": 96,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -49,13 +49,6 @@
       "injury_status": "Questionable",
       "status": "Active",
       "team": "MIN",
-      "pos": "RB"
-    },
-    "4866": {
-      "name": "Saquon Barkley",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PHI",
       "pos": "RB"
     },
     "4881": {
@@ -134,6 +127,13 @@
       "status": "Inactive",
       "team": "NO",
       "pos": "RB"
+    },
+    "7547": {
+      "name": "Amon-Ra St. Brown",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DET",
+      "pos": "WR"
     },
     "7567": {
       "name": "Kenny Gainwell",
@@ -366,6 +366,13 @@
       "team": "MIA",
       "pos": "RB"
     },
+    "11646": {
+      "name": "Jalen Coker",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CAR",
+      "pos": "WR"
+    },
     "11651": {
       "name": "Isaac Guerendo",
       "injury_status": "PUP",
@@ -425,7 +432,7 @@
     "12486": {
       "name": "Dillon Gabriel",
       "injury_status": "IR",
-      "status": "Inactive",
+      "status": "Active",
       "team": "CLE",
       "pos": "QB"
     },
@@ -441,6 +448,13 @@
       "injury_status": "IR",
       "status": "Inactive",
       "team": "DEN",
+      "pos": "WR"
+    },
+    "12501": {
+      "name": "Matthew Golden",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "GB",
       "pos": "WR"
     },
     "12504": {
@@ -617,13 +631,6 @@
       "status": "Active",
       "team": "MIN",
       "pos": "RB"
-    },
-    "13349": {
-      "name": "Eli Stowers",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "PHI",
-      "pos": "TE"
     },
     "13353": {
       "name": "Chris Brazzell II",

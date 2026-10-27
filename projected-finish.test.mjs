@@ -17,6 +17,8 @@ import {
   ARC_WEIGHT,
   FORM_WEIGHT,
   TREND_WEIGHT,
+  RACE_STANDINGS_SHARE,
+  RACE_PF_SHARE,
   EARLY_WEEK_CUTOFF,
 } from "./lib/projected-finish.mjs";
 import {
@@ -47,6 +49,8 @@ assert.ok(FORM_WEIGHT >= 0.1);
 assert.ok(TREND_WEIGHT >= 0.10);
 assert.ok(TREND_WEIGHT <= RACE_WEIGHT);
 assert.equal(EARLY_WEEK_CUTOFF, 4);
+assert.ok(RACE_PF_SHARE > RACE_STANDINGS_SHARE, "PF must lead race split");
+assert.ok(Math.abs(RACE_PF_SHARE + RACE_STANDINGS_SHARE - 1) < 1e-9);
 assert.ok(weekFormWeight(1) < weekFormWeight(5));
 assert.ok(weekFormWeight(3) < weekFormWeight(12));
 assert.ok(formAdjPyth(0.5, 1.5, 1.5, 1.5) > 0.5);
@@ -275,6 +279,49 @@ assert.equal(heatBy.QuietBag.trade_n, 0);
 assert.ok(
   heatBy.DealMaker.trend_score > heatBy.QuietBag.trend_score,
   "heat should lift DealMaker trend_score vs quiet seat",
+);
+
+// PF leading indicator: high-PF 3-4 (Tips-like) outranks low-PF 4-3 (ARae-like).
+const pfLead = projectFinishBook({
+  rosters: [
+    {
+      roster_id: 1,
+      owner_id: "hotpf",
+      settings: { wins: 3, losses: 4, fpts: 1120, fpts_against: 1150 },
+    },
+    {
+      roster_id: 2,
+      owner_id: "lowpf",
+      settings: { wins: 4, losses: 3, fpts: 880, fpts_against: 1010 },
+    },
+    {
+      roster_id: 3,
+      owner_id: "mid",
+      settings: { wins: 3, losses: 4, fpts: 950, fpts_against: 980 },
+    },
+  ],
+  ownerByRoster: { 1: "hotpf", 2: "lowpf", 3: "mid" },
+  nameByUser: { hotpf: "HotPF", lowpf: "LowPF", mid: "MidPack" },
+  remainingPairs: [
+    [1, 2], [1, 3], [2, 3],
+    [1, 2], [1, 3], [2, 3],
+  ],
+  teams: 3,
+  season: 2026,
+  week: 7,
+  playoffWeekStart: 15,
+  raceIntent: { by_name: { HotPF: "win_now", LowPF: "tank", MidPack: "contend" } },
+});
+const pfBy = Object.fromEntries(pfLead.seats.map((s) => [s.name, s]));
+assert.equal(pfBy.LowPF.place_now, 1, "LowPF owns place now on record");
+assert.ok(pfBy.HotPF.pf > pfBy.LowPF.pf, "HotPF has the points");
+assert.ok(
+  pfBy.HotPF.proj_finish < pfBy.LowPF.proj_finish,
+  "PF leading indicator: HotPF projects ahead of better-record LowPF",
+);
+assert.ok(
+  pfLead.rule.race_pf_share > pfLead.rule.race_standings_share,
+  "book rule must advertise PF-leading race split",
 );
 
 console.log("projected-finish.test.mjs ok", {

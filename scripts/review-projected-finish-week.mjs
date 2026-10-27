@@ -215,16 +215,22 @@ async function main() {
   const state = await sleeperGet("/state/nfl");
   const nflWeek = Number(state && state.week) || 0;
   const lastOfficial = Number(live.settings?.last_scored_leg) || 0;
-  // Bank the in-flight NFL week when it has matchup points (mid-Sunday review).
-  const bankWeek = Math.max(lastOfficial, nflWeek > 0 ? nflWeek : lastOfficial);
+  // Bank the in-flight NFL week only when matchups already have points.
+  // All-zero W8 slates must not mint ties and wipe official W7 standings.
+  let bankWeek = Math.max(lastOfficial, nflWeek > 0 ? nflWeek : lastOfficial);
   const playoffStart = Number(live.settings?.playoff_week_start) || 15;
   const season = Number(live.season) || live.season;
 
-  const [rosters0, users, matchups] = await Promise.all([
+  const [rosters0, users] = await Promise.all([
     sleeperGet(`/league/${leagueId}/rosters`),
     sleeperGet(`/league/${leagueId}/users`),
-    sleeperGet(`/league/${leagueId}/matchups/${bankWeek}`),
   ]);
+  let matchups = null;
+  if (bankWeek > lastOfficial) {
+    matchups = await sleeperGet(`/league/${leagueId}/matchups/${bankWeek}`);
+    const hasPts = (matchups || []).some((m) => Number(m && m.points) > 0);
+    if (!hasPts) bankWeek = lastOfficial;
+  }
 
   const nameByUser = Object.create(null);
   const aliases = readJson(`${RAW}/aliases.overrides.json`, {}) || {};
@@ -241,7 +247,7 @@ async function main() {
 
   let rosters = rosters0;
   let w7ByRid = null;
-  if (bankWeek > lastOfficial) {
+  if (bankWeek > lastOfficial && matchups) {
     const applied = applyWeekResults(rosters0, matchups);
     rosters = applied.rosters;
     w7ByRid = applied.w7ByRid;

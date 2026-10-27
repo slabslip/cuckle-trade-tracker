@@ -61,7 +61,8 @@ heat           = 2×trades + 0.35×FA adds in last 3 scored weeks
 adj_pythag     = clamp(pythag + FORM_LEAN × blend(form_z, recent_z, trend_z+0.25×heat_z, slope_z))
 P(A beats B)   = adj_pythag_A / (adj_pythag_A + adj_pythag_B)
 expected_remaining_wins = Σ P(win)                       ← SoS + form + trend
-race_score = 0.65×standings_pts_norm + 0.35×talent_PF_norm
+race_score = 0.45×standings_pts_norm + 0.55×talent_PF_norm
+               ← PF is the leading indicator (outranks record when they disagree)
 path / ease / arc as before (arcs = career late climb)
 form_score  = normalize(0.30×form_z + 0.50×recent_z + 0.20×slope_z)
 trend_score = 0.75×normalize(0.80×trend_signal_z + 0.20×slope_z) + 0.25×heat_score

@@ -8850,8 +8850,8 @@
       "drafted_by": "SF69erss",
       "startup": true,
       "pick_cost": 1548,
-      "player_today": 0,
-      "surplus": -1548,
+      "player_today": 621,
+      "surplus": -927,
       "flag": "priced_as_2021r5"
     },
     {
@@ -10765,8 +10765,8 @@
       "name": "SF69erss",
       "used": 28,
       "graded": 28,
-      "player_today": 11588,
-      "per_pick": 413.85714285714283,
+      "player_today": 12209,
+      "per_pick": 436.0357142857143,
       "best": {
         "player": "Kirk Cousins",
         "season": "2019",

@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-27",
-  "n": 96,
+  "as_of": "2026-10-28",
+  "n": 98,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -49,6 +49,13 @@
       "injury_status": "Questionable",
       "status": "Active",
       "team": "MIN",
+      "pos": "RB"
+    },
+    "4866": {
+      "name": "Saquon Barkley",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
       "pos": "RB"
     },
     "4881": {
@@ -162,6 +169,13 @@
       "status": "Inactive",
       "team": "NYG",
       "pos": "WR"
+    },
+    "8129": {
+      "name": "Dameon Pierce",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "RB"
     },
     "8142": {
       "name": "Alec Pierce",
@@ -382,8 +396,8 @@
     },
     "11655": {
       "name": "Tyrone Tracy Jr.",
-      "injury_status": "Questionable",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "NYG",
       "pos": "RB"
     },
@@ -530,7 +544,7 @@
     "12541": {
       "name": "Dont'e Thornton Jr.",
       "injury_status": "IR",
-      "status": "Inactive",
+      "status": "Active",
       "team": "LV",
       "pos": "WR"
     },

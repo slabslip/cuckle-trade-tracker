@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Best Ball Hype door: optimal-lineup weekly records in League Data.
+ * Best Ball Hype door: Top 6 champ / Bottom 4 toilet brackets.
  */
 import fs from "node:fs";
 
@@ -28,12 +28,13 @@ for (const need of [
   'closest("[data-best-ball-hype-open]")',
   'getLeagueJson("best-ball-hype.json")',
   "bestBallHypeOpenKey",
-  "Rest + playoffs (current roster)",
-  "Scored weeks use that week",
-  "Top 6 make the playoffs",
+  "Top 6 make the champ bracket",
+  "toilet bowl in best ball",
+  "Bracket path",
+  "Toilet bowl scores best ball",
   'band("Top 6", "top"',
   'band("Bottom 4", "bot"',
-  'band: i < playoffN ? "top" : "bot"',
+  'band: seed <= playoffN ? "top" : "bot"',
   'src[draftAt] = "best_ball_hype"',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -44,33 +45,33 @@ for (const need of [
   if (!doors.includes('"best_ball_hype"') || !def.includes('"best_ball_hype"')) {
     fail("Best Ball Hype must sit on DATA_DOORS + DATA_DASH_DEFAULT");
   }
-  if (doors.includes('"draft_board"') || def.includes('"draft_board"')) {
-    fail("Draft capital left the default 13 doors — Best Ball Hype took that slot");
-  }
 }
 
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/best-ball-hype.json", "utf8"),
 );
-if (Number(book.v) < 1 || !Array.isArray(book.seats) || book.seats.length < 8) {
-  fail("best-ball-hype book missing seats");
+if (Number(book.v) < 3 || !Array.isArray(book.seats) || book.seats.length < 8) {
+  fail("best-ball-hype v3 book missing seats");
 }
-const lead = book.seats[0];
-if (!lead.record || !lead.actual_record || !Array.isArray(lead.weeks) || !lead.weeks.length) {
-  fail("seat rows need BB record, actual record, and weeks");
+if (!book.champ || !book.toilet || !Array.isArray(book.seeding)) {
+  fail("v3 book needs champ, toilet, seeding");
 }
-// At least one seat should differ from set lineup (hype / anti-hype).
-if (!book.seats.some((s) => Number(s.delta_wins) !== 0)) {
-  fail("expected at least one seat with BB wins ≠ set lineup wins");
+if (Number(book.playoff_teams) !== 6) fail("expected 6 playoff teams");
+const champN = book.seats.filter((s) => s.bracket === "champ").length;
+const toiletN = book.seats.filter((s) => s.bracket === "toilet").length;
+if (champN !== 6 || toiletN !== 4) fail("expected 6 champ + 4 toilet seats");
+if (!book.seats.every((s) => s.place_proj >= 1 && s.place_proj <= 10 && s.path)) {
+  fail("each seat needs place_proj + path");
 }
-if (Number(book.v) >= 2) {
-  if (!book.proj_through_week || !Array.isArray(lead.future_weeks)) {
-    fail("v2 book needs proj_through_week + future_weeks");
-  }
-  if (!lead.proj_record) fail("v2 seats need proj_record from current-roster rest of season");
-  if (!book.seats.some((s) => (s.future_weeks || []).length > 0)) {
-    fail("expected projected future weeks on at least one seat");
-  }
+const toiletGames = (book.toilet.rounds || []).flatMap((r) => r.games || []);
+if (!toiletGames.length || toiletGames.some((g) => g.mode !== "best_ball")) {
+  fail("toilet games must be best_ball");
+}
+const champPlay = (book.champ.rounds || [])
+  .flatMap((r) => r.games || [])
+  .filter((g) => !g.bye);
+if (!champPlay.length || champPlay.some((g) => g.mode !== "set_lineup")) {
+  fail("champ games must be set_lineup");
 }
 
 const design = "design-best-ball-hype.html";
@@ -83,11 +84,11 @@ if (!fs.existsSync(design)) fail("missing " + design);
   if (html.includes("src=share")) fail(design + " must not use src=share");
 }
 
+const lead = book.seats.find((s) => Number(s.place_proj) === 1) || book.seats[0];
 console.log(JSON.stringify({
   ok: true,
   week: book.week,
-  lead: lead.name,
-  bb: lead.record,
-  actual: lead.actual_record,
-  delta: lead.delta_wins,
+  champ1: lead.name,
+  place: lead.place_proj,
+  toilet_sacko: (book.seats.find((s) => Number(s.place_proj) === 10) || {}).name,
 }));

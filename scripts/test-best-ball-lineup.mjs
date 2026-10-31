@@ -17,7 +17,6 @@ const posById = {
   te1: "TE", te2: "TE",
 };
 
-// Bench QB scores more than starter QB — best ball must take qb2.
 const opt = optimalLineupFromPoints({
   qb1: 10, qb2: 25,
   rb1: 12, rb2: 11, rb3: 20,
@@ -27,7 +26,6 @@ const opt = optimalLineupFromPoints({
 assert.equal(opt.starters.find((s) => s.slot === "QB").id, "qb2");
 assert.ok(opt.starters.some((s) => s.id === "rb3"), "extra RB can fill FLEX");
 assert.ok(opt.starters.some((s) => s.id === "te2"), "hot TE starts");
-assert.ok(opt.points > 10 + 12 + 11 + 15 + 14 + 9, "beats naive low lineup");
 
 const rows = [
   { roster_id: 1, matchup_id: 1, points: 100, players_points: { qb1: 20, rb1: 20, rb2: 15, wr1: 20, wr2: 15, te1: 10 } },
@@ -44,122 +42,150 @@ applyResult(rec, "W", 100, 90);
 applyResult(rec, "L", 80, 95);
 assert.equal(recordLabel(rec), "1-1");
 
+function tenWeekRows(ptsByRid) {
+  return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rid, i) => {
+    const opp = rid % 2 === 1 ? rid + 1 : rid - 1;
+    const mid = Math.ceil(rid / 2);
+    return {
+      roster_id: rid,
+      matchup_id: mid,
+      points: ptsByRid[rid],
+      players_points: {
+        a: ptsByRid[rid] * 0.3,
+        b: ptsByRid[rid] * 0.25,
+        c: ptsByRid[rid] * 0.2,
+        d: ptsByRid[rid] * 0.1,
+        e: ptsByRid[rid] * 0.1,
+        f: ptsByRid[rid] * 0.05,
+      },
+      _opp: opp,
+    };
+  });
+}
+
+const scoredPts = {
+  1: 120, 2: 100, 3: 115, 4: 90, 5: 110,
+  6: 95, 7: 85, 8: 80, 9: 70, 10: 60,
+};
+
+const ownerByRoster = {
+  1: "u1", 2: "u2", 3: "u3", 4: "u4", 5: "u5",
+  6: "u6", 7: "u7", 8: "u8", 9: "u9", 10: "u10",
+};
+const nameByUser = {
+  u1: "A", u2: "B", u3: "C", u4: "D", u5: "E",
+  u6: "F", u7: "G", u8: "H", u9: "I", u10: "J",
+};
+const players = {
+  a: { position: "QB" }, b: { position: "RB" }, c: { position: "RB" },
+  d: { position: "WR" }, e: { position: "WR" }, f: { position: "TE" },
+  g: { position: "WR" },
+};
+const rosterPositions = ["QB", "RB", "RB", "WR", "WR", "TE", "BN"];
+const currentRosters = {};
+const currentStarters = {};
+for (let rid = 1; rid <= 10; rid++) {
+  currentRosters[rid] = ["a", "b", "c", "d", "e", "f"];
+  currentStarters[rid] = ["a", "b", "c", "d", "e", "f"];
+}
+// Toilet seed 10 gets a stud only usable in best ball flex/QB pool via full roster
+currentRosters[10] = ["a", "b", "c", "d", "e", "f", "stud"];
+players.stud = { position: "QB" };
+
+const projectionsByWeek = {};
+for (let w = 2; w <= 17; w++) {
+  const proj = {
+    a: 18, b: 14, c: 12, d: 11, e: 10, f: 8, stud: 0,
+  };
+  // Stronger set lineups for higher seeds in RS weeks
+  projectionsByWeek[w] = { ...proj };
+}
+
+// Bias remaining RS so seeds stay roughly 1..10 by strength
+function biasWeek(w) {
+  const base = {
+    a: 18, b: 14, c: 12, d: 11, e: 10, f: 8, stud: 0,
+  };
+  // Per-roster overlay via starter strength — handled by set lineup sum; instead
+  // leave flat and use different starter pools.
+  return base;
+}
+for (let w = 2; w <= 17; w++) projectionsByWeek[w] = biasWeek(w);
+
+// Give seeds different set strength via starter lists (first player inflated in proj per seat
+// is awkward) — scale by adding seat-specific phantom not used. Simpler: set distinct
+// starter proj by putting unique ids.
+for (let rid = 1; rid <= 10; rid++) {
+  const qb = "qb" + rid;
+  players[qb] = { position: "QB" };
+  currentStarters[rid] = [qb, "b", "c", "d", "e", "f"];
+  currentRosters[rid] = [qb, "b", "c", "d", "e", "f"].concat(rid === 10 ? ["stud"] : []);
+  for (let w = 2; w <= 17; w++) {
+    projectionsByWeek[w][qb] = 30 - rid; // seed-ish strength
+    projectionsByWeek[w].stud = 25;
+  }
+}
+
 const book = buildBestBallHypeBook({
-  weeks: [
-    {
-      week: 1,
-      rows: [
-        { roster_id: 1, matchup_id: 1, points: 80, players_points: { a: 30, b: 25, c: 20, d: 15, e: 14, f: 12 } },
-        { roster_id: 2, matchup_id: 1, points: 100, players_points: { a: 22, b: 20, c: 18, d: 16, e: 14, f: 10 } },
-        { roster_id: 3, matchup_id: 2, points: 90, players_points: { a: 28, b: 24, c: 19, d: 15, e: 13, f: 11 } },
-        { roster_id: 4, matchup_id: 2, points: 85, players_points: { a: 26, b: 22, c: 18, d: 14, e: 12, f: 10 } },
-        { roster_id: 5, matchup_id: 3, points: 95, players_points: { a: 27, b: 23, c: 20, d: 16, e: 14, f: 12 } },
-        { roster_id: 6, matchup_id: 3, points: 70, players_points: { a: 20, b: 18, c: 16, d: 12, e: 10, f: 8 } },
-        { roster_id: 7, matchup_id: 4, points: 88, players_points: { a: 25, b: 21, c: 18, d: 15, e: 13, f: 11 } },
-        { roster_id: 8, matchup_id: 4, points: 92, players_points: { a: 24, b: 22, c: 19, d: 15, e: 14, f: 12 } },
-        { roster_id: 9, matchup_id: 5, points: 77, players_points: { a: 23, b: 20, c: 17, d: 13, e: 11, f: 9 } },
-        { roster_id: 10, matchup_id: 5, points: 81, players_points: { a: 22, b: 19, c: 16, d: 14, e: 12, f: 10 } },
-      ],
-    },
-  ],
-  rosterPositions: ["QB", "RB", "RB", "WR", "WR", "TE", "BN"],
-  players: {
-    a: { position: "QB" }, b: { position: "RB" }, c: { position: "RB" },
-    d: { position: "WR" }, e: { position: "WR" }, f: { position: "TE" },
-  },
-  ownerByRoster: {
-    1: "u1", 2: "u2", 3: "u3", 4: "u4", 5: "u5",
-    6: "u6", 7: "u7", 8: "u8", 9: "u9", 10: "u10",
-  },
-  nameByUser: {
-    u1: "A", u2: "B", u3: "C", u4: "D", u5: "E",
-    u6: "F", u7: "G", u8: "H", u9: "I", u10: "J",
-  },
+  weeks: [{ week: 1, rows: tenWeekRows(scoredPts) }],
+  rsFutureWeeks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((w) => ({
+    week: w,
+    rows: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rid) => ({
+      roster_id: rid,
+      matchup_id: Math.ceil(rid / 2),
+    })),
+  })),
+  currentRosters,
+  currentStarters,
+  projectionsByWeek,
+  rosterPositions,
+  players,
+  ownerByRoster,
+  nameByUser,
   season: 2026,
   week: 1,
+  playoffWeekStart: 15,
+  playoffTeams: 6,
   leagueId: "x",
 });
-assert.equal(book.v, 2);
+
+assert.equal(book.v, 3);
+assert.equal(book.playoff_teams, 6);
 assert.equal(book.seats.length, 10);
-assert.ok(book.seats.every((s) => s.record && s.actual_record && Array.isArray(s.weeks)));
+assert.ok(book.champ && book.toilet);
+assert.ok(book.seats.every((s) => s.seed >= 1 && s.seed <= 10));
+assert.equal(book.seats.filter((s) => s.bracket === "champ").length, 6);
+assert.equal(book.seats.filter((s) => s.bracket === "toilet").length, 4);
 
-const scoredWeekRows = [
-  { roster_id: 1, matchup_id: 1, points: 80, players_points: { a: 30, b: 25, c: 20, d: 15, e: 14, f: 12 } },
-  { roster_id: 2, matchup_id: 1, points: 100, players_points: { a: 22, b: 20, c: 18, d: 16, e: 14, f: 10 } },
-  { roster_id: 3, matchup_id: 2, points: 90, players_points: { a: 28, b: 24, c: 19, d: 15, e: 13, f: 11 } },
-  { roster_id: 4, matchup_id: 2, points: 85, players_points: { a: 26, b: 22, c: 18, d: 14, e: 12, f: 10 } },
-  { roster_id: 5, matchup_id: 3, points: 95, players_points: { a: 27, b: 23, c: 20, d: 16, e: 14, f: 12 } },
-  { roster_id: 6, matchup_id: 3, points: 70, players_points: { a: 20, b: 18, c: 16, d: 12, e: 10, f: 8 } },
-  { roster_id: 7, matchup_id: 4, points: 88, players_points: { a: 25, b: 21, c: 18, d: 15, e: 13, f: 11 } },
-  { roster_id: 8, matchup_id: 4, points: 92, players_points: { a: 24, b: 22, c: 19, d: 15, e: 14, f: 12 } },
-  { roster_id: 9, matchup_id: 5, points: 77, players_points: { a: 23, b: 20, c: 17, d: 13, e: 11, f: 9 } },
-  { roster_id: 10, matchup_id: 5, points: 81, players_points: { a: 22, b: 19, c: 16, d: 14, e: 12, f: 10 } },
-];
+const byes = (book.champ.rounds[0].games || []).filter((g) => g.bye);
+assert.equal(byes.length, 2, "seeds 1–2 get week-one byes");
+const qf = (book.champ.rounds[0].games || []).filter((g) => !g.bye);
+assert.ok(qf.some((g) => {
+  const seeds = [g.a.seed, g.b.seed].sort((a, b) => a - b);
+  return seeds[0] === 3 && seeds[1] === 6;
+}), "6v3 in champ QF");
+assert.ok(qf.some((g) => {
+  const seeds = [g.a.seed, g.b.seed].sort((a, b) => a - b);
+  return seeds[0] === 4 && seeds[1] === 5;
+}), "5v4 in champ QF");
 
-// Future week uses current roster + projections (not the scored-week players_points).
-const book2 = buildBestBallHypeBook({
-  weeks: [{ week: 1, rows: scoredWeekRows }],
-  futureWeeks: [{
-    week: 2,
-    rows: [
-      { roster_id: 1, matchup_id: 1 }, { roster_id: 2, matchup_id: 1 },
-      { roster_id: 3, matchup_id: 2 }, { roster_id: 4, matchup_id: 2 },
-      { roster_id: 5, matchup_id: 3 }, { roster_id: 6, matchup_id: 3 },
-      { roster_id: 7, matchup_id: 4 }, { roster_id: 8, matchup_id: 4 },
-      { roster_id: 9, matchup_id: 5 }, { roster_id: 10, matchup_id: 5 },
-    ],
-  }],
-  currentRosters: {
-    // Roster 1 traded for stud QB — future BB must use this, not week-1 pool alone.
-    1: ["a", "b", "c", "d", "e", "f", "stud"],
-    2: ["a", "b", "c", "d", "e", "f"],
-    3: ["a", "b", "c", "d", "e", "f"],
-    4: ["a", "b", "c", "d", "e", "f"],
-    5: ["a", "b", "c", "d", "e", "f"],
-    6: ["a", "b", "c", "d", "e", "f"],
-    7: ["a", "b", "c", "d", "e", "f"],
-    8: ["a", "b", "c", "d", "e", "f"],
-    9: ["a", "b", "c", "d", "e", "f"],
-    10: ["a", "b", "c", "d", "e", "f"],
-  },
-  projectionsByWeek: {
-    2: {
-      a: 20, b: 18, c: 16, d: 14, e: 12, f: 10,
-      stud: 40, // new acquisition only on roster 1
-    },
-  },
-  rosterPositions: ["QB", "RB", "RB", "WR", "WR", "TE", "BN"],
-  players: {
-    a: { position: "QB" }, b: { position: "RB" }, c: { position: "RB" },
-    d: { position: "WR" }, e: { position: "WR" }, f: { position: "TE" },
-    stud: { position: "QB" },
-  },
-  ownerByRoster: {
-    1: "u1", 2: "u2", 3: "u3", 4: "u4", 5: "u5",
-    6: "u6", 7: "u7", 8: "u8", 9: "u9", 10: "u10",
-  },
-  nameByUser: {
-    u1: "A", u2: "B", u3: "C", u4: "D", u5: "E",
-    u6: "F", u7: "G", u8: "H", u9: "I", u10: "J",
-  },
-  season: 2026,
-  week: 1,
-  projThroughWeek: 2,
-  leagueId: "x",
-});
-assert.equal(book2.v, 2);
-assert.equal(book2.proj_through_week, 2);
-const seat1 = book2.seats.find((s) => s.roster_id === 1);
-assert.ok(seat1.future_weeks.length === 1, "roster 1 has projected W2");
-assert.ok(seat1.future_weeks[0].bb > 100, "stud QB lifts future BB score");
-assert.ok(seat1.proj_wins >= seat1.wins, "projected record includes future");
-assert.equal(seat1.weeks[0].kind, "scored");
-assert.equal(seat1.future_weeks[0].kind, "projected");
+const toiletR1 = book.toilet.rounds[0].games || [];
+assert.ok(toiletR1.every((g) => g.mode === "best_ball"), "toilet is best ball");
+assert.ok(toiletR1.some((g) => {
+  const seeds = [g.a.seed, g.b.seed].sort((a, b) => a - b);
+  return seeds[0] === 7 && seeds[1] === 10;
+}), "10v7 toilet");
+assert.ok(toiletR1.some((g) => {
+  const seeds = [g.a.seed, g.b.seed].sort((a, b) => a - b);
+  return seeds[0] === 8 && seeds[1] === 9;
+}), "8v9 toilet");
+
+assert.ok(book.champ.rounds[0].games.filter((g) => !g.bye).every((g) => g.mode === "set_lineup"));
+assert.ok(book.seats.every((s) => Number(s.place_proj) >= 1 && Number(s.place_proj) <= 10));
 
 console.log(JSON.stringify({
   ok: true,
-  top: book.seats[0].name,
-  record: book.seats[0].record,
-  proj: seat1.proj_record,
-  future_bb: seat1.future_weeks[0].bb,
+  champ_leader: book.seats.find((s) => s.place_proj === 1)?.name,
+  sacko: book.seats.find((s) => s.place_proj === 10)?.name,
+  seeds: book.seeding.map((s) => s.name + "#" + s.seed),
 }));

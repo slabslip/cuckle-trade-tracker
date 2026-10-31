@@ -5018,7 +5018,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "bestBallHypeTop620261031";
+    const DATA_V = "bestBallBrackets20261031";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5156,7 +5156,7 @@
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
       { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks. Playoff is the winners-bracket title hunt." },
-      { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Each scored week uses that week’s roster (trades/waivers included). Rest of season through playoffs freezes today’s roster and projects the optimal lineup." },
+      { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Top 6 champ bracket (set lineups; 1–2 bye). Bottom 4 toilet bowl in best ball so nobody can tank. Seeding from projected regular-season finish." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -5904,35 +5904,31 @@
       if (canon === "best_ball_hype") {
         const seats = (bestBallHypeBook && Array.isArray(bestBallHypeBook.seats))
           ? bestBallHypeBook.seats.slice() : [];
-        // Playoff cut is top 6 — rank the shareable board by projected BB record.
+        const playoffN = Number(bestBallHypeBook && bestBallHypeBook.playoff_teams) || 6;
+        // Top 6 = champ seeds; Bottom 4 = toilet — sort by projected final place.
         seats.sort(function (a, b) {
-          return (Number(b.proj_wins) || 0) - (Number(a.proj_wins) || 0)
-            || (Number(a.proj_losses) || 0) - (Number(b.proj_losses) || 0)
-            || (Number(b.proj_pf) || 0) - (Number(a.proj_pf) || 0)
+          return (Number(a.place_proj) || 99) - (Number(b.place_proj) || 99)
+            || (Number(a.seed) || 99) - (Number(b.seed) || 99)
             || String(a.name || "").localeCompare(String(b.name || ""));
         });
-        const playoffN = Math.min(6, seats.length);
         return seats.map(function (s, i) {
-          const delta = Number(s.delta_wins) || 0;
-          const deltaLab = delta > 0 ? ("+" + delta + " W vs set")
-            : (delta < 0 ? (delta + " W vs set") : "same W as set");
-          const left = s.avg_left_on_bench != null
-            ? (s.avg_left_on_bench + " pts/wk left on bench")
-            : "";
-          const through = bestBallHypeBook && bestBallHypeBook.proj_through_week
-            ? (" through W" + bestBallHypeBook.proj_through_week)
-            : "";
+          const seed = Number(s.seed) || (i + 1);
+          const place = Number(s.place_proj) || null;
+          const bracket = s.bracket === "toilet" ? "toilet" : "champ";
+          const placeLab = place != null
+            ? ((typeof nth === "function" ? nth(place) : ("#" + place)))
+            : "—";
+          const modeLab = bracket === "toilet" ? "best ball" : "set lineup";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
-            metric: s.proj_record || s.record || "—",
-            sub: ("BB to date " + (s.record || "—")
-              + " · set " + (s.actual_record || "—") + " · " + deltaLab
-              + (left ? (" · " + left) : "")
-              + through
-              + " · tap for weeks"),
-            rank: i + 1,
-            band: i < playoffN ? "top" : "bot",
+            metric: placeLab,
+            sub: ("seed " + seed + " · " + (s.rs_record || s.actual_record || "—")
+              + " RS · " + modeLab
+              + (s.record ? (" · BB tape " + s.record) : "")
+              + " · tap for path"),
+            rank: place || (i + 1),
+            band: seed <= playoffN ? "top" : "bot",
             seat: s,
           };
         });
@@ -7900,12 +7896,15 @@
         const seats = bestBallHypeBook && Array.isArray(bestBallHypeBook.seats)
           ? bestBallHypeBook.seats.slice() : [];
         seats.sort(function (a, b) {
-          return (Number(b.proj_wins) || 0) - (Number(a.proj_wins) || 0)
-            || (Number(a.proj_losses) || 0) - (Number(b.proj_losses) || 0)
-            || (Number(b.proj_pf) || 0) - (Number(a.proj_pf) || 0);
+          return (Number(a.place_proj) || 99) - (Number(b.place_proj) || 99)
+            || (Number(a.seed) || 99) - (Number(b.seed) || 99);
         });
         const lead = seats[0];
-        if (lead) fig = receiptDoorLeadFig(lead.name, lead.proj_record || lead.record || "");
+        if (lead) {
+          const pl = Number(lead.place_proj);
+          fig = receiptDoorLeadFig(lead.name,
+            Number.isFinite(pl) ? (typeof nth === "function" ? nth(pl) : ("#" + pl)) : (lead.record || ""));
+        }
       } else if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
         if (id === "past_champions") {
           const last = ((titles && titles.titles) || [])[0];
@@ -9201,9 +9200,9 @@
           + " Opinion only — never writes the trade needle.";
       }
       else if (id === "best_ball_hype") {
-        caption = "Projected best-ball standings — Top 6 make the playoffs, Bottom 4 are out."
-          + " Big number is the projected BB record (scored weeks + rest/playoffs on today’s roster)."
-          + " Share Top 6 or Bottom 4. Tap a seat for scored weeks vs the projected rest.";
+        caption = "Top 6 make the champ bracket (set lineups; seeds 1–2 get a bye; 6v3 and 5v4)."
+          + " Bottom 4 play the toilet bowl in best ball (10v7, 8v9) so nobody can purposely lose."
+          + " Big number is projected final place. Share Top 6 or Bottom 4.";
       }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
@@ -14708,42 +14707,48 @@
 
     function bestBallHypeDetailHtml(seat) {
       if (!seat) return "";
-      const delta = Number(seat.delta_wins) || 0;
-      const deltaLab = delta > 0
-        ? ("+" + delta + " wins vs the set lineup")
-        : (delta < 0 ? (delta + " wins vs the set lineup") : "Same wins as the set lineup");
-      const through = bestBallHypeBook && bestBallHypeBook.proj_through_week;
+      const place = Number(seat.place_proj);
+      const seed = Number(seat.seed);
+      const bracket = seat.bracket === "toilet" ? "toilet bowl" : "champ bracket";
+      const mode = seat.bracket === "toilet" ? "best ball" : "set lineup";
+      const placeLab = Number.isFinite(place)
+        ? (typeof nth === "function" ? nth(place) : ("#" + place))
+        : "—";
       let html = '<div class="pf-why">';
       html += '<p class="pf-why-h">In plain English</p>';
-      html += "<p><b>Best Ball " + esc(seat.record || "—") + "</b> to date"
-        + (seat.proj_record
-          ? (". Projected <b>" + esc(seat.proj_record) + "</b>"
-            + (through ? (" through W" + esc(String(through))) : "")
-            + " if today’s roster holds")
-          : "")
-        + ". Set lineup was " + esc(seat.actual_record || "—") + ". "
-        + esc(deltaLab) + ".</p>";
-      if (seat.avg_left_on_bench != null) {
-        html += "<p>About <b>" + esc(String(seat.avg_left_on_bench))
-          + " pts/week</b> sat on the bench that best ball would have started.</p>";
+      html += "<p>Projected <b>" + esc(placeLab) + "</b> — seed "
+        + esc(String(seed || "—")) + " into the " + esc(bracket)
+        + " (" + esc(mode) + "). Regular season path "
+        + esc(seat.rs_record || seat.actual_record || "—") + ".</p>";
+      if (seat.bracket === "toilet") {
+        html += "<p>Toilet bowl scores best ball so managers cannot purposely lose.</p>";
+      } else {
+        html += "<p>Champ bracket uses normal set lineups. Seeds 1–2 bye week one; 6 plays 3 and 5 plays 4.</p>";
       }
-      html += '<p class="pf-why-h">Scored weeks</p>';
-      (seat.weeks || []).forEach(function (w) {
-        const mark = w.result === "W" ? "W" : (w.result === "L" ? "L" : "T");
-        html += '<p class="pf-week"><b>W' + esc(String(w.week)) + " · " + mark + "</b> — BB "
-          + esc(String(w.bb)) + " (set " + esc(String(w.actual)) + ")"
-          + (w.left ? (" · +" + esc(String(w.left)) + " from bench") : "")
-          + "</p>";
-      });
-      if (seat.future_weeks && seat.future_weeks.length) {
-        html += '<p class="pf-why-h">Rest + playoffs (current roster)</p>';
-        seat.future_weeks.forEach(function (w) {
-          const mark = w.result === "W" ? "W" : (w.result === "L" ? "L" : "T");
-          html += '<p class="pf-week"><b>W' + esc(String(w.week)) + " · " + mark
-            + "</b> — proj BB " + esc(String(w.bb)) + "</p>";
+      if (seat.path && seat.path.length) {
+        html += '<p class="pf-why-h">Bracket path</p>';
+        seat.path.forEach(function (p) {
+          if (p.result === "BYE") {
+            html += '<p class="pf-week"><b>W' + esc(String(p.week)) + " · BYE</b></p>";
+            return;
+          }
+          html += '<p class="pf-week"><b>W' + esc(String(p.week)) + " · "
+            + esc(String(p.result || "")) + "</b> — "
+            + esc(String(p.pts)) + " vs " + esc(String(p.opp || ""))
+            + " (" + esc(String(p.opp_pts)) + ")"
+            + (p.mode === "best_ball" ? " · BB" : " · set")
+            + "</p>";
         });
       }
-      html += '<p class="caption">Scored weeks use that week’s roster after trades and waivers. Future weeks freeze today’s roster and use Sleeper projections.</p>';
+      if (seat.record) {
+        html += '<p class="pf-why-h">Best-ball tape (scored weeks)</p>';
+        html += "<p>BB " + esc(seat.record) + " vs set " + esc(seat.actual_record || "—");
+        if (seat.avg_left_on_bench != null) {
+          html += " · ~" + esc(String(seat.avg_left_on_bench)) + " pts/wk left on bench";
+        }
+        html += ".</p>";
+      }
+      html += '<p class="caption">Seeding from projected regular-season standings. Champ = set lineup. Toilet = best ball.</p>';
       html += "</div>";
       return html;
     }
@@ -17458,14 +17463,14 @@
         const seats = bestBallHypeBook && Array.isArray(bestBallHypeBook.seats)
           ? bestBallHypeBook.seats.slice() : [];
         seats.sort(function (a, b) {
-          return (Number(b.proj_wins) || 0) - (Number(a.proj_wins) || 0)
-            || (Number(a.proj_losses) || 0) - (Number(b.proj_losses) || 0)
-            || (Number(b.proj_pf) || 0) - (Number(a.proj_pf) || 0);
+          return (Number(a.place_proj) || 99) - (Number(b.place_proj) || 99)
+            || (Number(a.seed) || 99) - (Number(b.seed) || 99);
         });
         const lead = seats[0];
+        const pl = lead && Number(lead.place_proj);
         return dataDashHead(spec,
-          lead ? (lead.proj_record || lead.record || "Open") : "Open",
-          lead ? ((lead.name || "Lead") + " proj BB · Top 6 in") : "Projected BB · Top 6 playoffs");
+          Number.isFinite(pl) ? (typeof nth === "function" ? nth(pl) : ("#" + pl)) : "Open",
+          lead ? ((lead.name || "Lead") + " · Top 6 / toilet") : "Champ + toilet brackets");
       }
       if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];

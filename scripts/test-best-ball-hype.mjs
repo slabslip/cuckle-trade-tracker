@@ -29,6 +29,8 @@ for (const need of [
   'getLeagueJson("best-ball-hype.json")',
   "bestBallHypeOpenKey",
   "If every week used the best lineup",
+  "Rest + playoffs (current roster)",
+  "Scored weeks use that week",
   'src[draftAt] = "best_ball_hype"',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -47,7 +49,7 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/best-ball-hype.json", "utf8"),
 );
-if (Number(book.v) !== 1 || !Array.isArray(book.seats) || book.seats.length < 8) {
+if (Number(book.v) < 1 || !Array.isArray(book.seats) || book.seats.length < 8) {
   fail("best-ball-hype book missing seats");
 }
 const lead = book.seats[0];
@@ -57,6 +59,15 @@ if (!lead.record || !lead.actual_record || !Array.isArray(lead.weeks) || !lead.w
 // At least one seat should differ from set lineup (hype / anti-hype).
 if (!book.seats.some((s) => Number(s.delta_wins) !== 0)) {
   fail("expected at least one seat with BB wins ≠ set lineup wins");
+}
+if (Number(book.v) >= 2) {
+  if (!book.proj_through_week || !Array.isArray(lead.future_weeks)) {
+    fail("v2 book needs proj_through_week + future_weeks");
+  }
+  if (!lead.proj_record) fail("v2 seats need proj_record from current-roster rest of season");
+  if (!book.seats.some((s) => (s.future_weeks || []).length > 0)) {
+    fail("expected projected future weeks on at least one seat");
+  }
 }
 
 const design = "design-best-ball-hype.html";

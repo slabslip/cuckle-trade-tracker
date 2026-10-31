@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * Best Ball Hype book for League Data.
- * Fetches scored Sleeper matchups (with players_points), builds optimal-lineup
- * W/L for the live season, writes data/ui/best-ball-hype.json.
+ * Scored weeks: that week's matchup players_points (roster after trades/waivers).
+ * Remaining weeks through playoffs: current roster + Sleeper projections.
  *
  *   node build-best-ball-hype.mjs [league_id]
  */
@@ -38,6 +38,13 @@ function nameMap() {
   return map;
 }
 
+function ptsKeyFromLeague(live) {
+  const rec = live && live.scoring_settings && Number(live.scoring_settings.rec);
+  if (rec === 1) return "pts_ppr";
+  if (rec === 0.5) return "pts_half_ppr";
+  return "pts_std";
+}
+
 async function matchupsFor(leagueId, week) {
   let lastErr = null;
   for (let i = 0; i < 4; i++) {
@@ -52,6 +59,40 @@ async function matchupsFor(leagueId, week) {
   throw lastErr || new Error(`matchups ${leagueId} w${week}`);
 }
 
+async function fetchWeekProjections(season, week, ptsKey) {
+  const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
+  const qs = positions.map((p) => "position[]=" + p).join("&");
+  const url = "https://api.sleeper.app/projections/nfl/" + season + "/" + week
+    + "?season_type=regular&" + qs;
+  let lastErr = null;
+  for (let i = 0; i < 3; i++) {
+    try {
+      const projs = await fetch(url).then((r) => (r.ok ? r.json() : []));
+      const projBy = Object.create(null);
+      for (const p of projs || []) {
+        const st = p.stats || {};
+        const pts = Number(st[ptsKey] || st.pts_ppr || st.pts_std || 0);
+        if (p.player_id != null) projBy[String(p.player_id)] = pts;
+      }
+      return projBy;
+    } catch (err) {
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, 300 * (i + 1)));
+    }
+  }
+  throw lastErr || new Error(`projections ${season} w${week}`);
+}
+
+/** Last fantasy week to project: through scheduled matchups, capped past playoff start. */
+function projThroughWeek(live, lastScored) {
+  const playoffStart = Number(live.settings?.playoff_week_start) || 15;
+  const rounds = Number(live.settings?.playoff_rounds) || 3;
+  // Regular season ends the week before playoffs; then playoff rounds.
+  const end = Math.max(playoffStart + rounds - 1, lastScored + 1);
+  // NFL fantasy weeks rarely need past 18.
+  return Math.min(Math.max(end, 17), 18);
+}
+
 async function main() {
   const leagueId = LEAGUE_ID;
   const live = await sleeperGet(`/league/${leagueId}`);
@@ -59,9 +100,10 @@ async function main() {
   const season = Number(live.season) || live.season;
   const lastScored = Number(live.settings?.last_scored_leg) || 0;
   const rosterPositions = live.roster_positions || [];
+  const ptsKey = ptsKeyFromLeague(live);
   if (!lastScored) {
     writeUi("best-ball-hype.json", {
-      v: 1,
+      v: 2,
       as_of: new Date().toISOString().slice(0, 10),
       league_id: String(leagueId),
       season,
@@ -87,8 +129,11 @@ async function main() {
     }
   }
   const ownerByRoster = {};
+  const currentRosters = {};
   for (const r of rosters || []) {
-    ownerByRoster[Number(r.roster_id)] = r.owner_id;
+    const rid = Number(r.roster_id);
+    ownerByRoster[rid] = r.owner_id;
+    currentRosters[rid] = (r.players || []).map(String).filter((id) => id && id !== "0");
   }
 
   const weeks = [];
@@ -97,26 +142,44 @@ async function main() {
     weeks.push({ week: w, rows });
   }
 
+  const through = projThroughWeek(live, lastScored);
+  const futureWeeks = [];
+  const projectionsByWeek = {};
+  for (let w = lastScored + 1; w <= through; w++) {
+    const rows = await matchupsFor(leagueId, w);
+    if (!rows.length) continue;
+    futureWeeks.push({ week: w, rows });
+    projectionsByWeek[w] = await fetchWeekProjections(season, w, ptsKey);
+  }
+
   const book = buildBestBallHypeBook({
     weeks,
+    futureWeeks,
+    currentRosters,
+    projectionsByWeek,
     rosterPositions,
     players,
     ownerByRoster,
     nameByUser,
     season,
     week: lastScored,
+    projThroughWeek: through,
     leagueId,
     asOf: new Date().toISOString().slice(0, 10),
   });
 
   writeUi("best-ball-hype.json", book);
+  const lead = book.seats[0];
   console.log(
     "best-ball-hype",
     book.season,
-    "w" + book.week,
+    "scored through w" + book.week,
+    "proj through w" + book.proj_through_week,
     book.seats.length + " seats",
     "→",
-    book.seats.slice(0, 3).map((s) => s.name + " " + s.record).join(", "),
+    lead
+      ? (lead.name + " BB " + lead.record + " / proj " + lead.proj_record)
+      : "—",
   );
 }
 

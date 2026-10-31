@@ -5018,7 +5018,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "bestBallHypeBoard20261030";
+    const DATA_V = "bestBallHypeRosterProj20261030";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5156,7 +5156,7 @@
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
       { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks. Playoff is the winners-bracket title hunt." },
-      { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Each week’s score is the best lineup from the full roster — not the set lineup. Record from those scores." },
+      { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Each scored week uses that week’s roster (trades/waivers included). Rest of season through playoffs freezes today’s roster and projects the optimal lineup." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -5900,12 +5900,19 @@
           const left = s.avg_left_on_bench != null
             ? (s.avg_left_on_bench + " pts/wk left on bench")
             : "";
+          const proj = s.proj_record
+            ? ("proj " + s.proj_record
+              + (bestBallHypeBook && bestBallHypeBook.proj_through_week
+                ? (" through W" + bestBallHypeBook.proj_through_week)
+                : ""))
+            : "";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
             metric: s.record || "—",
             sub: ("set " + (s.actual_record || "—") + " · " + deltaLab
               + (left ? (" · " + left) : "")
+              + (proj ? (" · " + proj) : "")
               + " · tap for weeks"),
             rank: s.rank || (i + 1),
             seat: s,
@@ -9163,9 +9170,10 @@
           + " Opinion only — never writes the trade needle.";
       }
       else if (id === "best_ball_hype") {
-        caption = "If every week used the best lineup from the full roster — not the set lineup."
-          + " Big number is that best-ball record. Compare to the set-lineup record beside it."
-          + " Tap a seat for week-by-week BB vs set scores.";
+        caption = "If every week used the best lineup from that week’s roster — not the set lineup."
+          + " Trades and waivers are already in each scored week. Rest of season through playoffs"
+          + " freezes today’s roster and projects. Big number is the scored best-ball record;"
+          + " tap a seat for week-by-week BB vs set and the projected rest.";
       }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
@@ -14674,15 +14682,22 @@
       const deltaLab = delta > 0
         ? ("+" + delta + " wins vs the set lineup")
         : (delta < 0 ? (delta + " wins vs the set lineup") : "Same wins as the set lineup");
+      const through = bestBallHypeBook && bestBallHypeBook.proj_through_week;
       let html = '<div class="pf-why">';
       html += '<p class="pf-why-h">In plain English</p>';
-      html += "<p><b>Best Ball " + esc(seat.record || "—") + ".</b> Set lineup was "
-        + esc(seat.actual_record || "—") + ". " + esc(deltaLab) + ".</p>";
+      html += "<p><b>Best Ball " + esc(seat.record || "—") + "</b> to date"
+        + (seat.proj_record
+          ? (". Projected <b>" + esc(seat.proj_record) + "</b>"
+            + (through ? (" through W" + esc(String(through))) : "")
+            + " if today’s roster holds")
+          : "")
+        + ". Set lineup was " + esc(seat.actual_record || "—") + ". "
+        + esc(deltaLab) + ".</p>";
       if (seat.avg_left_on_bench != null) {
         html += "<p>About <b>" + esc(String(seat.avg_left_on_bench))
           + " pts/week</b> sat on the bench that best ball would have started.</p>";
       }
-      html += '<p class="pf-why-h">Every week</p>';
+      html += '<p class="pf-why-h">Scored weeks</p>';
       (seat.weeks || []).forEach(function (w) {
         const mark = w.result === "W" ? "W" : (w.result === "L" ? "L" : "T");
         html += '<p class="pf-week"><b>W' + esc(String(w.week)) + " · " + mark + "</b> — BB "
@@ -14690,7 +14705,15 @@
           + (w.left ? (" · +" + esc(String(w.left)) + " from bench") : "")
           + "</p>";
       });
-      html += '<p class="caption">Optimal lineup from the full roster each week — not a projection.</p>';
+      if (seat.future_weeks && seat.future_weeks.length) {
+        html += '<p class="pf-why-h">Rest + playoffs (current roster)</p>';
+        seat.future_weeks.forEach(function (w) {
+          const mark = w.result === "W" ? "W" : (w.result === "L" ? "L" : "T");
+          html += '<p class="pf-week"><b>W' + esc(String(w.week)) + " · " + mark
+            + "</b> — proj BB " + esc(String(w.bb)) + "</p>";
+        });
+      }
+      html += '<p class="caption">Scored weeks use that week’s roster after trades and waivers. Future weeks freeze today’s roster and use Sleeper projections.</p>';
       html += "</div>";
       return html;
     }

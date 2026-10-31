@@ -26,8 +26,8 @@ for (const bad of [
 const def = page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/);
 if (!def) fail("missing DATA_DASH_DEFAULT");
 if (def[1].includes("firsts_held")) fail("default board still has firsts_held");
-if (!def[1].includes('"manager_archetypes"') || !def[1].includes('"draft_board"')) {
-  fail("default board should use manager_archetypes + draft_board");
+if (!def[1].includes('"manager_archetypes"') || !def[1].includes('"best_ball_hype"')) {
+  fail("default board should use manager_archetypes + best_ball_hype");
 }
 
 const mig = page.slice(page.indexOf("function dataDashMigrateMyPicks("),

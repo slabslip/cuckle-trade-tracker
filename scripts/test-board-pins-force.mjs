@@ -33,7 +33,7 @@ const catalog = new Set([
   "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
   "my_trades", "trade_helper", "league_trades", "league_draft",
   "profit_loss", "past_champions", "season_place",
-  "week_scores", "draft_board", "vs_you", "book_top", "firsts_held",
+  "week_scores", "best_ball_hype", "draft_board", "vs_you", "book_top", "firsts_held",
 ]);
 
 function dataDashById(id) {
@@ -93,9 +93,21 @@ function assert(cond, msg) {
     "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
     "my_trades", "trade_helper", "league_trades", "league_draft",
     "profit_loss", "past_champions", "season_place",
-    "week_scores", "draft_board",
+    "week_scores", "best_ball_hype",
   ];
   assert(dataDashMigrateMyPicks(good).join(",") === good.join(","), "good board must stay put");
+}
+
+{
+  const legacy = [
+    "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
+    "my_trades", "trade_helper", "league_trades", "league_draft",
+    "profit_loss", "past_champions", "season_place",
+    "week_scores", "draft_board",
+  ];
+  const next = dataDashMigrateMyPicks(legacy);
+  assert(next.indexOf("best_ball_hype") === 12, "draft_board becomes best_ball_hype, got " + next.join(","));
+  assert(next.indexOf("draft_board") < 0, "draft_board leaves the default door slot");
 }
 
 {

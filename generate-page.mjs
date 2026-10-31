@@ -5026,7 +5026,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "bestBallHypeDoor20261030";
+    const DATA_V = "bestBallHypeBoard20261030";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5098,7 +5098,7 @@ const html = `<!DOCTYPE html>
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "past_champions", "season_place",
-      "week_scores", "draft_board",
+      "week_scores", "best_ball_hype",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5112,7 +5112,7 @@ const html = `<!DOCTYPE html>
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "past_champions", "season_place",
-      "week_scores", "draft_board",
+      "week_scores", "best_ball_hype",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "passed_around", "week_scores",
@@ -13117,7 +13117,7 @@ const html = `<!DOCTYPE html>
         projected_finish: 1, my_draft: 1, manager_archetypes: 1, season_arcs: 1,
       };
       const softDrop = ["past_champions", "season_place", "league_draft",
-        "league_trades", "week_scores"];
+        "league_trades", "week_scores", "draft_board"];
       const softDropAt = function (fromIdx) {
         for (let d = 0; d < softDrop.length; d++) {
           const at = src.indexOf(softDrop[d]);
@@ -13125,6 +13125,20 @@ const html = `<!DOCTYPE html>
         }
         return -1;
       };
+      // Dynasty: pin Best Ball Hype onto saved boards (swap Draft capital when present).
+      if (dynasty && src.indexOf("best_ball_hype") < 0 && dataDashById("best_ball_hype")) {
+        const draftAt = src.indexOf("draft_board");
+        if (draftAt >= 0) {
+          src[draftAt] = "best_ball_hype";
+        } else if (src.length < DATA_DASH_MAX) {
+          const after = src.indexOf("week_scores");
+          if (after >= 0) src.splice(after + 1, 0, "best_ball_hype");
+          else src.push("best_ball_hype");
+        } else {
+          const at = softDropAt(4);
+          if (at >= 0) src[at] = "best_ball_hype";
+        }
+      }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
         if (vs >= 0) {
@@ -40233,8 +40247,12 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(softTop, 0, "season_arcs")')
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(Math.min(3, src.length), 0, "season_arcs")')
     || !fnSrc("dataDashMigrateMyPicks").includes("softDrop")
+    || !fnSrc("dataDashMigrateMyPicks").includes('src[draftAt] = "best_ball_hype"')
     || fnSrc("dataDashMigrateMyPicks").includes('src[src.length - 1] = "trade_helper"')) {
-    throw new Error("Your board must surface Trade helper + soft-pin Season arcs on saved dynasty boards");
+    throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype on saved dynasty boards");
+  }
+  if (!uniq.has("best_ball_hype") || defIds[12] !== "best_ball_hype" || doorIds[12] !== "best_ball_hype") {
+    throw new Error("Best Ball Hype must be default board tile 13 (League Data door)");
   }
   if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
     throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");

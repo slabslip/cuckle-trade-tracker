@@ -29,8 +29,19 @@ for (const need of [
   'getLeagueJson("best-ball-hype.json")',
   "bestBallHypeOpenKey",
   "If every week used the best lineup",
+  'src[draftAt] = "best_ball_hype"',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
+}
+{
+  const doors = (page.match(/const DATA_DOORS = \[([\s\S]*?)\];/) || [])[1] || "";
+  const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
+  if (!doors.includes('"best_ball_hype"') || !def.includes('"best_ball_hype"')) {
+    fail("Best Ball Hype must sit on DATA_DOORS + DATA_DASH_DEFAULT");
+  }
+  if (doors.includes('"draft_board"') || def.includes('"draft_board"')) {
+    fail("Draft capital left the default 13 doors — Best Ball Hype took that slot");
+  }
 }
 
 const book = JSON.parse(

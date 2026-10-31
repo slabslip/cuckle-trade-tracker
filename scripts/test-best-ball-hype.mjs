@@ -28,9 +28,12 @@ for (const need of [
   'closest("[data-best-ball-hype-open]")',
   'getLeagueJson("best-ball-hype.json")',
   "bestBallHypeOpenKey",
-  "If every week used the best lineup",
   "Rest + playoffs (current roster)",
   "Scored weeks use that week",
+  "Top 6 make the playoffs",
+  'band("Top 6", "top"',
+  'band("Bottom 4", "bot"',
+  'band: i < playoffN ? "top" : "bot"',
   'src[draftAt] = "best_ball_hype"',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);

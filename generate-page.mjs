@@ -5026,7 +5026,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261031085502";
+    const DATA_V = "bestBallHypeTop620261031";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5665,9 +5665,12 @@ const html = `<!DOCTYPE html>
       }
       if ((opts.slice === "top" || opts.slice === "bot") && picked.length) {
         const week = id === "week_scores" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "week_scores");
+        const bb = id === "best_ball_hype" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "best_ball_hype");
         const tag = week
           ? (opts.slice === "top" ? "Highest 5" : "Lowest 5")
-          : (opts.slice === "top" ? "Top 5" : "Bottom 5");
+          : (bb
+            ? (opts.slice === "top" ? "Top 6" : "Bottom 4")
+            : (opts.slice === "top" ? "Top 5" : "Bottom 5"));
         let body = leagueName + " · " + lab + " · " + tag;
         picked.forEach(function (r, i) {
           body += "\\n" + (r.rank || (i + 1)) + ". " + String(r.name || "") + (r.metric ? " · " + r.metric : "");
@@ -5688,7 +5691,15 @@ const html = `<!DOCTYPE html>
       opts = opts || {};
       const slice = opts.slice ? String(opts.slice) : "";
       const who = opts.who ? String(opts.who) : "";
-      const label = who ? "Share this team" : (slice === "top" ? "Share top 5" : (slice === "bot" ? "Share bottom 5" : "Share this view"));
+      const bb = id === "best_ball_hype" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "best_ball_hype");
+      const label = who
+        ? "Share this team"
+        : (slice === "top"
+          ? (bb ? "Share top 6" : "Share top 5")
+          : (slice === "bot"
+            ? (bb ? "Share bottom 4" : "Share bottom 5")
+            : "Share this view"));
       return '<button type="button" class="tile-share" data-tile-share="' + esc(id || "") + '"'
         + (slice ? ' data-share-slice="' + esc(slice) + '"' : "")
         + (who ? ' data-share-who="' + esc(who) + '"' : "")
@@ -5900,7 +5911,15 @@ const html = `<!DOCTYPE html>
       }
       if (canon === "best_ball_hype") {
         const seats = (bestBallHypeBook && Array.isArray(bestBallHypeBook.seats))
-          ? bestBallHypeBook.seats : [];
+          ? bestBallHypeBook.seats.slice() : [];
+        // Playoff cut is top 6 — rank the shareable board by projected BB record.
+        seats.sort(function (a, b) {
+          return (Number(b.proj_wins) || 0) - (Number(a.proj_wins) || 0)
+            || (Number(a.proj_losses) || 0) - (Number(b.proj_losses) || 0)
+            || (Number(b.proj_pf) || 0) - (Number(a.proj_pf) || 0)
+            || String(a.name || "").localeCompare(String(b.name || ""));
+        });
+        const playoffN = Math.min(6, seats.length);
         return seats.map(function (s, i) {
           const delta = Number(s.delta_wins) || 0;
           const deltaLab = delta > 0 ? ("+" + delta + " W vs set")
@@ -5908,21 +5927,20 @@ const html = `<!DOCTYPE html>
           const left = s.avg_left_on_bench != null
             ? (s.avg_left_on_bench + " pts/wk left on bench")
             : "";
-          const proj = s.proj_record
-            ? ("proj " + s.proj_record
-              + (bestBallHypeBook && bestBallHypeBook.proj_through_week
-                ? (" through W" + bestBallHypeBook.proj_through_week)
-                : ""))
+          const through = bestBallHypeBook && bestBallHypeBook.proj_through_week
+            ? (" through W" + bestBallHypeBook.proj_through_week)
             : "";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
-            metric: s.record || "—",
-            sub: ("set " + (s.actual_record || "—") + " · " + deltaLab
+            metric: s.proj_record || s.record || "—",
+            sub: ("BB to date " + (s.record || "—")
+              + " · set " + (s.actual_record || "—") + " · " + deltaLab
               + (left ? (" · " + left) : "")
-              + (proj ? (" · " + proj) : "")
+              + through
               + " · tap for weeks"),
-            rank: s.rank || (i + 1),
+            rank: i + 1,
+            band: i < playoffN ? "top" : "bot",
             seat: s,
           };
         });
@@ -6125,6 +6143,12 @@ const html = `<!DOCTYPE html>
       if (list[0] && list[0].band) {
         const highs = list.filter(function (r) { return r.band === "top"; });
         const lows = list.filter(function (r) { return r.band === "bot"; });
+        const bb = id === "best_ball_hype" || (typeof receiptDoorCanon === "function"
+          && receiptDoorCanon(id) === "best_ball_hype");
+        if (bb) {
+          return band("Top 6", "top", highs, 0)
+            + band("Bottom 4", "bot", lows, highs.length);
+        }
         return band("Highest weeks", "top", highs, 0)
           + band("Lowest weeks", "bot", lows, highs.length);
       }
@@ -7881,8 +7905,15 @@ const html = `<!DOCTYPE html>
         const lead = managerArchetypesBook && managerArchetypesBook.seats && managerArchetypesBook.seats[0];
         if (lead) fig = receiptDoorLeadFig(lead.name, lead.lab || "");
       } else if (id === "best_ball_hype") {
-        const lead = bestBallHypeBook && bestBallHypeBook.seats && bestBallHypeBook.seats[0];
-        if (lead) fig = receiptDoorLeadFig(lead.name, lead.record || "");
+        const seats = bestBallHypeBook && Array.isArray(bestBallHypeBook.seats)
+          ? bestBallHypeBook.seats.slice() : [];
+        seats.sort(function (a, b) {
+          return (Number(b.proj_wins) || 0) - (Number(a.proj_wins) || 0)
+            || (Number(a.proj_losses) || 0) - (Number(b.proj_losses) || 0)
+            || (Number(b.proj_pf) || 0) - (Number(a.proj_pf) || 0);
+        });
+        const lead = seats[0];
+        if (lead) fig = receiptDoorLeadFig(lead.name, lead.proj_record || lead.record || "");
       } else if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
         if (id === "past_champions") {
           const last = ((titles && titles.titles) || [])[0];
@@ -9178,10 +9209,9 @@ const html = `<!DOCTYPE html>
           + " Opinion only — never writes the trade needle.";
       }
       else if (id === "best_ball_hype") {
-        caption = "If every week used the best lineup from that week’s roster — not the set lineup."
-          + " Trades and waivers are already in each scored week. Rest of season through playoffs"
-          + " freezes today’s roster and projects. Big number is the scored best-ball record;"
-          + " tap a seat for week-by-week BB vs set and the projected rest.";
+        caption = "Projected best-ball standings — Top 6 make the playoffs, Bottom 4 are out."
+          + " Big number is the projected BB record (scored weeks + rest/playoffs on today’s roster)."
+          + " Share Top 6 or Bottom 4. Tap a seat for scored weeks vs the projected rest.";
       }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
@@ -17433,10 +17463,17 @@ const html = `<!DOCTYPE html>
           lead ? (lead.name || "Lead") : "How they play seasons");
       }
       if (id === "best_ball_hype") {
-        const lead = bestBallHypeBook && bestBallHypeBook.seats && bestBallHypeBook.seats[0];
+        const seats = bestBallHypeBook && Array.isArray(bestBallHypeBook.seats)
+          ? bestBallHypeBook.seats.slice() : [];
+        seats.sort(function (a, b) {
+          return (Number(b.proj_wins) || 0) - (Number(a.proj_wins) || 0)
+            || (Number(a.proj_losses) || 0) - (Number(b.proj_losses) || 0)
+            || (Number(b.proj_pf) || 0) - (Number(a.proj_pf) || 0);
+        });
+        const lead = seats[0];
         return dataDashHead(spec,
-          lead ? (lead.record || "Open") : "Open",
-          lead ? ((lead.name || "Lead") + " best ball") : "Optimal lineup record");
+          lead ? (lead.proj_record || lead.record || "Open") : "Open",
+          lead ? ((lead.name || "Lead") + " proj BB · Top 6 in") : "Projected BB · Top 6 playoffs");
       }
       if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];
@@ -41140,11 +41177,14 @@ if (!inline.includes("function bestBallHypeDetailHtml(")
   || !inline.includes('id: "best_ball_hype"')
   || !inline.includes('lab: "Best Ball Hype"')
   || !inline.includes('getLeagueJson("best-ball-hype.json")')
-  || !fnSrc("receiptWhoListHtml").includes("If every week used the best lineup")
   || !fnSrc("bestBallHypeDetailHtml").includes("Rest + playoffs (current roster)")
   || !fnSrc("bestBallHypeDetailHtml").includes("Scored weeks use that week")
+  || !fnSrc("dataListBandsHtml").includes('band("Top 6", "top"')
+  || !fnSrc("dataListBandsHtml").includes('band("Bottom 4", "bot"')
+  || !fnSrc("dataListItems").includes('band: i < playoffN ? "top" : "bot"')
+  || !fnSrc("receiptWhoListHtml").includes("Top 6 make the playoffs")
   || !fnSrc("receiptPortalNeedsSearch").includes('key === "best_ball_hype"')
-  || !fnSrc("receiptPortalLeave").includes("bestBallHypeOpenKey = \"\"")) {
+  || !fnSrc("receiptPortalLeave").includes('bestBallHypeOpenKey = ""')) {
   throw new Error("Best Ball Hype must be a catalog door with expand rows and best-ball-hype.json");
 }
 {

@@ -432,6 +432,78 @@
     "label": "Drake Maye"
   },
   {
+    "transaction_id": "1421238329533329408",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:6804",
+    "label": "Jordan Love"
+  },
+  {
+    "transaction_id": "1421238329533329408",
+    "direction": "in",
+    "to_user_id": "1132151320410140672",
+    "to_roster_id": 1,
+    "kind": "player",
+    "asset_key": "player:9758",
+    "label": "C.J. Stroud"
+  },
+  {
+    "transaction_id": "1421238329533329408",
+    "direction": "in",
+    "to_user_id": "1132151320410140672",
+    "to_roster_id": 1,
+    "kind": "player",
+    "asset_key": "player:13274",
+    "label": "Germie Bernard"
+  },
+  {
+    "transaction_id": "1421238329533329408",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:13345",
+    "label": "Jonah Coleman"
+  },
+  {
+    "transaction_id": "1421238329533329408",
+    "direction": "out",
+    "from_user_id": "1132151320410140672",
+    "from_roster_id": 1,
+    "kind": "player",
+    "asset_key": "player:6804",
+    "label": "Jordan Love"
+  },
+  {
+    "transaction_id": "1421238329533329408",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:9758",
+    "label": "C.J. Stroud"
+  },
+  {
+    "transaction_id": "1421238329533329408",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:13274",
+    "label": "Germie Bernard"
+  },
+  {
+    "transaction_id": "1421238329533329408",
+    "direction": "out",
+    "from_user_id": "1132151320410140672",
+    "from_roster_id": 1,
+    "kind": "player",
+    "asset_key": "player:13345",
+    "label": "Jonah Coleman"
+  },
+  {
     "transaction_id": "1271954165261692928",
     "direction": "in",
     "to_user_id": "1132151320410140672",

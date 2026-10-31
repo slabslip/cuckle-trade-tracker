@@ -36514,6 +36514,1384 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1421547590658330624",
+    "date": "2026-10-29",
+    "season": "2026",
+    "week": 8,
+    "user_ids": [
+      "458342725222133760",
+      "458766127967760384"
+    ],
+    "names": [
+      "TrumanCooper",
+      "DarkWingDucks2023"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 20,
+            "sent_today": 34,
+            "today_delta": -14,
+            "t0": 20,
+            "t0_delta": -14,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 20,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 34,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 20,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 34,
+            "sent_today": 20,
+            "today_delta": 14,
+            "t0": 34,
+            "t0_delta": 14,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 34,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 20,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 34,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 20,
+              "DarkWingDucks2023": 34
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 20,
+            "sent_today": 34,
+            "today_delta": -14,
+            "t0": 20,
+            "t0_delta": -14,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 20,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 34,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 20,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 34,
+            "sent_today": 20,
+            "today_delta": 14,
+            "t0": 34,
+            "t0_delta": 14,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 34,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 20,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 34,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 20,
+              "DarkWingDucks2023": 34
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 1429,
+            "sent_today": 1790,
+            "today_delta": -361,
+            "t0": 1473,
+            "t0_delta": -231,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 1429,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1473
+              }
+            ],
+            "sent": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 1790,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1704
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 1790,
+            "sent_today": 1429,
+            "today_delta": 361,
+            "t0": 1704,
+            "t0_delta": 231,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "DeMario Douglas",
+                "kind": "player",
+                "asset_key": "player:9501",
+                "value": 1790,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1704
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 1429,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1473
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 1473,
+              "DarkWingDucks2023": 1704
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 1473,
+              "sent_today": 1704,
+              "today_delta": -231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 1704,
+              "sent_today": 1473,
+              "today_delta": 231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y1": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 1473,
+              "sent_today": 1704,
+              "today_delta": -231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 1704,
+              "sent_today": 1473,
+              "today_delta": 231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y2": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 1473,
+              "sent_today": 1704,
+              "today_delta": -231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 1704,
+              "sent_today": 1473,
+              "today_delta": 231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y3": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 1473,
+              "sent_today": 1704,
+              "today_delta": -231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 1704,
+              "sent_today": 1473,
+              "today_delta": 231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 1473,
+              "sent_today": 1704,
+              "today_delta": -231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 1704,
+              "sent_today": 1473,
+              "today_delta": 231,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "DeMario Douglas",
+                  "kind": "player",
+                  "asset_key": "player:9501",
+                  "value": 1704,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1473,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
+    "transaction_id": "1421536361218928640",
+    "date": "2026-10-29",
+    "season": "2026",
+    "week": 8,
+    "user_ids": [
+      "458004578168729600",
+      "458342725222133760"
+    ],
+    "names": [
+      "ARae",
+      "TrumanCooper"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "458004578168729600": {
+            "name": "ARae",
+            "today": 59,
+            "sent_today": 395,
+            "today_delta": -336,
+            "t0": 59,
+            "t0_delta": -336,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 395,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 395,
+            "sent_today": 59,
+            "today_delta": 336,
+            "t0": 395,
+            "t0_delta": 336,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 395,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 395,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "ARae": 59,
+              "TrumanCooper": 395
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "458004578168729600": {
+            "name": "ARae",
+            "today": 59,
+            "sent_today": 395,
+            "today_delta": -336,
+            "t0": 59,
+            "t0_delta": -336,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 395,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 395,
+            "sent_today": 59,
+            "today_delta": 336,
+            "t0": 395,
+            "t0_delta": 336,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 395,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 59,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 395,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "ARae": 59,
+              "TrumanCooper": 395
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "458004578168729600": {
+            "name": "ARae",
+            "today": 1894,
+            "sent_today": 2009,
+            "today_delta": -115,
+            "t0": 1973,
+            "t0_delta": -1131,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 1894,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1973
+              }
+            ],
+            "sent": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 2009,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3104
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 2009,
+            "sent_today": 1894,
+            "today_delta": 115,
+            "t0": 3104,
+            "t0_delta": 1131,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Anthony Richardson Sr.",
+                "kind": "player",
+                "asset_key": "player:9229",
+                "value": 2009,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3104
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 3rd (ARae)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:4",
+                "value": 1894,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1973
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "ARae": 1973,
+              "TrumanCooper": 3104
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 1973,
+              "sent_today": 3104,
+              "today_delta": -1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 3104,
+              "sent_today": 1973,
+              "today_delta": 1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y1": {
+          "sides": {
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 1973,
+              "sent_today": 3104,
+              "today_delta": -1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 3104,
+              "sent_today": 1973,
+              "today_delta": 1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y2": {
+          "sides": {
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 1973,
+              "sent_today": 3104,
+              "today_delta": -1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 3104,
+              "sent_today": 1973,
+              "today_delta": 1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y3": {
+          "sides": {
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 1973,
+              "sent_today": 3104,
+              "today_delta": -1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 3104,
+              "sent_today": 1973,
+              "today_delta": 1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 1973,
+              "sent_today": 3104,
+              "today_delta": -1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 3104,
+              "sent_today": 1973,
+              "today_delta": 1131,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Anthony Richardson Sr.",
+                  "kind": "player",
+                  "asset_key": "player:9229",
+                  "value": 3104,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 3rd (ARae)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:4",
+                  "value": 1973,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1270932897498419200",
     "date": "2025-09-09",
     "season": "2025",

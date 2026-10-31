@@ -8816,5 +8816,53 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-10-29",
+    "season": "2026",
+    "week": 8,
+    "transaction_id": "1421547590658330624",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "2027 R4 (orig roster 9)"
+        ],
+        "out": [
+          "DeMario Douglas"
+        ]
+      },
+      "DarkWingDucks2023": {
+        "in": [
+          "DeMario Douglas"
+        ],
+        "out": [
+          "2027 R4 (orig roster 9)"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-10-29",
+    "season": "2026",
+    "week": 8,
+    "transaction_id": "1421536361218928640",
+    "sides": {
+      "ARae": {
+        "in": [
+          "2027 R3 (orig roster 4)"
+        ],
+        "out": [
+          "Anthony Richardson Sr."
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Anthony Richardson Sr."
+        ],
+        "out": [
+          "2027 R3 (orig roster 4)"
+        ]
+      }
+    }
   }
 ]

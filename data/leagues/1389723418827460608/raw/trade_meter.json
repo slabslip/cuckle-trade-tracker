@@ -4122,6 +4122,693 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1421238329533329408",
+    "date": "2026-10-28",
+    "season": "2026",
+    "week": 8,
+    "user_ids": [
+      "1132151320410140672",
+      "458342725222133760"
+    ],
+    "names": [
+      "ztrain123",
+      "TrumanCooper"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "1132151320410140672": {
+            "name": "ztrain123",
+            "today": 1641,
+            "sent_today": 1849,
+            "today_delta": -208,
+            "t0": 1641,
+            "t0_delta": -208,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 1483,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 158,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 1279,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 570,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 1483,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 158,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 1849,
+            "sent_today": 1641,
+            "today_delta": 208,
+            "t0": 1849,
+            "t0_delta": 208,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 1279,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 570,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 1483,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 158,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 1279,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 570,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "ztrain123": 1641,
+              "TrumanCooper": 1849
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "1132151320410140672": {
+            "name": "ztrain123",
+            "today": 1641,
+            "sent_today": 1849,
+            "today_delta": -208,
+            "t0": 1641,
+            "t0_delta": -208,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 1483,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 158,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 1279,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 570,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 1483,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 158,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 1849,
+            "sent_today": 1641,
+            "today_delta": 208,
+            "t0": 1849,
+            "t0_delta": 208,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 1279,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 570,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 1483,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 158,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 1279,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 570,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "ztrain123": 1641,
+              "TrumanCooper": 1849
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "1132151320410140672": {
+            "name": "ztrain123",
+            "today": 6556,
+            "sent_today": 7261,
+            "today_delta": -705,
+            "t0": 6556,
+            "t0_delta": -705,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 4027,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4027
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 2529,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2529
+              }
+            ],
+            "sent": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 3912,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3912
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 3349,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3349
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 7261,
+            "sent_today": 6556,
+            "today_delta": 705,
+            "t0": 7261,
+            "t0_delta": 705,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Jordan Love",
+                "kind": "player",
+                "asset_key": "player:6804",
+                "value": 3912,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3912
+              },
+              {
+                "label": "Jonah Coleman",
+                "kind": "player",
+                "asset_key": "player:13345",
+                "value": 3349,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3349
+              }
+            ],
+            "sent": [
+              {
+                "label": "C.J. Stroud",
+                "kind": "player",
+                "asset_key": "player:9758",
+                "value": 4027,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4027
+              },
+              {
+                "label": "Germie Bernard",
+                "kind": "player",
+                "asset_key": "player:13274",
+                "value": 2529,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2529
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "ztrain123": 6556,
+              "TrumanCooper": 7261
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "1132151320410140672": {
+              "name": "ztrain123",
+              "today": 6556,
+              "sent_today": 7261,
+              "today_delta": -705,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "C.J. Stroud",
+                  "kind": "player",
+                  "asset_key": "player:9758",
+                  "value": 4027,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2529,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Jordan Love",
+                  "kind": "player",
+                  "asset_key": "player:6804",
+                  "value": 3912,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Jonah Coleman",
+                  "kind": "player",
+                  "asset_key": "player:13345",
+                  "value": 3349,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 7261,
+              "sent_today": 6556,
+              "today_delta": 705,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Jordan Love",
+                  "kind": "player",
+                  "asset_key": "player:6804",
+                  "value": 3912,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Jonah Coleman",
+                  "kind": "player",
+                  "asset_key": "player:13345",
+                  "value": 3349,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "C.J. Stroud",
+                  "kind": "player",
+                  "asset_key": "player:9758",
+                  "value": 4027,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2529,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "1132151320410140672": {
+              "name": "ztrain123",
+              "today": 6556,
+              "sent_today": 7261,
+              "today_delta": -705,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "C.J. Stroud",
+                  "kind": "player",
+                  "asset_key": "player:9758",
+                  "value": 4027,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2529,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Jordan Love",
+                  "kind": "player",
+                  "asset_key": "player:6804",
+                  "value": 3912,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Jonah Coleman",
+                  "kind": "player",
+                  "asset_key": "player:13345",
+                  "value": 3349,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 7261,
+              "sent_today": 6556,
+              "today_delta": 705,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Jordan Love",
+                  "kind": "player",
+                  "asset_key": "player:6804",
+                  "value": 3912,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Jonah Coleman",
+                  "kind": "player",
+                  "asset_key": "player:13345",
+                  "value": 3349,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "C.J. Stroud",
+                  "kind": "player",
+                  "asset_key": "player:9758",
+                  "value": 4027,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Germie Bernard",
+                  "kind": "player",
+                  "asset_key": "player:13274",
+                  "value": 2529,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1271954165261692928",
     "date": "2025-09-11",
     "season": "2025",

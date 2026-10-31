@@ -1328,6 +1328,13 @@
     "provider": "dynastyprocess",
     "format_key": "1qb",
     "as_of": "2026-10-20",
+    "asset_key": "player:13274",
+    "value": 158
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-10-20",
     "asset_key": "pickval:2026:2:10",
     "value": 153,
     "label": "2026 Pick 2.10"

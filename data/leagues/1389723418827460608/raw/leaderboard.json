@@ -53,16 +53,16 @@
   {
     "user_id": "458342725222133760",
     "name": "TrumanCooper",
-    "two_way": 5,
+    "two_way": 6,
     "incomplete": 1,
-    "pick_total": 5466,
-    "pick_per_trade": 1093.2,
-    "even_total": 1759,
-    "even_per_trade": 351.8,
+    "pick_total": 5674,
+    "pick_per_trade": 945.6666666666666,
+    "even_total": 2464,
+    "even_per_trade": 410.6666666666667,
     "style": {
       "label": "Balanced",
       "now_share": 1,
-      "horizon": 205,
+      "horizon": 170.83333333333334,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }
@@ -121,16 +121,16 @@
   {
     "user_id": "1132151320410140672",
     "name": "ztrain123",
-    "two_way": 4,
+    "two_way": 5,
     "incomplete": 0,
-    "pick_total": -10526,
-    "pick_per_trade": -2631.5,
-    "even_total": -6314,
-    "even_per_trade": -1578.5,
+    "pick_total": -10734,
+    "pick_per_trade": -2146.8,
+    "even_total": -7019,
+    "even_per_trade": -1403.8,
     "style": {
       "label": "Win-now",
       "now_share": 1,
-      "horizon": -644,
+      "horizon": -515.2,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }

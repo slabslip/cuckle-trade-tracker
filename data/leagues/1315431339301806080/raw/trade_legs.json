@@ -4240,6 +4240,118 @@
     }
   },
   {
+    "transaction_id": "1421547590658330624",
+    "direction": "in",
+    "to_user_id": "458766127967760384",
+    "to_roster_id": 9,
+    "kind": "player",
+    "asset_key": "player:9501",
+    "label": "DeMario Douglas"
+  },
+  {
+    "transaction_id": "1421547590658330624",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "kind": "player",
+    "asset_key": "player:9501",
+    "label": "DeMario Douglas"
+  },
+  {
+    "transaction_id": "1421547590658330624",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 7,
+    "from_user_id": "458766127967760384",
+    "from_roster_id": 9,
+    "origin_roster_id": 9,
+    "kind": "pick",
+    "asset_key": "pick:2027:4:9",
+    "label": "2027 R4 (orig roster 9)",
+    "pick": {
+      "season": "2027",
+      "round": 4,
+      "roster_id": 9,
+      "previous_owner_id": 9,
+      "owner_id": 7
+    }
+  },
+  {
+    "transaction_id": "1421547590658330624",
+    "direction": "out",
+    "from_user_id": "458766127967760384",
+    "from_roster_id": 9,
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 7,
+    "origin_roster_id": 9,
+    "kind": "pick",
+    "asset_key": "pick:2027:4:9",
+    "label": "2027 R4 (orig roster 9)",
+    "pick": {
+      "season": "2027",
+      "round": 4,
+      "roster_id": 9,
+      "previous_owner_id": 9,
+      "owner_id": 7
+    }
+  },
+  {
+    "transaction_id": "1421536361218928640",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 7,
+    "kind": "player",
+    "asset_key": "player:9229",
+    "label": "Anthony Richardson Sr."
+  },
+  {
+    "transaction_id": "1421536361218928640",
+    "direction": "out",
+    "from_user_id": "458004578168729600",
+    "from_roster_id": 4,
+    "kind": "player",
+    "asset_key": "player:9229",
+    "label": "Anthony Richardson Sr."
+  },
+  {
+    "transaction_id": "1421536361218928640",
+    "direction": "in",
+    "to_user_id": "458004578168729600",
+    "to_roster_id": 4,
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "origin_roster_id": 4,
+    "kind": "pick",
+    "asset_key": "pick:2027:3:4",
+    "label": "2027 R3 (orig roster 4)",
+    "pick": {
+      "season": "2027",
+      "round": 3,
+      "roster_id": 4,
+      "previous_owner_id": 7,
+      "owner_id": 4
+    }
+  },
+  {
+    "transaction_id": "1421536361218928640",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "to_user_id": "458004578168729600",
+    "to_roster_id": 4,
+    "origin_roster_id": 4,
+    "kind": "pick",
+    "asset_key": "pick:2027:3:4",
+    "label": "2027 R3 (orig roster 4)",
+    "pick": {
+      "season": "2027",
+      "round": 3,
+      "roster_id": 4,
+      "previous_owner_id": 7,
+      "owner_id": 4
+    }
+  },
+  {
     "transaction_id": "1270932897498419200",
     "direction": "in",
     "to_user_id": "458715702119886848",

@@ -342,5 +342,33 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-10-28",
+    "season": "2026",
+    "week": 8,
+    "transaction_id": "1421238329533329408",
+    "sides": {
+      "ztrain123": {
+        "in": [
+          "C.J. Stroud",
+          "Germie Bernard"
+        ],
+        "out": [
+          "Jordan Love",
+          "Jonah Coleman"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Jordan Love",
+          "Jonah Coleman"
+        ],
+        "out": [
+          "C.J. Stroud",
+          "Germie Bernard"
+        ]
+      }
+    }
   }
 ]

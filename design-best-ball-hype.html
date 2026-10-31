@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=390, initial-scale=1" />
+  <title>Design — Best Ball Hype</title>
+</head>
+<body>
+  <p>Opening Best Ball Hype…</p>
+  <script>
+    (function () {
+      var seat = { id: "458342725222133760", name: "TrumanCooper" };
+      var user = {
+        access_token: "design-mode",
+        refresh_token: "",
+        expires_at: Math.floor(Date.now() / 1000) + 86400,
+        user_id: "design-user",
+        username: "designer",
+        seat_user_id: seat.id,
+        seat_name: seat.name
+      };
+      var league = {
+        sleeper_league_id: "1315431339301806080",
+        name: "CuckleChunckle",
+        status: "ready",
+        sleeper_user_id: seat.id,
+        team_name: seat.name
+      };
+      try {
+        localStorage.setItem("cuckle.auth.v2", JSON.stringify(user));
+        localStorage.setItem("cuckle.active_league.v1", JSON.stringify(league));
+        localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
+        sessionStorage.setItem("cuckle.design.league_home", "1");
+        sessionStorage.setItem("cuckle.design.seat", "truman");
+        sessionStorage.setItem("cuckle.pending.tile", "best_ball_hype");
+        sessionStorage.removeItem("cuckle.pending.who");
+        sessionStorage.removeItem("cuckle.pending.slice");
+      } catch (err) {
+        document.querySelector("p").textContent = "localStorage blocked.";
+        return;
+      }
+      var q = "design=league-home&tile=best_ball_hype&v=best-ball-hype&_=" + Date.now();
+      var go = function () { location.replace("./index.html?" + q); };
+      if (!("serviceWorker" in navigator)) { go(); return; }
+      navigator.serviceWorker.getRegistrations().then(function (regs) {
+        return Promise.all(regs.map(function (r) { return r.unregister(); }));
+      }).then(function () {
+        if (!("caches" in window)) return;
+        return caches.keys().then(function (keys) {
+          return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+        });
+      }).catch(function () {}).then(go);
+    })();
+  </script>
+</body>
+</html>

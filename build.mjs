@@ -54,6 +54,7 @@ const steps = [
   ["title-path.mjs", leagueId],
   ...(skipFinishes ? [] : [["build-finishes.mjs", leagueId]]),
   ["weekly-scores.mjs", leagueId],
+  ["build-best-ball-hype.mjs", leagueId],
   ["apply-value-adjust.mjs", leagueId],
   ["build-cuffs.mjs", leagueId],
   ["build-calculator.mjs", leagueId],

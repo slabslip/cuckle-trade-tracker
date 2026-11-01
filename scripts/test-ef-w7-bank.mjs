@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Expected Finish through official W7: live standings + PF/PA, with points-for
- * as the leading race indicator. Empty in-flight weeks must not mint ties.
+ * Expected Finish live-week bank: fold in-flight Sleeper matchup points into
+ * standings + PF/PA. Empty in-flight weeks must not mint ties. Points-for stays
+ * the leading race indicator.
  */
 import fs from "node:fs";
 
@@ -37,13 +38,21 @@ const pf = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/projected-finish.json", "utf8"),
 );
 const ui = JSON.parse(fs.readFileSync("data/ui/projected-finish.json", "utf8"));
-if (Number(pf.week) !== 7) fail("league projected-finish week must be 7, got " + pf.week);
-if (Number(ui.week) !== 7) fail("data/ui projected-finish week must be 7, got " + ui.week);
+if (Number(pf.week) < 7) fail("league projected-finish week must be >= 7, got " + pf.week);
+if (Number(ui.week) !== Number(pf.week)) {
+  fail("data/ui projected-finish week must match league book");
+}
 if (Number(pf.rule?.race_pf_share) <= Number(pf.rule?.race_standings_share)) {
   fail("book rule must keep PF share ahead of standings share");
 }
 if ((pf.seats || []).some((s) => Number(s.ties) > 0)) {
-  fail("official W7 book must not carry fake in-flight ties");
+  fail("EF book must not carry fake in-flight ties");
+}
+if (Number(pf.week) >= 8) {
+  const note = String(pf.note || "");
+  if (!note.includes("banked") || !note.includes("last_scored_leg=7")) {
+    fail("W8+ book should note live bank vs official last_scored_leg=7");
+  }
 }
 
 const byName = Object.fromEntries((pf.seats || []).map((s) => [s.name, s]));
@@ -51,16 +60,29 @@ const tips = byName.TipsUp;
 const arae = byName.ARae;
 const henry = byName.KingHenryXXVI;
 const ted = byName.TedCumberbatch;
-if (!tips || !arae || !henry || !ted) fail("missing core seats");
+const truman = byName.TrumanCooper;
+if (!tips || !arae || !henry || !ted || !truman) fail("missing core seats");
 if (!(tips.pf > arae.pf)) fail("Tips PF should beat ARae PF");
 if (!(tips.proj_finish < arae.proj_finish)) {
-  fail("PF leading indicator: Tips (high PF, 3-4) must project ahead of ARae (low PF, 4-3)");
+  fail("PF leading indicator: Tips (high PF) must project ahead of ARae (low PF)");
 }
-if (Number(henry.wins) !== 6 || Number(ted.wins) !== 6) {
-  fail("official W7 standings: Henry and Ted should be 6-1");
-}
-if (Number(henry.place_now) !== 1) {
-  fail("Henry should own place_now #1 on official W7 (got #" + henry.place_now + ")");
+if (Number(pf.week) === 8) {
+  // Live W8 slate (partial): Ted leading OKC, Truman beating 69ers, Henry trailing Business.
+  if (!(Number(ted.wins) >= 6)) fail("Ted should be at least 6 wins after W8 bank");
+  if (!(Number(truman.wins) >= 4)) fail("Truman should be at least 4-4 after beating 69ers live");
+  if (Number(ted.place_now) !== 1) {
+    fail("Ted should own place_now #1 on live W8 bank (got #" + ted.place_now + ")");
+  }
+  if (!(Number(truman.proj_finish) <= 6)) {
+    fail("Truman live W8 win should keep him in Top 6 proj (got #" + truman.proj_finish + ")");
+  }
+} else if (Number(pf.week) === 7) {
+  if (Number(henry.wins) !== 6 || Number(ted.wins) !== 6) {
+    fail("official W7 standings: Henry and Ted should be 6-1");
+  }
+  if (Number(henry.place_now) !== 1) {
+    fail("Henry should own place_now #1 on official W7 (got #" + henry.place_now + ")");
+  }
 }
 
 // Intent sanity (same as review loop).
@@ -89,8 +111,10 @@ console.log(JSON.stringify({
   tips_pf: tips.pf,
   arae_proj: arae.proj_finish,
   arae_pf: arae.pf,
-  henry_place: henry.place_now,
-  henry_record: henry.record,
+  ted_place: ted.place_now,
+  ted_record: ted.record,
+  truman_proj: truman.proj_finish,
+  truman_record: truman.record,
   board: (pf.seats || []).map((s) => ({
     proj: s.proj_finish,
     place: s.place_now,

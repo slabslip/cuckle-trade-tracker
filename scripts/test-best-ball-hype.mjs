@@ -84,11 +84,26 @@ if (!fs.existsSync(design)) fail("missing " + design);
   if (html.includes("src=share")) fail(design + " must not use src=share");
 }
 
+if (!(Number(book.week) >= 7)) fail("best-ball-hype week should be at least 7");
+if (Number(book.live_week) === 8) {
+  if (!String(book.note || "").includes("banked")) {
+    fail("W8 live bank should note banked matchup points");
+  }
+  const liveKinds = (book.seats || []).flatMap((s) => (s.weeks || []).filter((w) => w.kind === "live"));
+  if (!liveKinds.length) fail("W8 live bank should mark week rows kind=live");
+}
+const buildSrc = fs.readFileSync("build-best-ball-hype.mjs", "utf8");
+for (const need of ["bankWeek", "matchupsHavePoints", "/state/nfl", "live: true"]) {
+  if (!buildSrc.includes(need)) fail("build-best-ball-hype missing live bank: " + need);
+}
+
 const lead = book.seats.find((s) => Number(s.place_proj) === 1) || book.seats[0];
 console.log(JSON.stringify({
   ok: true,
   week: book.week,
+  live_week: book.live_week || null,
   champ1: lead.name,
   place: lead.place_proj,
   toilet_sacko: (book.seats.find((s) => Number(s.place_proj) === 10) || {}).name,
+  top6: book.seeding.filter((s) => s.seed <= 6).map((s) => s.name),
 }));

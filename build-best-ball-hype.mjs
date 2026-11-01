@@ -60,6 +60,11 @@ async function matchupsFor(leagueId, week) {
   throw lastErr || new Error(`matchups ${leagueId} w${week}`);
 }
 
+/** True when an in-flight NFL week already has live starter points. */
+function matchupsHavePoints(matchups) {
+  return (matchups || []).some((m) => Number(m && m.points) > 0);
+}
+
 async function fetchWeekProjections(season, week, ptsKey) {
   const positions = ["QB", "RB", "WR", "TE", "K", "DEF"];
   const qs = positions.map((p) => "position[]=" + p).join("&");
@@ -89,13 +94,13 @@ async function main() {
   const live = await sleeperGet(`/league/${leagueId}`);
   if (!live) throw new Error(`league ${leagueId} missing`);
   const season = Number(live.season) || live.season;
-  const lastScored = Number(live.settings?.last_scored_leg) || 0;
+  const lastOfficial = Number(live.settings?.last_scored_leg) || 0;
   const playoffWeekStart = Number(live.settings?.playoff_week_start) || 15;
   const playoffTeams = Number(live.settings?.playoff_teams) || 6;
   const playoffRounds = Number(live.settings?.playoff_rounds) || 3;
   const rosterPositions = live.roster_positions || [];
   const ptsKey = ptsKeyFromLeague(live);
-  if (!lastScored) {
+  if (!lastOfficial) {
     writeUi("best-ball-hype.json", {
       v: 3,
       as_of: new Date().toISOString().slice(0, 10),
@@ -107,6 +112,20 @@ async function main() {
     });
     console.log("best-ball-hype: no scored weeks");
     return;
+  }
+
+  // Bank the in-flight NFL week when matchups already have points — same
+  // path as Expected Finish — so Top 6 / Bottom 4 seeding tracks live slate.
+  const state = await sleeperGet("/state/nfl");
+  const nflWeek = Number(state && state.week) || 0;
+  let bankWeek = Math.max(lastOfficial, nflWeek > 0 ? nflWeek : lastOfficial);
+  let liveRows = null;
+  if (bankWeek > lastOfficial) {
+    liveRows = await matchupsFor(leagueId, bankWeek);
+    if (!matchupsHavePoints(liveRows)) {
+      bankWeek = lastOfficial;
+      liveRows = null;
+    }
   }
 
   const [rosters, users, players] = await Promise.all([
@@ -133,15 +152,18 @@ async function main() {
   }
 
   const weeks = [];
-  for (let w = 1; w <= lastScored; w++) {
+  for (let w = 1; w <= lastOfficial; w++) {
     weeks.push({ week: w, rows: await matchupsFor(leagueId, w) });
   }
+  if (liveRows) {
+    weeks.push({ week: bankWeek, rows: liveRows, live: true });
+  }
 
-  // Remaining RS + playoff weeks need projections.
+  // Remaining RS + playoff weeks need projections (after the banked week).
   const lastProjWeek = Math.min(playoffWeekStart + Math.max(playoffRounds, 2) - 1, 18);
   const rsFutureWeeks = [];
   const projectionsByWeek = {};
-  for (let w = lastScored + 1; w <= lastProjWeek; w++) {
+  for (let w = bankWeek + 1; w <= lastProjWeek; w++) {
     const rows = await matchupsFor(leagueId, w);
     if (w < playoffWeekStart && rows.length) {
       rsFutureWeeks.push({ week: w, rows });
@@ -160,12 +182,22 @@ async function main() {
     ownerByRoster,
     nameByUser,
     season,
-    week: lastScored,
+    week: bankWeek,
     playoffWeekStart,
     playoffTeams,
     leagueId,
     asOf: new Date().toISOString().slice(0, 10),
   });
+
+  if (bankWeek > lastOfficial) {
+    book.live_week = bankWeek;
+    book.official_last_scored = lastOfficial;
+    book.note = `W${bankWeek} banked from live Sleeper matchup points`
+      + ` (official last_scored_leg=${lastOfficial}).`;
+    if (book.rule && typeof book.rule === "object") {
+      book.rule.live_bank = `W${bankWeek} set-lineup points folded into RS seeding`;
+    }
+  }
 
   writeUi("best-ball-hype.json", book);
   const champ = (book.seats || []).filter((s) => s.bracket === "champ")
@@ -176,6 +208,7 @@ async function main() {
     "best-ball-hype",
     book.season,
     "scored w" + book.week,
+    bankWeek > lastOfficial ? `(live bank; official w${lastOfficial})` : "",
     "RS→w" + book.rs_through_week,
     "playoffs w" + book.playoff_week_start,
   );

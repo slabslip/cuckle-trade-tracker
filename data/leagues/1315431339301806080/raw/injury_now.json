@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-31",
-  "n": 81,
+  "as_of": "2026-11-01",
+  "n": 79,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -58,6 +58,13 @@
       "team": "NE",
       "pos": "WR"
     },
+    "4981": {
+      "name": "Calvin Ridley",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "TEN",
+      "pos": "WR"
+    },
     "4983": {
       "name": "DJ Moore",
       "injury_status": "Questionable",
@@ -67,7 +74,7 @@
     },
     "5859": {
       "name": "A.J. Brown",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NE",
       "pos": "WR"
@@ -242,7 +249,7 @@
     },
     "8676": {
       "name": "Rashid Shaheed",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "SEA",
       "pos": "WR"
@@ -287,13 +294,6 @@
       "injury_status": "Out",
       "status": "Active",
       "team": "TEN",
-      "pos": "RB"
-    },
-    "9753": {
-      "name": "Zach Charbonnet",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "SEA",
       "pos": "RB"
     },
     "10222": {
@@ -408,13 +408,6 @@
       "team": "NYG",
       "pos": "RB"
     },
-    "12483": {
-      "name": "Jack Bech",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "LV",
-      "pos": "WR"
-    },
     "12484": {
       "name": "Jayden Higgins",
       "injury_status": "IR",
@@ -431,8 +424,8 @@
     },
     "12489": {
       "name": "RJ Harvey",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "DEN",
       "pos": "RB"
     },
@@ -464,13 +457,6 @@
       "team": "TB",
       "pos": "WR"
     },
-    "12517": {
-      "name": "Colston Loveland",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CHI",
-      "pos": "TE"
-    },
     "12521": {
       "name": "Elijah Arroyo",
       "injury_status": "IR",
@@ -480,7 +466,7 @@
     },
     "12529": {
       "name": "TreVeyon Henderson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NE",
       "pos": "RB"
@@ -494,7 +480,7 @@
     },
     "12534": {
       "name": "Kyle Monangai",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "CHI",
       "pos": "RB"

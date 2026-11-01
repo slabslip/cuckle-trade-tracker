@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-31",
-  "n": 34,
+  "as_of": "2026-11-01",
+  "n": 32,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -39,7 +39,7 @@
     },
     "5859": {
       "name": "A.J. Brown",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NE",
       "pos": "WR"
@@ -142,13 +142,6 @@
       "team": "TEN",
       "pos": "RB"
     },
-    "9753": {
-      "name": "Zach Charbonnet",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "SEA",
-      "pos": "RB"
-    },
     "10236": {
       "name": "Dalton Kincaid",
       "injury_status": "Questionable",
@@ -179,8 +172,8 @@
     },
     "12489": {
       "name": "RJ Harvey",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "DEN",
       "pos": "RB"
     },
@@ -191,16 +184,9 @@
       "team": "TB",
       "pos": "WR"
     },
-    "12517": {
-      "name": "Colston Loveland",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CHI",
-      "pos": "TE"
-    },
     "12529": {
       "name": "TreVeyon Henderson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NE",
       "pos": "RB"
@@ -214,7 +200,7 @@
     },
     "12534": {
       "name": "Kyle Monangai",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "CHI",
       "pos": "RB"

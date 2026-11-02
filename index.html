@@ -1837,7 +1837,7 @@
     .home-wire-empty {
       margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted);
     }
-    /* Projected finish expandable why + soft playoff bracket. */
+    /* Projected finish expandable why + champ + toilet brackets (BB cut). */
     .pf-why { margin: 0; padding: 0; }
     .pf-why-h {
       margin: 10px 0 4px; font-size: 0.68rem; font-weight: 800;
@@ -1878,7 +1878,8 @@
     .pf-why .pf-week b { color: var(--text); font-weight: 750; }
     .pf-why .pf-week .pf-win { color: var(--green); }
     .pf-why .pf-week .pf-loss { color: var(--red); }
-    /* Sleeper-style horizontal playoff bracket (Expected finish expand). */
+    /* Sleeper-style champ + toilet boards (Expected finish expand). */
+    .pf-brack-toilet { margin-top: 10px; }
     .pf-brack-board { margin: 6px 0 0; }
     .pf-brack-scroll {
       overflow-x: auto; -webkit-overflow-scrolling: touch;
@@ -5018,7 +5019,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "bbProjOpt20261102172330";
+    const DATA_V = "efBbBrackets20261102173858";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5176,7 +5177,7 @@
       { id: "my_draft", lab: "Draft picks", desk: "lists", group: "memory", size: "full", why: "Unused 2027+ · who holds yours · early / mid / late from the 2026 window." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "Manager avg finish", desk: "lists", group: "memory", size: "full", why: "Career average finish. One year still counts. Not this season’s projection." },
-      { id: "projected_finish", lab: "Expected finish", desk: "lists", group: "memory", size: "full", why: "Place now is the race; v5 blends week-scaled path/form/trend with 2500-sim Monte Carlo mean place and path bands." },
+      { id: "projected_finish", lab: "Expected finish", desk: "lists", group: "memory", size: "full", why: "Top 6 champ bracket (1–2 bye; 6v3 / 5v4) + Bottom 4 toilet bowl (10v7, 8v9). Place now is the race; MC paths set projected finish." },
       { id: "season_arcs", lab: "Season arcs", desk: "lists", group: "memory", size: "full", why: "How each seat usually moves from a soft/hot September to final place — tap a row for the full story." },
       { id: "manager_archetypes", lab: "Manager type", desk: "lists", group: "memory", size: "full", why: "One plain label per seat (tank, race favorite, slow burn…) — tap for why it fits and how to deal." },
       { id: "career_avg", lab: "Career average", desk: "lists", group: "who", size: "full", why: "Average finish. Three completed seasons minimum." },
@@ -5730,13 +5731,21 @@
       const canon = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
       if (canon === "projected_finish") {
         const seats = (projectedFinishBook && Array.isArray(projectedFinishBook.seats))
-          ? projectedFinishBook.seats : [];
+          ? projectedFinishBook.seats.slice() : [];
+        const playoffN = Math.min(6, seats.length);
+        seats.sort(function (a, b) {
+          return (Number(a.proj_finish) || 99) - (Number(b.proj_finish) || 99)
+            || (Number(a.place_now) || 99) - (Number(b.place_now) || 99);
+        });
         return seats.map(function (s, i) {
           const delta = Number(s.delta_place) || 0;
           const climb = delta > 0 ? ("↑" + delta) : (delta < 0 ? ("↓" + (-delta)) : "flat");
           const pathBand = (Number.isFinite(Number(s.mc_p10)) && Number.isFinite(Number(s.mc_p90)))
             ? (" · #" + s.mc_p10 + "–#" + s.mc_p90)
             : "";
+          const seed = Number(s.proj_finish) || (i + 1);
+          const bracket = seed <= playoffN ? "champ" : "toilet";
+          const modeLab = bracket === "toilet" ? "toilet bowl" : "champ bracket";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
@@ -5747,11 +5756,13 @@
             // Collapsed: race snapshot. Path / SoS / history / weeks / bracket live in expand.
             sub: "#" + s.place_now + " now · " + (s.record || "")
               + " · PF " + Math.round(Number(s.pf) || 0)
+              + " · seed " + seed + " · " + modeLab
               + " · " + climb
-              + " · tap for why",
+              + " · tap for brackets",
             rank: s.proj_finish || (i + 1),
+            band: seed <= playoffN ? "top" : "bot",
             seat: s,
-            // pickBand only — never list.band (collides with top/bot share slice).
+            // pickBand only — Early/Mid/Late pick tier (not list top/bot share slice).
             pickBand: String(s.band || "Mid"),
           };
         });
@@ -6131,9 +6142,10 @@
       if (list[0] && list[0].band) {
         const highs = list.filter(function (r) { return r.band === "top"; });
         const lows = list.filter(function (r) { return r.band === "bot"; });
-        const bb = id === "best_ball_hype" || (typeof receiptDoorCanon === "function"
-          && receiptDoorCanon(id) === "best_ball_hype");
-        if (bb) {
+        const canonBand = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
+        const cutBands = id === "best_ball_hype" || id === "projected_finish"
+          || canonBand === "best_ball_hype" || canonBand === "projected_finish";
+        if (cutBands) {
           return band("Top 6", "top", highs, 0)
             + band("Bottom 4", "bot", lows, highs.length);
         }
@@ -9183,10 +9195,10 @@
           + (sims || 2500) + "-sim Monte Carlo paths"
           + (week != null ? (" (after week " + week + ")") : "")
           + (left != null ? (" · " + left + " weeks left") : "")
-          + ". Tap a row for Race / Path / Schedule / Form / Trend / Paths / History,"
-          + " week-by-week leans, and a soft playoff bracket — then Share this finish."
-          + " Paths show MC mean + p10–p90 band. Schedule: Cupcake → Hellscape."
-          + " Last place → Early 1.01; title → Late.";
+          + ". Top 6 make the champ bracket (seeds 1–2 bye; 6v3 and 5v4)."
+          + " Bottom 4 play the toilet bowl (10v7, 8v9) so nobody can tank."
+          + " Tap a row for scorecard, week leans, both brackets — then Share this finish."
+          + " Paths show MC mean + p10–p90 band. Share Top 6 or Bottom 4.";
       }
       else if (id === "season_arcs") {
         caption = "Big number = average spots gained (or lost) from week-4 points rank to final place."
@@ -13912,13 +13924,24 @@
       let losses = 0;
       weekLines.forEach(function (w) { if (w.expectWin) wins += 1; else losses += 1; });
       const bracket = projectedPlayoffBracket(seat);
+      const finish = Number(seat.proj_finish) || 0;
       let playoff = "Outside projected top " + ((bracket && bracket.n) || 6);
-      if (bracket && Number(seat.proj_finish) > 0 && Number(seat.proj_finish) <= Number(bracket.n)) {
-        playoff = "Seed #" + seat.proj_finish + " of top " + bracket.n;
+      if (bracket && finish > 0 && finish <= Number(bracket.n)) {
+        playoff = "Champ seed #" + finish + " of top " + bracket.n;
         if (bracket.champion && String(bracket.champion.user_id) === String(seat.user_id)) {
           playoff += " · projected champ edge";
-        } else if (Number(seat.proj_finish) <= 2) {
+        } else if (finish <= 2) {
           playoff += " · bye week";
+        }
+      } else if (bracket && bracket.toilet && finish > Number(bracket.n)) {
+        playoff = "Toilet seed #" + finish
+          + " · best-ball bowl (10v7 / 8v9)";
+        if (bracket.toilet.sacko
+          && String(bracket.toilet.sacko.user_id) === String(seat.user_id)) {
+          playoff += " · sacko edge";
+        } else if (bracket.toilet.seventh
+          && String(bracket.toilet.seventh.user_id) === String(seat.user_id)) {
+          playoff += " · 7th-place edge";
         }
       }
       const sosTip = ranks.sosRank === 1
@@ -14051,7 +14074,13 @@
       }
       if (dig.playoff) {
         lines.push("");
-        lines.push("Soft playoffs: " + dig.playoff);
+        lines.push("Bracket: " + dig.playoff);
+      }
+      if (dig.bracket && dig.bracket.toilet) {
+        const t = dig.bracket.toilet;
+        lines.push("Toilet: 10v7 / 8v9 · 7th "
+          + ((t.seventh && t.seventh.name) || "—")
+          + " · sacko " + ((t.sacko && t.sacko.name) || "—"));
       }
       lines.push("");
       lines.push("Cupcake = easiest SoS · Hellscape = hardest · Path 10/10 = Rocket");
@@ -14089,8 +14118,10 @@
     }
 
     /**
-     * Soft projected playoff bracket from projected seeds (proj_finish).
-     * Top six (league law): 1–2 bye, 3v6 / 4v5, then semis, final + 3rd.
+     * Soft projected brackets from projected seeds (proj_finish) — same cut as
+     * Best Ball Hype:
+     *   Champ (top 6): 1–2 bye, 6v3 / 5v4, semis, final + 3rd.
+     *   Toilet (bottom 4): 10v7 / 8v9, then 7th + sacko (best-ball format).
      * Matchup edges use form-adjusted PF/PA pythag — opinion only, not a Monte Carlo.
      */
     function projectedPlayoffBracket(focusSeat) {
@@ -14098,10 +14129,12 @@
         ? projectedFinishBook.seats.slice() : [];
       if (seats.length < 4) return null;
       const teams = Number((projectedFinishBook && projectedFinishBook.teams) || seats.length) || seats.length;
-      const nPlayoff = Math.min(6, teams, seats.length);
-      const seeds = seats.slice().sort(function (a, b) {
+      const ordered = seats.slice().sort(function (a, b) {
         return (Number(a.proj_finish) || 99) - (Number(b.proj_finish) || 99);
-      }).slice(0, nPlayoff);
+      });
+      const nPlayoff = Math.min(6, teams, ordered.length);
+      const seeds = ordered.slice(0, nPlayoff);
+      const toiletSeeds = ordered.slice(nPlayoff);
       const start = Number((projectedFinishBook && projectedFinishBook.playoff_week_start) || 15);
       const focusId = focusSeat && focusSeat.user_id != null ? String(focusSeat.user_id) : "";
       const label = function (s) {
@@ -14132,7 +14165,15 @@
           pct: pct,
         };
       };
-      const out = { n: nPlayoff, start: start, byes: [], rounds: [], champion: null, third: null };
+      const out = {
+        n: nPlayoff,
+        start: start,
+        byes: [],
+        rounds: [],
+        champion: null,
+        third: null,
+        toilet: null,
+      };
       if (nPlayoff >= 6) {
         const s1 = seeds[0];
         const s2 = seeds[1];
@@ -14164,6 +14205,31 @@
         const fin = game("Championship", start + 1, semiA.winnerSeat, semiB.winnerSeat);
         out.rounds.push({ lab: "Week " + (start + 1) + " · Finals", games: [fin] });
         out.champion = fin.winner;
+      }
+
+      // Toilet bowl — same Best Ball format: 10v7, 8v9 → 7th + sacko.
+      if (toiletSeeds.length >= 4) {
+        const t7 = toiletSeeds[0];
+        const t8 = toiletSeeds[1];
+        const t9 = toiletSeeds[2];
+        const t10 = toiletSeeds[3];
+        const g710 = game("Toilet semis", start, t7, t10);
+        const g89 = game("Toilet semis", start, t8, t9);
+        const for7 = game("7th place", start + 1, g710.winnerSeat, g89.winnerSeat);
+        const sacko = game("Sacko", start + 1, g710.loserSeat, g89.loserSeat);
+        out.toilet = {
+          n: 4,
+          start: start,
+          mode: "best_ball",
+          rounds: [
+            { lab: "Week " + start + " · Toilet semis", games: [g710, g89] },
+            { lab: "Week " + (start + 1) + " · Toilet finals", games: [for7, sacko] },
+          ],
+          seventh: for7.winner,
+          eighth: for7.loser,
+          ninth: sacko.winner,
+          sacko: sacko.loser,
+        };
       }
       return out;
     }
@@ -14215,12 +14281,65 @@
       return '<div class="pf-brack-slot is-bye">BYE</div>';
     }
 
-    /** Sleeper-style horizontal board for the projected playoff picture. */
+    /** Toilet bowl board — same Best Ball cut: 10v7 / 8v9 → 7th + sacko. */
+    function projectedToiletBracketBoardHtml(toilet) {
+      if (!toilet || !toilet.rounds || toilet.rounds.length < 2) return "";
+      const start = Number(toilet.start) || 15;
+      const semis = (toilet.rounds[0] && toilet.rounds[0].games) || [];
+      const finals = (toilet.rounds[1] && toilet.rounds[1].games) || [];
+      const g710 = semis[0];
+      const g89 = semis[1];
+      const for7 = finals[0];
+      const sacko = finals[1];
+      const edgeOn = function (g, side) {
+        if (!g || !g.winner) return null;
+        const sideTeam = side === "a" ? g.a : g.b;
+        if (!sideTeam || String(sideTeam.user_id) !== String(g.winner.user_id)) return null;
+        return g.pct + "%";
+      };
+      let html = '<div class="pf-brack-board pf-brack-toilet" role="group" aria-label="Projected toilet bowl bracket">';
+      html += '<div class="pf-brack-scroll"><div class="pf-brack-cols">';
+      html += '<div class="pf-brack-col">'
+        + '<div class="pf-brack-col-h">Toilet semis<span>Week ' + esc(String(start)) + "</span></div>"
+        + '<div class="pf-brack-stack is-r2">'
+        + '<div class="pf-brack-pair">'
+        + pfBracketTeamHtml(g710 && g710.a, { edge: edgeOn(g710, "a") })
+        + pfBracketTeamHtml(g710 && g710.b, { edge: edgeOn(g710, "b") })
+        + "</div>"
+        + '<div class="pf-brack-pair">'
+        + pfBracketTeamHtml(g89 && g89.a, { edge: edgeOn(g89, "a") })
+        + pfBracketTeamHtml(g89 && g89.b, { edge: edgeOn(g89, "b") })
+        + "</div>"
+        + "</div></div>";
+      html += '<div class="pf-brack-rail is-r2" aria-hidden="true"></div>';
+      html += '<div class="pf-brack-col">'
+        + '<div class="pf-brack-col-h">Toilet finals<span>Week ' + esc(String(start + 1)) + "</span></div>"
+        + '<div class="pf-brack-stack is-r2">'
+        + '<div class="pf-brack-pair">'
+        + pfBracketTeamHtml(for7 && for7.a, { edge: edgeOn(for7, "a") })
+        + pfBracketTeamHtml(for7 && for7.b, { edge: edgeOn(for7, "b") })
+        + "</div>"
+        + '<div class="pf-brack-pair">'
+        + pfBracketTeamHtml(sacko && sacko.a, { edge: edgeOn(sacko, "a") })
+        + pfBracketTeamHtml(sacko && sacko.b, { edge: edgeOn(sacko, "b") })
+        + "</div>"
+        + "</div></div>";
+      html += "</div></div>";
+      if (toilet.seventh || toilet.sacko) {
+        html += "<p>Projected 7th: <b>" + esc((toilet.seventh && toilet.seventh.name) || "—") + "</b>"
+          + " · sacko: <b>" + esc((toilet.sacko && toilet.sacko.name) || "—") + "</b>"
+          + " (best-ball format so nobody can purposely lose).</p>";
+      }
+      html += "</div>";
+      return html;
+    }
+
+    /** Sleeper-style horizontal board for the projected championship bracket. */
     function projectedPlayoffBracketBoardHtml(bracket) {
       if (!bracket) return "";
       const start = Number(bracket.start) || 15;
       const rounds = bracket.rounds || [];
-      let html = '<div class="pf-brack-board" role="group" aria-label="Projected playoff bracket">';
+      let html = '<div class="pf-brack-board" role="group" aria-label="Projected championship bracket">';
       html += '<div class="pf-brack-scroll"><div class="pf-brack-cols">';
 
       if (bracket.n >= 6 && bracket.byes && bracket.byes.length >= 2 && rounds.length >= 3) {
@@ -14374,11 +14493,18 @@
         });
       }
       if (bracket) {
-        html += '<p class="pf-why-h">Projected playoff bracket</p>';
+        html += '<p class="pf-why-h">Championship bracket</p>';
         html += "<p>" + esc(dig.playoff)
-          + " · seeds from this board · matchup edges from form-adjusted PF/PA"
+          + " · Top 6 seeds from this board (1–2 bye; 6v3 and 5v4)"
+          + " · matchup edges from form-adjusted PF/PA"
           + " (opinion, not a sim).</p>";
         html += projectedPlayoffBracketBoardHtml(bracket);
+        if (bracket.toilet) {
+          html += '<p class="pf-why-h">Toilet bowl</p>';
+          html += "<p>Bottom 4 play best ball (10v7, 8v9) so nobody can purposely lose"
+            + " — same cut as Best Ball Hype.</p>";
+          html += projectedToiletBracketBoardHtml(bracket.toilet);
+        }
       }
       html += "</div>";
       return html;
@@ -17443,9 +17569,9 @@
         return dataDashHead(spec,
           lead ? ("proj " + (typeof nth === "function" ? nth(lead.proj_finish) : lead.proj_finish)) : "Open",
           lead
-            ? ((lead.name || "Lead") + (lead.band ? (" · " + lead.band) : "")
+            ? ((lead.name || "Lead") + " · Top 6 / toilet"
               + (week != null ? (" · w" + week) : ""))
-            : "This season’s race");
+            : "Champ + toilet brackets");
       }
       if (id === "season_arcs") {
         const lead = seasonArcsBook && seasonArcsBook.seats && seasonArcsBook.seats[0];

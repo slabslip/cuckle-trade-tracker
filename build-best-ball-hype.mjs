@@ -2,8 +2,9 @@
 /**
  * Best Ball Hype book for League Data.
  *
- * Scored weeks → BB hype tape. Remaining regular season → set-lineup proj for
- * Top 6 / Bottom 4 seeding. Champ bracket → set lineup. Toilet → best ball.
+ * Scored weeks → BB hype tape. Future weeks (remaining RS + brackets) → best
+ * projected lineup per roster (OUT/IR dropped, optimal fill from bench).
+ * Toilet stays labeled best ball so nobody can purposely lose the sacko.
  *
  *   node build-best-ball-hype.mjs [league_id]
  */

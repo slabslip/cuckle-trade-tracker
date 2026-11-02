@@ -2,6 +2,8 @@
 import assert from "node:assert/strict";
 import {
   optimalLineupFromPoints,
+  optimalProjectedLineup,
+  playerUnavailable,
   weekResultsFromScores,
   recordLabel,
   applyResult,
@@ -26,6 +28,29 @@ const opt = optimalLineupFromPoints({
 assert.equal(opt.starters.find((s) => s.slot === "QB").id, "qb2");
 assert.ok(opt.starters.some((s) => s.id === "rb3"), "extra RB can fill FLEX");
 assert.ok(opt.starters.some((s) => s.id === "te2"), "hot TE starts");
+
+assert.equal(playerUnavailable({ injury_status: "Out" }), true);
+assert.equal(playerUnavailable({ injury_status: "Questionable" }), false);
+assert.equal(playerUnavailable({ status: "Inactive" }), true);
+{
+  const playersOut = {
+    qb1: { position: "QB", injury_status: "Out" },
+    qb2: { position: "QB" },
+    rb1: { position: "RB" }, rb2: { position: "RB" },
+    wr1: { position: "WR" }, wr2: { position: "WR" },
+    te1: { position: "TE" },
+  };
+  const proj = { qb1: 40, qb2: 18, rb1: 12, rb2: 11, wr1: 15, wr2: 14, te1: 9 };
+  const sub = optimalProjectedLineup(
+    ["qb1", "qb2", "rb1", "rb2", "wr1", "wr2", "te1"],
+    proj,
+    Object.fromEntries(Object.entries(playersOut).map(([id, p]) => [id, p.position])),
+    ["QB", "RB", "RB", "WR", "WR", "TE"],
+    playersOut,
+  );
+  assert.equal(sub.starters.find((s) => s.slot === "QB").id, "qb2", "OUT QB replaced by bench");
+  assert.ok(!sub.starters.some((s) => s.id === "qb1"), "OUT player stays out of projected lineup");
+}
 
 const rows = [
   { roster_id: 1, matchup_id: 1, points: 100, players_points: { qb1: 20, rb1: 20, rb2: 15, wr1: 20, wr2: 15, te1: 10 } },
@@ -180,8 +205,44 @@ assert.ok(toiletR1.some((g) => {
   return seeds[0] === 8 && seeds[1] === 9;
 }), "8v9 toilet");
 
-assert.ok(book.champ.rounds[0].games.filter((g) => !g.bye).every((g) => g.mode === "set_lineup"));
+assert.ok(book.champ.rounds[0].games.filter((g) => !g.bye).every((g) => g.mode === "proj_opt"));
 assert.ok(book.seats.every((s) => Number(s.place_proj) >= 1 && Number(s.place_proj) <= 10));
+
+// OUT starter must not drag future weeks — bench fill keeps seed strength.
+{
+  const hurt = structuredClone
+    ? structuredClone({ currentRosters, currentStarters, players, projectionsByWeek })
+    : JSON.parse(JSON.stringify({ currentRosters, currentStarters, players, projectionsByWeek }));
+  // Seat 1's QB goes OUT; bench qbBenched has strong proj.
+  hurt.players.qb1.injury_status = "Out";
+  hurt.players.qbBenched = { position: "QB" };
+  hurt.currentRosters[1] = ["qb1", "qbBenched", "b", "c", "d", "e", "f"];
+  for (let w = 2; w <= 17; w++) hurt.projectionsByWeek[w].qbBenched = 29;
+  const bookHurt = buildBestBallHypeBook({
+    weeks: [{ week: 1, rows: tenWeekRows(scoredPts) }],
+    rsFutureWeeks: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((w) => ({
+      week: w,
+      rows: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((rid) => ({
+        roster_id: rid,
+        matchup_id: Math.ceil(rid / 2),
+      })),
+    })),
+    currentRosters: hurt.currentRosters,
+    currentStarters: hurt.currentStarters,
+    projectionsByWeek: hurt.projectionsByWeek,
+    rosterPositions,
+    players: hurt.players,
+    ownerByRoster,
+    nameByUser,
+    season: 2026,
+    week: 1,
+    playoffWeekStart: 15,
+    playoffTeams: 6,
+    leagueId: "x",
+  });
+  const seed1 = bookHurt.seeding.find((s) => s.name === "A");
+  assert.ok(seed1 && seed1.seed <= 2, "OUT starter replaced — seat A stays a top seed, got #" + seed1?.seed);
+}
 
 console.log(JSON.stringify({
   ok: true,

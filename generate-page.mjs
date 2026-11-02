@@ -5026,7 +5026,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "bbW8rerun20261102154957";
+    const DATA_V = "bbProjOpt20261102172330";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5164,7 +5164,7 @@ const html = `<!DOCTYPE html>
       { id: "widest_clock", lab: "Widest on clock", desk: "tape", size: "full", why: "Widest margins on the Score as clock." },
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
       { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks. Playoff is the winners-bracket title hunt." },
-      { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Top 6 champ bracket (set lineups; 1–2 bye). Bottom 4 toilet bowl in best ball so nobody can tank. Seeding from projected regular-season finish." },
+      { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Top 6 champ bracket (1–2 bye). Bottom 4 toilet bowl in best ball so nobody can tank. Future weeks use best projected lineup — OUT/IR sit, best bench fills." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -5926,7 +5926,7 @@ const html = `<!DOCTYPE html>
           const placeLab = place != null
             ? ((typeof nth === "function" ? nth(place) : ("#" + place)))
             : "—";
-          const modeLab = bracket === "toilet" ? "best ball" : "set lineup";
+          const modeLab = bracket === "toilet" ? "best ball" : "proj lineup";
           return {
             key: String(s.user_id || s.name || i),
             name: s.name,
@@ -9208,7 +9208,7 @@ const html = `<!DOCTYPE html>
           + " Opinion only — never writes the trade needle.";
       }
       else if (id === "best_ball_hype") {
-        caption = "Top 6 make the champ bracket (set lineups; seeds 1–2 get a bye; 6v3 and 5v4)."
+        caption = "Top 6 make the champ bracket (seeds 1–2 get a bye; 6v3 and 5v4). Future weeks score each team's best projected lineup (OUT/IR → bench)."
           + " Bottom 4 play the toilet bowl in best ball (10v7, 8v9) so nobody can purposely lose."
           + " Big number is projected final place. Share Top 6 or Bottom 4.";
       }
@@ -14718,7 +14718,7 @@ const html = `<!DOCTYPE html>
       const place = Number(seat.place_proj);
       const seed = Number(seat.seed);
       const bracket = seat.bracket === "toilet" ? "toilet bowl" : "champ bracket";
-      const mode = seat.bracket === "toilet" ? "best ball" : "set lineup";
+      const mode = seat.bracket === "toilet" ? "best ball" : "proj lineup";
       const placeLab = Number.isFinite(place)
         ? (typeof nth === "function" ? nth(place) : ("#" + place))
         : "—";
@@ -14731,7 +14731,7 @@ const html = `<!DOCTYPE html>
       if (seat.bracket === "toilet") {
         html += "<p>Toilet bowl scores best ball so managers cannot purposely lose.</p>";
       } else {
-        html += "<p>Champ bracket uses normal set lineups. Seeds 1–2 bye week one; 6 plays 3 and 5 plays 4.</p>";
+        html += "<p>Champ bracket uses each team's best projected lineup (OUT/IR sit, best bench fills). Seeds 1–2 bye week one; 6 plays 3 and 5 plays 4.</p>";
       }
       if (seat.path && seat.path.length) {
         html += '<p class="pf-why-h">Bracket path</p>';
@@ -14744,7 +14744,7 @@ const html = `<!DOCTYPE html>
             + esc(String(p.result || "")) + "</b> — "
             + esc(String(p.pts)) + " vs " + esc(String(p.opp || ""))
             + " (" + esc(String(p.opp_pts)) + ")"
-            + (p.mode === "best_ball" ? " · BB" : " · set")
+            + (p.mode === "best_ball" ? " · BB" : " · opt")
             + "</p>";
         });
       }
@@ -14756,7 +14756,7 @@ const html = `<!DOCTYPE html>
         }
         html += ".</p>";
       }
-      html += '<p class="caption">Seeding from projected regular-season standings. Champ = set lineup. Toilet = best ball.</p>';
+      html += '<p class="caption">Future weeks = best projected lineup (OUT/IR → bench). Champ + toilet both score that way; toilet stays best-ball so nobody can tank.</p>';
       html += "</div>";
       return html;
     }

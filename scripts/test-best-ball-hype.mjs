@@ -32,6 +32,8 @@ for (const need of [
   "toilet bowl in best ball",
   "Bracket path",
   "Toilet bowl scores best ball",
+  "best projected lineup",
+  "OUT/IR",
   'band("Top 6", "top"',
   'band("Bottom 4", "bot"',
   'band: seed <= playoffN ? "top" : "bot"',
@@ -70,8 +72,11 @@ if (!toiletGames.length || toiletGames.some((g) => g.mode !== "best_ball")) {
 const champPlay = (book.champ.rounds || [])
   .flatMap((r) => r.games || [])
   .filter((g) => !g.bye);
-if (!champPlay.length || champPlay.some((g) => g.mode !== "set_lineup")) {
-  fail("champ games must be set_lineup");
+if (!champPlay.length || champPlay.some((g) => g.mode !== "proj_opt")) {
+  fail("champ games must be proj_opt (best projected lineup)");
+}
+if (!String(book.rule && book.rule.future_lineup || "").includes("optimalProjectedLineup")) {
+  fail("book rule must document optimalProjectedLineup for future weeks");
 }
 
 const design = "design-best-ball-hype.html";

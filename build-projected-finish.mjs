@@ -4,9 +4,14 @@
  * Writes data/ui/projected-finish.json — feeds Draft picks Early/Mid/Late +
  * the Projected finish League Data door.
  *
+ * Remaining-week MC means blend in each roster's best projected lineup
+ * (OUT/IR sit, bench fills) so future odds reflect swaps managers will make.
+ *
  *   node build-projected-finish.mjs [league_id]
  */
+import { existsSync, readFileSync } from "node:fs";
 import {
+  DATA,
   LEAGUE_ID,
   readJson,
   readUi,
@@ -27,6 +32,7 @@ import {
   DEFAULT_MC_SIMS,
   attachMonteCarloToBook,
 } from "./lib/projected-finish-mc.mjs";
+import { optimalProjectedLineup } from "./lib/best-ball-lineup.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -98,6 +104,65 @@ async function fetchWeekProjections(season, week, ptsKey) {
     projBy[p.player_id] = Number(st[ptsKey] || st.pts_ppr || st.pts_std || 0);
   }
   return projBy;
+}
+
+function loadPlayers() {
+  const path = `${DATA}/players.nfl.json`;
+  if (!existsSync(path)) return {};
+  return JSON.parse(readFileSync(path, "utf8"));
+}
+
+function posByIdFromPlayers(players) {
+  const by = Object.create(null);
+  for (const [id, row] of Object.entries(players || {})) {
+    if (!row || typeof row !== "object") continue;
+    const pos = row.position || row.fantasy_positions?.[0] || row.pos;
+    if (pos) by[String(id)] = String(pos).toUpperCase();
+  }
+  return by;
+}
+
+/**
+ * Average best-projected-lineup points across remaining RS weeks per roster.
+ * OUT/IR/PUP are dropped so bench replacements fill the slots.
+ */
+async function futureOptProjMuByRoster(opts) {
+  const {
+    season, weeks, ptsKey, rosters, rosterPositions, players,
+  } = opts;
+  const out = Object.create(null);
+  if (!weeks || !weeks.length) return out;
+  const posById = posByIdFromPlayers(players);
+  const sums = Object.create(null);
+  const counts = Object.create(null);
+  for (const w of weeks) {
+    let projBy = {};
+    try {
+      projBy = await fetchWeekProjections(season, w, ptsKey);
+    } catch {
+      continue;
+    }
+    for (const r of rosters || []) {
+      const rid = Number(r.roster_id);
+      if (!Number.isFinite(rid)) continue;
+      const ids = (r.players || []).map(String).filter((id) => id && id !== "0");
+      if (!ids.length) continue;
+      const pts = optimalProjectedLineup(
+        ids,
+        projBy,
+        posById,
+        rosterPositions,
+        players,
+      ).points;
+      if (!(pts > 0)) continue;
+      sums[rid] = (sums[rid] || 0) + pts;
+      counts[rid] = (counts[rid] || 0) + 1;
+    }
+  }
+  for (const rid of Object.keys(sums)) {
+    out[Number(rid)] = Math.round((sums[rid] / counts[rid]) * 100) / 100;
+  }
+  return out;
 }
 
 /**
@@ -368,6 +433,16 @@ async function main() {
 
   // Monte Carlo remaining RS + playoffs — blend mean place into proj_finish
   // (multi-season calib: MC MAE beats the point book especially after W6).
+  const players = loadPlayers();
+  const projMuByRoster = await futureOptProjMuByRoster({
+    season,
+    weeks: rem.weeks,
+    ptsKey: ptsKeyFromLeague(live),
+    rosters,
+    rosterPositions: live.roster_positions || [],
+    players,
+  });
+
   const mcSeats = Object.create(null);
   for (const r of rosters || []) {
     const rid = Number(r.roster_id);
@@ -384,6 +459,7 @@ async function main() {
       pf,
       pa,
       weekPts: weekPts || [],
+      proj_mu: projMuByRoster[rid] || null,
     };
   }
   // Prefer raw tape points when trend helper did not stash them.
@@ -433,7 +509,18 @@ async function main() {
   book.remaining_games = rem.pairs.length;
   if (bankWeek > lastOfficial) {
     book.note = `W${bankWeek} banked from live Sleeper matchup points`
-      + ` + race intent v6 (official last_scored_leg=${lastOfficial}).`;
+      + ` + race intent v6 (official last_scored_leg=${lastOfficial}).`
+      + " Remaining weeks blend best projected lineups (OUT/IR → bench).";
+  } else {
+    book.note = (book.note ? book.note + " " : "")
+      + "Remaining weeks blend best projected lineups (OUT/IR → bench).";
+  }
+  if (book.rule && typeof book.rule === "object") {
+    book.rule.future_lineup = "optimalProjectedLineup blended into MC mu";
+  }
+  for (const s of book.seats || []) {
+    const mu = projMuByRoster[Number(s.roster_id)];
+    if (mu != null) s.proj_opt_mu = mu;
   }
 
   writeUi("projected-finish.json", book);

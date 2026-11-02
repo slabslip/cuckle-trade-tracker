@@ -34,11 +34,13 @@ for (const need of [
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
 
-// List banding treats EF like Best Ball (Top 6 / Bottom 4).
+// List banding treats EF like Best Ball (Championship bracket / Toilet bowl).
 {
   const bands = (page.match(/function dataListBandsHtml\([\s\S]*?\n    \}/) || [])[0] || "";
-  if (!bands.includes('id === "projected_finish"') || !bands.includes('band("Top 6"')) {
-    fail("dataListBandsHtml must Top-6 / Bottom-4 band Expected finish");
+  if (!bands.includes('id === "projected_finish"')
+    || !bands.includes('band("Championship bracket"')
+    || !bands.includes('band("Toilet bowl"')) {
+    fail("dataListBandsHtml must label EF Championship bracket + Toilet bowl");
   }
 }
 

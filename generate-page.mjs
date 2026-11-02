@@ -5027,7 +5027,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "efBbBrackets20261102173858";
+    const DATA_V = "bracketLabels20261102174217";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5666,11 +5666,13 @@ const html = `<!DOCTYPE html>
       }
       if ((opts.slice === "top" || opts.slice === "bot") && picked.length) {
         const week = id === "week_scores" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "week_scores");
-        const bb = id === "best_ball_hype" || (typeof receiptDoorCanon === "function" && receiptDoorCanon(id) === "best_ball_hype");
+        const canonShare = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
+        const cutShare = id === "best_ball_hype" || id === "projected_finish"
+          || canonShare === "best_ball_hype" || canonShare === "projected_finish";
         const tag = week
           ? (opts.slice === "top" ? "Highest 5" : "Lowest 5")
-          : (bb
-            ? (opts.slice === "top" ? "Top 6" : "Bottom 4")
+          : (cutShare
+            ? (opts.slice === "top" ? "Championship bracket" : "Toilet bowl")
             : (opts.slice === "top" ? "Top 5" : "Bottom 5"));
         let body = leagueName + " · " + lab + " · " + tag;
         picked.forEach(function (r, i) {
@@ -6154,8 +6156,8 @@ const html = `<!DOCTYPE html>
         const cutBands = id === "best_ball_hype" || id === "projected_finish"
           || canonBand === "best_ball_hype" || canonBand === "projected_finish";
         if (cutBands) {
-          return band("Top 6", "top", highs, 0)
-            + band("Bottom 4", "bot", lows, highs.length);
+          return band("Championship bracket", "top", highs, 0)
+            + band("Toilet bowl", "bot", lows, highs.length);
         }
         return band("Highest weeks", "top", highs, 0)
           + band("Lowest weeks", "bot", lows, highs.length);
@@ -9206,7 +9208,7 @@ const html = `<!DOCTYPE html>
           + ". Top 6 make the champ bracket (seeds 1–2 bye; 6v3 and 5v4)."
           + " Bottom 4 play the toilet bowl (10v7, 8v9) so nobody can tank."
           + " Tap a row for scorecard, week leans, both brackets — then Share this finish."
-          + " Paths show MC mean + p10–p90 band. Share Top 6 or Bottom 4.";
+          + " Paths show MC mean + p10–p90 band. Share Championship bracket or Toilet bowl.";
       }
       else if (id === "season_arcs") {
         caption = "Big number = average spots gained (or lost) from week-4 points rank to final place."
@@ -9222,7 +9224,7 @@ const html = `<!DOCTYPE html>
       else if (id === "best_ball_hype") {
         caption = "Top 6 make the champ bracket (seeds 1–2 get a bye; 6v3 and 5v4). Future weeks score each team's best projected lineup (OUT/IR → bench)."
           + " Bottom 4 play the toilet bowl in best ball (10v7, 8v9) so nobody can purposely lose."
-          + " Big number is projected final place. Share Top 6 or Bottom 4.";
+          + " Big number is projected final place. Share Championship bracket or Toilet bowl.";
       }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
@@ -41315,8 +41317,8 @@ if (!inline.includes("function bestBallHypeDetailHtml(")
   || !inline.includes('getLeagueJson("best-ball-hype.json")')
   || !fnSrc("bestBallHypeDetailHtml").includes("Bracket path")
   || !fnSrc("bestBallHypeDetailHtml").includes("Toilet bowl scores best ball")
-  || !fnSrc("dataListBandsHtml").includes('band("Top 6", "top"')
-  || !fnSrc("dataListBandsHtml").includes('band("Bottom 4", "bot"')
+  || !fnSrc("dataListBandsHtml").includes('band("Championship bracket", "top"')
+  || !fnSrc("dataListBandsHtml").includes('band("Toilet bowl", "bot"')
   || !fnSrc("dataListItems").includes('band: seed <= playoffN ? "top" : "bot"')
   || !fnSrc("receiptWhoListHtml").includes("Top 6 make the champ bracket")
   || !fnSrc("receiptWhoListHtml").includes("toilet bowl in best ball")

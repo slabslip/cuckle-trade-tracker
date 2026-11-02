@@ -34,8 +34,8 @@ for (const need of [
   "Toilet bowl scores best ball",
   "best projected lineup",
   "OUT/IR",
-  'band("Top 6", "top"',
-  'band("Bottom 4", "bot"',
+  'band("Championship bracket", "top"',
+  'band("Toilet bowl", "bot"',
   'band: seed <= playoffN ? "top" : "bot"',
   'src[draftAt] = "best_ball_hype"',
 ]) {

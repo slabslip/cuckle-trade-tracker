@@ -281,7 +281,8 @@ loop(40, page.includes("const DATA_REPORTS = [")
   && page.includes("function dataDashRedraftStale(")
   && page.includes("function finishCareerClaim(")
   && !page.includes('id: "avg_finish"')
-  && page.includes('"past_champions", "season_place", "projected_finish", "vs_you"'),
+  && page.includes('"profit_loss", "biggest_choker", "season_place"')
+  && page.includes('id: "biggest_choker"'),
   "redraft home is career tiles; dynasty default board stays the 13 doors");
 
 const cosmetics = load(`${ui}/cosmetics.json`, { unlocks: {} });

@@ -4269,7 +4269,8 @@ const html = `<!DOCTYPE html>
     }
     .list-band-h button.tile-share { position: static; width: 20px; height: 20px; min-width: 20px; min-height: 20px; }
     .list-row { position: relative; }
-    .list-row > .row { padding-right: 30px; width: 100%; box-sizing: border-box; }
+    .list-row > .row,
+    .list-row > .row-x { padding-right: 30px; width: 100%; box-sizing: border-box; }
     .list-row > button.tile-share { position: absolute; right: 4px; top: 10px; }
     .receipt-chip {
       position: relative;
@@ -5028,7 +5029,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "chokerwentoff202611031515";
+    const DATA_V = "chokerflatshare202611031525";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5672,14 +5673,11 @@ const html = `<!DOCTYPE html>
         const canonShare = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
         const cutShare = id === "best_ball_hype" || id === "projected_finish"
           || canonShare === "best_ball_hype" || canonShare === "projected_finish";
-        const chokeShare = id === "biggest_choker" || canonShare === "biggest_choker";
         const tag = week
           ? (opts.slice === "top" ? "Highest 5" : "Lowest 5")
           : (cutShare
             ? (opts.slice === "top" ? "Championship bracket" : "Toilet bowl")
-            : (chokeShare
-              ? (opts.slice === "top" ? "Biggest each year" : "Also choked")
-              : (opts.slice === "top" ? "Top 5" : "Bottom 5")));
+            : (opts.slice === "top" ? "Top 5" : "Bottom 5"));
         let body = leagueName + " · " + lab + " · " + tag;
         picked.forEach(function (r, i) {
           body += "\\n" + (r.rank || (i + 1)) + ". " + String(r.name || "") + (r.metric ? " · " + r.metric : "");
@@ -5702,14 +5700,12 @@ const html = `<!DOCTYPE html>
       const who = opts.who ? String(opts.who) : "";
       const bb = id === "best_ball_hype" || (typeof receiptDoorCanon === "function"
         && receiptDoorCanon(id) === "best_ball_hype");
-      const choke = id === "biggest_choker" || (typeof receiptDoorCanon === "function"
-        && receiptDoorCanon(id) === "biggest_choker");
       const label = who
         ? "Share this team"
         : (slice === "top"
-          ? (bb ? "Share top 6" : (choke ? "Share year's biggest" : "Share top 5"))
+          ? (bb ? "Share top 6" : "Share top 5")
           : (slice === "bot"
-            ? (bb ? "Share bottom 4" : (choke ? "Share also choked" : "Share bottom 5"))
+            ? (bb ? "Share bottom 4" : "Share bottom 5")
             : "Share this view"));
       return '<button type="button" class="tile-share" data-tile-share="' + esc(id || "") + '"'
         + (slice ? ' data-share-slice="' + esc(slice) + '"' : "")
@@ -5974,7 +5970,6 @@ const html = `<!DOCTYPE html>
             metric: String(s.season || ""),
             sub: (s.lab || kindLab) + yearTag + " · tap for story",
             rank: Number(s.rank) || (i + 1),
-            band: s.year_biggest ? "top" : "bot",
             seat: s,
           };
         });
@@ -6174,6 +6169,11 @@ const html = `<!DOCTYPE html>
         });
         return html;
       }
+      // Biggest choker: one flat top-10 — no Top/Bottom or year bands unless asked.
+      if (id === "biggest_choker" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "biggest_choker")) {
+        return picked.map(wrap).join("");
+      }
       if (list[0] && list[0].band) {
         const highs = list.filter(function (r) { return r.band === "top"; });
         const lows = list.filter(function (r) { return r.band === "bot"; });
@@ -6183,11 +6183,6 @@ const html = `<!DOCTYPE html>
         if (cutBands) {
           return band("Championship bracket", "top", highs, 0)
             + band("Toilet bowl", "bot", lows, highs.length);
-        }
-        const chokeBands = id === "biggest_choker" || canonBand === "biggest_choker";
-        if (chokeBands) {
-          return band("Biggest each year", "top", highs, 0)
-            + band("Also choked", "bot", lows, highs.length);
         }
         return band("Highest weeks", "top", highs, 0)
           + band("Lowest weeks", "bot", lows, highs.length);
@@ -9283,7 +9278,7 @@ const html = `<!DOCTYPE html>
           + " Big number is projected final place. Share Championship bracket or Toilet bowl.";
       }
       else if (id === "biggest_choker") {
-        caption = "Top 10 season chokes. Biggest of each year first, then the next-worst fades."
+        caption = "Top 10 season chokes in one list — biggest of each year first, then the next-worst fades."
           + " Missed playoffs = locked inside the top six by week-4/8 points rank, then finished outside the cut."
           + " Lost the chip = championship runner-up who had the better record, higher points rank, or led PF."
           + " Tap a row for the story.";
@@ -41501,8 +41496,12 @@ if (!inline.includes("function biggestChokerDetailHtml(")
   || !fnSrc("biggestChokerDetailHtml").includes("Went off for the winner")
   || !fnSrc("biggestChokerDetailHtml").includes("top scorers same week")
   || fnSrc("biggestChokerDetailHtml").includes("Score ranks how locked")
-  || !fnSrc("dataListBandsHtml").includes('band("Biggest each year", "top"')
-  || !fnSrc("dataListBandsHtml").includes('band("Also choked", "bot"')
+  || !fnSrc("dataListBandsHtml").includes("Biggest choker: one flat top-10")
+  || fnSrc("dataListBandsHtml").includes('band("Biggest each year", "top"')
+  || fnSrc("dataListBandsHtml").includes('band("Also choked", "bot"')
+  || !fnSrc("dataListItems").includes('canon === "biggest_choker"')
+  || fnSrc("dataListItems").includes('band: s.year_biggest ? "top" : "bot"')
+  || !inline.includes(".list-row > .row-x")
   || !fnSrc("receiptWhoListHtml").includes("Top 10 season chokes")
   || !fnSrc("receiptPortalNeedsSearch").includes('key === "biggest_choker"')
   || !fnSrc("receiptPortalLeave").includes('biggestChokerOpenKey = ""')) {

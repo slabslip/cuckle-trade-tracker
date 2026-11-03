@@ -29,11 +29,30 @@ for (const need of [
   'getLeagueJson("biggest-choker.json")',
   "biggestChokerOpenKey",
   "Top 10 season chokes",
-  'band("Biggest each year", "top"',
-  'band("Also choked", "bot"',
+  "Biggest choker: one flat top-10",
+  ".list-row > .row-x",
   'src[champAt] = "biggest_choker"',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
+}
+{
+  const src = page.includes("function dataListBandsHtml(") ? page : gen;
+  const start = src.indexOf("function dataListBandsHtml(");
+  const end = src.indexOf("\n    function ", start + 10);
+  const bands = src.slice(start, end < 0 ? start + 4000 : end);
+  if (!bands.includes("Biggest choker: one flat top-10")
+    || bands.includes('band("Biggest each year"')
+    || bands.includes('band("Also choked"')) {
+    fail("Biggest choker must stay one flat list — no year / also-choked bands");
+  }
+  const itemsStart = src.indexOf("function dataListItems(");
+  const itemsEnd = src.indexOf("\n    function ", itemsStart + 10);
+  const items = src.slice(itemsStart, itemsEnd < 0 ? itemsStart + 8000 : itemsEnd);
+  const chokeAt = items.indexOf('canon === "biggest_choker"');
+  const chokeBlock = chokeAt >= 0 ? items.slice(chokeAt, chokeAt + 900) : "";
+  if (!chokeBlock || chokeBlock.includes('band: s.year_biggest ? "top" : "bot"')) {
+    fail("biggest_choker list items must not set top/bot bands");
+  }
 }
 {
   const doors = (page.match(/const DATA_DOORS = \[([\s\S]*?)\];/) || [])[1] || "";

@@ -8864,5 +8864,27 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-11-03",
+    "season": "2026",
+    "week": 8,
+    "transaction_id": "1423169808811188224",
+    "sides": {
+      "SF69erss": {
+        "in": [
+          "Calvin Ridley",
+          "2029 R4 (orig roster 2)"
+        ],
+        "out": []
+      },
+      "TrumanCooper": {
+        "in": [],
+        "out": [
+          "Calvin Ridley",
+          "2029 R4 (orig roster 2)"
+        ]
+      }
+    }
   }
 ]

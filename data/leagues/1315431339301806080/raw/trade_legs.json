@@ -4240,6 +4240,62 @@
     }
   },
   {
+    "transaction_id": "1423169808811188224",
+    "direction": "in",
+    "to_user_id": "457779824002330624",
+    "to_roster_id": 1,
+    "kind": "player",
+    "asset_key": "player:4981",
+    "label": "Calvin Ridley"
+  },
+  {
+    "transaction_id": "1423169808811188224",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "kind": "player",
+    "asset_key": "player:4981",
+    "label": "Calvin Ridley"
+  },
+  {
+    "transaction_id": "1423169808811188224",
+    "direction": "in",
+    "to_user_id": "457779824002330624",
+    "to_roster_id": 1,
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "origin_roster_id": 2,
+    "kind": "pick",
+    "asset_key": "pick:2029:4:2",
+    "label": "2029 R4 (orig roster 2)",
+    "pick": {
+      "season": "2029",
+      "round": 4,
+      "roster_id": 2,
+      "previous_owner_id": 7,
+      "owner_id": 1
+    }
+  },
+  {
+    "transaction_id": "1423169808811188224",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 7,
+    "to_user_id": "457779824002330624",
+    "to_roster_id": 1,
+    "origin_roster_id": 2,
+    "kind": "pick",
+    "asset_key": "pick:2029:4:2",
+    "label": "2029 R4 (orig roster 2)",
+    "pick": {
+      "season": "2029",
+      "round": 4,
+      "roster_id": 2,
+      "previous_owner_id": 7,
+      "owner_id": 1
+    }
+  },
+  {
     "transaction_id": "1421547590658330624",
     "direction": "in",
     "to_user_id": "458766127967760384",

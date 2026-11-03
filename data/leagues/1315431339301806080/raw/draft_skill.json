@@ -2960,8 +2960,8 @@
       "drafted_by": "ARae",
       "startup": false,
       "pick_cost": 1476,
-      "player_today": 0,
-      "surplus": -1476,
+      "player_today": 761,
+      "surplus": -715,
       "flag": null
     },
     {
@@ -10547,8 +10547,8 @@
       "name": "ARae",
       "used": 26,
       "graded": 26,
-      "surplus": -18961,
-      "per_pick": -729.2692307692307,
+      "surplus": -18200,
+      "per_pick": -700,
       "best": {
         "player": "Kenneth Walker",
         "season": "2022",

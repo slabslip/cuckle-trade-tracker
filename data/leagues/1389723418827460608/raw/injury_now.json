@@ -1,7 +1,14 @@
 {
-  "as_of": "2026-11-02",
-  "n": 37,
+  "as_of": "2026-11-03",
+  "n": 41,
   "players": {
+    "421": {
+      "name": "Matthew Stafford",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "QB"
+    },
     "2133": {
       "name": "Davante Adams",
       "injury_status": "IR",
@@ -78,6 +85,13 @@
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
+    },
+    "5947": {
+      "name": "Jakobi Meyers",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "WR"
     },
     "7525": {
       "name": "DeVonta Smith",
@@ -170,6 +184,13 @@
       "team": "TEN",
       "pos": "RB"
     },
+    "10219": {
+      "name": "Chris Rodriguez Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "RB"
+    },
     "10232": {
       "name": "Michael Wilson",
       "injury_status": "Questionable",
@@ -205,6 +226,13 @@
       "team": "DEN",
       "pos": "RB"
     },
+    "12490": {
+      "name": "Bhayshul Tuten",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "RB"
+    },
     "12514": {
       "name": "Emeka Egbuka",
       "injury_status": "Out",
@@ -233,6 +261,13 @@
       "team": "CHI",
       "pos": "RB"
     },
+    "12711": {
+      "name": "Tyler Loop",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "BAL",
+      "pos": "K"
+    },
     "13279": {
       "name": "Carnell Tate",
       "injury_status": "Out",
@@ -246,13 +281,6 @@
       "status": "Inactive",
       "team": "NO",
       "pos": "WR"
-    },
-    "13286": {
-      "name": "Jadarian Price",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "SEA",
-      "pos": "RB"
     },
     "13287": {
       "name": "Jeremiyah Love",

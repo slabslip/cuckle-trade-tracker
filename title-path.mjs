@@ -94,18 +94,12 @@ function championshipFinal(s, rid, players, nameByUser) {
   if (!mine || !theirs) return { ok: false, reason: `roster_absent_from_week_${week}` };
   if (mine.points == null || theirs.points == null) return { ok: false, reason: "week_has_no_points" };
 
-  const pp = mine.players_points || {};
-  const starters = (mine.starters || []).filter((id) => id && id !== "0");
-  let top = null;
-  for (const pid of starters) {
-    const pts = pp[pid];
-    if (pts == null) continue;
-    if (!top || pts > top.points) {
-      top = { player_id: String(pid), player: playerName(players, pid), points: money(pts) };
-    }
-  }
+  const champScorers = starterScorers(mine, players, 3);
+  const loserScorers = starterScorers(theirs, players, 3);
+  const top = champScorers[0] || null;
   let topBench = null;
-  const started = new Set(starters.map(String));
+  const started = new Set(((mine.starters || []).filter((id) => id && id !== "0")).map(String));
+  const pp = mine.players_points || {};
   for (const [pid, pts] of Object.entries(pp)) {
     if (started.has(String(pid)) || pts == null) continue;
     if (!topBench || pts > topBench.points) {
@@ -136,7 +130,28 @@ function championshipFinal(s, rid, players, nameByUser) {
     tie: champPoints === oppPoints,
     top,
     top_bench: topBench,
+    // Top starters who went off for the champ / what the runner-up put up the same week.
+    champ_scorers: champScorers,
+    loser_scorers: loserScorers,
   };
+}
+
+/** Top N starters by points in a matchup row. */
+function starterScorers(mu, players, n) {
+  const pp = (mu && mu.players_points) || {};
+  const starters = ((mu && mu.starters) || []).filter((id) => id && id !== "0");
+  const rows = [];
+  for (const pid of starters) {
+    const pts = pp[pid];
+    if (pts == null) continue;
+    rows.push({
+      player_id: String(pid),
+      player: playerName(players, pid),
+      points: money(pts),
+    });
+  }
+  rows.sort((a, b) => b.points - a.points || a.player.localeCompare(b.player));
+  return rows.slice(0, Math.max(1, Number(n) || 3));
 }
 
 function money(n) {

@@ -58,8 +58,8 @@ const DATA_DASH_MAX = 13;
 const catalog = new Set([
   "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
   "my_trades", "trade_helper", "league_trades", "league_draft",
-  "profit_loss", "past_champions", "season_place",
-  "week_scores", "best_ball_hype", "draft_board", "vs_you", "book_top", "firsts_held",
+  "profit_loss", "biggest_choker", "season_place",
+  "week_scores", "best_ball_hype", "draft_board", "vs_you", "book_top", "firsts_held", "past_champions",
 ]);
 function dataDashById(id) { return catalog.has(id) ? { id } : null; }
 function isRedraftLeague() { return false; }
@@ -102,7 +102,7 @@ function assert(cond, msg) {
   const good = [
     "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
     "my_trades", "trade_helper", "league_trades", "league_draft",
-    "profit_loss", "past_champions", "season_place",
+    "profit_loss", "biggest_choker", "season_place",
     "week_scores", "best_ball_hype",
   ];
   assert(migrate(good).join(",") === good.join(","), "good board must stay put");
@@ -117,6 +117,7 @@ function assert(cond, msg) {
   ];
   const next = migrate(legacy);
   assert(next[12] === "best_ball_hype", "legacy draft_board door becomes Best Ball Hype");
+  assert(next[9] === "biggest_choker", "legacy past_champions door becomes Biggest choker");
 }
 
 {

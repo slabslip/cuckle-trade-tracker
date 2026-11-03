@@ -5005,6 +5005,7 @@ const html = `<!DOCTYPE html>
     // Manager type list: which seat row is expanded (user_id / key).
     let managerArchetypesOpenKey = "";
     let bestBallHypeOpenKey = "";
+    let biggestChokerOpenKey = "";
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -5027,7 +5028,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "truman4of620261103105904";
+    const DATA_V = "biggestchoker202611031445";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5098,7 +5099,7 @@ const html = `<!DOCTYPE html>
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
-      "profit_loss", "past_champions", "season_place",
+      "profit_loss", "biggest_choker", "season_place",
       "week_scores", "best_ball_hype",
     ];
     const DATA_BLOCK_MAX = 8;
@@ -5112,13 +5113,13 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_DEFAULT = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
-      "profit_loss", "past_champions", "season_place",
+      "profit_loss", "biggest_choker", "season_place",
       "week_scores", "best_ball_hype",
     ];
     const DATA_DASH_RESEARCH = [
-      "manager_archetypes", "season_arcs", "passed_around", "week_scores",
+      "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "seat_run",
-      "least_traded", "draft_board", "past_champions", "my_draft",
+      "past_champions", "draft_board", "passed_around", "my_draft",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5166,6 +5167,7 @@ const html = `<!DOCTYPE html>
       { id: "passed_around", lab: "Passed around", desk: "lists", size: "full", why: "Players who moved the most." },
       { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks. Playoff is the winners-bracket title hunt." },
       { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Top 6 champ bracket (1–2 bye). Bottom 4 toilet bowl in best ball so nobody can tank. Future weeks use best projected lineup — OUT/IR sit, best bench fills." },
+      { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -5289,6 +5291,7 @@ const html = `<!DOCTYPE html>
     let seasonArcsBook = null;
     let managerArchetypesBook = null;
     let bestBallHypeBook = null;
+    let biggestChokerBook = null;
     let leagueLoadGen = 0;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
@@ -5669,11 +5672,14 @@ const html = `<!DOCTYPE html>
         const canonShare = typeof receiptDoorCanon === "function" ? receiptDoorCanon(id) : id;
         const cutShare = id === "best_ball_hype" || id === "projected_finish"
           || canonShare === "best_ball_hype" || canonShare === "projected_finish";
+        const chokeShare = id === "biggest_choker" || canonShare === "biggest_choker";
         const tag = week
           ? (opts.slice === "top" ? "Highest 5" : "Lowest 5")
           : (cutShare
             ? (opts.slice === "top" ? "Championship bracket" : "Toilet bowl")
-            : (opts.slice === "top" ? "Top 5" : "Bottom 5"));
+            : (chokeShare
+              ? (opts.slice === "top" ? "Biggest each year" : "Also choked")
+              : (opts.slice === "top" ? "Top 5" : "Bottom 5")));
         let body = leagueName + " · " + lab + " · " + tag;
         picked.forEach(function (r, i) {
           body += "\\n" + (r.rank || (i + 1)) + ". " + String(r.name || "") + (r.metric ? " · " + r.metric : "");
@@ -5696,12 +5702,14 @@ const html = `<!DOCTYPE html>
       const who = opts.who ? String(opts.who) : "";
       const bb = id === "best_ball_hype" || (typeof receiptDoorCanon === "function"
         && receiptDoorCanon(id) === "best_ball_hype");
+      const choke = id === "biggest_choker" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "biggest_choker");
       const label = who
         ? "Share this team"
         : (slice === "top"
-          ? (bb ? "Share top 6" : "Share top 5")
+          ? (bb ? "Share top 6" : (choke ? "Share year's biggest" : "Share top 5"))
           : (slice === "bot"
-            ? (bb ? "Share bottom 4" : "Share bottom 5")
+            ? (bb ? "Share bottom 4" : (choke ? "Share also choked" : "Share bottom 5"))
             : "Share this view"));
       return '<button type="button" class="tile-share" data-tile-share="' + esc(id || "") + '"'
         + (slice ? ' data-share-slice="' + esc(slice) + '"' : "")
@@ -5718,7 +5726,7 @@ const html = `<!DOCTYPE html>
         || canon === "homesteaders" || canon === "least_traded" || canon === "passed_around"
         || canon === "past_champions" || canon === "projected_finish"
         || canon === "season_arcs" || canon === "manager_archetypes"
-        || canon === "best_ball_hype";
+        || canon === "best_ball_hype" || canon === "biggest_choker";
     }
 
     function dataListPickSlice(items, slice, who) {
@@ -5954,6 +5962,23 @@ const html = `<!DOCTYPE html>
           };
         });
       }
+      if (canon === "biggest_choker") {
+        const seats = (biggestChokerBook && Array.isArray(biggestChokerBook.seats))
+          ? biggestChokerBook.seats.slice() : [];
+        return seats.map(function (s, i) {
+          const kindLab = s.kind === "title_loss" ? "lost the chip" : "missed playoffs";
+          const yearTag = s.year_biggest ? " · year's biggest" : "";
+          return {
+            key: String(s.key || ((s.season || "") + ":" + (s.user_id || i))),
+            name: s.name,
+            metric: String(s.season || ""),
+            sub: (s.lab || kindLab) + yearTag + " · tap for story",
+            rank: Number(s.rank) || (i + 1),
+            band: s.year_biggest ? "top" : "bot",
+            seat: s,
+          };
+        });
+      }
       if (canon === "past_champions") {
         return ((titles && titles.titles) || []).map(function (t, i) {
           return {
@@ -6158,6 +6183,11 @@ const html = `<!DOCTYPE html>
         if (cutBands) {
           return band("Championship bracket", "top", highs, 0)
             + band("Toilet bowl", "bot", lows, highs.length);
+        }
+        const chokeBands = id === "biggest_choker" || canonBand === "biggest_choker";
+        if (chokeBands) {
+          return band("Biggest each year", "top", highs, 0)
+            + band("Also choked", "bot", lows, highs.length);
         }
         return band("Highest weeks", "top", highs, 0)
           + band("Lowest weeks", "bot", lows, highs.length);
@@ -7745,7 +7775,8 @@ const html = `<!DOCTYPE html>
       if (id === "my_trades" || id === "league_trades" || id === "my_draft" || id === "league_draft"
         || id === "profit_loss"
         || id === "trade_mark" || id === "pick_print" || id === "my_picks"
-        || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes") return "memory";
+        || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
+        || id === "biggest_choker") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
       return "who";
@@ -7804,7 +7835,7 @@ const html = `<!DOCTYPE html>
       if (id === "trade_mark" || id === "lopsided" || id === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
       if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes"
-        || key === "best_ball_hype") return false;
+        || key === "best_ball_hype" || key === "biggest_choker") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
@@ -7817,7 +7848,7 @@ const html = `<!DOCTYPE html>
       if (id === "season_title" || canon === "season_place") return true;
       if (isFinishCareerTile(canon)) return true;
       if (id === "draft_marks" || id === "held_firsts") return true;
-      if (canon === "best_ball_hype") return true;
+      if (canon === "best_ball_hype" || canon === "biggest_choker") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
 
@@ -7863,6 +7894,7 @@ const html = `<!DOCTYPE html>
         firsts_held: '<rect x="5" y="7" width="14" height="10" rx="2"/><path d="M8.5 7v10M12 10.5h5"/>',
         week_scores: '<path d="M7 15V7M4.8 9.4L7 7l2.2 2.4"/><path d="M17 9v8M14.8 14.6L17 17l2.2-2.4"/>',
         best_ball_hype: '<circle cx="12" cy="12" r="7.2"/><path d="M9 12.2l2 2 4.2-4.4"/><path d="M8 7.2c1.2-1 2.6-1.5 4-1.5s2.8.5 4 1.5"/>',
+        biggest_choker: '<path d="M12 4v8"/><circle cx="12" cy="17.2" r="1.4"/><path d="M8.2 7.5c1.1-1.6 2.4-2.3 3.8-2.3s2.7.7 3.8 2.3"/>',
         forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
         passed_around: '<path d="M20 8a8 8 0 1 0 1.6 6"/><polyline points="16 8 20 8 20 4"/>',
         seat_draft: '<circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v2.2M12 18.6v2.2M3.2 12h2.2M18.6 12h2.2"/>',
@@ -7927,6 +7959,9 @@ const html = `<!DOCTYPE html>
           fig = receiptDoorLeadFig(lead.name,
             Number.isFinite(pl) ? (typeof nth === "function" ? nth(pl) : ("#" + pl)) : (lead.record || ""));
         }
+      } else if (id === "biggest_choker") {
+        const lead = biggestChokerBook && biggestChokerBook.seats && biggestChokerBook.seats[0];
+        if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.season || ""));
       } else if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
         if (id === "past_champions") {
           const last = ((titles && titles.titles) || [])[0];
@@ -9043,7 +9078,7 @@ const html = `<!DOCTYPE html>
         });
       }
       if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
-        || id === "best_ball_hype") {
+        || id === "best_ball_hype" || id === "biggest_choker") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank]);
         });
@@ -9059,6 +9094,9 @@ const html = `<!DOCTYPE html>
           }
           if (id === "best_ball_hype" && !bestBallHypeBook) {
             return '<p class="caption">Best Ball Hype book not loaded yet.</p>';
+          }
+          if (id === "biggest_choker" && !biggestChokerBook) {
+            return '<p class="caption">Biggest choker book not loaded yet.</p>';
           }
           return '<p class="caption">Nothing on this tape matches.</p>';
         }
@@ -9132,6 +9170,24 @@ const html = `<!DOCTYPE html>
               + "</button>"
               + (open
                 ? ('<div class="detail">' + bestBallHypeDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
+          if (id === "biggest_choker") {
+            const open = String(biggestChokerOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-biggest-choker-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + biggestChokerDetailHtml(r.seat) + "</div>")
                 : "")
               + "</div>";
           }
@@ -9225,6 +9281,12 @@ const html = `<!DOCTYPE html>
         caption = "Top 6 make the champ bracket (seeds 1–2 get a bye; 6v3 and 5v4). Future weeks score each team's best projected lineup (OUT/IR → bench)."
           + " Bottom 4 play the toilet bowl in best ball (10v7, 8v9) so nobody can purposely lose."
           + " Big number is projected final place. Share Championship bracket or Toilet bowl.";
+      }
+      else if (id === "biggest_choker") {
+        caption = "Top 10 season chokes. Biggest of each year first, then the next-worst fades."
+          + " Missed playoffs = locked inside the top six by week-4/8 points rank, then finished outside the cut."
+          + " Lost the chip = championship runner-up who had the better record, higher points rank, or led PF."
+          + " Tap a row for the story.";
       }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
@@ -11578,6 +11640,7 @@ const html = `<!DOCTYPE html>
       seasonArcsBook = null;
       managerArchetypesBook = null;
       bestBallHypeBook = null;
+      biggestChokerBook = null;
       overnight = null;
       overnightLoading = false;
       overnightOpen = false;
@@ -11587,6 +11650,7 @@ const html = `<!DOCTYPE html>
       seasonArcsOpenKey = "";
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
+      biggestChokerOpenKey = "";
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -11599,7 +11663,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -11618,6 +11682,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("season-arcs.json").catch(() => null),
         getLeagueJson("manager-archetypes.json").catch(() => null),
         getLeagueJson("best-ball-hype.json").catch(() => null),
+        getLeagueJson("biggest-choker.json").catch(() => null),
       ]);
       if (gen !== leagueLoadGen) return;
       const nowId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
@@ -11700,6 +11765,10 @@ const html = `<!DOCTYPE html>
         bestBallHypeBook = bestBallHypeRaw && Number(bestBallHypeRaw.v) >= 1
           && Array.isArray(bestBallHypeRaw.seats) ? bestBallHypeRaw : null;
       } catch (err) { bestBallHypeBook = null; }
+      try {
+        biggestChokerBook = biggestChokerRaw && Number(biggestChokerRaw.v) >= 1
+          && Array.isArray(biggestChokerRaw.seats) ? biggestChokerRaw : null;
+      } catch (err) { biggestChokerBook = null; }
       getLeagueJson("name-history.json").then(function (book) {
         nameHistoryBook = book && book.v === 1 && book.seats ? book : null;
         if (appScreen === "joinWelcome") render();
@@ -12965,6 +13034,7 @@ const html = `<!DOCTYPE html>
       seasonArcsOpenKey = "";
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
+      biggestChokerOpenKey = "";
       if (typeof receiptPlReset === "function") receiptPlReset();
       if (typeof receiptResetPlayerFilter === "function") receiptResetPlayerFilter();
     }
@@ -13188,6 +13258,20 @@ const html = `<!DOCTYPE html>
         } else {
           const at = softDropAt(4);
           if (at >= 0) src[at] = "best_ball_hype";
+        }
+      }
+      // Dynasty: pin Biggest choker (swap Past champions when present).
+      if (dynasty && src.indexOf("biggest_choker") < 0 && dataDashById("biggest_choker")) {
+        const champAt = src.indexOf("past_champions");
+        if (champAt >= 0) {
+          src[champAt] = "biggest_choker";
+        } else if (src.length < DATA_DASH_MAX) {
+          const after = src.indexOf("profit_loss");
+          if (after >= 0) src.splice(after + 1, 0, "biggest_choker");
+          else src.push("biggest_choker");
+        } else {
+          const at = softDropAt(4);
+          if (at >= 0) src[at] = "biggest_choker";
         }
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
@@ -14885,6 +14969,44 @@ const html = `<!DOCTYPE html>
         html += ".</p>";
       }
       html += '<p class="caption">Future weeks = best projected lineup (OUT/IR → bench). Champ + toilet both score that way; toilet stays best-ball so nobody can tank.</p>';
+      html += "</div>";
+      return html;
+    }
+
+    function biggestChokerDetailHtml(seat) {
+      if (!seat) return "";
+      const year = String(seat.season || "");
+      const kind = seat.kind === "title_loss" ? "Lost the chip" : "Missed playoffs";
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">In plain English</p>';
+      html += "<p><b>" + esc(year) + "</b> — " + esc(kind)
+        + (seat.year_biggest ? " · biggest choke of that year" : "")
+        + ".</p>";
+      if (seat.thesis) html += "<p>" + esc(seat.thesis) + "</p>";
+      if (seat.kind === "playoff_miss") {
+        html += '<p class="pf-why-h">The fade</p>';
+        html += "<p>Week 4 PF rank #" + esc(String(seat.place_w4 != null ? seat.place_w4 : "—"))
+          + " · Week 8 #" + esc(String(seat.place_w8 != null ? seat.place_w8 : "—"))
+          + " · finished #" + esc(String(seat.place_final != null ? seat.place_final : "—"))
+          + ".</p>";
+      } else if (seat.kind === "title_loss") {
+        html += '<p class="pf-why-h">Championship final</p>';
+        html += "<p>Lost to <b>" + esc(seat.champ_name || "the champ") + "</b>";
+        if (seat.points != null && seat.champ_points != null) {
+          html += " " + esc(String(seat.points)) + "–" + esc(String(seat.champ_points));
+        }
+        if (seat.week != null) html += " (week " + esc(String(seat.week)) + ")";
+        html += ".</p>";
+        if (seat.record || seat.champ_record) {
+          html += "<p>Regular season " + esc(seat.record || "—")
+            + " vs champ " + esc(seat.champ_record || "—");
+          if (seat.fpts_rank != null) {
+            html += " · PF rank #" + esc(String(seat.fpts_rank));
+          }
+          html += ".</p>";
+        }
+      }
+      html += '<p class="caption">Score ranks how locked they looked versus how far they fell. Year leaders list first, then the next-worst seasons fill the top 10.</p>';
       html += "</div>";
       return html;
     }
@@ -17608,6 +17730,12 @@ const html = `<!DOCTYPE html>
           Number.isFinite(pl) ? (typeof nth === "function" ? nth(pl) : ("#" + pl)) : "Open",
           lead ? ((lead.name || "Lead") + " · Top 6 / toilet") : "Champ + toilet brackets");
       }
+      if (id === "biggest_choker") {
+        const lead = biggestChokerBook && biggestChokerBook.seats && biggestChokerBook.seats[0];
+        return dataDashHead(spec,
+          lead ? String(lead.season || "Open") : "Open",
+          lead ? ((lead.name || "Lead") + " · " + (lead.lab || "choke")) : "Season chokes · top 10");
+      }
       if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];
         const tag = id === "sacko" ? " last place"
@@ -17859,6 +17987,7 @@ const html = `<!DOCTYPE html>
         seasonArcsOpenKey = "";
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
+        biggestChokerOpenKey = "";
         receiptResetPlayerFilter();
         if (typeof receiptPlReset === "function") receiptPlReset();
         if (receiptWhoList === "my_draft") {
@@ -23978,6 +24107,7 @@ const html = `<!DOCTYPE html>
         seasonArcsOpenKey = "";
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
+        biggestChokerOpenKey = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         homeTab = "history";
@@ -36296,6 +36426,15 @@ const html = `<!DOCTYPE html>
         if (typeof render === "function") render();
         return;
       }
+      const biggestChokerOpenBtn = e.target.closest("[data-biggest-choker-open]");
+      if (biggestChokerOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = biggestChokerOpenBtn.getAttribute("data-biggest-choker-open") || "";
+        biggestChokerOpenKey = (String(biggestChokerOpenKey) === String(key)) ? "" : key;
+        if (typeof render === "function") render();
+        return;
+      }
       const overnightMoreBtn = e.target.closest("[data-overnight-more]");
       if (overnightMoreBtn) {
         e.preventDefault();
@@ -36457,6 +36596,7 @@ const html = `<!DOCTYPE html>
         seasonArcsOpenKey = "";
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
+        biggestChokerOpenKey = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         dataRoom = "overview";
@@ -40380,8 +40520,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 44 || uniq.size !== 44) {
-    throw new Error("DATA_REPORTS must hold exactly 44 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 45 || uniq.size !== 45) {
+    throw new Error("DATA_REPORTS must hold exactly 45 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -40391,8 +40531,8 @@ if (!inline.includes("function dataDashHtml(")
     || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
     || !uniq.has("pot_net") || !uniq.has("projected_finish") || !uniq.has("season_place")
     || !uniq.has("season_arcs") || !uniq.has("manager_archetypes") || !uniq.has("trade_helper")
-    || !uniq.has("best_ball_hype")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, and Best Ball Hype");
+    || !uniq.has("best_ball_hype") || !uniq.has("biggest_choker")) {
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, and Biggest choker");
   }
   const needIds = ["trade_helper", "fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -40441,11 +40581,15 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(Math.min(3, src.length), 0, "season_arcs")')
     || !fnSrc("dataDashMigrateMyPicks").includes("softDrop")
     || !fnSrc("dataDashMigrateMyPicks").includes('src[draftAt] = "best_ball_hype"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src[champAt] = "biggest_choker"')
     || fnSrc("dataDashMigrateMyPicks").includes('src[src.length - 1] = "trade_helper"')) {
-    throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype on saved dynasty boards");
+    throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype + Biggest choker on saved dynasty boards");
   }
   if (!uniq.has("best_ball_hype") || defIds[12] !== "best_ball_hype" || doorIds[12] !== "best_ball_hype") {
     throw new Error("Best Ball Hype must be default board tile 13 (League Data door)");
+  }
+  if (!uniq.has("biggest_choker") || defIds[9] !== "biggest_choker" || doorIds[9] !== "biggest_choker") {
+    throw new Error("Biggest choker must be default board tile 10 (League Data door)");
   }
   if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
     throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");
@@ -41326,11 +41470,27 @@ if (!inline.includes("function bestBallHypeDetailHtml(")
   || !fnSrc("receiptPortalLeave").includes('bestBallHypeOpenKey = ""')) {
   throw new Error("Best Ball Hype must be a catalog door with expand rows and best-ball-hype.json");
 }
+if (!inline.includes("function biggestChokerDetailHtml(")
+  || !inline.includes('data-biggest-choker-open="')
+  || !inline.includes('closest("[data-biggest-choker-open]")')
+  || !inline.includes("let biggestChokerOpenKey")
+  || !inline.includes('id: "biggest_choker"')
+  || !inline.includes('lab: "Biggest choker"')
+  || !inline.includes('getLeagueJson("biggest-choker.json")')
+  || !fnSrc("biggestChokerDetailHtml").includes("In plain English")
+  || !fnSrc("dataListBandsHtml").includes('band("Biggest each year", "top"')
+  || !fnSrc("dataListBandsHtml").includes('band("Also choked", "bot"')
+  || !fnSrc("receiptWhoListHtml").includes("Top 10 season chokes")
+  || !fnSrc("receiptPortalNeedsSearch").includes('key === "biggest_choker"')
+  || !fnSrc("receiptPortalLeave").includes('biggestChokerOpenKey = ""')) {
+  throw new Error("Biggest choker must be a catalog door with expand rows and biggest-choker.json");
+}
 {
   const designSeeds = [
     "design-manager-types-expand.html",
     "design-season-arcs-expand.html",
     "design-best-ball-hype.html",
+    "design-biggest-choker.html",
   ];
   for (const path of designSeeds) {
     const seed = fs.readFileSync(path, "utf8");

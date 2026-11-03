@@ -86,7 +86,7 @@ if (missing.length) {
 
 if (!page.includes('DATA_DOORS = [')
   || !page.includes('"my_trades", "trade_helper", "league_trades", "league_draft"')
-  || !page.includes('"profit_loss", "past_champions", "season_place"')) {
+  || !page.includes('"profit_loss", "biggest_choker", "season_place"')) {
   throw new Error("default board must be the 13 door tiles");
 }
 if (!page.includes('class="door') || page.includes("The number is one example")) {

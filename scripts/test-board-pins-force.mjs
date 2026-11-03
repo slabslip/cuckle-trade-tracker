@@ -32,8 +32,8 @@ const DATA_DASH_MAX = 13;
 const catalog = new Set([
   "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
   "my_trades", "trade_helper", "league_trades", "league_draft",
-  "profit_loss", "past_champions", "season_place",
-  "week_scores", "best_ball_hype", "draft_board", "vs_you", "book_top", "firsts_held",
+  "profit_loss", "biggest_choker", "season_place",
+  "week_scores", "best_ball_hype", "draft_board", "past_champions", "vs_you", "book_top", "firsts_held",
 ]);
 
 function dataDashById(id) {
@@ -92,7 +92,7 @@ function assert(cond, msg) {
   const good = [
     "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
     "my_trades", "trade_helper", "league_trades", "league_draft",
-    "profit_loss", "past_champions", "season_place",
+    "profit_loss", "biggest_choker", "season_place",
     "week_scores", "best_ball_hype",
   ];
   assert(dataDashMigrateMyPicks(good).join(",") === good.join(","), "good board must stay put");
@@ -108,6 +108,8 @@ function assert(cond, msg) {
   const next = dataDashMigrateMyPicks(legacy);
   assert(next.indexOf("best_ball_hype") === 12, "draft_board becomes best_ball_hype, got " + next.join(","));
   assert(next.indexOf("draft_board") < 0, "draft_board leaves the default door slot");
+  assert(next.indexOf("biggest_choker") === 9, "past_champions becomes biggest_choker, got " + next.join(","));
+  assert(next.indexOf("past_champions") < 0, "past_champions leaves the default door slot");
 }
 
 {

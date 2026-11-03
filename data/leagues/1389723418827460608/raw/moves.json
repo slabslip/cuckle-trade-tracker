@@ -9364,5 +9364,21 @@
     "drops": {
       "6130": 2
     }
+  },
+  {
+    "transaction_id": "1423357179078938624",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 8,
+    "created": 1793717305491,
+    "date": "2026-11-03",
+    "roster_ids": [
+      2
+    ],
+    "adds": {},
+    "drops": {
+      "WAS": 2
+    }
   }
 ]

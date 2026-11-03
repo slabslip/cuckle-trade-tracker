@@ -62,6 +62,7 @@ const steps = [
   ["build-seat-direction.mjs", leagueId],
   ["build-projected-finish.mjs", leagueId],
   ["build-season-arcs.mjs", leagueId],
+  ["build-biggest-choker.mjs", leagueId],
   ["build-cosmetics.mjs", leagueId],
 ];
 

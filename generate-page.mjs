@@ -4268,10 +4268,17 @@ const html = `<!DOCTYPE html>
       color: #e0b44c;
     }
     .list-band-h button.tile-share { position: static; width: 20px; height: 20px; min-width: 20px; min-height: 20px; }
-    .list-row { position: relative; }
+    .list-row {
+      position: relative;
+      display: flex; align-items: flex-start; gap: 6px;
+    }
     .list-row > .row,
-    .list-row > .row-x { padding-right: 30px; width: 100%; box-sizing: border-box; }
-    .list-row > button.tile-share { position: absolute; right: 4px; top: 10px; }
+    .list-row > .row-x {
+      flex: 1 1 auto; min-width: 0; width: auto; box-sizing: border-box;
+    }
+    .list-row > button.tile-share {
+      position: static; flex: 0 0 auto; margin-top: 12px;
+    }
     .receipt-chip {
       position: relative;
       background: #1c1c22; border: 1px solid var(--line); border-radius: 12px;
@@ -5029,7 +5036,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "chokerflatshare202611031525";
+    const DATA_V = "chokershareflex202611031530";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -41502,6 +41509,7 @@ if (!inline.includes("function biggestChokerDetailHtml(")
   || !fnSrc("dataListItems").includes('canon === "biggest_choker"')
   || fnSrc("dataListItems").includes('band: s.year_biggest ? "top" : "bot"')
   || !inline.includes(".list-row > .row-x")
+  || !inline.includes("position: static; flex: 0 0 auto; margin-top: 12px")
   || !fnSrc("receiptWhoListHtml").includes("Top 10 season chokes")
   || !fnSrc("receiptPortalNeedsSearch").includes('key === "biggest_choker"')
   || !fnSrc("receiptPortalLeave").includes('biggestChokerOpenKey = ""')) {

@@ -97,6 +97,15 @@ if (Number(book.live_week) === 8) {
   const liveKinds = (book.seats || []).flatMap((s) => (s.weeks || []).filter((w) => w.kind === "live"));
   if (!liveKinds.length) fail("W8 live bank should mark week rows kind=live");
 }
+if (Number(book.week) === 8 && book.scenario && book.scenario.id === "truman_4of6") {
+  const truman = book.seats.find((s) => String(s.name) === "TrumanCooper");
+  if (!truman || truman.bracket !== "champ" || Number(truman.seed) > 6) {
+    fail("Truman 4-of-6 scenario must put Truman in Championship bracket");
+  }
+  if (String(book.scenario.final_from_4_4) !== "8-6") {
+    fail("Truman 4-of-6 should finish 8-6 from 4-4");
+  }
+}
 const buildSrc = fs.readFileSync("build-best-ball-hype.mjs", "utf8");
 for (const need of ["bankWeek", "matchupsHavePoints", "/state/nfl", "live: true"]) {
   if (!buildSrc.includes(need)) fail("build-best-ball-hype missing live bank: " + need);

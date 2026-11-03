@@ -19,6 +19,7 @@ import {
   writeUi,
 } from "./lib.mjs";
 import { buildBestBallHypeBook } from "./lib/best-ball-hype.mjs";
+import { resolveTrumanFourOfSix } from "./lib/finish-scenario.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -164,13 +165,30 @@ async function main() {
   const lastProjWeek = Math.min(playoffWeekStart + Math.max(playoffRounds, 2) - 1, 18);
   const rsFutureWeeks = [];
   const projectionsByWeek = {};
+  const schedule = [];
   for (let w = bankWeek + 1; w <= lastProjWeek; w++) {
     const rows = await matchupsFor(leagueId, w);
     if (w < playoffWeekStart && rows.length) {
       rsFutureWeeks.push({ week: w, rows });
+      const byM = new Map();
+      for (const row of rows) {
+        if (row.matchup_id == null) continue;
+        if (!byM.has(row.matchup_id)) byM.set(row.matchup_id, []);
+        byM.get(row.matchup_id).push(Number(row.roster_id));
+      }
+      for (const g of byM.values()) {
+        if (g.length < 2) continue;
+        schedule.push({ week: w, a: g[0], b: g[1] });
+      }
     }
     projectionsByWeek[w] = await fetchWeekProjections(season, w, ptsKey);
   }
+
+  // Default Cuckle scenario: Truman wins 4 of last 6 → Championship cut.
+  const wantScenario = String(process.env.FINISH_SCENARIO || "truman_4of6").trim();
+  const scenario = (wantScenario === "truman_4of6" || wantScenario === "1")
+    ? resolveTrumanFourOfSix({ ownerByRoster, nameByUser, schedule })
+    : null;
 
   const book = buildBestBallHypeBook({
     weeks,
@@ -188,16 +206,23 @@ async function main() {
     playoffTeams,
     leagueId,
     asOf: new Date().toISOString().slice(0, 10),
+    scenario,
   });
 
   if (bankWeek > lastOfficial) {
     book.live_week = bankWeek;
     book.official_last_scored = lastOfficial;
     book.note = `W${bankWeek} banked from live Sleeper matchup points`
-      + ` (official last_scored_leg=${lastOfficial}).`;
+      + ` (official last_scored_leg=${lastOfficial}).`
+      + (scenario && scenario.note ? (" " + scenario.note) : "");
     if (book.rule && typeof book.rule === "object") {
       book.rule.live_bank = `W${bankWeek} set-lineup points folded into RS seeding`;
     }
+  } else if (scenario && scenario.note) {
+    book.note = (book.note ? book.note + " " : "") + scenario.note;
+  }
+  if (scenario) {
+    console.log("  scenario:", scenario.final_from_4_4, scenario.rest_record, scenario.note);
   }
 
   writeUi("best-ball-hype.json", book);

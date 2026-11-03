@@ -33,6 +33,7 @@ import {
   attachMonteCarloToBook,
 } from "./lib/projected-finish-mc.mjs";
 import { optimalProjectedLineup } from "./lib/best-ball-lineup.mjs";
+import { resolveTrumanFourOfSix } from "./lib/finish-scenario.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -77,7 +78,7 @@ async function remainingPairs(leagueId, lastScored, playoffStart) {
     let weekPairs = 0;
     for (const group of by.values()) {
       if (group.length < 2) continue;
-      pairs.push([group[0], group[1]]);
+      pairs.push([group[0], group[1], w]);
       weekPairs += 1;
     }
     if (weekPairs) weeks.push(w);
@@ -415,6 +416,15 @@ async function main() {
   const raceIntent = readUi("race-intent.json", null)
     || readJson("race-intent.json", null);
 
+  const wantScenario = String(process.env.FINISH_SCENARIO || "truman_4of6").trim();
+  const scenario = (wantScenario === "truman_4of6" || wantScenario === "1")
+    ? resolveTrumanFourOfSix({
+      ownerByRoster,
+      nameByUser,
+      schedule: (rem.pairs || []).map((p) => ({ week: p[2], a: p[0], b: p[1] })),
+    })
+    : null;
+
   const book = projectFinishBook({
     rosters: rosters || [],
     ownerByRoster,
@@ -429,6 +439,7 @@ async function main() {
     trendByRoster,
     heatByRoster,
     raceIntent,
+    scenario,
   });
 
   // Monte Carlo remaining RS + playoffs — blend mean place into proj_finish
@@ -498,6 +509,7 @@ async function main() {
       week: bankWeek,
       playoffWeekStart: playoffStart,
       nSims: DEFAULT_MC_SIMS,
+      scenario,
     });
   }
 
@@ -513,10 +525,23 @@ async function main() {
       + " Remaining weeks blend best projected lineups (OUT/IR → bench).";
   } else {
     book.note = (book.note ? book.note + " " : "")
-      + "Remaining weeks blend best projected lineups (OUT/IR → bench).";
+      + `Official through W${bankWeek}.`
+      + " Remaining weeks blend best projected lineups (OUT/IR → bench).";
+  }
+  if (scenario && scenario.note) {
+    book.note = (book.note ? book.note + " " : "") + scenario.note;
+    book.scenario = {
+      id: scenario.id,
+      note: scenario.note,
+      rest_record: scenario.rest_record,
+      final_from_4_4: scenario.final_from_4_4,
+      forced: scenario.forced,
+    };
+    console.log("  scenario:", scenario.final_from_4_4, scenario.note);
   }
   if (book.rule && typeof book.rule === "object") {
     book.rule.future_lineup = "optimalProjectedLineup blended into MC mu";
+    if (scenario) book.rule.scenario = scenario.note || scenario.id;
   }
   for (const s of book.seats || []) {
     const mu = projMuByRoster[Number(s.roster_id)];

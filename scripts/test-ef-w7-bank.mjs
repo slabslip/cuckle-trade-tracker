@@ -48,10 +48,12 @@ if (Number(pf.rule?.race_pf_share) <= Number(pf.rule?.race_standings_share)) {
 if ((pf.seats || []).some((s) => Number(s.ties) > 0)) {
   fail("EF book must not carry fake in-flight ties");
 }
-if (Number(pf.week) >= 8) {
+if (Number(pf.week) === 8) {
   const note = String(pf.note || "");
-  if (!note.includes("banked") || !note.includes("last_scored_leg=7")) {
-    fail("W8+ book should note live bank vs official last_scored_leg=7");
+  // Official W8 (no live bank) or prior live-bank note both OK.
+  if (!(note.includes("Official through W8") || note.includes("banked")
+    || note.includes("Truman wins 4 of last 6"))) {
+    fail("W8 book should note official tape and/or Truman 4-of-6 scenario");
   }
 }
 
@@ -67,14 +69,21 @@ if (!(tips.proj_finish < arae.proj_finish)) {
   fail("PF leading indicator: Tips (high PF) must project ahead of ARae (low PF)");
 }
 if (Number(pf.week) === 8) {
-  // Live W8 slate (partial): Ted leading OKC, Truman beating 69ers, Henry trailing Business.
-  if (!(Number(ted.wins) >= 6)) fail("Ted should be at least 6 wins after W8 bank");
-  if (!(Number(truman.wins) >= 4)) fail("Truman should be at least 4-4 after beating 69ers live");
+  // Official W8: Ted 7-1 #1, Truman 4-4. Scenario: Truman 4-of-6 → champ cut.
+  if (Number(ted.wins) !== 7 || Number(ted.losses) !== 1) {
+    fail("official W8: Ted should be 7-1 (got " + ted.record + ")");
+  }
+  if (Number(truman.wins) !== 4 || Number(truman.losses) !== 4) {
+    fail("official W8: Truman should be 4-4 (got " + truman.record + ")");
+  }
   if (Number(ted.place_now) !== 1) {
-    fail("Ted should own place_now #1 on live W8 bank (got #" + ted.place_now + ")");
+    fail("Ted should own place_now #1 on official W8 (got #" + ted.place_now + ")");
   }
   if (!(Number(truman.proj_finish) <= 6)) {
-    fail("Truman live W8 win should keep him in Top 6 proj (got #" + truman.proj_finish + ")");
+    fail("Truman 4-of-6 scenario should keep him in Top 6 proj (got #" + truman.proj_finish + ")");
+  }
+  if (!pf.scenario || pf.scenario.id !== "truman_4of6") {
+    fail("EF book should carry truman_4of6 scenario");
   }
 } else if (Number(pf.week) === 7) {
   if (Number(henry.wins) !== 6 || Number(ted.wins) !== 6) {

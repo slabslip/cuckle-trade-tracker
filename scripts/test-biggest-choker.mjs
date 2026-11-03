@@ -46,7 +46,7 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/biggest-choker.json", "utf8"),
 );
-if (Number(book.v) < 1 || !Array.isArray(book.seats) || book.seats.length < 5) {
+if (Number(book.v) < 2 || !Array.isArray(book.seats) || book.seats.length < 5) {
   fail("biggest-choker book missing seats");
 }
 if (book.seats.length > 10) fail("top list must be at most 10");
@@ -56,6 +56,21 @@ if (!book.seats.every((s) => s.rank && s.season && s.name && s.kind && s.thesis 
 const kinds = new Set(book.seats.map((s) => s.kind));
 if (!kinds.has("playoff_miss") || !kinds.has("title_loss")) {
   fail("book should include playoff_miss and title_loss rows");
+}
+const titleRows = book.seats.filter((s) => s.kind === "title_loss");
+if (!titleRows.length || !titleRows.every((s) => Array.isArray(s.went_off) && s.went_off.length)) {
+  fail("title_loss rows need went_off scorers");
+}
+{
+  const start = page.indexOf("function biggestChokerDetailHtml(");
+  const end = page.indexOf("\n    function ", start + 10);
+  const detail = start >= 0 ? page.slice(start, end < 0 ? start + 2500 : end) : "";
+  if (!detail || detail.includes("Score ranks how locked")) {
+    fail("choke summaries must not keep the score-rank caption");
+  }
+  if (!detail.includes("Went off for the winner")) {
+    fail("detail must surface winner went-off scorers");
+  }
 }
 const yearLeaders = book.seats.filter((s) => s.year_biggest);
 if (yearLeaders.length < 3) fail("expected several year-biggest rows");

@@ -5020,7 +5020,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "biggestchoker202611031445";
+    const DATA_V = "chokerwentoff202611031515";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -14969,6 +14969,11 @@
       if (!seat) return "";
       const year = String(seat.season || "");
       const kind = seat.kind === "title_loss" ? "Lost the chip" : "Missed playoffs";
+      const scorersLine = function (rows) {
+        return (rows || []).map(function (p) {
+          return esc(p.player || "—") + " " + esc(String(p.points));
+        }).join(" · ");
+      };
       let html = '<div class="pf-why">';
       html += '<p class="pf-why-h">In plain English</p>';
       html += "<p><b>" + esc(year) + "</b> — " + esc(kind)
@@ -14981,6 +14986,13 @@
           + " · Week 8 #" + esc(String(seat.place_w8 != null ? seat.place_w8 : "—"))
           + " · finished #" + esc(String(seat.place_final != null ? seat.place_final : "—"))
           + ".</p>";
+        if (seat.went_off && seat.went_off.length) {
+          html += '<p class="pf-why-h">Who went off</p>';
+          html += "<p>While the cut slipped away: "
+            + scorersLine(seat.went_off)
+            + (seat.went_off_note ? (" — " + esc(seat.went_off_note)) : ".")
+            + "</p>";
+        }
       } else if (seat.kind === "title_loss") {
         html += '<p class="pf-why-h">Championship final</p>';
         html += "<p>Lost to <b>" + esc(seat.champ_name || "the champ") + "</b>";
@@ -14997,8 +15009,16 @@
           }
           html += ".</p>";
         }
+        if (seat.went_off && seat.went_off.length) {
+          html += '<p class="pf-why-h">Went off for the winner</p>';
+          html += "<p>" + esc(seat.champ_name || "Champ") + "'s biggest outlier scorers: "
+            + scorersLine(seat.went_off) + ".</p>";
+        }
+        if (seat.own_scorers && seat.own_scorers.length) {
+          html += '<p class="pf-why-h">Their top scorers same week</p>';
+          html += "<p>" + scorersLine(seat.own_scorers) + ".</p>";
+        }
       }
-      html += '<p class="caption">Score ranks how locked they looked versus how far they fell. Year leaders list first, then the next-worst seasons fill the top 10.</p>';
       html += "</div>";
       return html;
     }

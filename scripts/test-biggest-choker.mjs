@@ -31,6 +31,7 @@ for (const need of [
   "Top 10 season chokes",
   "Biggest choker: one flat top-10",
   ".list-row > .row-x",
+  "position: static; flex: 0 0 auto; margin-top: 12px",
   'src[champAt] = "biggest_choker"',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);

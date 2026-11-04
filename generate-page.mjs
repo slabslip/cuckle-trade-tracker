@@ -5014,6 +5014,8 @@ const html = `<!DOCTYPE html>
     let managerArchetypesOpenKey = "";
     let bestBallHypeOpenKey = "";
     let biggestChokerOpenKey = "";
+    let receiptH2hA = "";
+    let receiptH2hB = "";
     let analyzerShareNote = "";
     let cuffsLoading = false;
     let cuffFilterMine = false;
@@ -5036,7 +5038,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261104081954";
+    const DATA_V = "h2h202611041530";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5126,7 +5128,7 @@ const html = `<!DOCTYPE html>
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
-      "best_ball_hype", "projected_finish", "my_trades", "seat_run",
+      "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "passed_around", "my_draft",
     ];
     const DATA_DASH_REDRAFT = [
@@ -5143,7 +5145,7 @@ const html = `<!DOCTYPE html>
       "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
-      "vs_you", "book_top", "seat_manners",
+      "vs_you", "head_to_head", "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
       career_avg: { lab: "Career average", why: "Average finish. Three completed seasons minimum so one year cannot lead." },
@@ -5176,6 +5178,7 @@ const html = `<!DOCTYPE html>
       { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks. Playoff is the winners-bracket title hunt." },
       { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Top 6 champ bracket (1–2 bye). Bottom 4 toilet bowl in best ball so nobody can tank. Future weeks use best projected lineup — OUT/IR sit, best bench fills." },
       { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
+      { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
       { id: "my_trades", lab: "My Trade History", desk: "lists", group: "memory", size: "full", why: "Your partners, then every deal with one name." },
@@ -5300,6 +5303,7 @@ const html = `<!DOCTYPE html>
     let managerArchetypesBook = null;
     let bestBallHypeBook = null;
     let biggestChokerBook = null;
+    let headToHeadBook = null;
     let leagueLoadGen = 0;
     let cosmeticsEquip = { title: null, emblem: null };
     let cosmeticsBySeat = {};
@@ -5634,6 +5638,26 @@ const html = `<!DOCTYPE html>
       const spec = typeof dataDashById === "function" ? dataDashById(id) : null;
       const lab = (spec && spec.lab) || String(id || "Data");
       const leagueName = (activeLeague && activeLeague.name) || (league && league.name) || "League";
+      if ((id === "head_to_head" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "head_to_head"))
+        && receiptH2hA && receiptH2hB && typeof h2hOrientPair === "function") {
+        const pairs = (headToHeadBook && headToHeadBook.pairs) || {};
+        const raw = pairs[h2hPairKey(receiptH2hA, receiptH2hB)];
+        const view = h2hOrientPair(raw, receiptH2hA);
+        const nameA = h2hSeatName(receiptH2hA);
+        const nameB = h2hSeatName(receiptH2hB);
+        let body = leagueName + " · " + lab + "\\n" + nameA + " vs " + nameB;
+        if (view) {
+          body += "\\n" + view.record + " (" + view.games + " games)"
+            + "\\nPF " + view.pf + " · PA " + view.pa;
+          (view.by_season || []).forEach(function (s) {
+            body += "\\n" + s.season + " · " + h2hRecordLine(s.w, s.l, s.t);
+          });
+        } else {
+          body += "\\nNo completed games yet";
+        }
+        return body;
+      }
       const items = typeof dataListItems === "function" ? dataListItems(id) : [];
       const picked = typeof dataListPickSlice === "function"
         ? dataListPickSlice(items, opts.slice, opts.who)
@@ -5729,7 +5753,8 @@ const html = `<!DOCTYPE html>
         || canon === "homesteaders" || canon === "least_traded" || canon === "passed_around"
         || canon === "past_champions" || canon === "projected_finish"
         || canon === "season_arcs" || canon === "manager_archetypes"
-        || canon === "best_ball_hype" || canon === "biggest_choker";
+        || canon === "best_ball_hype" || canon === "biggest_choker"
+        || canon === "head_to_head";
     }
 
     function dataListPickSlice(items, slice, who) {
@@ -7778,7 +7803,7 @@ const html = `<!DOCTYPE html>
         || id === "profit_loss"
         || id === "trade_mark" || id === "pick_print" || id === "my_picks"
         || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
-        || id === "biggest_choker") return "memory";
+        || id === "biggest_choker" || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
       return "who";
@@ -7837,7 +7862,8 @@ const html = `<!DOCTYPE html>
       if (id === "trade_mark" || id === "lopsided" || id === "profit_loss") return false;
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
       if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes"
-        || key === "best_ball_hype" || key === "biggest_choker") return false;
+        || key === "best_ball_hype" || key === "biggest_choker"
+        || key === "head_to_head") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
@@ -7850,7 +7876,7 @@ const html = `<!DOCTYPE html>
       if (id === "season_title" || canon === "season_place") return true;
       if (isFinishCareerTile(canon)) return true;
       if (id === "draft_marks" || id === "held_firsts") return true;
-      if (canon === "best_ball_hype" || canon === "biggest_choker") return true;
+      if (canon === "best_ball_hype" || canon === "biggest_choker" || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
 
@@ -7897,6 +7923,7 @@ const html = `<!DOCTYPE html>
         week_scores: '<path d="M7 15V7M4.8 9.4L7 7l2.2 2.4"/><path d="M17 9v8M14.8 14.6L17 17l2.2-2.4"/>',
         best_ball_hype: '<circle cx="12" cy="12" r="7.2"/><path d="M9 12.2l2 2 4.2-4.4"/><path d="M8 7.2c1.2-1 2.6-1.5 4-1.5s2.8.5 4 1.5"/>',
         biggest_choker: '<path d="M12 4v8"/><circle cx="12" cy="17.2" r="1.4"/><path d="M8.2 7.5c1.1-1.6 2.4-2.3 3.8-2.3s2.7.7 3.8 2.3"/>',
+        head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
         forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
         passed_around: '<path d="M20 8a8 8 0 1 0 1.6 6"/><polyline points="16 8 20 8 20 4"/>',
         seat_draft: '<circle cx="12" cy="12" r="7.2"/><circle cx="12" cy="12" r="2.4"/><path d="M12 3.2v2.2M12 18.6v2.2M3.2 12h2.2M18.6 12h2.2"/>',
@@ -8950,6 +8977,10 @@ const html = `<!DOCTYPE html>
             + '<div class="margin">1st</div></div></button>';
         });
       }
+      if (id === "head_to_head") {
+        if (receiptH2hA && receiptH2hB) return headToHeadCompareHtml(receiptH2hA, receiptH2hB);
+        return headToHeadPickerHtml(needle);
+      }
       if (id === "vs_you") {
         const claimed = typeof authSeatId === "function" ? authSeatId() : "";
         if (!claimed) return '<p class="caption">Claim your seat to see your tape vs them.</p>';
@@ -9290,6 +9321,16 @@ const html = `<!DOCTYPE html>
           + " Lost the chip = championship runner-up who had the better record, higher points rank, or led PF."
           + " Tap a row for the story.";
       }
+      else if (id === "head_to_head") {
+        if (receiptH2hA && receiptH2hB) {
+          caption = "All-time head-to-head — every completed Sleeper week, regular season and playoffs."
+            + " Record is from " + h2hSeatName(receiptH2hA) + "'s side.";
+        } else if (receiptH2hA) {
+          caption = "First seat locked. Pick the second seat to open the career series.";
+        } else {
+          caption = "Pick two seats. Career W-L across every year on the Sleeper book.";
+        }
+      }
       else if (id === "season_place") {
         const yearWant = typeof finishYearWant === "function" ? finishYearWant() : "";
         if (leagueFormat().kind !== "redraft") {
@@ -9371,6 +9412,9 @@ const html = `<!DOCTYPE html>
       const draftBack = (id === "league_draft" && receiptDraftSeat)
         ? '<button type="button" class="chip" data-draft-back="1">← Seats</button> '
         : "";
+      const h2hBack = (id === "head_to_head" && (receiptH2hA || receiptH2hB))
+        ? '<button type="button" class="chip" data-h2h-back="1">← Teams</button> '
+        : "";
       const listAll = ((receiptListSlice || receiptListWho) && typeof dataListShareable === "function" && dataListShareable(id))
         ? '<button type="button" class="chip" data-list-share-all="1">Show all</button> '
         : "";
@@ -9378,7 +9422,7 @@ const html = `<!DOCTYPE html>
         ? { who: receiptListWho }
         : (receiptListSlice ? { slice: receiptListSlice } : {});
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
-        + '<p class="caption">' + vsBack + netBack + histBack + draftBack + listAll
+        + '<p class="caption">' + vsBack + netBack + histBack + draftBack + h2hBack + listAll
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
         + '<div class="tile-share-row">'
@@ -11643,6 +11687,7 @@ const html = `<!DOCTYPE html>
       managerArchetypesBook = null;
       bestBallHypeBook = null;
       biggestChokerBook = null;
+      headToHeadBook = null;
       overnight = null;
       overnightLoading = false;
       overnightOpen = false;
@@ -11653,6 +11698,8 @@ const html = `<!DOCTYPE html>
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
       biggestChokerOpenKey = "";
+      receiptH2hA = "";
+      receiptH2hB = "";
       dataDashTiles = null;
       ledgerBets = null;
       ledgerLoadState = "idle";
@@ -11665,7 +11712,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -11685,6 +11732,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("manager-archetypes.json").catch(() => null),
         getLeagueJson("best-ball-hype.json").catch(() => null),
         getLeagueJson("biggest-choker.json").catch(() => null),
+        getLeagueJson("head-to-head.json").catch(() => null),
       ]);
       if (gen !== leagueLoadGen) return;
       const nowId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
@@ -11771,6 +11819,10 @@ const html = `<!DOCTYPE html>
         biggestChokerBook = biggestChokerRaw && Number(biggestChokerRaw.v) >= 1
           && Array.isArray(biggestChokerRaw.seats) ? biggestChokerRaw : null;
       } catch (err) { biggestChokerBook = null; }
+      try {
+        headToHeadBook = headToHeadRaw && Number(headToHeadRaw.v) >= 1
+          && headToHeadRaw.pairs ? headToHeadRaw : null;
+      } catch (err) { headToHeadBook = null; }
       getLeagueJson("name-history.json").then(function (book) {
         nameHistoryBook = book && book.v === 1 && book.seats ? book : null;
         if (appScreen === "joinWelcome") render();
@@ -13037,6 +13089,8 @@ const html = `<!DOCTYPE html>
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
       biggestChokerOpenKey = "";
+      receiptH2hA = "";
+      receiptH2hB = "";
       if (typeof receiptPlReset === "function") receiptPlReset();
       if (typeof receiptResetPlayerFilter === "function") receiptResetPlayerFilter();
     }
@@ -13274,6 +13328,20 @@ const html = `<!DOCTYPE html>
         } else {
           const at = softDropAt(4);
           if (at >= 0) src[at] = "biggest_choker";
+        }
+      }
+      // Dynasty: pin Head to head (swap Manager avg finish when present).
+      if (dynasty && src.indexOf("head_to_head") < 0 && dataDashById("head_to_head")) {
+        const placeAt = src.indexOf("season_place");
+        if (placeAt >= 0) {
+          src[placeAt] = "head_to_head";
+        } else if (src.length < DATA_DASH_MAX) {
+          const after = src.indexOf("biggest_choker");
+          if (after >= 0) src.splice(after + 1, 0, "head_to_head");
+          else src.push("head_to_head");
+        } else {
+          const at = softDropAt(4);
+          if (at >= 0) src[at] = "head_to_head";
         }
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
@@ -14973,6 +15041,126 @@ const html = `<!DOCTYPE html>
       html += '<p class="caption">Future weeks = best projected lineup (OUT/IR → bench). Champ + toilet both score that way; toilet stays best-ball so nobody can tank.</p>';
       html += "</div>";
       return html;
+    }
+
+    function h2hPairKey(a, b) {
+      const x = String(a || "");
+      const y = String(b || "");
+      return x < y ? (x + "|" + y) : (y + "|" + x);
+    }
+
+    function h2hSeatName(uid) {
+      const id = String(uid || "");
+      const seats = (headToHeadBook && headToHeadBook.seats) || [];
+      for (let i = 0; i < seats.length; i++) {
+        if (String(seats[i].user_id) === id) return seats[i].name || id;
+      }
+      const mem = (members || []).find(function (m) { return String(m.user_id) === id; });
+      return (mem && mem.name) || id;
+    }
+
+    function h2hOrientPair(pair, fromUid) {
+      if (!pair) return null;
+      const from = String(fromUid || "");
+      const flip = from === String(pair.b);
+      if (!flip && from !== String(pair.a)) return null;
+      const seasons = (pair.by_season || []).map(function (s) {
+        return {
+          season: s.season,
+          w: flip ? s.l : s.w,
+          l: flip ? s.w : s.l,
+          t: s.t,
+          pf: flip ? s.pa : s.pf,
+          pa: flip ? s.pf : s.pa,
+          games: s.games,
+        };
+      }).sort(function (a, b) {
+        return String(b.season).localeCompare(String(a.season));
+      });
+      const w = flip ? pair.l : pair.w;
+      const l = flip ? pair.w : pair.l;
+      const t = pair.t || 0;
+      return {
+        a: from,
+        b: flip ? pair.a : pair.b,
+        w: w,
+        l: l,
+        t: t,
+        pf: flip ? pair.pa : pair.pf,
+        pa: flip ? pair.pf : pair.pa,
+        games: pair.games,
+        by_season: seasons,
+        record: t ? (w + "-" + l + "-" + t) : (w + "-" + l),
+      };
+    }
+
+    function h2hRecordLine(w, l, t) {
+      const base = String(w || 0) + "-" + String(l || 0);
+      return (t || 0) > 0 ? (base + "-" + t) : base;
+    }
+
+    function headToHeadCompareHtml(uidA, uidB) {
+      const a = String(uidA || "");
+      const b = String(uidB || "");
+      if (!a || !b || a === b) return '<p class="caption">Pick two different seats.</p>';
+      const pairs = (headToHeadBook && headToHeadBook.pairs) || {};
+      const raw = pairs[h2hPairKey(a, b)];
+      const nameA = h2hSeatName(a);
+      const nameB = h2hSeatName(b);
+      if (!raw || !raw.games) {
+        return '<p class="caption">' + esc(nameA) + " and " + esc(nameB)
+          + " have no completed head-to-head games on the Sleeper book yet.</p>";
+      }
+      const view = h2hOrientPair(raw, a);
+      if (!view) return '<p class="caption">Could not read this pairing.</p>';
+      let html = '<div class="h2h-compare">';
+      html += '<div class="row"><div class="row-top"><div><div class="names">'
+        + esc(nameA) + " vs " + esc(nameB) + "</div>"
+        + '<div class="date">' + esc(String(view.games)) + " games · all years</div></div>"
+        + '<div class="margin">' + esc(view.record) + "</div></div></div>";
+      html += '<p class="caption">' + esc(nameA) + " "
+        + esc(view.record) + " · PF " + esc(String(view.pf))
+        + " · PA " + esc(String(view.pa)) + "</p>";
+      html += '<p class="caption">By season</p>';
+      (view.by_season || []).forEach(function (s) {
+        html += '<div class="row"><div class="row-top"><div><div class="names">'
+          + esc(String(s.season)) + "</div>"
+          + '<div class="date">PF ' + esc(String(s.pf)) + " · PA " + esc(String(s.pa))
+          + " · " + esc(String(s.games)) + " games</div></div>"
+          + '<div class="margin">' + esc(h2hRecordLine(s.w, s.l, s.t)) + "</div></div></div>";
+      });
+      html += "</div>";
+      return html;
+    }
+
+    function headToHeadPickerHtml(needle) {
+      if (!headToHeadBook) {
+        return '<p class="caption">Head to head book not loaded yet.</p>';
+      }
+      const seats = (headToHeadBook.seats || []).slice();
+      const you = typeof authSeatId === "function" ? String(authSeatId() || "") : "";
+      const q = String(needle || "").trim().toLowerCase();
+      const pickingB = !!receiptH2hA && !receiptH2hB;
+      const taken = pickingB ? String(receiptH2hA) : "";
+      const lead = pickingB
+        ? ('<p class="caption">' + esc(h2hSeatName(receiptH2hA)) + " — pick who they play.</p>")
+        : '<p class="caption">Pick the first seat.</p>';
+      const rows = seats.filter(function (s) {
+        if (taken && String(s.user_id) === taken) return false;
+        if (!q) return true;
+        return String(s.name || "").toLowerCase().indexOf(q) >= 0;
+      }).map(function (s) {
+        const uid = String(s.user_id || "");
+        const mine = you && uid === you;
+        return '<button type="button" class="row' + (mine ? " you" : "") + '" data-h2h-pick="'
+          + esc(uid) + '">'
+          + '<div class="row-top"><div><div class="names">' + esc(s.name || uid) + "</div>"
+          + (mine ? '<div class="date">You</div>' : "")
+          + "</div>"
+          + '<div class="margin">' + (pickingB ? "vs" : "Pick") + "</div></div></button>";
+      });
+      if (!rows.length) return lead + '<p class="caption">No seats match.</p>';
+      return lead + rows.join("");
     }
 
     function biggestChokerDetailHtml(seat) {
@@ -17758,6 +17946,12 @@ const html = `<!DOCTYPE html>
           lead ? String(lead.season || "Open") : "Open",
           lead ? ((lead.name || "Lead") + " · " + (lead.lab || "choke")) : "Season chokes · top 10");
       }
+      if (id === "head_to_head") {
+        const n = headToHeadBook && headToHeadBook.n_pairs;
+        return dataDashHead(spec,
+          n ? (n + " pairs") : "Open",
+          "Pick two seats · all-time W-L");
+      }
       if (isFinishCareerTile(id)) {
         const lead = finishCareerSeats(id)[0];
         const tag = id === "sacko" ? " last place"
@@ -18010,6 +18204,8 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        receiptH2hA = "";
+        receiptH2hB = "";
         receiptResetPlayerFilter();
         if (typeof receiptPlReset === "function") receiptPlReset();
         if (receiptWhoList === "my_draft") {
@@ -24116,6 +24312,13 @@ const html = `<!DOCTYPE html>
           render();
           return true;
         }
+        if (receiptWhoList === "head_to_head" && (receiptH2hA || receiptH2hB)) {
+          if (receiptH2hB) receiptH2hB = "";
+          else receiptH2hA = "";
+          receiptQ = "";
+          render();
+          return true;
+        }
         receiptWhoList = "";
         receiptQ = "";
         receiptDoorFilter = "all";
@@ -24130,6 +24333,8 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        receiptH2hA = "";
+        receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         homeTab = "history";
@@ -36619,10 +36824,30 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        receiptH2hA = "";
+        receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
         receiptResetPlayerFilter();
         dataRoom = "overview";
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const h2hBackBtn = e.target.closest("[data-h2h-back]");
+      if (h2hBackBtn) {
+        if (receiptH2hB) receiptH2hB = "";
+        else receiptH2hA = "";
+        receiptQ = "";
+        render();
+        return;
+      }
+      const h2hPickBtn = e.target.closest("[data-h2h-pick]");
+      if (h2hPickBtn) {
+        const uid = h2hPickBtn.getAttribute("data-h2h-pick") || "";
+        if (!uid) return;
+        if (!receiptH2hA) receiptH2hA = uid;
+        else if (!receiptH2hB && uid !== receiptH2hA) receiptH2hB = uid;
+        receiptQ = "";
         render();
         return;
       }
@@ -40542,8 +40767,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 45 || uniq.size !== 45) {
-    throw new Error("DATA_REPORTS must hold exactly 45 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 46 || uniq.size !== 46) {
+    throw new Error("DATA_REPORTS must hold exactly 46 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -40553,8 +40778,8 @@ if (!inline.includes("function dataDashHtml(")
     || !uniq.has("rs_avg") || !uniq.has("playoff_n") || !uniq.has("playoff_avg")
     || !uniq.has("pot_net") || !uniq.has("projected_finish") || !uniq.has("season_place")
     || !uniq.has("season_arcs") || !uniq.has("manager_archetypes") || !uniq.has("trade_helper")
-    || !uniq.has("best_ball_hype") || !uniq.has("biggest_choker")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, and Biggest choker");
+    || !uniq.has("best_ball_hype") || !uniq.has("biggest_choker") || !uniq.has("head_to_head")) {
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, and Head to head");
   }
   const needIds = ["trade_helper", "fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -40604,8 +40829,9 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes("softDrop")
     || !fnSrc("dataDashMigrateMyPicks").includes('src[draftAt] = "best_ball_hype"')
     || !fnSrc("dataDashMigrateMyPicks").includes('src[champAt] = "biggest_choker"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src[placeAt] = "head_to_head"')
     || fnSrc("dataDashMigrateMyPicks").includes('src[src.length - 1] = "trade_helper"')) {
-    throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype + Biggest choker on saved dynasty boards");
+    throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype + Biggest choker + Head to head on saved dynasty boards");
   }
   if (!uniq.has("best_ball_hype") || defIds[12] !== "best_ball_hype" || doorIds[12] !== "best_ball_hype") {
     throw new Error("Best Ball Hype must be default board tile 13 (League Data door)");
@@ -41515,12 +41741,39 @@ if (!inline.includes("function biggestChokerDetailHtml(")
   || !fnSrc("receiptPortalLeave").includes('biggestChokerOpenKey = ""')) {
   throw new Error("Biggest choker must be a catalog door with expand rows and biggest-choker.json");
 }
+if (!inline.includes('id: "head_to_head"')
+  || !inline.includes('lab: "Head to head"')
+  || !inline.includes('getLeagueJson("head-to-head.json")')
+  || !inline.includes("function headToHeadCompareHtml(")
+  || !inline.includes("function headToHeadPickerHtml(")
+  || !inline.includes('data-h2h-pick="')
+  || !inline.includes('closest("[data-h2h-pick]")')
+  || !inline.includes('data-h2h-back="')
+  || !inline.includes("let receiptH2hA")
+  || !inline.includes("let receiptH2hB")
+  || !inline.includes("let headToHeadBook")
+  || !fnSrc("receiptIsDoor").includes('canon === "head_to_head"')
+  || !fnSrc("receiptPortalLeave").includes('receiptH2hA = ""')
+  || !fnSrc("receiptPortalNeedsSearch").includes('key === "head_to_head"')
+  || !fnSrc("dataDashMigrateMyPicks").includes('src[placeAt] = "head_to_head"')
+  || !fnSrc("receiptWhoListHtml").includes("Pick two seats")) {
+  throw new Error("Head to head must be a catalog door with two-seat picker and head-to-head.json");
+}
+{
+  const reportStart = inline.indexOf("    const DATA_REPORTS = [");
+  const reportEnd = inline.indexOf("];", reportStart);
+  const reports = inline.slice(reportStart, reportEnd);
+  if (!reports.includes('lab: "Head to head"') || /lab:\s*"HEAD TO HEAD"/.test(reports)) {
+    throw new Error("Head to head lab must stay sentence case");
+  }
+}
 {
   const designSeeds = [
     "design-manager-types-expand.html",
     "design-season-arcs-expand.html",
     "design-best-ball-hype.html",
     "design-biggest-choker.html",
+    "design-head-to-head.html",
   ];
   for (const path of designSeeds) {
     const seed = fs.readFileSync(path, "utf8");

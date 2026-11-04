@@ -5030,7 +5030,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "h2h202611041530";
+    const DATA_V = "h2hclear202611041545";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9405,7 +9405,7 @@
         ? '<button type="button" class="chip" data-draft-back="1">← Seats</button> '
         : "";
       const h2hBack = (id === "head_to_head" && (receiptH2hA || receiptH2hB))
-        ? '<button type="button" class="chip" data-h2h-back="1">← Teams</button> '
+        ? '<button type="button" class="chip" data-h2h-back="1">Clear</button> '
         : "";
       const listAll = ((receiptListSlice || receiptListWho) && typeof dataListShareable === "function" && dataListShareable(id))
         ? '<button type="button" class="chip" data-list-share-all="1">Show all</button> '
@@ -24305,8 +24305,8 @@
           return true;
         }
         if (receiptWhoList === "head_to_head" && (receiptH2hA || receiptH2hB)) {
-          if (receiptH2hB) receiptH2hB = "";
-          else receiptH2hA = "";
+          receiptH2hA = "";
+          receiptH2hB = "";
           receiptQ = "";
           render();
           return true;
@@ -36827,8 +36827,8 @@
       }
       const h2hBackBtn = e.target.closest("[data-h2h-back]");
       if (h2hBackBtn) {
-        if (receiptH2hB) receiptH2hB = "";
-        else receiptH2hA = "";
+        receiptH2hA = "";
+        receiptH2hB = "";
         receiptQ = "";
         render();
         return;

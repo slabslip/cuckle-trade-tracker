@@ -5038,7 +5038,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "h2h202611041530";
+    const DATA_V = "h2hclear202611041545";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9413,7 +9413,7 @@ const html = `<!DOCTYPE html>
         ? '<button type="button" class="chip" data-draft-back="1">← Seats</button> '
         : "";
       const h2hBack = (id === "head_to_head" && (receiptH2hA || receiptH2hB))
-        ? '<button type="button" class="chip" data-h2h-back="1">← Teams</button> '
+        ? '<button type="button" class="chip" data-h2h-back="1">Clear</button> '
         : "";
       const listAll = ((receiptListSlice || receiptListWho) && typeof dataListShareable === "function" && dataListShareable(id))
         ? '<button type="button" class="chip" data-list-share-all="1">Show all</button> '
@@ -24313,8 +24313,8 @@ const html = `<!DOCTYPE html>
           return true;
         }
         if (receiptWhoList === "head_to_head" && (receiptH2hA || receiptH2hB)) {
-          if (receiptH2hB) receiptH2hB = "";
-          else receiptH2hA = "";
+          receiptH2hA = "";
+          receiptH2hB = "";
           receiptQ = "";
           render();
           return true;
@@ -36835,8 +36835,8 @@ const html = `<!DOCTYPE html>
       }
       const h2hBackBtn = e.target.closest("[data-h2h-back]");
       if (h2hBackBtn) {
-        if (receiptH2hB) receiptH2hB = "";
-        else receiptH2hA = "";
+        receiptH2hA = "";
+        receiptH2hB = "";
         receiptQ = "";
         render();
         return;
@@ -41749,6 +41749,7 @@ if (!inline.includes('id: "head_to_head"')
   || !inline.includes('data-h2h-pick="')
   || !inline.includes('closest("[data-h2h-pick]")')
   || !inline.includes('data-h2h-back="')
+  || !fnSrc("receiptWhoListHtml").includes(">Clear</button>")
   || !inline.includes("let receiptH2hA")
   || !inline.includes("let receiptH2hB")
   || !inline.includes("let headToHeadBook")
@@ -41758,6 +41759,16 @@ if (!inline.includes('id: "head_to_head"')
   || !fnSrc("dataDashMigrateMyPicks").includes('src[placeAt] = "head_to_head"')
   || !fnSrc("receiptWhoListHtml").includes("Pick two seats")) {
   throw new Error("Head to head must be a catalog door with two-seat picker and head-to-head.json");
+}
+{
+  const clickStart = inline.indexOf('const h2hBackBtn = e.target.closest("[data-h2h-back]")');
+  const clickEnd = inline.indexOf("const h2hPickBtn", clickStart);
+  const clickBlock = clickStart >= 0 && clickEnd > clickStart
+    ? inline.slice(clickStart, clickEnd) : "";
+  if (!clickBlock.includes('receiptH2hA = ""') || !clickBlock.includes('receiptH2hB = ""')
+    || /if \(receiptH2hB\)/.test(clickBlock)) {
+    throw new Error("Head to head Clear must reset both seats in one tap");
+  }
 }
 {
   const reportStart = inline.indexOf("    const DATA_REPORTS = [");

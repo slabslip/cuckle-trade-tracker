@@ -28,6 +28,7 @@ for (const need of [
   'data-h2h-pick="',
   'closest("[data-h2h-pick]")',
   'data-h2h-back="',
+  ">Clear</button>",
   'getLeagueJson("head-to-head.json")',
   "receiptH2hA",
   "receiptH2hB",
@@ -35,6 +36,24 @@ for (const need of [
   "Pick two seats",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
+}
+{
+  const start = page.indexOf("function receiptWhoListHtml(");
+  const end = page.indexOf("\n    function ", start + 10);
+  const who = start >= 0 ? page.slice(start, end < 0 ? start + 8000 : end) : "";
+  if (!who.includes(">Clear</button>") || who.includes(">← Teams</button>")) {
+    fail("Head to head must use Clear, not stepped ← Teams");
+  }
+}
+{
+  const clickStart = page.indexOf('const h2hBackBtn = e.target.closest("[data-h2h-back]")');
+  const clickEnd = page.indexOf("const h2hPickBtn", clickStart);
+  const clickBlock = clickStart >= 0 && clickEnd > clickStart
+    ? page.slice(clickStart, clickEnd) : "";
+  if (!clickBlock.includes('receiptH2hA = ""') || !clickBlock.includes('receiptH2hB = ""')
+    || /if \(receiptH2hB\)/.test(clickBlock)) {
+    fail("Clear must wipe both seats in one tap");
+  }
 }
 {
   const reportStart = page.indexOf("const DATA_REPORTS = [");

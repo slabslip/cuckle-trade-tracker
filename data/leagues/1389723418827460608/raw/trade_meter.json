@@ -4122,6 +4122,940 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1423445735961120768",
+    "date": "2026-11-03",
+    "season": "2026",
+    "week": 8,
+    "user_ids": [
+      "458342725222133760",
+      "741001884449525760"
+    ],
+    "names": [
+      "TrumanCooper",
+      "fatassmexican"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 61,
+            "sent_today": 194,
+            "today_delta": -133,
+            "t0": 61,
+            "t0_delta": -133,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 61,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 194,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 61,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "741001884449525760": {
+            "name": "fatassmexican",
+            "today": 194,
+            "sent_today": 61,
+            "today_delta": 133,
+            "t0": 194,
+            "t0_delta": 133,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 194,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 61,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 194,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 61,
+              "fatassmexican": 194
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 61,
+            "sent_today": 194,
+            "today_delta": -133,
+            "t0": 61,
+            "t0_delta": -133,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 61,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 194,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 61,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "741001884449525760": {
+            "name": "fatassmexican",
+            "today": 194,
+            "sent_today": 61,
+            "today_delta": 133,
+            "t0": 194,
+            "t0_delta": 133,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 194,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 61,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 194,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 61,
+              "fatassmexican": 194
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 1993,
+            "sent_today": 2655,
+            "today_delta": -662,
+            "t0": 1993,
+            "t0_delta": -662,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 1993,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1993
+              }
+            ],
+            "sent": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 2655,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2655
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "741001884449525760": {
+            "name": "fatassmexican",
+            "today": 2655,
+            "sent_today": 1993,
+            "today_delta": 662,
+            "t0": 2655,
+            "t0_delta": 662,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Woody Marks",
+                "kind": "player",
+                "asset_key": "player:12474",
+                "value": 2655,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2655
+              }
+            ],
+            "sent": [
+              {
+                "label": "Kirk Cousins",
+                "kind": "player",
+                "asset_key": "player:1166",
+                "value": 1993,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1993
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 1993,
+              "fatassmexican": 2655
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 1993,
+              "sent_today": 2655,
+              "today_delta": -662,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Kirk Cousins",
+                  "kind": "player",
+                  "asset_key": "player:1166",
+                  "value": 1993,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Woody Marks",
+                  "kind": "player",
+                  "asset_key": "player:12474",
+                  "value": 2655,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "741001884449525760": {
+              "name": "fatassmexican",
+              "today": 2655,
+              "sent_today": 1993,
+              "today_delta": 662,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Woody Marks",
+                  "kind": "player",
+                  "asset_key": "player:12474",
+                  "value": 2655,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Kirk Cousins",
+                  "kind": "player",
+                  "asset_key": "player:1166",
+                  "value": 1993,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 1993,
+              "sent_today": 2655,
+              "today_delta": -662,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Kirk Cousins",
+                  "kind": "player",
+                  "asset_key": "player:1166",
+                  "value": 1993,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Woody Marks",
+                  "kind": "player",
+                  "asset_key": "player:12474",
+                  "value": 2655,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "741001884449525760": {
+              "name": "fatassmexican",
+              "today": 2655,
+              "sent_today": 1993,
+              "today_delta": 662,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Woody Marks",
+                  "kind": "player",
+                  "asset_key": "player:12474",
+                  "value": 2655,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Kirk Cousins",
+                  "kind": "player",
+                  "asset_key": "player:1166",
+                  "value": 1993,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
+    "transaction_id": "1423439597098037248",
+    "date": "2026-11-03",
+    "season": "2026",
+    "week": 8,
+    "user_ids": [
+      "458342725222133760",
+      "1132151393051095040"
+    ],
+    "names": [
+      "TrumanCooper",
+      "Tbow00"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 152,
+            "sent_today": 3304,
+            "today_delta": -3152,
+            "t0": 152,
+            "t0_delta": -3152,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 152,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 3304,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 152,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "1132151393051095040": {
+            "name": "Tbow00",
+            "today": 3304,
+            "sent_today": 152,
+            "today_delta": 3152,
+            "t0": 3304,
+            "t0_delta": 3152,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 3304,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 152,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 3304,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 152,
+              "Tbow00": 3304
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 152,
+            "sent_today": 3304,
+            "today_delta": -3152,
+            "t0": 152,
+            "t0_delta": -3152,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 152,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 3304,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 152,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "1132151393051095040": {
+            "name": "Tbow00",
+            "today": 3304,
+            "sent_today": 152,
+            "today_delta": 3152,
+            "t0": 3304,
+            "t0_delta": 3152,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 3304,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 152,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 3304,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 152,
+              "Tbow00": 3304
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 2506,
+            "sent_today": 4922,
+            "today_delta": -2416,
+            "t0": 2506,
+            "t0_delta": -2416,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 2506,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2506
+              }
+            ],
+            "sent": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 4922,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4922
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "1132151393051095040": {
+            "name": "Tbow00",
+            "today": 4922,
+            "sent_today": 2506,
+            "today_delta": 2416,
+            "t0": 4922,
+            "t0_delta": 2416,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Tucker Kraft",
+                "kind": "player",
+                "asset_key": "player:9484",
+                "value": 4922,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4922
+              }
+            ],
+            "sent": [
+              {
+                "label": "Tyler Allgeier",
+                "kind": "player",
+                "asset_key": "player:8132",
+                "value": 2506,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2506
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-10-20",
+            "points": {
+              "TrumanCooper": 2506,
+              "Tbow00": 4922
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 2506,
+              "sent_today": 4922,
+              "today_delta": -2416,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Tyler Allgeier",
+                  "kind": "player",
+                  "asset_key": "player:8132",
+                  "value": 2506,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Tucker Kraft",
+                  "kind": "player",
+                  "asset_key": "player:9484",
+                  "value": 4922,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "1132151393051095040": {
+              "name": "Tbow00",
+              "today": 4922,
+              "sent_today": 2506,
+              "today_delta": 2416,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Tucker Kraft",
+                  "kind": "player",
+                  "asset_key": "player:9484",
+                  "value": 4922,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Tyler Allgeier",
+                  "kind": "player",
+                  "asset_key": "player:8132",
+                  "value": 2506,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 2506,
+              "sent_today": 4922,
+              "today_delta": -2416,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Tyler Allgeier",
+                  "kind": "player",
+                  "asset_key": "player:8132",
+                  "value": 2506,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Tucker Kraft",
+                  "kind": "player",
+                  "asset_key": "player:9484",
+                  "value": 4922,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "1132151393051095040": {
+              "name": "Tbow00",
+              "today": 4922,
+              "sent_today": 2506,
+              "today_delta": 2416,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Tucker Kraft",
+                  "kind": "player",
+                  "asset_key": "player:9484",
+                  "value": 4922,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Tyler Allgeier",
+                  "kind": "player",
+                  "asset_key": "player:8132",
+                  "value": 2506,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1421238329533329408",
     "date": "2026-10-28",
     "season": "2026",

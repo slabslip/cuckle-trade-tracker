@@ -432,6 +432,78 @@
     "label": "Drake Maye"
   },
   {
+    "transaction_id": "1423445735961120768",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:1166",
+    "label": "Kirk Cousins"
+  },
+  {
+    "transaction_id": "1423445735961120768",
+    "direction": "in",
+    "to_user_id": "741001884449525760",
+    "to_roster_id": 10,
+    "kind": "player",
+    "asset_key": "player:12474",
+    "label": "Woody Marks"
+  },
+  {
+    "transaction_id": "1423445735961120768",
+    "direction": "out",
+    "from_user_id": "741001884449525760",
+    "from_roster_id": 10,
+    "kind": "player",
+    "asset_key": "player:1166",
+    "label": "Kirk Cousins"
+  },
+  {
+    "transaction_id": "1423445735961120768",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:12474",
+    "label": "Woody Marks"
+  },
+  {
+    "transaction_id": "1423439597098037248",
+    "direction": "in",
+    "to_user_id": "458342725222133760",
+    "to_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:8132",
+    "label": "Tyler Allgeier"
+  },
+  {
+    "transaction_id": "1423439597098037248",
+    "direction": "in",
+    "to_user_id": "1132151393051095040",
+    "to_roster_id": 5,
+    "kind": "player",
+    "asset_key": "player:9484",
+    "label": "Tucker Kraft"
+  },
+  {
+    "transaction_id": "1423439597098037248",
+    "direction": "out",
+    "from_user_id": "1132151393051095040",
+    "from_roster_id": 5,
+    "kind": "player",
+    "asset_key": "player:8132",
+    "label": "Tyler Allgeier"
+  },
+  {
+    "transaction_id": "1423439597098037248",
+    "direction": "out",
+    "from_user_id": "458342725222133760",
+    "from_roster_id": 2,
+    "kind": "player",
+    "asset_key": "player:9484",
+    "label": "Tucker Kraft"
+  },
+  {
     "transaction_id": "1421238329533329408",
     "direction": "in",
     "to_user_id": "458342725222133760",

@@ -370,5 +370,53 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-11-03",
+    "season": "2026",
+    "week": 8,
+    "transaction_id": "1423445735961120768",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Kirk Cousins"
+        ],
+        "out": [
+          "Woody Marks"
+        ]
+      },
+      "fatassmexican": {
+        "in": [
+          "Woody Marks"
+        ],
+        "out": [
+          "Kirk Cousins"
+        ]
+      }
+    }
+  },
+  {
+    "date": "2026-11-03",
+    "season": "2026",
+    "week": 8,
+    "transaction_id": "1423439597098037248",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Tyler Allgeier"
+        ],
+        "out": [
+          "Tucker Kraft"
+        ]
+      },
+      "Tbow00": {
+        "in": [
+          "Tucker Kraft"
+        ],
+        "out": [
+          "Tyler Allgeier"
+        ]
+      }
+    }
   }
 ]

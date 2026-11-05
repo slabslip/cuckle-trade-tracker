@@ -2,1892 +2,1898 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9488",
-    "value": 10160
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:7564",
-    "value": 10160
+    "value": 10113
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:9488",
+    "value": 10018
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:9509",
     "value": 9580
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:9221",
-    "value": 9292
+    "value": 9314
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:7547",
     "value": 9184
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:6786",
-    "value": 8928
+    "value": 9119
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6794",
-    "value": 8907
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:9493",
-    "value": 8866
+    "value": 8949
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12527",
-    "value": 8340
+    "as_of": "2026-11-05",
+    "asset_key": "player:6794",
+    "value": 8949
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11632",
-    "value": 7920
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13287",
-    "value": 7846
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:8151",
-    "value": 7700
+    "value": 8108
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8138",
-    "value": 7556
+    "as_of": "2026-11-05",
+    "asset_key": "player:12527",
+    "value": 7995
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11632",
+    "value": 7939
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13287",
+    "value": 7312
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:8112",
-    "value": 7381
+    "value": 7295
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8138",
+    "value": 7295
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:4984",
-    "value": 6911
+    "value": 7009
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8144",
-    "value": 6798
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8155",
-    "value": 6687
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12526",
-    "value": 6625
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:6813",
-    "value": 6593
+    "value": 6943
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8146",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8144",
+    "value": 6656
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12526",
+    "value": 6547
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8155",
     "value": 6380
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:1",
-    "value": 6265,
+    "value": 6334,
     "label": "2026 Pick 1.01"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8146",
+    "value": 6306
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:11604",
-    "value": 6002
+    "value": 6073
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8130",
-    "value": 5904
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:7569",
-    "value": 5862
+    "value": 5918
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:12514",
-    "value": 5541
+    "value": 5890
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8130",
+    "value": 5740
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:2",
-    "value": 5502,
+    "value": 5589,
     "label": "2026 Pick 1.02"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11564",
+    "value": 5502
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:4881",
-    "value": 5274
+    "value": 5337
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9997",
-    "value": 5249
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9226",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4034",
     "value": 5225
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13279",
-    "value": 5188
+    "as_of": "2026-11-05",
+    "asset_key": "player:9997",
+    "value": 5213
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12507",
-    "value": 5164
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:7525",
-    "value": 5092
+    "value": 5044
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11564",
-    "value": 5068
+    "as_of": "2026-11-05",
+    "asset_key": "player:9226",
+    "value": 4915
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:8137",
-    "value": 4881
+    "value": 4869
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4046",
-    "value": 4689
+    "as_of": "2026-11-05",
+    "asset_key": "player:12519",
+    "value": 4812
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7526",
-    "value": 4474
+    "as_of": "2026-11-05",
+    "asset_key": "player:13279",
+    "value": 4559
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9487",
-    "value": 4464
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:3",
-    "value": 4455,
+    "value": 4512,
     "label": "2026 Pick 1.03"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12518",
-    "value": 4319
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:9224",
-    "value": 4299
+    "value": 4506
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11635",
-    "value": 4279
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:5859",
+    "value": 4453
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11635",
+    "value": 4401
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4046",
+    "value": 4370
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12517",
     "value": 4259
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4034",
+    "as_of": "2026-11-05",
+    "asset_key": "player:9487",
     "value": 4259
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12519",
-    "value": 4179
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:1:Early",
-    "value": 4127,
+    "value": 4178,
     "label": "2027 Early 1st"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12518",
+    "value": 4111
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:6770",
-    "value": 4044
+    "value": 4063
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12517",
-    "value": 3969
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:10859",
-    "value": 3932
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:8167",
-    "value": 3913
+    "value": 4016
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6904",
-    "value": 3742
+    "as_of": "2026-11-05",
+    "asset_key": "player:7526",
+    "value": 3960
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:11560",
-    "value": 3734
+    "value": 3690
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:10859",
+    "value": 3690
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8150",
+    "value": 3673
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:11620",
-    "value": 3630
+    "value": 3664
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:4",
-    "value": 3620,
+    "value": 3656,
     "label": "2026 Pick 1.04"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:6801",
-    "value": 3613
+    "value": 3471
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11566",
-    "value": 3562
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:10236",
-    "value": 3407
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9484",
-    "value": 3304
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13281",
-    "value": 3258
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8150",
-    "value": 3190
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:10229",
-    "value": 3138
+    "value": 3471
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11566",
+    "value": 3367
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12507",
+    "value": 3359
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:7523",
-    "value": 3079
+    "value": 3335
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11584",
+    "value": 3094
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:8148",
-    "value": 3036
+    "value": 3065
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12501",
+    "value": 3058
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4866",
+    "value": 3050
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:8183",
     "value": 3008
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:5",
-    "value": 2952,
+    "value": 2973,
     "label": "2026 Pick 1.05"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4866",
-    "value": 2856
+    "as_of": "2026-11-05",
+    "asset_key": "player:9484",
+    "value": 2959
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12529",
-    "value": 2751
+    "as_of": "2026-11-05",
+    "asset_key": "player:6904",
+    "value": 2890
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13294",
-    "value": 2687
+    "as_of": "2026-11-05",
+    "asset_key": "player:7588",
+    "value": 2738
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12506",
-    "value": 2457
+    "as_of": "2026-11-05",
+    "asset_key": "player:13281",
+    "value": 2712
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12512",
+    "value": 2674
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:10236",
+    "value": 2624
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:7543",
-    "value": 2446
+    "value": 2540
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6797",
-    "value": 2423
+    "as_of": "2026-11-05",
+    "asset_key": "player:13346",
+    "value": 2434
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:6",
-    "value": 2416,
+    "value": 2426,
     "label": "2026 Pick 1.06"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12512",
-    "value": 2389
+    "as_of": "2026-11-05",
+    "asset_key": "player:12506",
+    "value": 2378
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12529",
+    "value": 2361
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13294",
+    "value": 2345
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:4983",
-    "value": 2317
+    "value": 2285
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11584",
-    "value": 2290
+    "as_of": "2026-11-05",
+    "asset_key": "player:12490",
+    "value": 2124
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7588",
-    "value": 2279
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7553",
-    "value": 2134
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:13298",
-    "value": 2094
+    "value": 2119
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:5846",
-    "value": 2060
+    "value": 2104
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13346",
-    "value": 2046
+    "as_of": "2026-11-05",
+    "asset_key": "player:7553",
+    "value": 2065
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:7",
-    "value": 1984,
+    "value": 1987,
     "label": "2026 Pick 1.07"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11563",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12481",
+    "value": 1938
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:3198",
+    "value": 1929
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:6790",
     "value": 1915
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13286",
-    "value": 1915
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:1:Mid",
-    "value": 1885,
+    "value": 1890,
     "label": "2027 1st"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13330",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13286",
     "value": 1880
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:1:Mid",
-    "value": 1864,
+    "value": 1869,
     "label": "2027 Mid 1st"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8131",
-    "value": 1810
+    "as_of": "2026-11-05",
+    "asset_key": "player:9758",
+    "value": 1828
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11631",
-    "value": 1794
+    "as_of": "2026-11-05",
+    "asset_key": "player:6797",
+    "value": 1802
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:3198",
-    "value": 1785
+    "as_of": "2026-11-05",
+    "asset_key": "player:10232",
+    "value": 1711
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11628",
+    "as_of": "2026-11-05",
+    "asset_key": "player:3294",
     "value": 1695
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12481",
-    "value": 1679
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:8",
-    "value": 1635,
+    "value": 1632,
     "label": "2026 Pick 1.08"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8142",
-    "value": 1565
+    "as_of": "2026-11-05",
+    "asset_key": "player:11631",
+    "value": 1583
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12490",
-    "value": 1543
+    "as_of": "2026-11-05",
+    "asset_key": "player:11563",
+    "value": 1572
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6790",
-    "value": 1521
+    "as_of": "2026-11-05",
+    "asset_key": "player:9756",
+    "value": 1569
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8131",
+    "value": 1558
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2028:1:Mid",
-    "value": 1508,
+    "value": 1512,
     "label": "2028 1st"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:3294",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8142",
     "value": 1493
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9758",
-    "value": 1483
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:10232",
-    "value": 1472
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:11646",
-    "value": 1445
+    "value": 1490
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6819",
-    "value": 1438
+    "as_of": "2026-11-05",
+    "asset_key": "player:11628",
+    "value": 1462
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12508",
-    "value": 1425
+    "as_of": "2026-11-05",
+    "asset_key": "player:6804",
+    "value": 1388
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5927",
-    "value": 1425
+    "as_of": "2026-11-05",
+    "asset_key": "player:13330",
+    "value": 1378
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9756",
-    "value": 1411
+    "as_of": "2026-11-05",
+    "asset_key": "player:8228",
+    "value": 1372
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:9",
-    "value": 1352,
+    "value": 1346,
     "label": "2026 Pick 1.09"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4217",
-    "value": 1303
+    "as_of": "2026-11-05",
+    "asset_key": "player:6819",
+    "value": 1318
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9500",
-    "value": 1303
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6804",
-    "value": 1279
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12501",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5927",
     "value": 1231
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8228",
-    "value": 1137
+    "as_of": "2026-11-05",
+    "asset_key": "player:7594",
+    "value": 1186
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:10",
-    "value": 1121,
+    "value": 1113,
     "label": "2026 Pick 1.10"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:2133",
-    "value": 1110
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:3163",
-    "value": 983
+    "value": 1113
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7594",
-    "value": 969
+    "as_of": "2026-11-05",
+    "asset_key": "player:2133",
+    "value": 1064
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8126",
-    "value": 951
+    "as_of": "2026-11-05",
+    "asset_key": "player:9500",
+    "value": 1023
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4217",
+    "value": 987
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:2216",
+    "value": 976
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:11",
-    "value": 933,
+    "value": 924,
     "label": "2026 Pick 1.11"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:2216",
-    "value": 920
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:12534",
-    "value": 886
+    "value": 909
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11624",
+    "value": 872
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5850",
+    "value": 870
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:1:Late",
-    "value": 871,
+    "value": 864,
     "label": "2027 Late 1st"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13417",
-    "value": 846
+    "as_of": "2026-11-05",
+    "asset_key": "player:12508",
+    "value": 832
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12484",
-    "value": 846
+    "as_of": "2026-11-05",
+    "asset_key": "player:8126",
+    "value": 832
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:11586",
-    "value": 830
+    "value": 812
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:1:12",
-    "value": 779,
+    "value": 770,
     "label": "2026 Pick 1.12"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7002",
-    "value": 745
+    "as_of": "2026-11-05",
+    "asset_key": "player:12484",
+    "value": 727
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5892",
-    "value": 741
+    "as_of": "2026-11-05",
+    "asset_key": "player:5947",
+    "value": 680
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11624",
-    "value": 724
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5850",
-    "value": 688
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9754",
-    "value": 684
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11583",
-    "value": 681
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5045",
-    "value": 672
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9480",
-    "value": 659
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:1",
-    "value": 652,
+    "value": 643,
     "label": "2026 Pick 2.01"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8110",
-    "value": 647
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:13345",
-    "value": 570
+    "value": 639
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4037",
-    "value": 564
+    "as_of": "2026-11-05",
+    "asset_key": "player:11583",
+    "value": 635
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4892",
-    "value": 564
+    "as_of": "2026-11-05",
+    "asset_key": "player:5892",
+    "value": 626
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:10222",
-    "value": 564
+    "as_of": "2026-11-05",
+    "asset_key": "player:12489",
+    "value": 603
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5947",
-    "value": 562
+    "as_of": "2026-11-05",
+    "asset_key": "player:8134",
+    "value": 600
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:2449",
-    "value": 551
+    "as_of": "2026-11-05",
+    "asset_key": "player:9480",
+    "value": 597
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:7611",
+    "value": 594
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13417",
+    "value": 571
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:9754",
+    "value": 568
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8110",
+    "value": 563
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5045",
+    "value": 549
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:2",
-    "value": 548,
+    "value": 539,
     "label": "2026 Pick 2.02"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8121",
-    "value": 509
+    "as_of": "2026-11-05",
+    "asset_key": "player:7002",
+    "value": 532
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12489",
+    "as_of": "2026-11-05",
+    "asset_key": "player:10222",
     "value": 495
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7611",
-    "value": 465
+    "as_of": "2026-11-05",
+    "asset_key": "player:4037",
+    "value": 482
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8121",
+    "value": 472
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:3",
-    "value": 462,
+    "value": 454,
     "label": "2026 Pick 2.03"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5022",
+    "value": 448
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4892",
+    "value": 431
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:1466",
+    "value": 430
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:2:Early",
-    "value": 429,
+    "value": 421,
     "label": "2027 Early 2nd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:5849",
-    "value": 424
+    "value": 421
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5022",
-    "value": 420
+    "as_of": "2026-11-05",
+    "asset_key": "player:9753",
+    "value": 397
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8134",
-    "value": 404
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:4",
-    "value": 391,
+    "value": 383,
     "label": "2026 Pick 2.04"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:421",
-    "value": 386
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:1466",
-    "value": 379
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11638",
-    "value": 377
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5012",
-    "value": 377
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:7021",
-    "value": 346
+    "value": 381
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:421",
+    "value": 377
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13337",
+    "value": 372
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12474",
+    "value": 364
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11638",
+    "value": 355
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5967",
+    "value": 354
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8210",
+    "value": 333
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5012",
+    "value": 330
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:5",
-    "value": 332,
+    "value": 324,
     "label": "2026 Pick 2.05"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9753",
-    "value": 330
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12533",
-    "value": 330
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5870",
-    "value": 321
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:12509",
-    "value": 312
+    "value": 320
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8210",
-    "value": 299
+    "as_of": "2026-11-05",
+    "asset_key": "player:12533",
+    "value": 317
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13337",
-    "value": 287
+    "as_of": "2026-11-05",
+    "asset_key": "player:2449",
+    "value": 317
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8136",
+    "value": 295
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13274",
+    "value": 292
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:6",
-    "value": 282,
+    "value": 275,
     "label": "2026 Pick 2.06"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5872",
-    "value": 266
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6803",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5870",
     "value": 265
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8676",
-    "value": 261
+    "as_of": "2026-11-05",
+    "asset_key": "player:8132",
+    "value": 257
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5967",
-    "value": 260
+    "as_of": "2026-11-05",
+    "asset_key": "player:7567",
+    "value": 253
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:3321",
-    "value": 259
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:8408",
-    "value": 244
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13296",
     "value": 242
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2026:2:7",
-    "value": 241,
-    "label": "2026 Pick 2.07"
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7567",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8676",
     "value": 237
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11618",
-    "value": 229
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2026:2:7",
+    "value": 234,
+    "label": "2026 Pick 2.07"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5872",
+    "value": 230
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:10213",
+    "value": 227
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11576",
+    "value": 222
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:2:Mid",
-    "value": 226,
+    "value": 220,
     "label": "2027 2nd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2027:2:Mid",
-    "value": 222,
-    "label": "2027 Mid 2nd"
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8136",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11603",
     "value": 218
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:6806",
-    "value": 216
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2027:2:Mid",
+    "value": 216,
+    "label": "2027 Mid 2nd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:5844",
+    "value": 215
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13296",
+    "value": 213
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:6806",
+    "value": 207
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12530",
+    "value": 204
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:8",
-    "value": 206,
+    "value": 200,
     "label": "2026 Pick 2.08"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11603",
-    "value": 197
+    "as_of": "2026-11-05",
+    "asset_key": "player:6803",
+    "value": 198
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12474",
-    "value": 194
+    "as_of": "2026-11-05",
+    "asset_key": "player:3321",
+    "value": 192
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:5844",
-    "value": 191
+    "as_of": "2026-11-05",
+    "asset_key": "player:13305",
+    "value": 184
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:3214",
+    "value": 180
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2028:2:Mid",
-    "value": 181,
+    "value": 176,
     "label": "2028 2nd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2026:2:9",
-    "value": 177,
-    "label": "2026 Pick 2.09"
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12530",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4199",
     "value": 173
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13414",
-    "value": 171
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2026:2:9",
+    "value": 172,
+    "label": "2026 Pick 2.09"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:3214",
-    "value": 170
+    "as_of": "2026-11-05",
+    "asset_key": "player:9508",
+    "value": 164
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13305",
-    "value": 161
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:13274",
-    "value": 158
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:10",
-    "value": 153,
+    "value": 148,
     "label": "2026 Pick 2.10"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8132",
-    "value": 152
+    "as_of": "2026-11-05",
+    "asset_key": "player:12469",
+    "value": 146
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7049",
-    "value": 140
+    "as_of": "2026-11-05",
+    "asset_key": "player:12535",
+    "value": 138
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11576",
-    "value": 133
+    "as_of": "2026-11-05",
+    "asset_key": "player:12495",
+    "value": 134
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:10219",
+    "value": 128
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:11",
-    "value": 132,
+    "value": 127,
     "label": "2026 Pick 2.11"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9511",
-    "value": 132
+    "as_of": "2026-11-05",
+    "asset_key": "player:11618",
+    "value": 126
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:10213",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11637",
     "value": 124
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:2:Late",
-    "value": 121,
+    "value": 117,
     "label": "2027 Late 2nd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7571",
-    "value": 120
+    "as_of": "2026-11-05",
+    "asset_key": "player:8154",
+    "value": 115
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4199",
-    "value": 118
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:2:12",
-    "value": 115,
+    "value": 110,
     "label": "2026 Pick 2.12"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:9511",
+    "value": 102
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:11655",
-    "value": 107
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:10219",
-    "value": 106
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9508",
-    "value": 106
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12469",
     "value": 100
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:1",
-    "value": 100,
+    "value": 96,
     "label": "2026 Pick 3.01"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:6783",
-    "value": 97
+    "value": 94
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9225",
-    "value": 91
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12535",
-    "value": 90
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2026:3:2",
-    "value": 87,
-    "label": "2026 Pick 3.02"
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8154",
+    "as_of": "2026-11-05",
+    "asset_key": "player:13414",
     "value": 85
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2026:3:2",
+    "value": 83,
+    "label": "2026 Pick 3.02"
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4035",
+    "value": 81
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11610",
+    "value": 80
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:7571",
+    "value": 75
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:3",
-    "value": 76,
+    "value": 73,
     "label": "2026 Pick 3.03"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2027:3:Early",
-    "value": 69,
-    "label": "2027 Early 3rd"
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2026:3:4",
-    "value": 67,
-    "label": "2026 Pick 3.04"
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11610",
+    "as_of": "2026-11-05",
+    "asset_key": "player:9225",
     "value": 67
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4981",
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2027:3:Early",
+    "value": 66,
+    "label": "2027 Early 3rd"
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2026:3:4",
+    "value": 64,
+    "label": "2026 Pick 3.04"
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:7049",
     "value": 64
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4035",
-    "value": 64
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:1166",
-    "value": 61
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12504",
-    "value": 59
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:5",
-    "value": 59,
+    "value": 56,
     "label": "2026 Pick 3.05"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:1479",
-    "value": 55
+    "as_of": "2026-11-05",
+    "asset_key": "player:4033",
+    "value": 49
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:6",
-    "value": 52,
+    "value": 49,
     "label": "2026 Pick 3.06"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12495",
-    "value": 51
+    "as_of": "2026-11-05",
+    "asset_key": "player:11575",
+    "value": 48
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11637",
-    "value": 50
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4033",
-    "value": 50
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:11581",
-    "value": 47
+    "value": 46
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7090",
-    "value": 47
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:7",
-    "value": 46,
+    "value": 44,
     "label": "2026 Pick 3.07"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4981",
+    "value": 42
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:1166",
+    "value": 42
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:12504",
+    "value": 41
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:3:Mid",
-    "value": 42,
+    "value": 40,
     "label": "2027 3rd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:3:Mid",
-    "value": 42,
+    "value": 39,
     "label": "2027 Mid 3rd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:8",
-    "value": 41,
+    "value": 39,
     "label": "2026 Pick 3.08"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:7090",
+    "value": 38
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:9",
-    "value": 36,
+    "value": 34,
     "label": "2026 Pick 3.09"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:9501",
+    "value": 33
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2028:3:Mid",
-    "value": 34,
+    "value": 32,
     "label": "2028 3rd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4039",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4137",
     "value": 32
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:9494",
+    "value": 32
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:10",
-    "value": 32,
+    "value": 30,
     "label": "2026 Pick 3.10"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:4137",
-    "value": 30
+    "as_of": "2026-11-05",
+    "asset_key": "player:12457",
+    "value": 29
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9501",
-    "value": 30
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:11",
-    "value": 29,
+    "value": 27,
     "label": "2026 Pick 3.11"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:9494",
-    "value": 28
+    "as_of": "2026-11-05",
+    "asset_key": "player:8205",
+    "value": 25
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:3:Late",
-    "value": 26,
+    "value": 24,
     "label": "2027 Late 3rd"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:3:12",
-    "value": 26,
+    "value": 24,
     "label": "2026 Pick 3.12"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:1",
-    "value": 23,
+    "value": 22,
     "label": "2026 Pick 4.01"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2026:4:2",
-    "value": 21,
-    "label": "2026 Pick 4.02"
+    "as_of": "2026-11-05",
+    "asset_key": "player:1479",
+    "value": 22
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:4066",
     "value": 20
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2026:4:3",
-    "value": 19,
-    "label": "2026 Pick 4.03"
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2026:4:2",
+    "value": 20,
+    "label": "2026 Pick 4.02"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7591",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4039",
     "value": 19
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12457",
-    "value": 18
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2026:4:3",
+    "value": 18,
+    "label": "2026 Pick 4.03"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:7591",
+    "value": 17
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:4",
-    "value": 17,
+    "value": 16,
     "label": "2026 Pick 4.04"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8125",
-    "value": 17
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8205",
-    "value": 17
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11575",
-    "value": 17
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:4:Early",
-    "value": 17,
+    "value": 16,
     "label": "2027 Early 4th"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:5",
-    "value": 16,
+    "value": 15,
     "label": "2026 Pick 4.05"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:10444",
+    "value": 15
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "player:4950",
-    "value": 15
+    "value": 13
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:11589",
-    "value": 15
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:6",
-    "value": 14,
+    "value": 13,
     "label": "2026 Pick 4.06"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:7",
-    "value": 13,
+    "value": 12,
     "label": "2026 Pick 4.07"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:8",
-    "value": 12,
+    "value": 11,
     "label": "2026 Pick 4.08"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:4:Mid",
-    "value": 12,
+    "value": 11,
     "label": "2027 4th"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:11589",
+    "value": 11
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:4:Mid",
-    "value": 12,
+    "value": 11,
     "label": "2027 Mid 4th"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:9",
-    "value": 11,
+    "value": 10,
     "label": "2026 Pick 4.09"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:8143",
+    "as_of": "2026-11-05",
+    "asset_key": "player:8125",
     "value": 10
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:7528",
+    "value": 10
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:10",
-    "value": 10,
+    "value": 9,
     "label": "2026 Pick 4.10"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "pickval:2026:4:11",
-    "value": 9,
-    "label": "2026 Pick 4.11"
+    "as_of": "2026-11-05",
+    "asset_key": "player:12541",
+    "value": 9
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2028:4:Mid",
     "value": 9,
     "label": "2028 4th"
@@ -1895,22 +1901,23 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7670",
-    "value": 9
+    "as_of": "2026-11-05",
+    "asset_key": "pickval:2026:4:11",
+    "value": 9,
+    "label": "2026 Pick 4.11"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:4:12",
-    "value": 9,
+    "value": 8,
     "label": "2026 Pick 4.12"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:4:Late",
     "value": 8,
     "label": "2027 Late 4th"
@@ -1918,21 +1925,7 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:10444",
-    "value": 8
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:12541",
-    "value": 8
-  },
-  {
-    "provider": "dynastyprocess",
-    "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:1",
     "value": 8,
     "label": "2026 Pick 5.01"
@@ -1940,15 +1933,15 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:2",
-    "value": 8,
+    "value": 7,
     "label": "2026 Pick 5.02"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:3",
     "value": 7,
     "label": "2026 Pick 5.03"
@@ -1956,22 +1949,22 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:4",
-    "value": 7,
+    "value": 6,
     "label": "2026 Pick 5.04"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
-    "asset_key": "player:7528",
-    "value": 7
+    "as_of": "2026-11-05",
+    "asset_key": "player:8143",
+    "value": 6
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:5",
     "value": 6,
     "label": "2026 Pick 5.05"
@@ -1979,7 +1972,7 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:5:Early",
     "value": 6,
     "label": "2027 Early 5th"
@@ -1987,7 +1980,7 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:6",
     "value": 6,
     "label": "2026 Pick 5.06"
@@ -1995,15 +1988,22 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:7",
-    "value": 6,
+    "value": 5,
     "label": "2026 Pick 5.07"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4144",
+    "value": 5
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:8",
     "value": 5,
     "label": "2026 Pick 5.08"
@@ -2011,7 +2011,7 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:9",
     "value": 5,
     "label": "2026 Pick 5.09"
@@ -2019,7 +2019,7 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:5:Mid",
     "value": 5,
     "label": "2027 5th"
@@ -2027,7 +2027,14 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
+    "asset_key": "player:7670",
+    "value": 5
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:5:Mid",
     "value": 5,
     "label": "2027 Mid 5th"
@@ -2035,7 +2042,7 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:10",
     "value": 5,
     "label": "2026 Pick 5.10"
@@ -2043,23 +2050,23 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:11",
-    "value": 5,
+    "value": 4,
     "label": "2026 Pick 5.11"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2026:5:12",
-    "value": 5,
+    "value": 4,
     "label": "2026 Pick 5.12"
   },
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2027:5:Late",
     "value": 4,
     "label": "2027 Late 5th"
@@ -2067,7 +2074,7 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "pickval:2028:5:Mid",
     "value": 4,
     "label": "2028 5th"
@@ -2075,8 +2082,22 @@
   {
     "provider": "dynastyprocess",
     "format_key": "1qb",
-    "as_of": "2026-10-20",
+    "as_of": "2026-11-05",
     "asset_key": "player:4018",
-    "value": 3
+    "value": 2
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4098",
+    "value": 2
+  },
+  {
+    "provider": "dynastyprocess",
+    "format_key": "1qb",
+    "as_of": "2026-11-05",
+    "asset_key": "player:4663",
+    "value": 2
   }
 ]

@@ -81,7 +81,8 @@ jobs:
             exit 0
           fi
           stamp="nightly$(date -u +%Y%m%d%H%M%S)"
-          node scripts/bust-data-v.mjs "$stamp" "chuckle-shell-v289-cuckle-nightly"
+          # CACHE must match /chuckle-shell-v\d+/ (generate-page assert); unique each run.
+          node scripts/bust-data-v.mjs "$stamp" "chuckle-shell-v$(date -u +%Y%m%d%H%M%S)-nightly"
 
       - name: Commit tape if changed
         run: |

@@ -54,11 +54,11 @@ const end = page.indexOf("\n    function dataDashBoardTiles(", start);
 if (start < 0 || end < 0) fail("missing dataDashMigrateMyPicks");
 const fnSrc = page.slice(start, end);
 
-const DATA_DASH_MAX = 13;
+const DATA_DASH_MAX = 14;
 const catalog = new Set([
   "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
   "my_trades", "trade_helper", "league_trades", "league_draft",
-  "profit_loss", "biggest_choker", "season_place",
+  "profit_loss", "biggest_choker", "waiver_winners", "season_place",
   "week_scores", "best_ball_hype", "draft_board", "vs_you", "book_top", "firsts_held", "past_champions",
 ]);
 function dataDashById(id) { return catalog.has(id) ? { id } : null; }

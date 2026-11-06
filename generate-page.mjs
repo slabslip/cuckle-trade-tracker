@@ -5038,7 +5038,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261106025803";
+    const DATA_V = "news20261106032000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9392,10 +9392,10 @@ const html = `<!DOCTYPE html>
           + " Tap a row for the story.";
       }
       else if (id === "waiver_winners") {
-        caption = "Three top-10 boards by dynasty-value lift."
+        caption = "Three top-10 boards by dynasty-value lift on the same scale as Trade Value / calculator."
           + " Original → today / Original → peak only count if that claim was their first roster entry — drafted then dropped then claimed does not count."
           + " Any claim → today includes every waiver/FA add, including reclamations after a draft drop."
-          + " Lift is today's curve (or peak) minus value the day they were claimed."
+          + " Today uses calculator pricing; pickup and peak use the same flatten book."
           + " One row per player. Biggest lift first.";
       }
       else if (id === "head_to_head") {
@@ -11899,7 +11899,7 @@ const html = `<!DOCTYPE html>
           && Array.isArray(biggestChokerRaw.seats) ? biggestChokerRaw : null;
       } catch (err) { biggestChokerBook = null; }
       try {
-        bestWaiverPickupsBook = bestWaiverRaw && Number(bestWaiverRaw.v) >= 3
+        bestWaiverPickupsBook = bestWaiverRaw && Number(bestWaiverRaw.v) >= 4
           && Array.isArray(bestWaiverRaw.to_today) && Array.isArray(bestWaiverRaw.to_peak)
           && Array.isArray(bestWaiverRaw.to_today_any)
           ? bestWaiverRaw
@@ -41868,6 +41868,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !fnSrc("dataListItems").includes('canon === "waiver_winners"')
   || !fnSrc("dataListItems").includes("to_today_any")
   || !fnSrc("receiptWhoListHtml").includes("Any claim → today includes every waiver/FA add")
+  || !fnSrc("receiptWhoListHtml").includes("same scale as Trade Value")
   || !fnSrc("receiptWhoListHtml").includes("drafted then dropped then claimed does not count")
   || !fnSrc("dataDashMigrateMyPicks").includes('src[passedAt] = "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')

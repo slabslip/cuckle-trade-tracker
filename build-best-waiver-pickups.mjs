@@ -14,7 +14,8 @@ import {
   writeUi,
   LEAGUE_ID,
 } from "./lib.mjs";
-import { buildBestWaiverPickupsBook } from "./lib/best-waiver-pickups.mjs";
+import { makeTodayPrice, priceTodayValue } from "./price-today.mjs";
+import { buildBestWaiverPickupsBook, latestAsOf } from "./lib/best-waiver-pickups.mjs";
 
 setLeagueId(process.argv[2] || process.env.LEAGUE_ID);
 
@@ -90,6 +91,11 @@ for (const pid of Object.keys(players || {})) {
   nameById.set(String(pid), playerName(players, pid));
 }
 
+const todayAsOf = latestAsOf(curve);
+const todayPrice = makeTodayPrice(todayAsOf, {
+  flattenOnly: (format.format_key || "2qb") === "1qb",
+});
+
 const book = buildBestWaiverPickupsBook({
   leagueId: LEAGUE_ID,
   formatKey: format.format_key || "2qb",
@@ -99,15 +105,19 @@ const book = buildBestWaiverPickupsBook({
   draftPicks,
   nameById,
   seatBy,
+  todayPrice,
+  priceTodayValue,
 });
 
 writeUi("best-waiver-pickups.json", book);
 console.log(JSON.stringify({
   ok: true,
   v: book.v,
+  pricing: book.pricing,
   n_pickups: book.n_pickups,
   n_scored: book.n_scored,
   to_today: book.to_today.slice(0, 3).map((r) => `${r.player}+${r.delta}`),
   to_peak: book.to_peak.slice(0, 3).map((r) => `${r.player}+${r.delta}`),
+  to_today_any: book.to_today_any.slice(0, 3).map((r) => `${r.player}+${r.delta}`),
   out: "ui/best-waiver-pickups.json",
 }));

@@ -59,11 +59,22 @@ if (!gen.includes('if (id === "best_waiver_pickups") return "waiver_winners"')) 
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/best-waiver-pickups.json", "utf8"),
 );
-if (Number(book.v) < 1 || !Array.isArray(book.to_today) || !Array.isArray(book.to_peak)) {
-  fail("best-waiver-pickups book missing to_today / to_peak");
+if (Number(book.v) < 2 || !Array.isArray(book.to_today) || !Array.isArray(book.to_peak)) {
+  fail("best-waiver-pickups book missing v2 to_today / to_peak");
 }
 if (book.to_today.length !== 10 || book.to_peak.length !== 10) {
   fail("each board must be top 10");
+}
+if (!book.rule || !/drafted-then-dropped/i.test(String(book.rule.origin || ""))) {
+  fail("book rule must require original waiver/FA entry");
+}
+// Drafted-first stars must not appear (Anthony Richardson was a draft then later claim).
+if (book.to_peak.some((r) => /Anthony Richardson/i.test(r.player || ""))) {
+  fail("drafted-first players must not rank on Waiver winners");
+}
+if (!page.includes("drafted then dropped then claimed does not count")
+  && !gen.includes("drafted then dropped then claimed does not count")) {
+  fail("caption must spell out original-waiver-only rule");
 }
 
 const design = "design-waiver-winners.html";

@@ -5038,7 +5038,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261106021000";
+    const DATA_V = "news20261106023000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5178,7 +5178,7 @@ const html = `<!DOCTYPE html>
       { id: "week_scores", lab: "Week scores", desk: "lists", group: "who", size: "full", why: "Highest and lowest team weeks. Playoff is the winners-bracket title hunt." },
       { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Top 6 champ bracket (1–2 bye). Bottom 4 toilet bowl in best ball so nobody can tank. Future weeks use best projected lineup — OUT/IR sit, best bench fills." },
       { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
-      { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Top 10 waiver and free-agent adds by value lift — pickup to today, and pickup to the highest value that add ever hit." },
+      { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Top 10 original waiver/FA claims by value lift — never drafted first. Pickup to today, and pickup to the highest value that claim ever hit." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -9372,7 +9372,8 @@ const html = `<!DOCTYPE html>
           + " Tap a row for the story.";
       }
       else if (id === "waiver_winners") {
-        caption = "Top 10 waiver and free-agent adds by dynasty-value lift."
+        caption = "Top 10 original waiver and free-agent claims by dynasty-value lift."
+          + " Only counts if that claim was their first roster entry in this league — drafted then dropped then claimed does not count."
           + " Pickup → today is today's curve minus value the day they were claimed."
           + " Pickup → peak is the highest curve value on or after that claim, minus pickup value."
           + " One row per player. Biggest lift first.";
@@ -41844,6 +41845,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !fnSrc("dataListBandsHtml").includes('band("Pickup → peak", "bot"')
   || !fnSrc("dataListItems").includes('canon === "waiver_winners"')
   || !fnSrc("receiptWhoListHtml").includes("Pickup → today is today's curve")
+  || !fnSrc("receiptWhoListHtml").includes("drafted then dropped then claimed does not count")
   || !fnSrc("dataDashMigrateMyPicks").includes('src[passedAt] = "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "season_place"')

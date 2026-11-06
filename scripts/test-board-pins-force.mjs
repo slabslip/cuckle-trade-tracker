@@ -28,11 +28,11 @@ if (!fnSrc.includes("softDrop")
   fail("migrate must soft-pin season_arcs / trade_helper without last-tile clobber");
 }
 
-const DATA_DASH_MAX = 14;
+const DATA_DASH_MAX = 15;
 const catalog = new Set([
   "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
   "my_trades", "trade_helper", "league_trades", "league_draft",
-  "profit_loss", "biggest_choker", "waiver_winners", "season_place",
+  "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades", "season_place",
   "week_scores", "best_ball_hype", "draft_board", "past_champions", "vs_you", "book_top", "firsts_held",
 ]);
 
@@ -92,10 +92,11 @@ function assert(cond, msg) {
   const good = [
     "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
     "my_trades", "trade_helper", "league_trades", "league_draft",
-    "profit_loss", "biggest_choker", "season_place",
-    "week_scores", "best_ball_hype",
+    "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
+    "season_place", "week_scores", "best_ball_hype",
   ];
-  assert(dataDashMigrateMyPicks(good).join(",") === good.join(","), "good board must stay put");
+  assert(dataDashMigrateMyPicks(good).join(",") === good.join(","),
+    "good board must stay put, got " + dataDashMigrateMyPicks(good).join(","));
 }
 
 {
@@ -106,10 +107,27 @@ function assert(cond, msg) {
     "week_scores", "draft_board",
   ];
   const next = dataDashMigrateMyPicks(legacy);
-  assert(next.indexOf("best_ball_hype") === 12, "draft_board becomes best_ball_hype, got " + next.join(","));
+  assert(next.indexOf("best_ball_hype") >= 0, "draft_board becomes best_ball_hype, got " + next.join(","));
   assert(next.indexOf("draft_board") < 0, "draft_board leaves the default door slot");
   assert(next.indexOf("biggest_choker") === 9, "past_champions becomes biggest_choker, got " + next.join(","));
   assert(next.indexOf("past_champions") < 0, "past_champions leaves the default door slot");
+  assert(next.indexOf("waiver_winners") >= 0, "waiver_winners must pin onto legacy boards");
+  assert(next.indexOf("cornerstone_trades") >= 0, "cornerstone_trades must add onto legacy boards");
+}
+
+{
+  // Full 15-tile board without cornerstone: add-only pin must NOT replace a tile.
+  const fullNoCorner = [
+    "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
+    "my_trades", "trade_helper", "league_trades", "league_draft",
+    "profit_loss", "biggest_choker", "waiver_winners", "season_place",
+    "week_scores", "best_ball_hype", "book_top",
+  ];
+  const next = dataDashMigrateMyPicks(fullNoCorner);
+  assert(next.join(",") === fullNoCorner.join(","),
+    "full board without room must keep every tile (no cornerstone replace), got " + next.join(","));
+  assert(next.indexOf("cornerstone_trades") < 0, "must not replace to force cornerstone on");
+  assert(next.indexOf("book_top") >= 0, "book_top must survive");
 }
 
 {

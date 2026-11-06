@@ -5014,6 +5014,7 @@ const html = `<!DOCTYPE html>
     let managerArchetypesOpenKey = "";
     let bestBallHypeOpenKey = "";
     let biggestChokerOpenKey = "";
+    let cornerstoneTradesOpenKey = "";
     let receiptH2hA = "";
     let receiptH2hB = "";
     let analyzerShareNote = "";
@@ -5038,7 +5039,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261106222435";
+    const DATA_V = "cornerstone20261106231000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5105,12 +5106,12 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 14;
+    const DATA_DASH_MAX = 15;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
-      "profit_loss", "biggest_choker", "waiver_winners", "season_place",
-      "week_scores", "best_ball_hype",
+      "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
+      "season_place", "week_scores", "best_ball_hype",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5123,13 +5124,14 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_DEFAULT = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
-      "profit_loss", "biggest_choker", "waiver_winners", "season_place",
-      "week_scores", "best_ball_hype",
+      "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
+      "season_place", "week_scores", "best_ball_hype",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
+      "cornerstone_trades",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5145,7 +5147,8 @@ const html = `<!DOCTYPE html>
       "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
-      "vs_you", "head_to_head", "waiver_winners", "book_top", "seat_manners",
+      "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades",
+      "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
       career_avg: { lab: "Career average", why: "Average finish. Three completed seasons minimum so one year cannot lead." },
@@ -5179,6 +5182,7 @@ const html = `<!DOCTYPE html>
       { id: "best_ball_hype", lab: "Best Ball Hype", desk: "lists", group: "who", size: "full", why: "Top 6 champ bracket (1–2 bye). Bottom 4 toilet bowl in best ball so nobody can tank. Future weeks use best projected lineup — OUT/IR sit, best bench fills." },
       { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
       { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Three top-10 boards: original waiver/FA → today, original → peak, and any claim → today (including drafted-then-dropped reclamations)." },
+      { id: "cornerstone_trades", lab: "Cornerstone trades", desk: "lists", group: "memory", size: "full", why: "Top 10 highest-value players ever moved in a trade, priced the day they traded. Tap a row for both bags." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5305,6 +5309,7 @@ const html = `<!DOCTYPE html>
     let bestBallHypeBook = null;
     let biggestChokerBook = null;
     let bestWaiverPickupsBook = null;
+    let cornerstoneTradesBook = null;
     let headToHeadBook = null;
     let leagueLoadGen = 0;
     let cosmeticsEquip = { title: null, emblem: null };
@@ -5765,7 +5770,7 @@ const html = `<!DOCTYPE html>
         || canon === "past_champions" || canon === "projected_finish"
         || canon === "season_arcs" || canon === "manager_archetypes"
         || canon === "best_ball_hype" || canon === "biggest_choker"
-        || canon === "waiver_winners"
+        || canon === "waiver_winners" || canon === "cornerstone_trades"
         || canon === "head_to_head";
     }
 
@@ -6049,6 +6054,27 @@ const html = `<!DOCTYPE html>
           .concat(pack(peak, "peak"))
           .concat(pack(any, "any"));
       }
+      if (canon === "cornerstone_trades") {
+        const rows = (cornerstoneTradesBook && Array.isArray(cornerstoneTradesBook.trades))
+          ? cornerstoneTradesBook.trades.slice() : [];
+        return rows.map(function (r, i) {
+          const when = r.date ? String(r.date).slice(0, 7) : (r.season || "");
+          const fromLab = (r.from_names && r.from_names.length)
+            ? r.from_names.join(" / ")
+            : "—";
+          return {
+            // One row per player — key on asset, not tx (same deal can move two studs).
+            key: String(r.asset_key || r.transaction_id || i),
+            name: r.asset,
+            metric: fmt(r.value),
+            sub: (r.to_name || "—") + " from " + fromLab
+              + (when ? (" · " + when) : "")
+              + " · day they traded · tap for bags",
+            rank: Number(r.rank) || (i + 1),
+            seat: r,
+          };
+        });
+      }
       if (canon === "past_champions") {
         return ((titles && titles.titles) || []).map(function (t, i) {
           return {
@@ -6248,6 +6274,11 @@ const html = `<!DOCTYPE html>
       // Biggest choker: one flat top-10 — no Top/Bottom or year bands unless asked.
       if (id === "biggest_choker" || (typeof receiptDoorCanon === "function"
         && receiptDoorCanon(id) === "biggest_choker")) {
+        return picked.map(wrap).join("");
+      }
+      // Cornerstone trades: one flat top-10 by player value at time of trade.
+      if (id === "cornerstone_trades" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "cornerstone_trades")) {
         return picked.map(wrap).join("");
       }
       // Waiver winners: three boards — original today, original peak, any claim today.
@@ -7858,6 +7889,7 @@ const html = `<!DOCTYPE html>
         || id === "trade_mark" || id === "pick_print" || id === "my_picks"
         || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "biggest_choker" || id === "waiver_winners"
+        || id === "cornerstone_trades"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
@@ -7918,7 +7950,7 @@ const html = `<!DOCTYPE html>
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
       if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes"
         || key === "best_ball_hype" || key === "biggest_choker"
-        || key === "waiver_winners"
+        || key === "waiver_winners" || key === "cornerstone_trades"
         || key === "head_to_head") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
@@ -7933,7 +7965,8 @@ const html = `<!DOCTYPE html>
       if (isFinishCareerTile(canon)) return true;
       if (id === "draft_marks" || id === "held_firsts") return true;
       if (canon === "best_ball_hype" || canon === "biggest_choker"
-        || canon === "waiver_winners" || canon === "head_to_head") return true;
+        || canon === "waiver_winners" || canon === "cornerstone_trades"
+        || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
 
@@ -7982,6 +8015,7 @@ const html = `<!DOCTYPE html>
         best_ball_hype: '<circle cx="12" cy="12" r="7.2"/><path d="M9 12.2l2 2 4.2-4.4"/><path d="M8 7.2c1.2-1 2.6-1.5 4-1.5s2.8.5 4 1.5"/>',
         biggest_choker: '<path d="M12 4v8"/><circle cx="12" cy="17.2" r="1.4"/><path d="M8.2 7.5c1.1-1.6 2.4-2.3 3.8-2.3s2.7.7 3.8 2.3"/>',
         waiver_winners: '<path d="M12 19V7M8.5 10.5L12 7l3.5 3.5"/><path d="M5 19h14"/>',
+        cornerstone_trades: '<path d="M12 3l2.2 4.5L19 8.2l-3.5 3.4.8 4.9L12 14.2 7.7 16.5l.8-4.9L5 8.2l4.8-.7L12 3z"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
         forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
         passed_around: '<path d="M20 8a8 8 0 1 0 1.6 6"/><polyline points="16 8 20 8 20 4"/>',
@@ -8057,6 +8091,10 @@ const html = `<!DOCTYPE html>
           fig = receiptDoorLeadFig(lead.player,
             (Number(lead.delta) >= 0 ? "+" : "") + fmt(lead.delta));
         }
+      } else if (id === "cornerstone_trades") {
+        const lead = cornerstoneTradesBook && cornerstoneTradesBook.trades
+          && cornerstoneTradesBook.trades[0];
+        if (lead) fig = receiptDoorLeadFig(lead.asset, fmt(lead.value));
       } else if (typeof isRedraftLeague === "function" && isRedraftLeague()) {
         if (id === "past_champions") {
           const last = ((titles && titles.titles) || [])[0];
@@ -9177,10 +9215,12 @@ const html = `<!DOCTYPE html>
         });
       }
       if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
-        || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners") {
+        || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners"
+        || id === "cornerstone_trades") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank,
-            r.seat && r.seat.picker, r.seat && r.seat.player]);
+            r.seat && r.seat.picker, r.seat && r.seat.player,
+            r.seat && r.seat.asset, r.seat && r.seat.to_name]);
         });
         if (!items.length) {
           if (id === "projected_finish" && !projectedFinishBook) {
@@ -9200,6 +9240,9 @@ const html = `<!DOCTYPE html>
           }
           if (id === "waiver_winners" && !bestWaiverPickupsBook) {
             return '<p class="caption">Waiver winners book not loaded yet.</p>';
+          }
+          if (id === "cornerstone_trades" && !cornerstoneTradesBook) {
+            return '<p class="caption">Cornerstone trades book not loaded yet.</p>';
           }
           return '<p class="caption">Nothing on this tape matches.</p>';
         }
@@ -9291,6 +9334,24 @@ const html = `<!DOCTYPE html>
               + "</button>"
               + (open
                 ? ('<div class="detail">' + biggestChokerDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
+          if (id === "cornerstone_trades") {
+            const open = String(cornerstoneTradesOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + esc(r.name || "—") + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-cornerstone-trades-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + cornerstoneTradesDetailHtml(r.seat) + "</div>")
                 : "")
               + "</div>";
           }
@@ -9397,6 +9458,12 @@ const html = `<!DOCTYPE html>
           + " Any claim → today includes every waiver/FA add, including reclamations after a draft drop."
           + " Today uses calculator pricing; pickup and peak use the same flatten book."
           + " One row per player. Biggest lift first.";
+      }
+      else if (id === "cornerstone_trades") {
+        caption = "Top 10 highest-value players ever moved in a trade."
+          + " Big number is that player's value the day they traded (same flatten book as Trade Value)."
+          + " One row per player — keep the highest-value move."
+          + " Tap a row for both bags on that deal.";
       }
       else if (id === "head_to_head") {
         if (receiptH2hA && receiptH2hB) {
@@ -11765,6 +11832,7 @@ const html = `<!DOCTYPE html>
       bestBallHypeBook = null;
       biggestChokerBook = null;
       bestWaiverPickupsBook = null;
+      cornerstoneTradesBook = null;
       headToHeadBook = null;
       overnight = null;
       overnightLoading = false;
@@ -11776,6 +11844,7 @@ const html = `<!DOCTYPE html>
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
       biggestChokerOpenKey = "";
+      cornerstoneTradesOpenKey = "";
       receiptH2hA = "";
       receiptH2hB = "";
       dataDashTiles = null;
@@ -11790,7 +11859,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, bestWaiverRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, bestWaiverRaw, cornerstoneTradesRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -11811,6 +11880,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("best-ball-hype.json").catch(() => null),
         getLeagueJson("biggest-choker.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
+        getLeagueJson("cornerstone-trades.json").catch(() => null),
         getLeagueJson("head-to-head.json").catch(() => null),
       ]);
       if (gen !== leagueLoadGen) return;
@@ -11905,6 +11975,12 @@ const html = `<!DOCTYPE html>
           ? bestWaiverRaw
           : null;
       } catch (err) { bestWaiverPickupsBook = null; }
+      try {
+        cornerstoneTradesBook = cornerstoneTradesRaw && Number(cornerstoneTradesRaw.v) >= 1
+          && Array.isArray(cornerstoneTradesRaw.trades)
+          ? cornerstoneTradesRaw
+          : null;
+      } catch (err) { cornerstoneTradesBook = null; }
       try {
         headToHeadBook = headToHeadRaw && Number(headToHeadRaw.v) >= 1
           && headToHeadRaw.pairs ? headToHeadRaw : null;
@@ -13175,6 +13251,7 @@ const html = `<!DOCTYPE html>
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
       biggestChokerOpenKey = "";
+      cornerstoneTradesOpenKey = "";
       receiptH2hA = "";
       receiptH2hB = "";
       if (typeof receiptPlReset === "function") receiptPlReset();
@@ -13446,6 +13523,13 @@ const html = `<!DOCTYPE html>
           const at = softDropAt(4);
           if (at >= 0) src[at] = "waiver_winners";
         }
+      }
+      // Dynasty: add Cornerstone trades after Waiver winners — never replace a tile.
+      if (dynasty && src.indexOf("cornerstone_trades") < 0 && dataDashById("cornerstone_trades")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("waiver_winners");
+        if (after >= 0) src.splice(after + 1, 0, "cornerstone_trades");
+        else src.push("cornerstone_trades");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -15320,6 +15404,33 @@ const html = `<!DOCTYPE html>
           html += "<p>" + scorersLine(seat.own_scorers) + ".</p>";
         }
       }
+      html += "</div>";
+      return html;
+    }
+
+    function cornerstoneTradesDetailHtml(row) {
+      if (!row) return "";
+      const when = row.date ? String(row.date) : (row.season || "");
+      const fromLab = (row.from_names && row.from_names.length)
+        ? row.from_names.join(" / ")
+        : "the other side";
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">In plain English</p>';
+      html += "<p><b>" + esc(row.asset || "Player") + "</b> was worth "
+        + esc(fmt(row.value)) + " the day they traded"
+        + (when ? (" (" + esc(when) + ")") : "")
+        + ".</p>";
+      html += "<p>" + esc(row.to_name || "Someone") + " got them from "
+        + esc(fromLab) + ".</p>";
+      html += '<p class="pf-why-h">The trade</p>';
+      (row.sides || []).forEach(function (side) {
+        const got = (side.got || []).map(function (leg) {
+          return esc(leg.label || "—") + " (" + esc(fmt(leg.value)) + ")";
+        }).join(" · ");
+        html += "<p><b>" + esc(side.name || "Seat") + "</b> got"
+          + (got ? (": " + got) : ": —")
+          + ".</p>";
+      });
       html += "</div>";
       return html;
     }
@@ -18056,6 +18167,13 @@ const html = `<!DOCTYPE html>
           lead ? ("+" + fmt(lead.delta)) : "Open",
           lead ? ((lead.player || "Lead") + " · pickup → today") : "Waiver + FA lifts · top 10");
       }
+      if (id === "cornerstone_trades") {
+        const lead = cornerstoneTradesBook && cornerstoneTradesBook.trades
+          && cornerstoneTradesBook.trades[0];
+        return dataDashHead(spec,
+          lead ? fmt(lead.value) : "Open",
+          lead ? ((lead.asset || "Lead") + " · day they traded") : "Highest t0 players · top 10");
+      }
       if (id === "head_to_head") {
         const n = headToHeadBook && headToHeadBook.n_pairs;
         return dataDashHead(spec,
@@ -18314,6 +18432,7 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        cornerstoneTradesOpenKey = "";
         receiptH2hA = "";
         receiptH2hB = "";
         receiptResetPlayerFilter();
@@ -24443,6 +24562,7 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        cornerstoneTradesOpenKey = "";
         receiptH2hA = "";
         receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -36772,6 +36892,15 @@ const html = `<!DOCTYPE html>
         if (typeof render === "function") render();
         return;
       }
+      const cornerstoneTradesOpenBtn = e.target.closest("[data-cornerstone-trades-open]");
+      if (cornerstoneTradesOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = cornerstoneTradesOpenBtn.getAttribute("data-cornerstone-trades-open") || "";
+        cornerstoneTradesOpenKey = (String(cornerstoneTradesOpenKey) === String(key)) ? "" : key;
+        if (typeof render === "function") render();
+        return;
+      }
       const overnightMoreBtn = e.target.closest("[data-overnight-more]");
       if (overnightMoreBtn) {
         e.preventDefault();
@@ -40877,8 +41006,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 47 || uniq.size !== 47) {
-    throw new Error("DATA_REPORTS must hold exactly 47 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 48 || uniq.size !== 48) {
+    throw new Error("DATA_REPORTS must hold exactly 48 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -40904,31 +41033,35 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 14 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 15 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
+    || defIds.indexOf("cornerstone_trades") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 14 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 15 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 14 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 14 default door tiles");
+  if (doorIds.length !== 15 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 15 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 12 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 12 catalog ids");
+  if (resIds.length !== 13 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 13 catalog ids");
+  }
+  if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board and add cornerstone_trades");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
     throw new Error("Data library must not include bag totals or Best/Worst 10");
   }
-  if (!uniq.has("week_scores") || defIds[12] !== "week_scores") {
-    throw new Error("Week scores must be a catalog door and default board tile 13");
+  if (!uniq.has("week_scores") || defIds[13] !== "week_scores") {
+    throw new Error("Week scores must be a catalog door and default board tile 14");
   }
   if (!uniq.has("trade_helper") || defIds[5] !== "trade_helper") {
     throw new Error("Trade helper must be default board tile 6 (right after My Trade History)");
@@ -40945,14 +41078,18 @@ if (!inline.includes("function dataDashHtml(")
     || fnSrc("dataDashMigrateMyPicks").includes('src[src.length - 1] = "trade_helper"')) {
     throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype + Biggest choker + Head to head + Waiver winners on saved dynasty boards");
   }
-  if (!uniq.has("best_ball_hype") || defIds[13] !== "best_ball_hype" || doorIds[13] !== "best_ball_hype") {
-    throw new Error("Best Ball Hype must be default board tile 14 (League Data door)");
+  if (!uniq.has("best_ball_hype") || defIds[14] !== "best_ball_hype" || doorIds[14] !== "best_ball_hype") {
+    throw new Error("Best Ball Hype must be default board tile 15 (League Data door)");
   }
   if (!uniq.has("biggest_choker") || defIds[9] !== "biggest_choker" || doorIds[9] !== "biggest_choker") {
     throw new Error("Biggest choker must be default board tile 10 (League Data door)");
   }
   if (!uniq.has("waiver_winners") || defIds[10] !== "waiver_winners" || doorIds[10] !== "waiver_winners") {
     throw new Error("Waiver winners must be default board tile 11 (League Data door)");
+  }
+  if (!uniq.has("cornerstone_trades") || defIds[11] !== "cornerstone_trades"
+    || doorIds[11] !== "cornerstone_trades") {
+    throw new Error("Cornerstone trades must be default board tile 12 (League Data door)");
   }
   if (!uniq.has("projected_finish") || defIds[0] !== "projected_finish") {
     throw new Error("Projected finish must be default board tile 1 (Home top-4 race pulse)");
@@ -41872,10 +42009,31 @@ if (!inline.includes('id: "waiver_winners"')
   || !fnSrc("receiptWhoListHtml").includes("drafted then dropped then claimed does not count")
   || !fnSrc("dataDashMigrateMyPicks").includes('src[passedAt] = "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
-  || !inline.includes('"waiver_winners", "season_place"')
+  || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 14")) {
-  throw new Error("Waiver winners must be a 14th League Data door with three top-10 bands");
+  || !inline.includes("const DATA_DASH_MAX = 15")) {
+  throw new Error("Waiver winners must stay on League Data with three top-10 bands");
+}
+if (!inline.includes('id: "cornerstone_trades"')
+  || !inline.includes('lab: "Cornerstone trades"')
+  || !inline.includes('getLeagueJson("cornerstone-trades.json")')
+  || !inline.includes("let cornerstoneTradesBook")
+  || !inline.includes("let cornerstoneTradesOpenKey")
+  || !inline.includes('data-cornerstone-trades-open="')
+  || !inline.includes('closest("[data-cornerstone-trades-open]")')
+  || !fnSrc("receiptIsDoor").includes("cornerstone_trades")
+  || !fnSrc("receiptPortalNeedsSearch").includes('key === "cornerstone_trades"')
+  || !fnSrc("dataListBandsHtml").includes("Cornerstone trades: one flat top-10")
+  || !fnSrc("dataListItems").includes('canon === "cornerstone_trades"')
+  || !fnSrc("cornerstoneTradesDetailHtml").includes("The trade")
+  || !fnSrc("receiptWhoListHtml").includes("day they traded")
+  || !fnSrc("dataDashMigrateMyPicks").includes('"cornerstone_trades"')
+  || !fnSrc("dataDashMigrateMyPicks").includes("never replace a tile")
+  || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "cornerstone_trades"')
+  || !fnSrc("receiptPortalLeave").includes('cornerstoneTradesOpenKey = ""')
+  || !inline.includes('"waiver_winners", "cornerstone_trades"')
+  || !inline.includes('"season_place", "week_scores"')) {
+  throw new Error("Cornerstone trades must be a League Data door with t0 top-10 expand rows");
 }
 if (!inline.includes('id: "head_to_head"')
   || !inline.includes('lab: "Head to head"')

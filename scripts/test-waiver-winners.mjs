@@ -60,9 +60,16 @@ if (!gen.includes('if (id === "best_waiver_pickups") return "waiver_winners"')) 
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/best-waiver-pickups.json", "utf8"),
 );
-if (Number(book.v) < 3 || !Array.isArray(book.to_today) || !Array.isArray(book.to_peak)
-  || !Array.isArray(book.to_today_any)) {
-  fail("best-waiver-pickups book missing v3 to_today / to_peak / to_today_any");
+if (Number(book.v) < 4 || !Array.isArray(book.to_today) || !Array.isArray(book.to_peak)
+  || !Array.isArray(book.to_today_any) || book.pricing !== "calculator") {
+  fail("best-waiver-pickups book missing v4 calculator pricing boards");
+}
+{
+  const wilson = book.to_today.find((r) => /Michael Wilson/i.test(r.player || ""))
+    || book.to_today_any.find((r) => /Michael Wilson/i.test(r.player || ""));
+  if (wilson && (wilson.today_value < 3000 || wilson.today_value > 5500)) {
+    fail("Michael Wilson today_value should match calculator scale (~3900), got " + wilson.today_value);
+  }
 }
 if (book.to_today.length !== 10 || book.to_peak.length !== 10 || book.to_today_any.length !== 10) {
   fail("each board must be top 10");

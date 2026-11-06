@@ -31,6 +31,7 @@ const curveName = format.format_key === "1qb" ? "value_curve_1qb.json" : "value_
 const curve = readJson(curveName, null) || readJson("value_curve.json", []) || [];
 
 const moves = readJson("moves.json", []) || [];
+const draftPicks = readJson("draft_picks.json", []) || [];
 const seats = readJson("seats.json", []) || [];
 const members = readJson("members.json", []) || [];
 const standings = readJson("sleeper_season_standings.json", []) || [];
@@ -95,6 +96,7 @@ const book = buildBestWaiverPickupsBook({
   curveName,
   curve,
   moves,
+  draftPicks,
   nameById,
   seatBy,
 });

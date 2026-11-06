@@ -8914,5 +8914,29 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-11-06",
+    "season": "2026",
+    "week": 9,
+    "transaction_id": "1424283757803761664",
+    "sides": {
+      "ChiefGumby": {
+        "in": [
+          "2029 R2 (orig roster 10)"
+        ],
+        "out": [
+          "Kenny Gainwell"
+        ]
+      },
+      "TrumanCooper": {
+        "in": [
+          "Kenny Gainwell"
+        ],
+        "out": [
+          "2029 R2 (orig roster 10)"
+        ]
+      }
+    }
   }
 ]

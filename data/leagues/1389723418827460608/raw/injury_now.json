@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-06",
-  "n": 36,
+  "n": 35,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -114,13 +114,6 @@
       "team": "DET",
       "pos": "WR"
     },
-    "8110": {
-      "name": "Jake Ferguson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DAL",
-      "pos": "TE"
-    },
     "8121": {
       "name": "Romeo Doubs",
       "injury_status": "IR",
@@ -144,7 +137,7 @@
     },
     "8154": {
       "name": "Brian Robinson Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "ATL",
       "pos": "RB"

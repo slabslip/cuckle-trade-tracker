@@ -38909,6 +38909,695 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1424283757803761664",
+    "date": "2026-11-06",
+    "season": "2026",
+    "week": 9,
+    "user_ids": [
+      "457945712932417536",
+      "458342725222133760"
+    ],
+    "names": [
+      "ChiefGumby",
+      "TrumanCooper"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "457945712932417536": {
+            "name": "ChiefGumby",
+            "today": 208,
+            "sent_today": 202,
+            "today_delta": 6,
+            "t0": 208,
+            "t0_delta": 6,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 208,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 202,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 208,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 202,
+            "sent_today": 208,
+            "today_delta": -6,
+            "t0": 202,
+            "t0_delta": -6,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 202,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 208,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 202,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "ChiefGumby": 208,
+              "TrumanCooper": 202
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "457945712932417536": {
+            "name": "ChiefGumby",
+            "today": 208,
+            "sent_today": 202,
+            "today_delta": 6,
+            "t0": 208,
+            "t0_delta": 6,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 208,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 202,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 208,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 202,
+            "sent_today": 208,
+            "today_delta": -6,
+            "t0": 202,
+            "t0_delta": -6,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 202,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 208,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 202,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "ChiefGumby": 208,
+              "TrumanCooper": 202
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "457945712932417536": {
+            "name": "ChiefGumby",
+            "today": 2368,
+            "sent_today": 2168,
+            "today_delta": 200,
+            "t0": 2694,
+            "t0_delta": 19,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 2368,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2694
+              }
+            ],
+            "sent": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 2168,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2675
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 2168,
+            "sent_today": 2368,
+            "today_delta": -200,
+            "t0": 2675,
+            "t0_delta": -19,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Kenny Gainwell",
+                "kind": "player",
+                "asset_key": "player:7567",
+                "value": 2168,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2675
+              }
+            ],
+            "sent": [
+              {
+                "label": "2029 2nd (TedCumberbatch)",
+                "kind": "pick",
+                "asset_key": "pick:2029:2:10",
+                "value": 2368,
+                "flag": "priced_as_2028",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2694
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "ChiefGumby": 2694,
+              "TrumanCooper": 2675
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2694,
+              "sent_today": 2675,
+              "today_delta": 19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 2675,
+              "sent_today": 2694,
+              "today_delta": -19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y1": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2694,
+              "sent_today": 2675,
+              "today_delta": 19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 2675,
+              "sent_today": 2694,
+              "today_delta": -19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y2": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2694,
+              "sent_today": 2675,
+              "today_delta": 19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 2675,
+              "sent_today": 2694,
+              "today_delta": -19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y3": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2694,
+              "sent_today": 2675,
+              "today_delta": 19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 2675,
+              "sent_today": 2694,
+              "today_delta": -19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2694,
+              "sent_today": 2675,
+              "today_delta": 19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 2675,
+              "sent_today": 2694,
+              "today_delta": -19,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Kenny Gainwell",
+                  "kind": "player",
+                  "asset_key": "player:7567",
+                  "value": 2675,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2029 2nd (TedCumberbatch)",
+                  "kind": "pick",
+                  "asset_key": "pick:2029:2:10",
+                  "value": 2694,
+                  "flag": "priced_as_2028",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1270932897498419200",
     "date": "2025-09-09",
     "season": "2025",

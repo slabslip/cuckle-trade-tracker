@@ -54,11 +54,11 @@ const end = page.indexOf("\n    function dataDashBoardTiles(", start);
 if (start < 0 || end < 0) fail("missing dataDashMigrateMyPicks");
 const fnSrc = page.slice(start, end);
 
-const DATA_DASH_MAX = 14;
+const DATA_DASH_MAX = 15;
 const catalog = new Set([
   "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
   "my_trades", "trade_helper", "league_trades", "league_draft",
-  "profit_loss", "biggest_choker", "waiver_winners", "season_place",
+  "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades", "season_place",
   "week_scores", "best_ball_hype", "draft_board", "vs_you", "book_top", "firsts_held", "past_champions",
 ]);
 function dataDashById(id) { return catalog.has(id) ? { id } : null; }
@@ -102,10 +102,11 @@ function assert(cond, msg) {
   const good = [
     "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
     "my_trades", "trade_helper", "league_trades", "league_draft",
-    "profit_loss", "biggest_choker", "season_place",
-    "week_scores", "best_ball_hype",
+    "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
+    "season_place", "week_scores", "best_ball_hype",
   ];
-  assert(migrate(good).join(",") === good.join(","), "good board must stay put");
+  assert(migrate(good).join(",") === good.join(","),
+    "good board must stay put, got " + migrate(good).join(","));
 }
 
 {
@@ -116,8 +117,9 @@ function assert(cond, msg) {
     "week_scores", "draft_board",
   ];
   const next = migrate(legacy);
-  assert(next[12] === "best_ball_hype", "legacy draft_board door becomes Best Ball Hype");
+  assert(next.indexOf("best_ball_hype") >= 0, "legacy draft_board door becomes Best Ball Hype");
   assert(next[9] === "biggest_choker", "legacy past_champions door becomes Biggest choker");
+  assert(next.indexOf("cornerstone_trades") >= 0, "legacy boards pin Cornerstone trades");
 }
 
 {

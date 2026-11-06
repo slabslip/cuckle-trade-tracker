@@ -30,7 +30,7 @@ for (const need of [
   'band("Any claim → today", "any"',
   'src[passedAt] = "waiver_winners"',
   "Any claim → today includes every waiver/FA add",
-  "const DATA_DASH_MAX = 14",
+  "const DATA_DASH_MAX = 15",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -39,8 +39,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 14 || defIds.length !== 14) {
-    fail("DATA_DOORS / DEFAULT must be 14 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 15 || defIds.length !== 15) {
+    fail("DATA_DOORS / DEFAULT must be 15 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[10] !== "waiver_winners" || defIds[10] !== "waiver_winners") {
     fail("Waiver winners must be door tile 11");
@@ -106,7 +106,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Waiver winners",
-  doors: 14,
+  doors: 15,
   today_lead: book.to_today[0].player,
   delta: book.to_today[0].delta,
 }));

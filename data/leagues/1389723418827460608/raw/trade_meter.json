@@ -5743,6 +5743,473 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1424239227339587584",
+    "date": "2026-11-06",
+    "season": "2026",
+    "week": 9,
+    "user_ids": [
+      "740721014035660800",
+      "1132355027018035200"
+    ],
+    "names": [
+      "kotula69",
+      "Biff34"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "740721014035660800": {
+            "name": "kotula69",
+            "today": 3058,
+            "sent_today": 1938,
+            "today_delta": 1120,
+            "t0": 3058,
+            "t0_delta": 1120,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 3058,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 1938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 3058,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "1132355027018035200": {
+            "name": "Biff34",
+            "today": 1938,
+            "sent_today": 3058,
+            "today_delta": -1120,
+            "t0": 1938,
+            "t0_delta": -1120,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 1938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 3058,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 1938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "kotula69": 3058,
+              "Biff34": 1938
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "740721014035660800": {
+            "name": "kotula69",
+            "today": 3058,
+            "sent_today": 1938,
+            "today_delta": 1120,
+            "t0": 3058,
+            "t0_delta": 1120,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 3058,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 1938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 3058,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "1132355027018035200": {
+            "name": "Biff34",
+            "today": 1938,
+            "sent_today": 3058,
+            "today_delta": -1120,
+            "t0": 1938,
+            "t0_delta": -1120,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 1938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 3058,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 1938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "kotula69": 3058,
+              "Biff34": 1938
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "740721014035660800": {
+            "name": "kotula69",
+            "today": 4807,
+            "sent_today": 4264,
+            "today_delta": 543,
+            "t0": 4807,
+            "t0_delta": 543,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 4807,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4807
+              }
+            ],
+            "sent": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 4264,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4264
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "1132355027018035200": {
+            "name": "Biff34",
+            "today": 4264,
+            "sent_today": 4807,
+            "today_delta": -543,
+            "t0": 4264,
+            "t0_delta": -543,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Cam Skattebo",
+                "kind": "player",
+                "asset_key": "player:12481",
+                "value": 4264,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4264
+              }
+            ],
+            "sent": [
+              {
+                "label": "Matthew Golden",
+                "kind": "player",
+                "asset_key": "player:12501",
+                "value": 4807,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4807
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "kotula69": 4807,
+              "Biff34": 4264
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "740721014035660800": {
+              "name": "kotula69",
+              "today": 4807,
+              "sent_today": 4264,
+              "today_delta": 543,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Matthew Golden",
+                  "kind": "player",
+                  "asset_key": "player:12501",
+                  "value": 4807,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Cam Skattebo",
+                  "kind": "player",
+                  "asset_key": "player:12481",
+                  "value": 4264,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "1132355027018035200": {
+              "name": "Biff34",
+              "today": 4264,
+              "sent_today": 4807,
+              "today_delta": -543,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Cam Skattebo",
+                  "kind": "player",
+                  "asset_key": "player:12481",
+                  "value": 4264,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Matthew Golden",
+                  "kind": "player",
+                  "asset_key": "player:12501",
+                  "value": 4807,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "740721014035660800": {
+              "name": "kotula69",
+              "today": 4807,
+              "sent_today": 4264,
+              "today_delta": 543,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Matthew Golden",
+                  "kind": "player",
+                  "asset_key": "player:12501",
+                  "value": 4807,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Cam Skattebo",
+                  "kind": "player",
+                  "asset_key": "player:12481",
+                  "value": 4264,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "1132355027018035200": {
+              "name": "Biff34",
+              "today": 4264,
+              "sent_today": 4807,
+              "today_delta": -543,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Cam Skattebo",
+                  "kind": "player",
+                  "asset_key": "player:12481",
+                  "value": 4264,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Matthew Golden",
+                  "kind": "player",
+                  "asset_key": "player:12501",
+                  "value": 4807,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1271954165261692928",
     "date": "2025-09-11",
     "season": "2025",

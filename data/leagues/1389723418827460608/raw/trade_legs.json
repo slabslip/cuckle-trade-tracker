@@ -576,6 +576,42 @@
     "label": "Jonah Coleman"
   },
   {
+    "transaction_id": "1424239227339587584",
+    "direction": "in",
+    "to_user_id": "1132355027018035200",
+    "to_roster_id": 8,
+    "kind": "player",
+    "asset_key": "player:12481",
+    "label": "Cam Skattebo"
+  },
+  {
+    "transaction_id": "1424239227339587584",
+    "direction": "in",
+    "to_user_id": "740721014035660800",
+    "to_roster_id": 3,
+    "kind": "player",
+    "asset_key": "player:12501",
+    "label": "Matthew Golden"
+  },
+  {
+    "transaction_id": "1424239227339587584",
+    "direction": "out",
+    "from_user_id": "740721014035660800",
+    "from_roster_id": 3,
+    "kind": "player",
+    "asset_key": "player:12481",
+    "label": "Cam Skattebo"
+  },
+  {
+    "transaction_id": "1424239227339587584",
+    "direction": "out",
+    "from_user_id": "1132355027018035200",
+    "from_roster_id": 8,
+    "kind": "player",
+    "asset_key": "player:12501",
+    "label": "Matthew Golden"
+  },
+  {
     "transaction_id": "1271954165261692928",
     "direction": "in",
     "to_user_id": "1132151320410140672",

@@ -36,16 +36,16 @@
   {
     "user_id": "740721014035660800",
     "name": "kotula69",
-    "two_way": 3,
+    "two_way": 4,
     "incomplete": 0,
-    "pick_total": 4124,
-    "pick_per_trade": 1374.6666666666667,
-    "even_total": 3568,
-    "even_per_trade": 1189.3333333333333,
+    "pick_total": 5244,
+    "pick_per_trade": 1311,
+    "even_total": 4111,
+    "even_per_trade": 1027.75,
     "style": {
       "label": "Balanced",
       "now_share": 1,
-      "horizon": 277.3333333333333,
+      "horizon": 208,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }
@@ -119,6 +119,23 @@
     }
   },
   {
+    "user_id": "1132355027018035200",
+    "name": "Biff34",
+    "two_way": 1,
+    "incomplete": 0,
+    "pick_total": -1120,
+    "pick_per_trade": -1120,
+    "even_total": -543,
+    "even_per_trade": -543,
+    "style": {
+      "label": "Win-now",
+      "now_share": 1,
+      "horizon": 0,
+      "sold_picks_for_players": 0,
+      "sold_players_for_picks": 0
+    }
+  },
+  {
     "user_id": "1132149096636141568",
     "name": "Aballers",
     "two_way": 2,
@@ -155,23 +172,6 @@
   {
     "user_id": "1132146625205567488",
     "name": "Adizzl3",
-    "two_way": 0,
-    "incomplete": 0,
-    "pick_total": 0,
-    "pick_per_trade": null,
-    "even_total": 0,
-    "even_per_trade": null,
-    "style": {
-      "label": null,
-      "now_share": null,
-      "horizon": null,
-      "sold_picks_for_players": 0,
-      "sold_players_for_picks": 0
-    }
-  },
-  {
-    "user_id": "1132355027018035200",
-    "name": "Biff34",
     "two_way": 0,
     "incomplete": 0,
     "pick_total": 0,

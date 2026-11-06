@@ -48456,6 +48456,24 @@
     "drops": {}
   },
   {
+    "transaction_id": "1423843201055215616",
+    "type": "waiver",
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "week": 9,
+    "created": 1793833182161,
+    "date": "2026-11-04",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "13150": 2
+    },
+    "drops": {
+      "9230": 2
+    }
+  },
+  {
     "transaction_id": "1423826211452338176",
     "type": "free_agent",
     "league_id": "1315431339301806080",

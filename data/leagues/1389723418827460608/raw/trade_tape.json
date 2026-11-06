@@ -418,5 +418,29 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-11-06",
+    "season": "2026",
+    "week": 9,
+    "transaction_id": "1424239227339587584",
+    "sides": {
+      "kotula69": {
+        "in": [
+          "Matthew Golden"
+        ],
+        "out": [
+          "Cam Skattebo"
+        ]
+      },
+      "Biff34": {
+        "in": [
+          "Cam Skattebo"
+        ],
+        "out": [
+          "Matthew Golden"
+        ]
+      }
+    }
   }
 ]

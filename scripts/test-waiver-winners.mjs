@@ -25,10 +25,11 @@ for (const need of [
   'lab: "Waiver winners"',
   'getLeagueJson("best-waiver-pickups.json")',
   "bestWaiverPickupsBook",
-  'band("Pickup → today", "top"',
-  'band("Pickup → peak", "bot"',
+  'band("Original → today", "today"',
+  'band("Original → peak", "peak"',
+  'band("Any claim → today", "any"',
   'src[passedAt] = "waiver_winners"',
-  "Pickup → today is today's curve",
+  "Any claim → today includes every waiver/FA add",
   "const DATA_DASH_MAX = 14",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -59,22 +60,29 @@ if (!gen.includes('if (id === "best_waiver_pickups") return "waiver_winners"')) 
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/best-waiver-pickups.json", "utf8"),
 );
-if (Number(book.v) < 2 || !Array.isArray(book.to_today) || !Array.isArray(book.to_peak)) {
-  fail("best-waiver-pickups book missing v2 to_today / to_peak");
+if (Number(book.v) < 3 || !Array.isArray(book.to_today) || !Array.isArray(book.to_peak)
+  || !Array.isArray(book.to_today_any)) {
+  fail("best-waiver-pickups book missing v3 to_today / to_peak / to_today_any");
 }
-if (book.to_today.length !== 10 || book.to_peak.length !== 10) {
+if (book.to_today.length !== 10 || book.to_peak.length !== 10 || book.to_today_any.length !== 10) {
   fail("each board must be top 10");
 }
 if (!book.rule || !/drafted-then-dropped/i.test(String(book.rule.origin || ""))) {
-  fail("book rule must require original waiver/FA entry");
+  fail("book rule must require original waiver/FA entry on original boards");
 }
-// Drafted-first stars must not appear (Anthony Richardson was a draft then later claim).
+if (!book.rule || !/reclamations/i.test(String(book.rule.any_claim || ""))) {
+  fail("book rule must allow reclamations on any-claim board");
+}
+// Drafted-first stars must not appear on original boards.
 if (book.to_peak.some((r) => /Anthony Richardson/i.test(r.player || ""))) {
-  fail("drafted-first players must not rank on Waiver winners");
+  fail("drafted-first players must not rank on original Waiver winners boards");
 }
 if (!page.includes("drafted then dropped then claimed does not count")
   && !gen.includes("drafted then dropped then claimed does not count")) {
   fail("caption must spell out original-waiver-only rule");
+}
+if (!page.includes("Any claim → today") && !gen.includes("Any claim → today")) {
+  fail("UI must show Any claim → today band");
 }
 
 const design = "design-waiver-winners.html";

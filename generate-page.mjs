@@ -5039,7 +5039,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cornerstone20261106225500";
+    const DATA_V = "cornerstone20261106231000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5130,7 +5130,8 @@ const html = `<!DOCTYPE html>
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
-      "past_champions", "cornerstone_trades", "waiver_winners", "my_draft",
+      "past_champions", "draft_board", "waiver_winners", "my_draft",
+      "cornerstone_trades",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -13523,16 +13524,12 @@ const html = `<!DOCTYPE html>
           if (at >= 0) src[at] = "waiver_winners";
         }
       }
-      // Dynasty: pin Cornerstone trades after Waiver winners.
-      if (dynasty && src.indexOf("cornerstone_trades") < 0 && dataDashById("cornerstone_trades")) {
-        if (src.length < DATA_DASH_MAX) {
-          const after = src.indexOf("waiver_winners");
-          if (after >= 0) src.splice(after + 1, 0, "cornerstone_trades");
-          else src.push("cornerstone_trades");
-        } else {
-          const at = softDropAt(4);
-          if (at >= 0) src[at] = "cornerstone_trades";
-        }
+      // Dynasty: add Cornerstone trades after Waiver winners — never replace a tile.
+      if (dynasty && src.indexOf("cornerstone_trades") < 0 && dataDashById("cornerstone_trades")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("waiver_winners");
+        if (after >= 0) src.splice(after + 1, 0, "cornerstone_trades");
+        else src.push("cornerstone_trades");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -41053,8 +41050,11 @@ if (!inline.includes("function dataDashHtml(")
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 12 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 12 catalog ids");
+  if (resIds.length !== 13 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 13 catalog ids");
+  }
+  if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board and add cornerstone_trades");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
@@ -42028,6 +42028,8 @@ if (!inline.includes('id: "cornerstone_trades"')
   || !fnSrc("cornerstoneTradesDetailHtml").includes("The trade")
   || !fnSrc("receiptWhoListHtml").includes("day they traded")
   || !fnSrc("dataDashMigrateMyPicks").includes('"cornerstone_trades"')
+  || !fnSrc("dataDashMigrateMyPicks").includes("never replace a tile")
+  || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "cornerstone_trades"')
   || !fnSrc("receiptPortalLeave").includes('cornerstoneTradesOpenKey = ""')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !inline.includes('"season_place", "week_scores"')) {

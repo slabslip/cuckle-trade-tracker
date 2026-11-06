@@ -112,7 +112,22 @@ function assert(cond, msg) {
   assert(next.indexOf("biggest_choker") === 9, "past_champions becomes biggest_choker, got " + next.join(","));
   assert(next.indexOf("past_champions") < 0, "past_champions leaves the default door slot");
   assert(next.indexOf("waiver_winners") >= 0, "waiver_winners must pin onto legacy boards");
-  assert(next.indexOf("cornerstone_trades") >= 0, "cornerstone_trades must pin onto legacy boards");
+  assert(next.indexOf("cornerstone_trades") >= 0, "cornerstone_trades must add onto legacy boards");
+}
+
+{
+  // Full 15-tile board without cornerstone: add-only pin must NOT replace a tile.
+  const fullNoCorner = [
+    "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
+    "my_trades", "trade_helper", "league_trades", "league_draft",
+    "profit_loss", "biggest_choker", "waiver_winners", "season_place",
+    "week_scores", "best_ball_hype", "book_top",
+  ];
+  const next = dataDashMigrateMyPicks(fullNoCorner);
+  assert(next.join(",") === fullNoCorner.join(","),
+    "full board without room must keep every tile (no cornerstone replace), got " + next.join(","));
+  assert(next.indexOf("cornerstone_trades") < 0, "must not replace to force cornerstone on");
+  assert(next.indexOf("book_top") >= 0, "book_top must survive");
 }
 
 {

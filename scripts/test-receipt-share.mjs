@@ -86,8 +86,10 @@ if (missing.length) {
 
 if (!page.includes('DATA_DOORS = [')
   || !page.includes('"my_trades", "trade_helper", "league_trades", "league_draft"')
-  || !page.includes('"profit_loss", "biggest_choker", "season_place"')) {
-  throw new Error("default board must be the 13 door tiles");
+  || !page.includes('"profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades"')
+  || !page.includes('"season_place", "week_scores", "best_ball_hype"')
+  || !page.includes("const DATA_DASH_MAX = 15")) {
+  throw new Error("default board must be the 15 door tiles");
 }
 if (!page.includes('class="door') || page.includes("The number is one example")) {
   throw new Error("door tiles must be icon + label only");
@@ -115,8 +117,15 @@ if (page.includes("if (leg.became) receiptAddOwnedPlayer")) {
 }
 
 const bootAt = page.indexOf("const receiptQboot = receiptQueryFrom(params);");
-const gateAt = page.indexOf('appScreen = "gate"', bootAt);
-if (bootAt < 0 || gateAt < 0 || page.indexOf("openPublicReceipt(receiptQboot)", bootAt) > gateAt) {
+const openAt = page.indexOf("openPublicReceipt(receiptQboot)", bootAt);
+const unsignedBoot = bootAt >= 0 && openAt > bootAt
+  ? page.slice(bootAt, openAt + "openPublicReceipt(receiptQboot)".length + 80)
+  : "";
+// OAuth failure may set gate before this; the unsigned receipt path itself must open
+// the public receipt when receiptQboot is set, then return — never fall into gate.
+if (!unsignedBoot.includes("if (receiptQboot)")
+  || !unsignedBoot.includes("await openPublicReceipt(receiptQboot)")
+  || !/if \(receiptQboot\) \{[\s\S]*openPublicReceipt\(receiptQboot\);[\s\S]*return;/.test(unsignedBoot)) {
   throw new Error("unsigned receipt query must skip the gate");
 }
 

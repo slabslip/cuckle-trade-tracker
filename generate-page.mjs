@@ -5039,7 +5039,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cornerstone20261106223000";
+    const DATA_V = "cornerstone20261106225500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6062,7 +6062,8 @@ const html = `<!DOCTYPE html>
             ? r.from_names.join(" / ")
             : "—";
           return {
-            key: String(r.transaction_id || r.asset_key || i),
+            // One row per player — key on asset, not tx (same deal can move two studs).
+            key: String(r.asset_key || r.transaction_id || i),
             name: r.asset,
             metric: fmt(r.value),
             sub: (r.to_name || "—") + " from " + fromLab

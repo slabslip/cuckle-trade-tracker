@@ -28,11 +28,11 @@ if (!fnSrc.includes("softDrop")
   fail("migrate must soft-pin season_arcs / trade_helper without last-tile clobber");
 }
 
-const DATA_DASH_MAX = 13;
+const DATA_DASH_MAX = 14;
 const catalog = new Set([
   "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
   "my_trades", "trade_helper", "league_trades", "league_draft",
-  "profit_loss", "biggest_choker", "season_place",
+  "profit_loss", "biggest_choker", "waiver_winners", "season_place",
   "week_scores", "best_ball_hype", "draft_board", "past_champions", "vs_you", "book_top", "firsts_held",
 ]);
 

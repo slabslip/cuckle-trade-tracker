@@ -3,10 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=390, initial-scale=1" />
-  <title>Design — Best waiver pickups</title>
+  <title>Design — Waiver winners</title>
 </head>
 <body>
-  <p>Opening Best waiver pickups…</p>
+  <p>Opening Waiver winners…</p>
   <script>
     (function () {
       var seat = { id: "458342725222133760", name: "TrumanCooper" };
@@ -32,14 +32,14 @@
         localStorage.setItem("cuckle.memberships.v1", JSON.stringify([league]));
         sessionStorage.setItem("cuckle.design.league_home", "1");
         sessionStorage.setItem("cuckle.design.seat", "truman");
-        sessionStorage.setItem("cuckle.pending.tile", "best_waiver_pickups");
+        sessionStorage.setItem("cuckle.pending.tile", "waiver_winners");
         sessionStorage.removeItem("cuckle.pending.who");
         sessionStorage.removeItem("cuckle.pending.slice");
       } catch (err) {
         document.querySelector("p").textContent = "localStorage blocked.";
         return;
       }
-      var q = "design=league-home&tile=best_waiver_pickups&v=best-waiver-pickups&_=" + Date.now();
+      var q = "design=league-home&tile=waiver_winners&v=waiver-winners&_=" + Date.now();
       var go = function () { location.replace("./index.html?" + q); };
       if (!("serviceWorker" in navigator)) { go(); return; }
       navigator.serviceWorker.getRegistrations().then(function (regs) {

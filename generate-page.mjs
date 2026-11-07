@@ -5039,7 +5039,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "cornerstone20261106231000";
+    const DATA_V = "cornerstone20261107010000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9461,7 +9461,8 @@ const html = `<!DOCTYPE html>
       }
       else if (id === "cornerstone_trades") {
         caption = "Top 10 highest-value players ever moved in a trade."
-          + " Big number is that player's value the day they traded (same flatten book as Trade Value)."
+          + " Big number is that player's Trade Value flatten the day they traded (last quote on or before that date)."
+          + " No 30-day lookback and no today's market blend — so recent deals are not padded up."
           + " One row per player — keep the highest-value move."
           + " Tap a row for both bags on that deal.";
       }
@@ -11976,7 +11977,8 @@ const html = `<!DOCTYPE html>
           : null;
       } catch (err) { bestWaiverPickupsBook = null; }
       try {
-        cornerstoneTradesBook = cornerstoneTradesRaw && Number(cornerstoneTradesRaw.v) >= 1
+        cornerstoneTradesBook = cornerstoneTradesRaw && Number(cornerstoneTradesRaw.v) >= 2
+          && cornerstoneTradesRaw.pricing === "trade_day_flatten"
           && Array.isArray(cornerstoneTradesRaw.trades)
           ? cornerstoneTradesRaw
           : null;
@@ -42027,13 +42029,15 @@ if (!inline.includes('id: "cornerstone_trades"')
   || !fnSrc("dataListItems").includes('canon === "cornerstone_trades"')
   || !fnSrc("cornerstoneTradesDetailHtml").includes("The trade")
   || !fnSrc("receiptWhoListHtml").includes("day they traded")
+  || !fnSrc("receiptWhoListHtml").includes("No 30-day lookback")
   || !fnSrc("dataDashMigrateMyPicks").includes('"cornerstone_trades"')
   || !fnSrc("dataDashMigrateMyPicks").includes("never replace a tile")
   || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "cornerstone_trades"')
   || !fnSrc("receiptPortalLeave").includes('cornerstoneTradesOpenKey = ""')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
-  || !inline.includes('"season_place", "week_scores"')) {
-  throw new Error("Cornerstone trades must be a League Data door with t0 top-10 expand rows");
+  || !inline.includes('"season_place", "week_scores"')
+  || !inline.includes('pricing === "trade_day_flatten"')) {
+  throw new Error("Cornerstone trades must be a League Data door with day-of flatten top-10");
 }
 if (!inline.includes('id: "head_to_head"')
   || !inline.includes('lab: "Head to head"')

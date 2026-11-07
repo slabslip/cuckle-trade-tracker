@@ -54,21 +54,30 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/cornerstone-trades.json", "utf8"),
 );
-if (Number(book.v) < 1 || book.pricing !== "trade_meter_t0"
+if (Number(book.v) < 2 || book.pricing !== "trade_day_flatten"
   || !Array.isArray(book.trades) || book.trades.length !== 10) {
-  fail("cornerstone-trades book missing top-10 t0 board");
+  fail("cornerstone-trades book missing v2 day-of flatten top-10");
 }
 if (!book.trades.every((t) => t.rank && t.asset && t.value != null && t.date
-  && t.transaction_id && Array.isArray(t.sides) && t.sides.length >= 2)) {
-  fail("each cornerstone row needs asset/value/date/tx/sides");
+  && t.transaction_id && Array.isArray(t.sides) && t.sides.length >= 2
+  && t.priced_as && t.priced_as <= t.date)) {
+  fail("each cornerstone row needs asset/value/date/tx/sides/priced_as<=date");
 }
 if (book.trades.some((t) => t.kind !== "player")) {
   fail("cornerstone board must be players only");
 }
+if (book.trades.some((t) => /Davante Adams/i.test(t.asset || ""))) {
+  fail("Davante Adams 2019 trade must not invent a 2020 first_snap price");
+}
 const lead = book.trades[0];
-if (!/CeeDee Lamb/i.test(lead.asset || "") || lead.value < 7000) {
-  fail("expected CeeDee Lamb as lead cornerstone (~8518), got "
+if (!/CeeDee Lamb/i.test(lead.asset || "") || lead.value < 8000 || lead.value > 9000) {
+  fail("expected CeeDee Lamb as lead cornerstone (~8529 flatten), got "
     + lead.asset + "@" + lead.value);
+}
+// Recent trades must not use 30-day lookback (Caleb lookback was 7802; day-of ~7603).
+const caleb = book.trades.find((t) => /Caleb Williams/i.test(t.asset || ""));
+if (caleb && caleb.value >= 7800) {
+  fail("Caleb Williams should be day-of flatten (~7603), not lookback 7802; got " + caleb.value);
 }
 if (!lead.sides.some((s) => (s.got || []).some((g) => /CeeDee/i.test(g.label || "")))) {
   fail("lead trade sides must include CeeDee in a got bag");

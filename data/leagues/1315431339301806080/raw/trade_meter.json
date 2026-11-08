@@ -38909,6 +38909,695 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1424867679994458112",
+    "date": "2026-11-07",
+    "season": "2026",
+    "week": 9,
+    "user_ids": [
+      "457945712932417536",
+      "458004578168729600"
+    ],
+    "names": [
+      "ChiefGumby",
+      "ARae"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "457945712932417536": {
+            "name": "ChiefGumby",
+            "today": 283,
+            "sent_today": 256,
+            "today_delta": 27,
+            "t0": 283,
+            "t0_delta": 27,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 283,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 256,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 283,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458004578168729600": {
+            "name": "ARae",
+            "today": 256,
+            "sent_today": 283,
+            "today_delta": -27,
+            "t0": 256,
+            "t0_delta": -27,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 256,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 283,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 256,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "ChiefGumby": 283,
+              "ARae": 256
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "457945712932417536": {
+            "name": "ChiefGumby",
+            "today": 283,
+            "sent_today": 256,
+            "today_delta": 27,
+            "t0": 283,
+            "t0_delta": 27,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 283,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 256,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 283,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458004578168729600": {
+            "name": "ARae",
+            "today": 256,
+            "sent_today": 283,
+            "today_delta": -27,
+            "t0": 256,
+            "t0_delta": -27,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 256,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 283,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 256,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "ChiefGumby": 283,
+              "ARae": 256
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "457945712932417536": {
+            "name": "ChiefGumby",
+            "today": 2525,
+            "sent_today": 2908,
+            "today_delta": -383,
+            "t0": 2888,
+            "t0_delta": 64,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 2525,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2888
+              }
+            ],
+            "sent": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 2908,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2824
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          },
+          "458004578168729600": {
+            "name": "ARae",
+            "today": 2908,
+            "sent_today": 2525,
+            "today_delta": 383,
+            "t0": 2824,
+            "t0_delta": -64,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "2027 2nd (KingHenryXXVI)",
+                "kind": "pick",
+                "asset_key": "pick:2027:2:5",
+                "value": 2908,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2824
+              }
+            ],
+            "sent": [
+              {
+                "label": "Adonai Mitchell",
+                "kind": "player",
+                "asset_key": "player:11625",
+                "value": 2525,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 2888
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "ChiefGumby": 2888,
+              "ARae": 2824
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2888,
+              "sent_today": 2824,
+              "today_delta": 64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 2824,
+              "sent_today": 2888,
+              "today_delta": -64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y1": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2888,
+              "sent_today": 2824,
+              "today_delta": 64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 2824,
+              "sent_today": 2888,
+              "today_delta": -64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y2": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2888,
+              "sent_today": 2824,
+              "today_delta": 64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 2824,
+              "sent_today": 2888,
+              "today_delta": -64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y3": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2888,
+              "sent_today": 2824,
+              "today_delta": 64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 2824,
+              "sent_today": 2888,
+              "today_delta": -64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "457945712932417536": {
+              "name": "ChiefGumby",
+              "today": 2888,
+              "sent_today": 2824,
+              "today_delta": 64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            },
+            "458004578168729600": {
+              "name": "ARae",
+              "today": 2824,
+              "sent_today": 2888,
+              "today_delta": -64,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "2027 2nd (KingHenryXXVI)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:2:5",
+                  "value": 2824,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Adonai Mitchell",
+                  "kind": "player",
+                  "asset_key": "player:11625",
+                  "value": 2888,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 0
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1424283757803761664",
     "date": "2026-11-06",
     "season": "2026",

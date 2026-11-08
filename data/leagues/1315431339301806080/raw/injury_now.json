@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-07",
-  "n": 87,
+  "as_of": "2026-11-08",
+  "n": 84,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -22,13 +22,6 @@
       "status": "Active",
       "team": "NE",
       "pos": "TE"
-    },
-    "3286": {
-      "name": "Demarcus Robinson",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "SF",
-      "pos": "WR"
     },
     "3321": {
       "name": "Tyreek Hill",
@@ -53,8 +46,8 @@
     },
     "4177": {
       "name": "Mack Hollins",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "NE",
       "pos": "WR"
     },
@@ -81,21 +74,14 @@
     },
     "4950": {
       "name": "Christian Kirk",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "SF",
-      "pos": "WR"
-    },
-    "4983": {
-      "name": "DJ Moore",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BUF",
       "pos": "WR"
     },
     "5849": {
       "name": "Kyler Murray",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIN",
       "pos": "QB"
@@ -165,7 +151,7 @@
     },
     "7049": {
       "name": "Jauan Jennings",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIN",
       "pos": "WR"
@@ -256,8 +242,8 @@
     },
     "8154": {
       "name": "Brian Robinson Jr.",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "ATL",
       "pos": "RB"
     },
@@ -387,13 +373,6 @@
       "team": "PIT",
       "pos": "WR"
     },
-    "11637": {
-      "name": "Keon Coleman",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BUF",
-      "pos": "WR"
-    },
     "11638": {
       "name": "Ricky Pearsall",
       "injury_status": "IR",
@@ -452,8 +431,8 @@
     },
     "12492": {
       "name": "Pat Bryant",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "DEN",
       "pos": "WR"
     },
@@ -536,8 +515,8 @@
     },
     "13281": {
       "name": "Jordyn Tyson",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "NO",
       "pos": "WR"
     },
@@ -571,7 +550,7 @@
     },
     "13347": {
       "name": "Demond Claiborne",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIN",
       "pos": "RB"

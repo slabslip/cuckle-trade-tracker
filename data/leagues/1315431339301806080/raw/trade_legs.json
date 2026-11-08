@@ -4540,6 +4540,62 @@
     }
   },
   {
+    "transaction_id": "1424867679994458112",
+    "direction": "in",
+    "to_user_id": "457945712932417536",
+    "to_roster_id": 3,
+    "kind": "player",
+    "asset_key": "player:11625",
+    "label": "Adonai Mitchell"
+  },
+  {
+    "transaction_id": "1424867679994458112",
+    "direction": "out",
+    "from_user_id": "458004578168729600",
+    "from_roster_id": 4,
+    "kind": "player",
+    "asset_key": "player:11625",
+    "label": "Adonai Mitchell"
+  },
+  {
+    "transaction_id": "1424867679994458112",
+    "direction": "in",
+    "to_user_id": "458004578168729600",
+    "to_roster_id": 4,
+    "from_user_id": "457945712932417536",
+    "from_roster_id": 3,
+    "origin_roster_id": 5,
+    "kind": "pick",
+    "asset_key": "pick:2027:2:5",
+    "label": "2027 R2 (orig roster 5)",
+    "pick": {
+      "season": "2027",
+      "round": 2,
+      "roster_id": 5,
+      "previous_owner_id": 3,
+      "owner_id": 4
+    }
+  },
+  {
+    "transaction_id": "1424867679994458112",
+    "direction": "out",
+    "from_user_id": "457945712932417536",
+    "from_roster_id": 3,
+    "to_user_id": "458004578168729600",
+    "to_roster_id": 4,
+    "origin_roster_id": 5,
+    "kind": "pick",
+    "asset_key": "pick:2027:2:5",
+    "label": "2027 R2 (orig roster 5)",
+    "pick": {
+      "season": "2027",
+      "round": 2,
+      "roster_id": 5,
+      "previous_owner_id": 3,
+      "owner_id": 4
+    }
+  },
+  {
     "transaction_id": "1424283757803761664",
     "direction": "in",
     "to_user_id": "458342725222133760",

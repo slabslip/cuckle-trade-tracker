@@ -36,17 +36,17 @@
   {
     "user_id": "457945712932417536",
     "name": "ChiefGumby",
-    "two_way": 40,
+    "two_way": 41,
     "incomplete": 0,
-    "pick_total": 1,
-    "pick_per_trade": 0.025,
-    "even_total": 12268.126615443216,
-    "even_per_trade": 306.7031653860804,
+    "pick_total": 28,
+    "pick_per_trade": 0.6829268292682927,
+    "even_total": 11885.126615443216,
+    "even_per_trade": 289.88113696202964,
     "style": {
       "label": "Win-now",
-      "now_share": 0.801535753780976,
-      "horizon": -84.46153846153847,
-      "sold_picks_for_players": 4,
+      "now_share": 0.8024067239400801,
+      "horizon": -82.35,
+      "sold_picks_for_players": 5,
       "sold_players_for_picks": 14
     }
   },
@@ -138,18 +138,18 @@
   {
     "user_id": "458004578168729600",
     "name": "ARae",
-    "two_way": 67,
+    "two_way": 68,
     "incomplete": 1,
-    "pick_total": -3394,
-    "pick_per_trade": -50.656716417910445,
-    "even_total": -23648.284124238122,
-    "even_per_trade": -352.9594645408675,
+    "pick_total": -3421,
+    "pick_per_trade": -50.30882352941177,
+    "even_total": -23265.284124238122,
+    "even_per_trade": -342.1365312387959,
     "style": {
       "label": "Win-now",
-      "now_share": 0.580661522689257,
-      "horizon": -155.83333333333334,
+      "now_share": 0.5790617836656945,
+      "horizon": -153.50746268656715,
       "sold_picks_for_players": 9,
-      "sold_players_for_picks": 26
+      "sold_players_for_picks": 27
     }
   },
   {

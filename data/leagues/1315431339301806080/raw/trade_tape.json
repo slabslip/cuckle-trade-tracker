@@ -8938,5 +8938,29 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-11-07",
+    "season": "2026",
+    "week": 9,
+    "transaction_id": "1424867679994458112",
+    "sides": {
+      "ChiefGumby": {
+        "in": [
+          "Adonai Mitchell"
+        ],
+        "out": [
+          "2027 R2 (orig roster 5)"
+        ]
+      },
+      "ARae": {
+        "in": [
+          "2027 R2 (orig roster 5)"
+        ],
+        "out": [
+          "Adonai Mitchell"
+        ]
+      }
+    }
   }
 ]

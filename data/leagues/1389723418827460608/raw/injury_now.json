@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-07",
-  "n": 28,
+  "as_of": "2026-11-08",
+  "n": 26,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -37,16 +37,9 @@
       "team": "BAL",
       "pos": "QB"
     },
-    "4983": {
-      "name": "DJ Moore",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BUF",
-      "pos": "WR"
-    },
     "5849": {
       "name": "Kyler Murray",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIN",
       "pos": "QB"
@@ -116,17 +109,10 @@
     },
     "8154": {
       "name": "Brian Robinson Jr.",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "ATL",
       "pos": "RB"
-    },
-    "11637": {
-      "name": "Keon Coleman",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BUF",
-      "pos": "WR"
     },
     "11729": {
       "name": "Sione Vaki",
@@ -186,8 +172,8 @@
     },
     "13281": {
       "name": "Jordyn Tyson",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "NO",
       "pos": "WR"
     },

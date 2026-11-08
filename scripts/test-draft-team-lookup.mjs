@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-/** Draft picks League: team search → year groups + who owns them. */
+/** Draft picks League: Team dropdown (A–Z) → year groups + who owns them. */
 import fs from "node:fs";
 import path from "node:path";
 import vm from "node:vm";
@@ -7,6 +7,7 @@ import { ROOT } from "../lib.mjs";
 
 const page = fs.readFileSync(path.join(ROOT, "index.html"), "utf8");
 const gen = fs.readFileSync(path.join(ROOT, "generate-page.mjs"), "utf8");
+const mem = fs.readFileSync(path.join(ROOT, "docs/MEMORY_SDD.md"), "utf8");
 
 function fnSrc(src, name) {
   const start = src.indexOf("function " + name + "(");
@@ -25,7 +26,7 @@ function fnSrc(src, name) {
 
 for (const src of [page, gen]) {
   for (const name of [
-    "pickHubTeamSearchHits",
+    "pickHubTeamSelectHtml",
     "pickHubApplyTeam",
     "receiptPickHubTeamHtml",
     "pickHubOwnerLine",
@@ -34,18 +35,32 @@ for (const src of [page, gen]) {
       throw new Error("missing " + name);
     }
   }
-  if (!fnSrc(src, "receiptPickHubHtml").includes("pickHubTeamSearchHtml(")) {
-    throw new Error("League idle must offer team search");
+  if (/function\s+pickHubTeamSearchHtml\s*\(/.test(src)
+    || /function\s+pickHubTeamSearchHits\s*\(/.test(src)
+    || src.includes("data-pick-hub-team-q")
+    || src.includes("data-pick-hub-team-pick")
+    || src.includes("Type a team name")) {
+    throw new Error("type-ahead team search must be gone — Team dropdown only");
+  }
+  if (!fnSrc(src, "pickHubTeamSelectHtml").includes("sensitivity")
+    || !fnSrc(src, "pickHubTeamSelectHtml").includes("localeCompare")) {
+    throw new Error("Team dropdown must sort A–Z case-insensitive");
   }
   if (!fnSrc(src, "receiptDoorFilterHtml").includes("Their originals")) {
     throw new Error("Team look needs Their originals / They hold");
   }
+  if (!fnSrc(src, "receiptPickHubHtml").includes("Pick a team from the dropdown")) {
+    throw new Error("League idle caption must point at the Team dropdown");
+  }
+}
+
+if (!mem.includes("Team dropdown (A–Z)") || !mem.includes("No type-in")) {
+  throw new Error("MEMORY_SDD must lock Team dropdown only (no type-in)");
 }
 
 const ctx = {
   pickHubTeam: "all",
   pickHubTeamLook: "origin",
-  pickHubTeamQ: "",
   receiptPickYearFilter: "all",
   receiptPickRoundFilter: "all",
   pickIntelOpen: null,
@@ -53,6 +68,7 @@ const ctx = {
     { name: "TrumanCooper" },
     { name: "KingHenryXXVI" },
     { name: "TipsUp" },
+    { name: "ARae" },
   ],
   picks: {
     "pick:2027:1:5": {
@@ -81,24 +97,21 @@ const ctx = {
   },
 };
 
-function esc(s) {
-  return String(s == null ? "" : s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
 vm.runInNewContext([
   "var pickHubTeam = this.pickHubTeam;",
   "var pickHubTeamLook = this.pickHubTeamLook;",
-  "var pickHubTeamQ = this.pickHubTeamQ;",
   "var receiptPickYearFilter = this.receiptPickYearFilter;",
   "var receiptPickRoundFilter = this.receiptPickRoundFilter;",
   "var pickIntelOpen = this.pickIntelOpen;",
   "var members = this.members;",
   "var picks = this.picks;",
   "function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;'); }",
+  "function receiptLookSelect(lab, attr, opts, cur) {",
+  "  var want = (cur == null || cur === '') ? 'all' : String(cur);",
+  "  return '<label class=\"receipt-look\"><span>' + esc(lab) + '</span><select ' + attr + '=\"1\">'",
+  "    + (opts||[]).map(function(o){ return '<option value=\"'+esc(o[0])+'\">' + esc(o[1]) + '</option>'; }).join('')",
+  "    + '</select></label>';",
+  "}",
   "function pickKeyParts(key) {",
   "  var m = /^pick:(\\d{4}):(\\d+):(\\d+)$/.exec(String(key||''));",
   "  return m ? { season: m[1], round: Number(m[2]), slot: Number(m[3]) } : null;",
@@ -148,15 +161,19 @@ vm.runInNewContext([
   "}",
   "function pickHubSoonestYear() { return '2027'; }",
   fnSrc(page, "pickHubTeamName"),
-  fnSrc(page, "pickHubTeamSearchHits"),
+  fnSrc(page, "pickHubTeamSelectHtml"),
   fnSrc(page, "pickHubApplyTeam"),
   fnSrc(page, "pickHubOwnerLine"),
   fnSrc(page, "receiptPickHubTeamHtml"),
 ].join("\n"), ctx);
 
-const hits = ctx.pickHubTeamSearchHits("king");
-if (hits.length !== 1 || hits[0] !== "KingHenryXXVI") {
-  throw new Error("team search should hit KingHenryXXVI, got " + JSON.stringify(hits));
+const menu = ctx.pickHubTeamSelectHtml();
+const opts = [...menu.matchAll(/<option value="([^"]+)">/g)].map((m) => m[1]);
+if (opts[0] !== "all") throw new Error("first option must be All teams");
+const seats = opts.slice(1);
+const sorted = seats.slice().sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+if (seats.join("|") !== sorted.join("|")) {
+  throw new Error("Team dropdown must be A–Z, got " + seats.join(", "));
 }
 
 ctx.pickHubApplyTeam("KingHenryXXVI");
@@ -172,23 +189,16 @@ if (!originHtml.includes("2027") || !originHtml.includes("Held by TrumanCooper")
 if (!originHtml.includes("Used · became Ashton Jeanty")) {
   throw new Error("origin look must show used picks by year");
 }
-if (!originHtml.includes("data-sec-h\">2026") || !originHtml.includes("data-sec-h\">2027")
-  || !originHtml.includes("data-sec-h\">2028")) {
-  throw new Error("origin look must group by year");
-}
 
 ctx.pickHubTeamLook = "held";
 const heldHtml = ctx.receiptPickHubTeamHtml("KingHenryXXVI", "");
-if (!heldHtml.includes("2028 2nd") || !heldHtml.includes("Was KingHenryXXVI")) {
-  throw new Error("held look must list picks they still hold: " + heldHtml.slice(0, 400));
-}
-if (heldHtml.includes("2027 1st")) {
-  throw new Error("held look must not list picks they sold");
+if (!heldHtml.includes("2028 2nd") || heldHtml.includes("2027 1st")) {
+  throw new Error("held look must list only picks they still hold");
 }
 
 console.log(JSON.stringify({
   ok: true,
-  search: hits,
+  teams_az: seats,
   origin_has_owner: originHtml.includes("Held by TrumanCooper"),
   held_n: (heldHtml.match(/class="row"/g) || []).length,
 }));

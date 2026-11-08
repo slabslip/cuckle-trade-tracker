@@ -33,17 +33,15 @@ need(page, "index.html", [
   "function pickHubSoonestYear(",
   "function pickHubApplyScope(",
   "function pickHubApplyTeam(",
+  "function pickHubTeamSelectHtml(",
   "function pickHubProject(",
   "function receiptPickHubHtml(",
   "function receiptPickHubTeamHtml(",
-  "function pickHubTeamSearchHtml(",
   "function pickHubDeal(",
   'data-pick-hub-scope="mine">Mine<',
   'data-pick-hub-scope="league">League<',
   'data-pick-hub-scope="tape">Tape<',
   "data-pick-hub-team",
-  "data-pick-hub-team-q",
-  "data-pick-hub-team-pick",
   "Their originals",
   "They hold",
   "rank2027",
@@ -59,10 +57,10 @@ need(gen, "generate-page.mjs", [
   "function pickHubSoonestYear(",
   "function pickHubApplyScope(",
   "function pickHubApplyTeam(",
+  "function pickHubTeamSelectHtml(",
   "function pickHubProject(",
   "function receiptPickHubHtml(",
   "function receiptPickHubTeamHtml(",
-  "function pickHubTeamSearchHtml(",
   "function pickHubDeal(",
   'data-pick-hub-scope="mine">Mine<',
   'data-pick-hub-scope="league">League<',
@@ -83,9 +81,16 @@ need(mem, "MEMORY_SDD", [
   "origin seat's 2026",
   "last-place 2026 window is 1.01",
   "3-way line",
-  "find a team",
+  "Team dropdown (A–Z)",
+  "No type-in",
   "who owns them",
 ]);
+if (page.includes("data-pick-hub-team-q") || page.includes("Type a team name")
+  || /function\s+pickHubTeamSearchHtml\s*\(/.test(page)
+  || /function\s+pickHubTeamSearchHtml\s*\(/.test(gen)
+  || /function\s+pickHubTeamSearchHits\s*\(/.test(gen)) {
+  throw new Error("type-ahead team search must be removed");
+}
 
 if (!fnSrc(page, "pickHubProject").includes("rank2027")
   || !fnSrc(gen, "pickHubProject").includes("rank2027")) {

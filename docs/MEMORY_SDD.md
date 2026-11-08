@@ -206,9 +206,9 @@ overlapping tiles.
 - **Mine** — who holds the unused picks that started on your seat.
   2027, then later years. Row: holder, origin window (Contend / Tank),
   projected slot, Early / Mid / Late.
-- **League** — find a team (type-ahead or Team dropdown) to look up that
-  seat's picks by year and who owns them (**Their originals** / **They
-  hold**). All teams still shows every unused pick that year, firsts
+- **League** — Team dropdown (A–Z) to look up that seat's picks by year
+  and who owns them (**Their originals** / **They hold**). No type-in
+  search. All teams still shows every unused pick that year, firsts
   first. Early / Mid / Late board on firsts: last-place 2026 window is 1.01,
   title window is 1.10 — from the origin seat's 2026 look.
 - **Tape** — the old Used / Traded away / Traded in grades. Each

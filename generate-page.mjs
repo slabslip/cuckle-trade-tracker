@@ -4340,14 +4340,6 @@ const html = `<!DOCTYPE html>
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px;
     }
     .pick-hub-menus .receipt-look { margin: 0; }
-    .pick-hub-team-search { display: grid; gap: 6px; margin: 0 0 12px; }
-    .pick-hub-team-search .cuffs-q {
-      width: 100%; box-sizing: border-box; font: inherit; font-size: 16px;
-      color: var(--text); background: var(--card); border: 1px solid var(--line);
-      border-radius: 10px; min-height: 36px; padding: 6px 10px;
-    }
-    .pick-hub-team-search .cuffs-q:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
-    .pick-hub-team-hits { display: grid; gap: 0; margin: 0; }
     .pick-hub-scopes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
     .pick-hub-scopes .chip { min-height: 40px; }
     .pick-hub-band {
@@ -5047,7 +5039,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "draftTeam20261108230000";
+    const DATA_V = "draftTeamDd20261108233000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5208,7 +5200,7 @@ const html = `<!DOCTYPE html>
       { id: "my_cuffs", lab: "My cuffs", desk: "cuffs", size: "full", why: "Cuffs on your starters." },
       { id: "available_cuffs", lab: "Available cuffs", desk: "cuffs", size: "full", why: "Free-agent cuffs, your starters first." },
       { id: "league_trades", lab: "League Trade History", desk: "lists", group: "memory", size: "full", why: "Every pairing, most deals first." },
-      { id: "my_draft", lab: "Draft picks", desk: "lists", group: "memory", size: "full", why: "Look up any team’s picks by year and who owns them. Mine / League / Tape." },
+      { id: "my_draft", lab: "Draft picks", desk: "lists", group: "memory", size: "full", why: "Team dropdown (A–Z) to look up picks by year and who owns them. Mine / League / Tape." },
       { id: "league_draft", lab: "League Draft Picks", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then the same used / away / in tape." },
       { id: "season_place", lab: "Manager avg finish", desk: "lists", group: "memory", size: "full", why: "Career average finish. One year still counts. Not this season’s projection." },
       { id: "projected_finish", lab: "Expected finish", desk: "lists", group: "memory", size: "full", why: "Top 6 champ bracket (1–2 bye; 6v3 / 5v4) + Bottom 4 toilet bowl (10v7, 8v9). Place now is the race; MC paths set projected finish." },
@@ -8630,7 +8622,6 @@ const html = `<!DOCTYPE html>
       pickHubScope = "mine";
       pickHubTeam = "all";
       pickHubTeamLook = "origin";
-      pickHubTeamQ = "";
       pickHubOutlookMemo = null;
     }
 
@@ -8639,45 +8630,14 @@ const html = `<!DOCTYPE html>
       return (!t || t === "all") ? "" : t;
     }
 
+    /** Alphabetical Team dropdown — All teams, then every seat A→Z. */
     function pickHubTeamSelectHtml() {
       const names = (members || []).map(function (m) { return m.name; }).filter(Boolean)
-        .sort(function (a, b) { return String(a).localeCompare(String(b)); });
+        .sort(function (a, b) {
+          return String(a).localeCompare(String(b), undefined, { sensitivity: "base" });
+        });
       const opts = [["all", "All teams"]].concat(names.map(function (n) { return [n, n]; }));
       return receiptLookSelect("Team", "data-pick-hub-team", opts, pickHubTeam || "all");
-    }
-
-    /** Type-ahead hits for League team lookup (seat names only). */
-    function pickHubTeamSearchHits(q) {
-      const needle = String(q || "").trim().toLowerCase();
-      if (!needle) return [];
-      return (members || []).map(function (m) { return m && m.name; }).filter(Boolean)
-        .filter(function (n) { return String(n).toLowerCase().indexOf(needle) >= 0; })
-        .sort(function (a, b) { return String(a).localeCompare(String(b)); })
-        .slice(0, 8);
-    }
-
-    function pickHubTeamSearchHtml() {
-      const q = String(pickHubTeamQ || "");
-      const hits = pickHubTeamSearchHits(q);
-      let list = "";
-      if (q.trim() && !hits.length) {
-        list = '<p class="caption">No team matches.</p>';
-      } else if (hits.length) {
-        list = '<div class="pick-hub-team-hits" role="listbox" aria-label="Matching teams">'
-          + hits.map(function (n) {
-            return '<button type="button" class="row" role="option" data-pick-hub-team-pick="' + esc(n) + '">'
-              + '<div class="row-top"><div><div class="names">' + esc(n) + "</div>"
-              + '<div class="date">Look up picks by year · who owns them</div></div></div></button>';
-          }).join("")
-          + "</div>";
-      }
-      return '<div class="pick-hub-team-search">'
-        + '<label class="receipt-look"><span class="receipt-look-lab">Find a team</span>'
-        + '<input type="search" class="cuffs-q" data-pick-hub-team-q placeholder="Type a team name"'
-        + ' value="' + esc(q) + '" autocomplete="off" spellcheck="false" aria-label="Find a team">'
-        + "</label>"
-        + list
-        + "</div>";
     }
 
     function receiptDoorFilterHtml(id) {
@@ -9478,9 +9438,9 @@ const html = `<!DOCTYPE html>
             ? ("Unused picks " + team + " still holds, by year. Origin seat on each row.")
             : (team + "'s original picks by year — who owns them, used, or still held. Switch Look for what they hold.");
         } else if (pickHubScope === "league") {
-          caption = "Find a team to look up their picks by year and who owns them. Or leave Team on All for every leftover pick that year, firsts first. Early / Mid / Late follows Projected finish — last place is the 1.01.";
+          caption = "Pick a team from the dropdown (A–Z) to look up their picks by year and who owns them. Leave Team on All for every leftover pick that year, firsts first. Early / Mid / Late follows Projected finish — last place is the 1.01.";
         } else {
-          caption = "Unused 2027+ first. Mine is who holds the picks that started here. League lets you look up any team by year. Early / Mid / Late follows Projected finish (this season’s race + strength of schedule) — last place is the 1.01.";
+          caption = "Unused 2027+ first. Mine is who holds the picks that started here. League uses a Team dropdown to look up any seat by year. Early / Mid / Late follows Projected finish (this season’s race + strength of schedule) — last place is the 1.01.";
         }
       }
       else if (id === "my_draft") caption = "Used is a player this seat drafted. Traded away started here and left. Traded in came from another seat. Grade is Star / Hit / Even / Miss / Bust vs the slot.";
@@ -9928,7 +9888,6 @@ const html = `<!DOCTYPE html>
     function pickHubApplyScope(scope) {
       pickHubScope = scope || "mine";
       pickIntelOpen = null;
-      pickHubTeamQ = "";
       if (pickHubScope === "league") {
         if (pickHubTeamName()) {
           if (!receiptPickYearFilter) receiptPickYearFilter = "all";
@@ -9960,7 +9919,6 @@ const html = `<!DOCTYPE html>
     function pickHubApplyTeam(name) {
       const n = String(name || "").trim();
       pickHubTeam = n || "all";
-      pickHubTeamQ = "";
       pickIntelOpen = null;
       if (pickHubTeamName()) {
         receiptPickYearFilter = "all";
@@ -10419,8 +10377,7 @@ const html = `<!DOCTYPE html>
       if (pickHubScope === "league") {
         const team = pickHubTeamName();
         if (team) return receiptPickHubTeamHtml(team, q);
-        // Idle League: find a team, then the unused board.
-        let html = pickHubTeamSearchHtml();
+        // Idle League: Team dropdown (A–Z), then the unused board.
         let rows = pickHubUnusedRows();
         const needle = String(q || "").trim().toLowerCase();
         if (needle) {
@@ -10433,8 +10390,8 @@ const html = `<!DOCTYPE html>
         const rd = pickHubRoundFilter();
         const head = "Who has " + (year === "all" ? "future" : year) + " "
           + (rd === "all" ? "picks" : (rd === "1" ? "firsts" : (rd === "2" ? "2nds" : (rd + "ths"))));
-        html += '<p class="caption">' + esc(head) + ". "
-          + rows.length + " still unused. Or find a team above to see their picks by year and who owns them. "
+        let html = '<p class="caption">' + esc(head) + ". "
+          + rows.length + " still unused. Pick a team from the dropdown to see their picks by year and who owns them. "
           + "Early / Mid / Late follows Projected finish (race + SoS) when that book is live — last place is 1.01, the title is 1."
           + pickHubTeamsN() + ".</p>";
         if (rd === "1" || rd === "all") html += pickHubBoardHtml(rows);
@@ -24154,7 +24111,6 @@ const html = `<!DOCTYPE html>
     let pickHubScope = "mine";
     let pickHubTeam = "all";
     let pickHubTeamLook = "origin";
-    let pickHubTeamQ = "";
     let pickHubOutlookMemo = null;
     let receiptVsWho = "";
     let receiptNetWho = "";
@@ -37234,12 +37190,6 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
-      const hubTeamPick = e.target.closest("[data-pick-hub-team-pick]");
-      if (hubTeamPick) {
-        pickHubApplyTeam(hubTeamPick.getAttribute("data-pick-hub-team-pick") || "");
-        render();
-        return;
-      }
       const hubScopeBtn = e.target.closest("[data-pick-hub-scope]");
       if (hubScopeBtn) {
         pickHubApplyScope(hubScopeBtn.getAttribute("data-pick-hub-scope") || "mine");
@@ -39443,19 +39393,6 @@ const html = `<!DOCTYPE html>
         }
         return;
       }
-      const pickHubTeamQBox = e.target.closest("[data-pick-hub-team-q]");
-      if (pickHubTeamQBox) {
-        pickHubTeamQ = pickHubTeamQBox.value || "";
-        const start = pickHubTeamQBox.selectionStart;
-        const end = pickHubTeamQBox.selectionEnd;
-        render();
-        const back = document.querySelector("#app [data-pick-hub-team-q]");
-        if (back) {
-          back.focus({ preventScroll: true });
-          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
-        }
-        return;
-      }
       const tradeHelperQBox = e.target.closest("[data-trade-helper-q]");
       if (tradeHelperQBox) {
         tradeHelperQ = tradeHelperQBox.value;
@@ -41569,18 +41506,22 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("function pickHubSoonestYear(")
     || !inline.includes("function pickHubApplyScope(")
     || !inline.includes("function pickHubApplyTeam(")
+    || !inline.includes("function pickHubTeamSelectHtml(")
     || !inline.includes("function pickHubProject(")
     || !inline.includes("function receiptPickHubHtml(")
     || !inline.includes("function receiptPickHubTeamHtml(")
-    || !inline.includes("function pickHubTeamSearchHtml(")
     || !inline.includes('data-pick-hub-team')
-    || !inline.includes("data-pick-hub-team-q")
-    || !inline.includes("data-pick-hub-team-pick")
+    || inline.includes("data-pick-hub-team-" + "q")
+    || inline.includes("data-pick-hub-team-" + "pick")
+    || inline.includes("function pickHubTeam" + "SearchHtml(")
+    || inline.includes("Type a team " + "name")
     || !inline.includes("Their originals")
     || !inline.includes("They hold")
+    || !fnSrc("pickHubTeamSelectHtml").includes("localeCompare")
+    || !fnSrc("pickHubTeamSelectHtml").includes("All teams")
     || !fnSrc("pickHubProject").includes("rank2027")
     || !fnSrc("receiptPickHubHtml").includes("1.01")
-    || !fnSrc("receiptPickHubHtml").includes("pickHubTeamSearchHtml(")
+    || !fnSrc("receiptPickHubHtml").includes("Pick a team from the dropdown")
     || !fnSrc("receiptPickHubTeamHtml").includes("who owns them")
     || !inline.includes("function receiptOriginPicksListHtml(")
     || !fnSrc("receiptPortalRows").includes('receiptDoorFilter === "origin"')

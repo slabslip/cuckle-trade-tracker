@@ -499,13 +499,6 @@
       "team": "BAL",
       "pos": "WR"
     },
-    "13277": {
-      "name": "CJ Donaldson",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "NO",
-      "pos": "RB"
-    },
     "13279": {
       "name": "Carnell Tate",
       "injury_status": "Out",
@@ -589,6 +582,13 @@
       "status": "Active",
       "team": "PIT",
       "pos": "RB"
+    },
+    "13602": {
+      "name": "Jack Strand",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "ATL",
+      "pos": "QB"
     }
   }
 }

@@ -34,6 +34,10 @@ for (const need of [
   "Pipeline credit",
   "Most started",
   "Belief = lineup starts",
+  "data-pipeline-pos",
+  "pipeline-pos-list",
+  "fantasy rank (PPR)",
+  "function pipelinePosBoard(",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -57,11 +61,28 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/pipeline.json", "utf8"),
 );
-if (Number(book.v) < 2 || !Array.isArray(book.players) || book.players.length < 100) {
-  fail("pipeline book missing players (need v>=2 with starts)");
+if (Number(book.v) < 3 || !Array.isArray(book.players) || book.players.length < 100) {
+  fail("pipeline book missing players (need v>=3 with pos ranks)");
 }
 if (!book.rule || !/0\.50 starts/.test(book.rule.metric || "")) {
   fail("pipeline rule must weight starts at 0.50");
+}
+if (!book.positions || book.positions.join(",") !== "QB,RB,WR,TE") {
+  fail("pipeline book must list QB/RB/WR/TE positions");
+}
+{
+  const wr = book.players
+    .filter((p) => p.pos === "WR" && p.pos_rank != null)
+    .sort((a, b) => a.pos_rank - b.pos_rank);
+  if (wr.length < 10) fail("expected WR season ranks, got " + wr.length);
+  if (wr[0].pos_rank !== 1 || !(wr[0].season_pts > 0)) {
+    fail("WR #1 missing season pts");
+  }
+  for (let i = 1; i < Math.min(wr.length, 8); i++) {
+    if (wr[i].season_pts > wr[i - 1].season_pts) {
+      fail("WR ranks not ordered by season pts");
+    }
+  }
 }
 const startsRaw = "data/leagues/1315431339301806080/raw/player_starts.json";
 if (!fs.existsSync(startsRaw)) fail("missing " + startsRaw);

@@ -4340,6 +4340,21 @@ const html = `<!DOCTYPE html>
       display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 0 0 14px;
     }
     .pick-hub-menus .receipt-look { margin: 0; }
+    .pipeline-search { display: grid; gap: 6px; margin: 0 0 12px; }
+    .pipeline-search .cuffs-q {
+      width: 100%; box-sizing: border-box; font: inherit; font-size: 16px;
+      color: var(--text); background: var(--card); border: 1px solid var(--line);
+      border-radius: 10px; min-height: 36px; padding: 6px 10px;
+    }
+    .pipeline-search .cuffs-q:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+    .pipeline-credit {
+      margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line);
+      border-radius: 10px; background: #141418;
+    }
+    .pipeline-credit .names { font-size: 1.15rem; font-weight: 700; margin: 2px 0; }
+    .pipeline-credit .margin { color: var(--lh-gold, #e0b44c); font-size: 1.35rem; font-weight: 750; margin: 4px 0; }
+    .pipeline-facts { margin: 0 0 12px; }
+    .pipeline-facts p { margin: 0 0 6px; font-size: 0.88rem; }
     .pick-hub-scopes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
     .pick-hub-scopes .chip { min-height: 40px; }
     .pick-hub-band {
@@ -5015,6 +5030,9 @@ const html = `<!DOCTYPE html>
     let bestBallHypeOpenKey = "";
     let biggestChokerOpenKey = "";
     let cornerstoneTradesOpenKey = "";
+    let pipelineQ = "";
+    let pipelinePickKey = "";
+    let pipelineLook = "pipeline";
     let receiptH2hA = "";
     let receiptH2hB = "";
     let analyzerShareNote = "";
@@ -5039,7 +5057,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261108233717";
+    const DATA_V = "pipeline20261109015500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5106,12 +5124,12 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 15;
+    const DATA_DASH_MAX = 16;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
-      "season_place", "week_scores", "best_ball_hype",
+      "season_place", "week_scores", "best_ball_hype", "pipeline",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5125,13 +5143,13 @@ const html = `<!DOCTYPE html>
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
-      "season_place", "week_scores", "best_ball_hype",
+      "season_place", "week_scores", "best_ball_hype", "pipeline",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
-      "cornerstone_trades",
+      "cornerstone_trades", "pipeline",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5147,7 +5165,7 @@ const html = `<!DOCTYPE html>
       "uninsured", "available_cuffs", "cuffs_board", "my_cuffs", "poach_cuffs",
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
-      "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades",
+      "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades", "pipeline",
       "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -5183,6 +5201,7 @@ const html = `<!DOCTYPE html>
       { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
       { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Three top-10 boards: original waiver/FA → today, original → peak, and any claim → today (including drafted-then-dropped reclamations)." },
       { id: "cornerstone_trades", lab: "Cornerstone trades", desk: "lists", group: "memory", size: "full", why: "Top 10 highest-value players ever moved in a trade, priced the day they traded. Tap a row for both bags." },
+      { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Search any player — who owned them, who found them, who held longest, who paid the most. Pipeline credit weeds out short flips." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5310,6 +5329,7 @@ const html = `<!DOCTYPE html>
     let biggestChokerBook = null;
     let bestWaiverPickupsBook = null;
     let cornerstoneTradesBook = null;
+    let pipelineBook = null;
     let headToHeadBook = null;
     let leagueLoadGen = 0;
     let cosmeticsEquip = { title: null, emblem: null };
@@ -5770,7 +5790,7 @@ const html = `<!DOCTYPE html>
         || canon === "past_champions" || canon === "projected_finish"
         || canon === "season_arcs" || canon === "manager_archetypes"
         || canon === "best_ball_hype" || canon === "biggest_choker"
-        || canon === "waiver_winners" || canon === "cornerstone_trades"
+        || canon === "waiver_winners" || canon === "cornerstone_trades" || canon === "pipeline"
         || canon === "head_to_head";
     }
 
@@ -7889,7 +7909,7 @@ const html = `<!DOCTYPE html>
         || id === "trade_mark" || id === "pick_print" || id === "my_picks"
         || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "biggest_choker" || id === "waiver_winners"
-        || id === "cornerstone_trades"
+        || id === "cornerstone_trades" || id === "pipeline"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
@@ -7950,7 +7970,7 @@ const html = `<!DOCTYPE html>
       if (key === "vs_you" || key === "season_place" || key === "past_champions") return false;
       if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes"
         || key === "best_ball_hype" || key === "biggest_choker"
-        || key === "waiver_winners" || key === "cornerstone_trades"
+        || key === "waiver_winners" || key === "cornerstone_trades" || key === "pipeline"
         || key === "head_to_head") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
@@ -7966,6 +7986,7 @@ const html = `<!DOCTYPE html>
       if (id === "draft_marks" || id === "held_firsts") return true;
       if (canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades"
+        || canon === "pipeline"
         || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
@@ -8016,6 +8037,7 @@ const html = `<!DOCTYPE html>
         biggest_choker: '<path d="M12 4v8"/><circle cx="12" cy="17.2" r="1.4"/><path d="M8.2 7.5c1.1-1.6 2.4-2.3 3.8-2.3s2.7.7 3.8 2.3"/>',
         waiver_winners: '<path d="M12 19V7M8.5 10.5L12 7l3.5 3.5"/><path d="M5 19h14"/>',
         cornerstone_trades: '<path d="M12 3l2.2 4.5L19 8.2l-3.5 3.4.8 4.9L12 14.2 7.7 16.5l.8-4.9L5 8.2l4.8-.7L12 3z"/>',
+        pipeline: '<path d="M4 12h16M8 8v8M16 8v8M12 6v12"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
         forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
         passed_around: '<path d="M20 8a8 8 0 1 0 1.6 6"/><polyline points="16 8 20 8 20 4"/>',
@@ -8624,6 +8646,14 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptDoorFilterHtml(id) {
+      if (id === "pipeline" && pipelinePickKey) {
+        return receiptLookSelect("Credit", "data-pipeline-look", [
+          ["pipeline", "Pipeline credit"],
+          ["first", "First owned"],
+          ["longest", "Longest hold"],
+          ["paid", "Highest paid"],
+        ], pipelineLook || "pipeline");
+      }
       if (id === "profit_loss") {
         return receiptLookSelect("Sort", "data-receipt-pl-sort",
           [["most", "Most profitable"], ["least", "Least profitable"]], receiptPlSort);
@@ -8784,6 +8814,7 @@ const html = `<!DOCTYPE html>
     }
 
     function receiptPortalRows(id, q) {
+      if (id === "pipeline") return pipelinePortalHtml();
       const needle = String(q || "").trim().toLowerCase();
       const hit = function (parts) {
         if (!needle) return true;
@@ -9216,7 +9247,7 @@ const html = `<!DOCTYPE html>
       }
       if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners"
-        || id === "cornerstone_trades") {
+        || id === "cornerstone_trades" || id === "pipeline") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank,
             r.seat && r.seat.picker, r.seat && r.seat.player,
@@ -9465,6 +9496,11 @@ const html = `<!DOCTYPE html>
           + " No 30-day lookback and no today's market blend — so recent deals are not padded up."
           + " One row per player — keep the highest-value move."
           + " Tap a row for both bags on that deal.";
+      }
+      else if (id === "pipeline") {
+        caption = pipelinePickKey
+          ? ("Every seat that owned this player. Credit look crowns one pipeline — discover + hold, short flips dinged. Highest paid is a fact, not the hero.")
+          : ("Search any player. See who owned them, who found them, who held longest, who paid the most — then Pipeline credit for the seat that actually ran them.");
       }
       else if (id === "head_to_head") {
         if (receiptH2hA && receiptH2hB) {
@@ -11834,6 +11870,10 @@ const html = `<!DOCTYPE html>
       biggestChokerBook = null;
       bestWaiverPickupsBook = null;
       cornerstoneTradesBook = null;
+      pipelineBook = null;
+      pipelineQ = "";
+      pipelinePickKey = "";
+      pipelineLook = "pipeline";
       headToHeadBook = null;
       overnight = null;
       overnightLoading = false;
@@ -11860,7 +11900,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, bestWaiverRaw, cornerstoneTradesRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -11882,6 +11922,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("biggest-choker.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
         getLeagueJson("cornerstone-trades.json").catch(() => null),
+        getLeagueJson("pipeline.json").catch(() => null),
         getLeagueJson("head-to-head.json").catch(() => null),
       ]);
       if (gen !== leagueLoadGen) return;
@@ -11983,6 +12024,12 @@ const html = `<!DOCTYPE html>
           ? cornerstoneTradesRaw
           : null;
       } catch (err) { cornerstoneTradesBook = null; }
+      try {
+        pipelineBook = pipelineRaw && Number(pipelineRaw.v) >= 1
+          && Array.isArray(pipelineRaw.players)
+          ? pipelineRaw
+          : null;
+      } catch (err) { pipelineBook = null; }
       try {
         headToHeadBook = headToHeadRaw && Number(headToHeadRaw.v) >= 1
           && headToHeadRaw.pairs ? headToHeadRaw : null;
@@ -13254,6 +13301,9 @@ const html = `<!DOCTYPE html>
       bestBallHypeOpenKey = "";
       biggestChokerOpenKey = "";
       cornerstoneTradesOpenKey = "";
+      pipelineQ = "";
+      pipelinePickKey = "";
+      pipelineLook = "pipeline";
       receiptH2hA = "";
       receiptH2hB = "";
       if (typeof receiptPlReset === "function") receiptPlReset();
@@ -13532,6 +13582,13 @@ const html = `<!DOCTYPE html>
         const after = src.indexOf("waiver_winners");
         if (after >= 0) src.splice(after + 1, 0, "cornerstone_trades");
         else src.push("cornerstone_trades");
+      }
+      // Dynasty: add Pipeline after Best Ball Hype — never replace a tile.
+      if (dynasty && src.indexOf("pipeline") < 0 && dataDashById("pipeline")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("best_ball_hype");
+        if (after >= 0) src.splice(after + 1, 0, "pipeline");
+        else src.push("pipeline");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -15435,6 +15492,144 @@ const html = `<!DOCTYPE html>
       });
       html += "</div>";
       return html;
+    }
+
+    function pipelinePlayerByKey(key) {
+      const want = String(key || "");
+      if (!want || !pipelineBook || !Array.isArray(pipelineBook.players)) return null;
+      for (let i = 0; i < pipelineBook.players.length; i++) {
+        if (String(pipelineBook.players[i].asset_key) === want) return pipelineBook.players[i];
+      }
+      return null;
+    }
+
+    function pipelineSearchHits(q, limit) {
+      const needle = String(q || "").trim().toLowerCase();
+      const cap = Math.max(1, Number(limit) || 12);
+      if (!needle || !pipelineBook || !Array.isArray(pipelineBook.players)) return [];
+      const out = [];
+      for (let i = 0; i < pipelineBook.players.length; i++) {
+        const p = pipelineBook.players[i];
+        if (!p || String(p.name || "").toLowerCase().indexOf(needle) < 0) continue;
+        out.push(p);
+        if (out.length >= cap) break;
+      }
+      return out;
+    }
+
+    function pipelineCreditForLook(player, look) {
+      const facts = (player && player.facts) || {};
+      const key = String(look || pipelineLook || "pipeline");
+      if (key === "first") return facts.first_owned || null;
+      if (key === "longest") return facts.longest || null;
+      if (key === "paid") return facts.highest_paid || null;
+      return facts.pipeline || null;
+    }
+
+    function pipelineAcquireLab(kind) {
+      if (kind === "draft") return "Draft";
+      if (kind === "waiver") return "Waiver";
+      if (kind === "fa" || kind === "free_agent") return "FA";
+      if (kind === "trade") return "Trade";
+      if (kind === "commissioner") return "Commish";
+      if (kind === "drop") return "Drop";
+      if (kind === "held") return "Held";
+      return kind ? String(kind) : "—";
+    }
+
+    function pipelinePlayerHtml(player) {
+      if (!player) return '<p class="caption">Pick a player.</p>';
+      const credit = pipelineCreditForLook(player, pipelineLook);
+      const facts = player.facts || {};
+      const lookLab = pipelineLook === "first" ? "First owned"
+        : (pipelineLook === "longest" ? "Longest hold"
+          : (pipelineLook === "paid" ? "Highest paid" : "Pipeline credit"));
+      let html = "";
+      if (credit) {
+        const big = credit.days != null ? (credit.days + "d")
+          : (credit.value != null ? fmt(credit.value)
+            : (credit.score != null ? String(credit.score) : "—"));
+        html += '<div class="pipeline-credit">'
+          + '<p class="caption">' + esc(lookLab) + "</p>"
+          + '<p class="names">' + esc(credit.name || "—") + "</p>"
+          + '<p class="margin">' + esc(String(big)) + "</p>"
+          + (credit.because ? ('<p class="date">' + esc(credit.because) + "</p>") : "")
+          + (credit.date ? ('<p class="date">' + esc(String(credit.date)) + "</p>") : "")
+          + (credit.acquire ? ('<p class="date">' + esc(pipelineAcquireLab(credit.acquire)) + "</p>") : "")
+          + "</div>";
+      } else {
+        html += '<p class="caption">No seat wins this look yet.</p>';
+      }
+      html += '<div class="pipeline-facts" aria-label="Pipeline facts">';
+      if (facts.first_owned) {
+        html += "<p><b>First owned</b> · " + esc(facts.first_owned.name)
+          + " · " + esc(pipelineAcquireLab(facts.first_owned.acquire))
+          + (facts.first_owned.date ? (" · " + esc(facts.first_owned.date)) : "")
+          + "</p>";
+      }
+      if (facts.longest) {
+        html += "<p><b>Longest hold</b> · " + esc(facts.longest.name)
+          + " · " + esc(String(facts.longest.days)) + " days</p>";
+      }
+      if (facts.highest_paid) {
+        html += "<p><b>Highest paid</b> · " + esc(facts.highest_paid.name)
+          + " · " + esc(fmt(facts.highest_paid.value))
+          + (facts.highest_paid.date ? (" · " + esc(facts.highest_paid.date)) : "")
+          + "</p>";
+      }
+      html += '<p class="caption">First start awaits a week-by-week lineup book. Paid is market flatten at acquire — not FAAB.</p>';
+      html += "</div>";
+      html += '<p class="caption">' + esc(String((player.stints || []).length))
+        + " stint" + ((player.stints || []).length === 1 ? "" : "s")
+        + " · short flips under 21 days are dinged for Pipeline credit.</p>";
+      (player.stints || []).forEach(function (s) {
+        const when = (s.start || "") + (s.end && s.end !== s.start ? (" → " + s.end) : "");
+        const val = s.acquire_value != null ? (" · " + fmt(s.acquire_value)) : "";
+        const flag = s.short ? " · short" : "";
+        html += '<div class="row">'
+          + '<div class="row-top"><div><div class="names">' + esc(s.name || "—") + "</div>"
+          + '<div class="date">' + esc(pipelineAcquireLab(s.acquire) + " → " + pipelineAcquireLab(s.exit)
+            + " · " + (s.days != null ? s.days : "—") + "d" + val + flag)
+          + "</div>"
+          + '<div class="date">' + esc(when) + "</div></div>"
+          + '<div class="margin">' + esc(pipelineAcquireLab(s.exit)) + "</div></div></div>";
+      });
+      return html;
+    }
+
+    function pipelinePortalHtml() {
+      if (!pipelineBook && typeof ensurePicks === "function") { /* book loads with league */ }
+      if (!pipelineBook) {
+        return '<p class="caption">Pipeline book not loaded yet.</p>';
+      }
+      const picked = pipelinePlayerByKey(pipelinePickKey);
+      if (picked) {
+        return '<p class="caption"><button type="button" class="chip" data-pipeline-clear="1">← Players</button> '
+          + esc(picked.name) + "</p>"
+          + pipelinePlayerHtml(picked);
+      }
+      const q = String(pipelineQ || "");
+      const hits = pipelineSearchHits(q, 12);
+      let list = "";
+      if (q.trim() && !hits.length) {
+        list = '<p class="caption">No player matches.</p>';
+      } else if (hits.length) {
+        list = hits.map(function (p) {
+          const credit = (p.facts && p.facts.pipeline && p.facts.pipeline.name) || "—";
+          return '<button type="button" class="row" data-pipeline-pick="' + esc(p.asset_key) + '">'
+            + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
+            + '<div class="date">Pipeline · ' + esc(credit) + "</div></div>"
+            + '<div class="margin">' + esc(String((p.seats || []).length)) + "</div></div></button>";
+        }).join("");
+      } else {
+        list = '<p class="caption">Type a player name to see every seat that owned them.</p>';
+      }
+      return '<div class="pipeline-search">'
+        + '<label class="receipt-look"><span>Player</span>'
+        + '<input type="search" class="cuffs-q" data-pipeline-q placeholder="Search a player"'
+        + ' value="' + esc(q) + '" autocomplete="off" spellcheck="false" aria-label="Search a player">'
+        + "</label></div>"
+        + list;
     }
 
     function seatDirOf(uid) {
@@ -18435,6 +18630,9 @@ const html = `<!DOCTYPE html>
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
         cornerstoneTradesOpenKey = "";
+        pipelineQ = "";
+        pipelinePickKey = "";
+        pipelineLook = "pipeline";
         receiptH2hA = "";
         receiptH2hB = "";
         receiptResetPlayerFilter();
@@ -24565,6 +24763,9 @@ const html = `<!DOCTYPE html>
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
         cornerstoneTradesOpenKey = "";
+        pipelineQ = "";
+        pipelinePickKey = "";
+        pipelineLook = "pipeline";
         receiptH2hA = "";
         receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -24626,6 +24827,14 @@ const html = `<!DOCTYPE html>
         receiptPickKey = "";
         receiptTicket = !!openId;
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      // Pipeline credit detail → player search (one layer). Do not skip to Your board.
+      if (receiptWhoList === "pipeline" && pipelinePickKey) {
+        pipelinePickKey = "";
+        pipelineQ = "";
+        focusNext = "[data-pipeline-q], .screen-h";
         render();
         return;
       }
@@ -36287,6 +36496,13 @@ const html = `<!DOCTYPE html>
         goBack(() => setHomeTab("history", { force: true }));
         return true;
       }
+      if (receiptWhoList === "pipeline" && pipelinePickKey) {
+        pipelinePickKey = "";
+        pipelineQ = "";
+        focusNext = "[data-pipeline-q], .screen-h";
+        render();
+        return true;
+      }
       if (view === "trade" && dataDashFromDoor()) { dataDashLeaveTicket(); return true; }
       if (dataDashUnwindOne()) return true;
       if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
@@ -36986,6 +37202,20 @@ const html = `<!DOCTYPE html>
         receiptTicket = true;
         receiptMoreClocks = false;
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      const pipelineClear = e.target.closest("[data-pipeline-clear]");
+      if (pipelineClear) {
+        pipelinePickKey = "";
+        pipelineQ = "";
+        render();
+        return;
+      }
+      const pipelinePick = e.target.closest("[data-pipeline-pick]");
+      if (pipelinePick) {
+        pipelinePickKey = pipelinePick.getAttribute("data-pipeline-pick") || "";
+        pipelineQ = "";
         render();
         return;
       }
@@ -38984,6 +39214,13 @@ const html = `<!DOCTYPE html>
         render();
         return;
       }
+      const pipelineLookSel = e.target && e.target.closest && e.target.closest("[data-pipeline-look]");
+      if (pipelineLookSel) {
+        const v = pipelineLookSel.value || "pipeline";
+        pipelineLook = (v === "first" || v === "longest" || v === "paid") ? v : "pipeline";
+        render();
+        return;
+      }
       const pickYearSel = e.target && e.target.closest && e.target.closest("[data-receipt-pick-year]");
       if (pickYearSel) {
         receiptPickYearFilter = pickYearSel.value || "all";
@@ -39173,6 +39410,19 @@ const html = `<!DOCTYPE html>
         const end = cuffQBox.selectionEnd;
         render();
         const back = document.querySelector("#app [data-cuff-q]");
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
+        return;
+      }
+      const pipelineQBox = e.target.closest("[data-pipeline-q]");
+      if (pipelineQBox) {
+        pipelineQ = pipelineQBox.value || "";
+        const start = pipelineQBox.selectionStart;
+        const end = pipelineQBox.selectionEnd;
+        render();
+        const back = document.querySelector("#app [data-pipeline-q]");
         if (back) {
           back.focus({ preventScroll: true });
           try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
@@ -41008,8 +41258,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 48 || uniq.size !== 48) {
-    throw new Error("DATA_REPORTS must hold exactly 48 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 49 || uniq.size !== 49) {
+    throw new Error("DATA_REPORTS must hold exactly 49 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -41035,28 +41285,28 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 15 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 16 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
     || defIds.indexOf("cornerstone_trades") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 15 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 16 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 15 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 15 default door tiles");
+  if (doorIds.length !== 16 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 16 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 13 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 13 catalog ids");
+  if (resIds.length !== 14 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 14 catalog ids");
   }
-  if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades")) {
-    throw new Error("DATA_DASH_RESEARCH must keep draft_board and add cornerstone_trades");
+  if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades") || !resIds.includes("pipeline")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, and pipeline");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
@@ -41082,6 +41332,29 @@ if (!inline.includes("function dataDashHtml(")
   }
   if (!uniq.has("best_ball_hype") || defIds[14] !== "best_ball_hype" || doorIds[14] !== "best_ball_hype") {
     throw new Error("Best Ball Hype must be default board tile 15 (League Data door)");
+  }
+  if (!uniq.has("pipeline") || defIds[15] !== "pipeline" || doorIds[15] !== "pipeline") {
+    throw new Error("Pipeline must be default board tile 16 (League Data door)");
+  }
+  if (!inline.includes('id: "pipeline"')
+    || !inline.includes('lab: "Pipeline"')
+    || !inline.includes("function pipelinePortalHtml(")
+    || !inline.includes("function pipelinePlayerHtml(")
+    || !inline.includes('getLeagueJson("pipeline.json")')
+    || !inline.includes("data-pipeline-q")
+    || !inline.includes("data-pipeline-pick")
+    || !inline.includes("data-pipeline-look")
+    || !fnSrc("dataDashMigrateMyPicks").includes('"pipeline"')
+    || !fnSrc("dataDashMigrateMyPicks").includes("never replace a tile")
+    || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "pipeline"')
+    || !fnSrc("receiptPortalRows").includes('id === "pipeline"')
+    || !fnSrc("receiptPortalNeedsSearch").includes('key === "pipeline"')
+    || !fnSrc("onBrandBack").includes('receiptWhoList === "pipeline" && pipelinePickKey')
+    || !fnSrc("closeTopmost").includes('receiptWhoList === "pipeline" && pipelinePickKey')
+    || !fnSrc("dataDashUnwindOne").includes('pipelinePickKey = ""')
+    || !fnSrc("dataDashOpenReport").includes('pipelinePickKey = ""')
+    || !fnSrc("receiptPortalLeave").includes('pipelinePickKey = ""')) {
+    throw new Error("Pipeline must be a League Data door with player search + credit looks");
   }
   if (!uniq.has("biggest_choker") || defIds[9] !== "biggest_choker" || doorIds[9] !== "biggest_choker") {
     throw new Error("Biggest choker must be default board tile 10 (League Data door)");
@@ -42013,7 +42286,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 15")) {
+  || !inline.includes("const DATA_DASH_MAX = 16")) {
   throw new Error("Waiver winners must stay on League Data with three top-10 bands");
 }
 if (!inline.includes('id: "cornerstone_trades"')

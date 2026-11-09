@@ -30,7 +30,7 @@ for (const need of [
   "cornerstoneTradesOpenKey",
   "Cornerstone trades: one flat top-10",
   "day they traded",
-  "const DATA_DASH_MAX = 15",
+  "const DATA_DASH_MAX = 16",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -39,8 +39,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 15 || defIds.length !== 15) {
-    fail("DATA_DOORS / DEFAULT must be 15 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 16 || defIds.length !== 16) {
+    fail("DATA_DOORS / DEFAULT must be 16 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[11] !== "cornerstone_trades" || defIds[11] !== "cornerstone_trades") {
     fail("Cornerstone trades must be door tile 12");
@@ -97,7 +97,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Cornerstone trades",
-  doors: 15,
+  doors: 16,
   lead: lead.asset,
   value: lead.value,
   date: lead.date,

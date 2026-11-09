@@ -5048,7 +5048,7 @@
     let cornerstoneTradesOpenKey = "";
     let pipelineQ = "";
     let pipelinePickKey = "";
-    let pipelineLook = "pipeline";
+    let pipelineCat = "developed"; // discovered | developed
     let pipelinePos = ""; // QB | RB | WR | TE
     let receiptH2hA = "";
     let receiptH2hB = "";
@@ -5074,7 +5074,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pipelineOwnerColor20261109120000";
+    const DATA_V = "pipelineCats20261109150000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5218,7 +5218,7 @@
       { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
       { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Three top-10 boards: original waiver/FA → today, original → peak, and any claim → today (including drafted-then-dropped reclamations)." },
       { id: "cornerstone_trades", lab: "Cornerstone trades", desk: "lists", group: "memory", size: "full", why: "Top 10 highest-value players ever moved in a trade, priced the day they traded. Tap a row for both bags." },
-      { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Browse by position (season fantasy rank) or search any player — who found them, who started them, who held longest. Pipeline credit crowns belief." },
+      { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Two lenses: Discovered (who found them) and Developed (who believed — starts + hold). Browse by position or search." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -8663,14 +8663,6 @@
     }
 
     function receiptDoorFilterHtml(id) {
-      if (id === "pipeline" && pipelinePickKey) {
-        return receiptLookSelect("Credit", "data-pipeline-look", [
-          ["pipeline", "Pipeline credit"],
-          ["first", "First owned"],
-          ["longest", "Longest hold"],
-          ["paid", "Highest paid"],
-        ], pipelineLook || "pipeline");
-      }
       if (id === "profit_loss") {
         return receiptLookSelect("Sort", "data-receipt-pl-sort",
           [["most", "Most profitable"], ["least", "Least profitable"]], receiptPlSort);
@@ -9516,8 +9508,8 @@
       }
       else if (id === "pipeline") {
         caption = pipelinePickKey
-          ? ("Every seat that owned this player. Pipeline credit crowns belief — discover + actual lineup starts + hold. Bench stashes and short flips get dinged. Highest paid is a fact, not the hero.")
-          : ("Browse QB/RB/WR/TE by this season's fantasy rank, or search a name. Pipeline credit for the seat that really believed.");
+          ? ("Every seat that owned this player. Discovered = who found them first. Developed = who believed — lineup starts + hold. Green still owns, yellow traded, red dropped.")
+          : ("Discovered or Developed, then browse by position or search a name.");
       }
       else if (id === "head_to_head") {
         if (receiptH2hA && receiptH2hB) {
@@ -11890,7 +11882,7 @@
       pipelineBook = null;
       pipelineQ = "";
       pipelinePickKey = "";
-      pipelineLook = "pipeline";
+      pipelineCat = "developed";
       pipelinePos = "";
       headToHeadBook = null;
       overnight = null;
@@ -13321,7 +13313,7 @@
       cornerstoneTradesOpenKey = "";
       pipelineQ = "";
       pipelinePickKey = "";
-      pipelineLook = "pipeline";
+      pipelineCat = "developed";
       pipelinePos = "";
       receiptH2hA = "";
       receiptH2hB = "";
@@ -15561,15 +15553,30 @@
       return ranked.concat(rest).slice(0, cap);
     }
 
-    function pipelineWinnerStatus(player) {
-      const pipe = player && player.facts && player.facts.pipeline;
-      if (!pipe) return "";
-      if (pipe.owner_status === "held" || pipe.owner_status === "trade" || pipe.owner_status === "drop") {
-        return pipe.owner_status;
+    function pipelineCatId() {
+      return String(pipelineCat || "developed") === "discovered" ? "discovered" : "developed";
+    }
+
+    function pipelineCatLab(cat) {
+      return String(cat || pipelineCatId()) === "discovered" ? "Discovered" : "Developed";
+    }
+
+    function pipelineCreditForCat(player, cat) {
+      const facts = (player && player.facts) || {};
+      if (String(cat || pipelineCatId()) === "discovered") return facts.first_owned || null;
+      return facts.pipeline || null;
+    }
+
+    function pipelineOwnerStatusFor(player, userId) {
+      const uid = userId != null ? String(userId) : "";
+      if (!uid || !player) return "";
+      const pipe = player.facts && player.facts.pipeline;
+      if (pipe && String(pipe.user_id) === uid) {
+        if (pipe.owner_status === "held" || pipe.owner_status === "trade" || pipe.owner_status === "drop") {
+          return pipe.owner_status;
+        }
+        if (pipe.still_owns) return "held";
       }
-      if (pipe.still_owns) return "held";
-      const uid = pipe.user_id != null ? String(pipe.user_id) : "";
-      if (!uid) return "";
       const seats = player.seats || [];
       for (let i = 0; i < seats.length; i++) {
         if (String(seats[i].user_id) === uid && seats[i].still_holds) return "held";
@@ -15586,6 +15593,11 @@
       return "";
     }
 
+    function pipelineWinnerStatus(player) {
+      const credit = pipelineCreditForCat(player, pipelineCatId());
+      return credit ? pipelineOwnerStatusFor(player, credit.user_id) : "";
+    }
+
     function pipelineOwnerNameHtml(name, status) {
       const st = (status === "held" || status === "trade" || status === "drop") ? status : "";
       const cls = st ? ("pipeline-owner " + st) : "pipeline-owner";
@@ -15600,29 +15612,22 @@
     }
 
     function pipelineRowHtml(p, mode) {
-      const pipe = p.facts && p.facts.pipeline;
-      const credit = (pipe && pipe.name) || "—";
-      const status = pipelineWinnerStatus(p);
+      const cat = pipelineCatId();
+      const credit = pipelineCreditForCat(p, cat);
+      const creditName = (credit && credit.name) || "—";
+      const status = credit ? pipelineOwnerStatusFor(p, credit.user_id) : "";
       const rankLab = p.pos_rank != null ? ("#" + p.pos_rank) : "—";
       const ptsLab = p.season_pts != null ? String(p.season_pts) : "—";
-      const creditHtml = pipelineOwnerNameHtml(credit, status);
+      const creditHtml = pipelineOwnerNameHtml(creditName, status);
+      const catLab = pipelineCatLab(cat);
       const sub = mode === "pos"
-        ? (esc(rankLab) + " · " + esc(ptsLab) + " pts · Pipeline · " + creditHtml)
-        : ("Pipeline · " + creditHtml);
+        ? (esc(rankLab) + " · " + esc(ptsLab) + " pts · " + esc(catLab) + " · " + creditHtml)
+        : (esc(catLab) + " · " + creditHtml);
       const margin = mode === "pos" ? rankLab : String((p.seats || []).length);
       return '<button type="button" class="row" data-pipeline-pick="' + esc(p.asset_key) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
         + '<div class="date">' + sub + "</div></div>"
         + '<div class="margin">' + esc(margin) + "</div></div></button>";
-    }
-
-    function pipelineCreditForLook(player, look) {
-      const facts = (player && player.facts) || {};
-      const key = String(look || pipelineLook || "pipeline");
-      if (key === "first") return facts.first_owned || null;
-      if (key === "longest") return facts.longest || null;
-      if (key === "paid") return facts.highest_paid || null;
-      return facts.pipeline || null;
     }
 
     function pipelineAcquireLab(kind) {
@@ -15638,40 +15643,44 @@
 
     function pipelinePlayerHtml(player) {
       if (!player) return '<p class="caption">Pick a player.</p>';
-      const credit = pipelineCreditForLook(player, pipelineLook);
+      const cat = pipelineCatId();
+      const credit = pipelineCreditForCat(player, cat);
       const facts = player.facts || {};
-      const isPipeLook = String(pipelineLook || "pipeline") === "pipeline";
-      const winnerStatus = isPipeLook ? pipelineWinnerStatus(player) : "";
-      const lookLab = pipelineLook === "first" ? "First owned"
-        : (pipelineLook === "longest" ? "Longest hold"
-          : (pipelineLook === "paid" ? "Highest paid" : "Pipeline credit"));
+      const winnerStatus = credit ? pipelineOwnerStatusFor(player, credit.user_id) : "";
+      const lookLab = pipelineCatLab(cat);
       let html = "";
       if (credit) {
-        const big = credit.days != null ? (credit.days + "d")
-          : (credit.value != null ? fmt(credit.value)
-            : (credit.score != null ? String(credit.score) : "—"));
-        const nameHtml = isPipeLook
-          ? pipelineOwnerNameHtml(credit.name || "—", winnerStatus)
-          : esc(credit.name || "—");
+        const big = cat === "discovered"
+          ? pipelineAcquireLab(credit.acquire)
+          : (credit.score != null ? String(credit.score)
+            : (credit.starts != null ? (credit.starts + "×") : "—"));
         html += '<div class="pipeline-credit">'
           + '<p class="caption">' + esc(lookLab) + "</p>"
-          + '<p class="names">' + nameHtml + "</p>"
+          + '<p class="names">' + pipelineOwnerNameHtml(credit.name || "—", winnerStatus) + "</p>"
           + '<p class="margin">' + esc(String(big)) + "</p>"
           + (winnerStatus
             ? ('<p class="date">' + pipelineOwnerNameHtml(pipelineOwnerStatusLab(winnerStatus), winnerStatus) + "</p>")
             : "")
           + (credit.because ? ('<p class="date">' + esc(credit.because) + "</p>") : "")
           + (credit.date ? ('<p class="date">' + esc(String(credit.date)) + "</p>") : "")
-          + (credit.acquire ? ('<p class="date">' + esc(pipelineAcquireLab(credit.acquire)) + "</p>") : "")
+          + (cat === "discovered" && credit.acquire
+            ? ('<p class="date">' + esc(pipelineAcquireLab(credit.acquire)) + "</p>")
+            : "")
           + "</div>";
       } else {
-        html += '<p class="caption">No seat wins this look yet.</p>';
+        html += '<p class="caption">No seat wins ' + esc(lookLab) + " yet.</p>";
       }
       html += '<div class="pipeline-facts" aria-label="Pipeline facts">';
       if (facts.first_owned) {
-        html += "<p><b>First owned</b> · " + esc(facts.first_owned.name)
+        html += "<p><b>Discovered</b> · " + esc(facts.first_owned.name)
           + " · " + esc(pipelineAcquireLab(facts.first_owned.acquire))
           + (facts.first_owned.date ? (" · " + esc(facts.first_owned.date)) : "")
+          + "</p>";
+      }
+      if (facts.pipeline) {
+        html += "<p><b>Developed</b> · " + esc(facts.pipeline.name)
+          + (facts.pipeline.score != null ? (" · " + esc(String(facts.pipeline.score))) : "")
+          + (facts.pipeline.starts != null ? (" · " + esc(String(facts.pipeline.starts)) + " starts") : "")
           + "</p>";
       }
       if (facts.longest) {
@@ -15695,11 +15704,11 @@
             : "")
           + "</p>";
       }
-      html += '<p class="caption">Belief = lineup starts (half the score) + finding them + holding them. Paid is market flatten at acquire — not FAAB.</p>';
+      html += '<p class="caption">Discovered = first roster entry. Developed = belief score (starts + hold). Paid is market flatten at acquire — not FAAB.</p>';
       html += "</div>";
       html += '<p class="caption">' + esc(String((player.stints || []).length))
         + " stint" + ((player.stints || []).length === 1 ? "" : "s")
-        + " · short flips and never-started stashes are dinged for Pipeline credit.</p>";
+        + " · short flips and never-started stashes are dinged for Developed credit.</p>";
       const seatStarts = {};
       (player.seats || []).forEach(function (seat) {
         if (seat && seat.user_id != null) seatStarts[String(seat.user_id)] = seat.starts || 0;
@@ -15727,10 +15736,23 @@
       if (!pipelineBook) {
         return '<p class="caption">Pipeline book not loaded yet.</p>';
       }
+      const cat = pipelineCatId();
+      const catButtons = [
+        ["discovered", "Discovered"],
+        ["developed", "Developed"],
+      ].map(function (pair) {
+        return '<button type="button" class="pipeline-pos' + (cat === pair[0] ? " on" : "") + '"'
+          + ' data-pipeline-cat="' + pair[0] + '" aria-pressed="' + (cat === pair[0] ? "true" : "false") + '">'
+          + pair[1] + "</button>";
+      }).join("");
       const picked = pipelinePlayerByKey(pipelinePickKey);
       if (picked) {
         const backLab = pipelinePos ? ("← " + pipelinePos) : "← Players";
-        return '<p class="caption"><button type="button" class="chip" data-pipeline-clear="1">'
+        return '<div class="pipeline-search">'
+          + '<div class="pipeline-pos-row" role="group" aria-label="Pipeline category">'
+          + catButtons
+          + "</div></div>"
+          + '<p class="caption"><button type="button" class="chip" data-pipeline-clear="1">'
           + esc(backLab) + "</button> "
           + esc(picked.name)
           + (picked.pos_rank != null
@@ -15760,14 +15782,15 @@
         if (!board.length) {
           list = '<p class="caption">No ' + esc(pos) + " players ranked yet.</p>";
         } else {
-          list = '<p class="caption">' + esc(pos) + " · " + esc(seasonLab)
-            + " fantasy rank (PPR) · tap for pipeline history</p>"
+          list = '<p class="caption">' + esc(pipelineCatLab(cat)) + " · " + esc(pos) + " · " + esc(seasonLab)
+            + " fantasy rank (PPR) · tap for history</p>"
             + '<div class="pipeline-pos-list" role="list">'
             + board.map(function (p) { return pipelineRowHtml(p, "pos"); }).join("")
             + "</div>";
         }
       } else {
-        list = '<p class="caption">Pick a position for season fantasy ranks, or search any player.</p>';
+        list = '<p class="caption">' + esc(pipelineCatLab(cat))
+          + " — pick a position for season fantasy ranks, or search any player.</p>";
       }
       const legend = '<p class="pipeline-owner-legend" aria-label="Pipeline owner colors">'
         + pipelineOwnerNameHtml("Green", "held") + " still owns · "
@@ -15775,6 +15798,9 @@
         + pipelineOwnerNameHtml("Red", "drop") + " dropped"
         + "</p>";
       return '<div class="pipeline-search">'
+        + '<div class="pipeline-pos-row" role="group" aria-label="Pipeline category">'
+        + catButtons
+        + "</div>"
         + '<div class="pipeline-pos-row" role="group" aria-label="Position">'
         + posButtons
         + "</div>"
@@ -18786,7 +18812,7 @@
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
         pipelinePickKey = "";
-        pipelineLook = "pipeline";
+        pipelineCat = "developed";
         pipelinePos = "";
         receiptH2hA = "";
         receiptH2hB = "";
@@ -24920,7 +24946,7 @@
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
         pipelinePickKey = "";
-        pipelineLook = "pipeline";
+        pipelineCat = "developed";
         pipelinePos = "";
         receiptH2hA = "";
         receiptH2hB = "";
@@ -37368,6 +37394,13 @@
         render();
         return;
       }
+      const pipelineCatBtn = e.target.closest("[data-pipeline-cat]");
+      if (pipelineCatBtn) {
+        const next = String(pipelineCatBtn.getAttribute("data-pipeline-cat") || "").toLowerCase();
+        pipelineCat = next === "discovered" ? "discovered" : "developed";
+        render();
+        return;
+      }
       const pipelinePosBtn = e.target.closest("[data-pipeline-pos]");
       if (pipelinePosBtn) {
         const next = String(pipelinePosBtn.getAttribute("data-pipeline-pos") || "").toUpperCase();
@@ -39375,13 +39408,6 @@
       const doorFilterSel = e.target && e.target.closest && e.target.closest("[data-receipt-door-filter]");
       if (doorFilterSel) {
         receiptDoorFilter = doorFilterSel.value || "all";
-        render();
-        return;
-      }
-      const pipelineLookSel = e.target && e.target.closest && e.target.closest("[data-pipeline-look]");
-      if (pipelineLookSel) {
-        const v = pipelineLookSel.value || "pipeline";
-        pipelineLook = (v === "first" || v === "longest" || v === "paid") ? v : "pipeline";
         render();
         return;
       }

@@ -4362,6 +4362,13 @@
     }
     .pipeline-credit .names { font-size: 1.15rem; font-weight: 700; margin: 2px 0; }
     .pipeline-credit .margin { color: var(--lh-gold, #e0b44c); font-size: 1.35rem; font-weight: 750; margin: 4px 0; }
+    .pipeline-owner.held { color: #5ecf8a; }
+    .pipeline-owner.trade { color: #e0b44c; }
+    .pipeline-owner.drop { color: #e07070; }
+    .pipeline-owner-legend {
+      margin: 0 0 8px; color: var(--muted); font-size: 0.75rem;
+    }
+    .pipeline-owner-legend .pipeline-owner { font-weight: 650; }
     .pipeline-facts { margin: 0 0 12px; }
     .pipeline-facts p { margin: 0 0 6px; font-size: 0.88rem; }
     .pick-hub-scopes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 12px; }
@@ -5067,7 +5074,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pipelinePos20261109100000";
+    const DATA_V = "pipelineOwnerColor20261109110000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15554,17 +15561,58 @@
       return ranked.concat(rest).slice(0, cap);
     }
 
+    function pipelineWinnerStatus(player) {
+      const pipe = player && player.facts && player.facts.pipeline;
+      if (!pipe) return "";
+      if (pipe.owner_status === "held" || pipe.owner_status === "trade" || pipe.owner_status === "drop") {
+        return pipe.owner_status;
+      }
+      if (pipe.still_owns) return "held";
+      const uid = pipe.user_id != null ? String(pipe.user_id) : "";
+      if (!uid) return "";
+      const seats = player.seats || [];
+      for (let i = 0; i < seats.length; i++) {
+        if (String(seats[i].user_id) === uid && seats[i].still_holds) return "held";
+      }
+      const stints = player.stints || [];
+      let last = null;
+      for (let i = 0; i < stints.length; i++) {
+        if (String(stints[i].user_id) === uid) last = stints[i];
+      }
+      const exit = last && last.exit ? String(last.exit) : "";
+      if (exit === "held") return "held";
+      if (exit === "trade") return "trade";
+      if (exit === "drop") return "drop";
+      return "";
+    }
+
+    function pipelineOwnerNameHtml(name, status) {
+      const st = (status === "held" || status === "trade" || status === "drop") ? status : "";
+      const cls = st ? ("pipeline-owner " + st) : "pipeline-owner";
+      return '<span class="' + cls + '">' + esc(name || "—") + "</span>";
+    }
+
+    function pipelineOwnerStatusLab(status) {
+      if (status === "held") return "still owns";
+      if (status === "trade") return "traded away";
+      if (status === "drop") return "dropped";
+      return "";
+    }
+
     function pipelineRowHtml(p, mode) {
-      const credit = (p.facts && p.facts.pipeline && p.facts.pipeline.name) || "—";
+      const pipe = p.facts && p.facts.pipeline;
+      const credit = (pipe && pipe.name) || "—";
+      const status = pipelineWinnerStatus(p);
       const rankLab = p.pos_rank != null ? ("#" + p.pos_rank) : "—";
       const ptsLab = p.season_pts != null ? String(p.season_pts) : "—";
+      const creditHtml = pipelineOwnerNameHtml(credit, status);
       const sub = mode === "pos"
-        ? (rankLab + " · " + ptsLab + " pts · Pipeline · " + credit)
-        : ("Pipeline · " + credit);
+        ? (esc(rankLab) + " · " + esc(ptsLab) + " pts · Pipeline · " + creditHtml)
+        : ("Pipeline · " + creditHtml);
       const margin = mode === "pos" ? rankLab : String((p.seats || []).length);
       return '<button type="button" class="row" data-pipeline-pick="' + esc(p.asset_key) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(p.name) + "</div>"
-        + '<div class="date">' + esc(sub) + "</div></div>"
+        + '<div class="date">' + sub + "</div></div>"
         + '<div class="margin">' + esc(margin) + "</div></div></button>";
     }
 
@@ -15592,6 +15640,8 @@
       if (!player) return '<p class="caption">Pick a player.</p>';
       const credit = pipelineCreditForLook(player, pipelineLook);
       const facts = player.facts || {};
+      const isPipeLook = String(pipelineLook || "pipeline") === "pipeline";
+      const winnerStatus = isPipeLook ? pipelineWinnerStatus(player) : "";
       const lookLab = pipelineLook === "first" ? "First owned"
         : (pipelineLook === "longest" ? "Longest hold"
           : (pipelineLook === "paid" ? "Highest paid" : "Pipeline credit"));
@@ -15600,10 +15650,16 @@
         const big = credit.days != null ? (credit.days + "d")
           : (credit.value != null ? fmt(credit.value)
             : (credit.score != null ? String(credit.score) : "—"));
+        const nameHtml = isPipeLook
+          ? pipelineOwnerNameHtml(credit.name || "—", winnerStatus)
+          : esc(credit.name || "—");
         html += '<div class="pipeline-credit">'
           + '<p class="caption">' + esc(lookLab) + "</p>"
-          + '<p class="names">' + esc(credit.name || "—") + "</p>"
+          + '<p class="names">' + nameHtml + "</p>"
           + '<p class="margin">' + esc(String(big)) + "</p>"
+          + (winnerStatus
+            ? ('<p class="date">' + pipelineOwnerNameHtml(pipelineOwnerStatusLab(winnerStatus), winnerStatus) + "</p>")
+            : "")
           + (credit.because ? ('<p class="date">' + esc(credit.because) + "</p>") : "")
           + (credit.date ? ('<p class="date">' + esc(String(credit.date)) + "</p>") : "")
           + (credit.acquire ? ('<p class="date">' + esc(pipelineAcquireLab(credit.acquire)) + "</p>") : "")
@@ -15713,6 +15769,11 @@
       } else {
         list = '<p class="caption">Pick a position for season fantasy ranks, or search any player.</p>';
       }
+      const legend = '<p class="pipeline-owner-legend" aria-label="Pipeline owner colors">'
+        + pipelineOwnerNameHtml("Green", "held") + " still owns · "
+        + pipelineOwnerNameHtml("Yellow", "trade") + " traded away · "
+        + pipelineOwnerNameHtml("Red", "drop") + " dropped"
+        + "</p>";
       return '<div class="pipeline-search">'
         + '<div class="pipeline-pos-row" role="group" aria-label="Position">'
         + posButtons
@@ -15721,6 +15782,7 @@
         + '<input type="search" class="cuffs-q" data-pipeline-q placeholder="Search a player"'
         + ' value="' + esc(q) + '" autocomplete="off" spellcheck="false" aria-label="Search a player">'
         + "</label></div>"
+        + legend
         + list;
     }
 

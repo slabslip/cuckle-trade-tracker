@@ -38,6 +38,12 @@ for (const need of [
   "pipeline-pos-list",
   "fantasy rank (PPR)",
   "function pipelinePosBoard(",
+  "function pipelineWinnerStatus(",
+  ".pipeline-owner.held",
+  ".pipeline-owner.trade",
+  ".pipeline-owner.drop",
+  "still owns",
+  "traded away",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -97,6 +103,17 @@ if (!puka.facts.most_started || !(puka.facts.most_started.starts > 0)) {
 }
 if (!/started/i.test(puka.facts.pipeline.because || "")) {
   fail("Puka pipeline because should mention starts");
+}
+if (puka.facts.pipeline.owner_status !== "held" || !puka.facts.pipeline.still_owns) {
+  fail("Puka pipeline winner should still own (held)");
+}
+const aj = book.players.find((p) => /A\.J\. Green/i.test(p.name || ""));
+if (!aj || aj.facts.pipeline.owner_status !== "drop") {
+  fail("A.J. Green pipeline winner should be drop status");
+}
+const cd = book.players.find((p) => p.name === "CeeDee Lamb");
+if (!cd || cd.facts.pipeline.owner_status !== "trade") {
+  fail("CeeDee Lamb pipeline winner should be trade status");
 }
 const allen = book.players.find((p) => p.name === "Josh Allen");
 if (!allen || !allen.facts.first_owned || allen.facts.first_owned.name !== "ARae") {

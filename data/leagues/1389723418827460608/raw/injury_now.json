@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-08",
-  "n": 26,
+  "as_of": "2026-11-09",
+  "n": 29,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -16,19 +16,19 @@
       "team": "SF",
       "pos": "WR"
     },
-    "3214": {
-      "name": "Hunter Henry",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "TE"
-    },
     "3321": {
       "name": "Tyreek Hill",
       "injury_status": "Questionable",
       "status": "Active",
       "team": null,
       "pos": "WR"
+    },
+    "4046": {
+      "name": "Patrick Mahomes",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "KC",
+      "pos": "QB"
     },
     "4881": {
       "name": "Lamar Jackson",
@@ -43,6 +43,13 @@
       "status": "Active",
       "team": "MIN",
       "pos": "QB"
+    },
+    "5850": {
+      "name": "Josh Jacobs",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "GB",
+      "pos": "RB"
     },
     "5859": {
       "name": "A.J. Brown",
@@ -72,6 +79,13 @@
       "team": "PHI",
       "pos": "WR"
     },
+    "7526": {
+      "name": "Jaylen Waddle",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "DEN",
+      "pos": "WR"
+    },
     "7543": {
       "name": "Travis Etienne Jr.",
       "injury_status": "IR",
@@ -79,12 +93,12 @@
       "team": "NO",
       "pos": "RB"
     },
-    "7547": {
-      "name": "Amon-Ra St. Brown",
-      "injury_status": "Questionable",
+    "7611": {
+      "name": "Rhamondre Stevenson",
+      "injury_status": "Out",
       "status": "Active",
-      "team": "DET",
-      "pos": "WR"
+      "team": "NE",
+      "pos": "RB"
     },
     "8121": {
       "name": "Romeo Doubs",
@@ -95,7 +109,7 @@
     },
     "8137": {
       "name": "George Pickens",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "DAL",
       "pos": "WR"
@@ -114,16 +128,30 @@
       "team": "ATL",
       "pos": "RB"
     },
-    "11729": {
-      "name": "Sione Vaki",
+    "9493": {
+      "name": "Puka Nacua",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "DET",
-      "pos": "RB"
+      "team": "LAR",
+      "pos": "WR"
+    },
+    "11624": {
+      "name": "Xavier Worthy",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "KC",
+      "pos": "WR"
+    },
+    "11635": {
+      "name": "Ladd McConkey",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAC",
+      "pos": "WR"
     },
     "12481": {
       "name": "Cam Skattebo",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NYG",
       "pos": "RB"
@@ -134,13 +162,6 @@
       "status": "Inactive",
       "team": "DEN",
       "pos": "RB"
-    },
-    "12514": {
-      "name": "Emeka Egbuka",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "TB",
-      "pos": "WR"
     },
     "12529": {
       "name": "TreVeyon Henderson",
@@ -158,7 +179,7 @@
     },
     "12534": {
       "name": "Kyle Monangai",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "CHI",
       "pos": "RB"
@@ -170,19 +191,19 @@
       "team": "TEN",
       "pos": "WR"
     },
-    "13281": {
-      "name": "Jordyn Tyson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NO",
-      "pos": "WR"
-    },
     "13287": {
       "name": "Jeremiyah Love",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "ARI",
       "pos": "RB"
+    },
+    "13298": {
+      "name": "KC Concepcion Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CLE",
+      "pos": "WR"
     }
   }
 }

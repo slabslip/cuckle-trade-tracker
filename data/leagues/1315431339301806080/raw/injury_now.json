@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-08",
-  "n": 84,
+  "as_of": "2026-11-09",
+  "n": 94,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -16,13 +16,6 @@
       "team": "SF",
       "pos": "WR"
     },
-    "3214": {
-      "name": "Hunter Henry",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "TE"
-    },
     "3321": {
       "name": "Tyreek Hill",
       "injury_status": "Questionable",
@@ -32,9 +25,16 @@
     },
     "4017": {
       "name": "Deshaun Watson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "CLE",
+      "pos": "QB"
+    },
+    "4046": {
+      "name": "Patrick Mahomes",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "KC",
       "pos": "QB"
     },
     "4137": {
@@ -43,13 +43,6 @@
       "status": "Inactive",
       "team": "ARI",
       "pos": "RB"
-    },
-    "4177": {
-      "name": "Mack Hollins",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "WR"
     },
     "4454": {
       "name": "Kendrick Bourne",
@@ -86,6 +79,20 @@
       "team": "MIN",
       "pos": "QB"
     },
+    "5850": {
+      "name": "Josh Jacobs",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "GB",
+      "pos": "RB"
+    },
+    "5854": {
+      "name": "Drew Lock",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "SEA",
+      "pos": "QB"
+    },
     "5859": {
       "name": "A.J. Brown",
       "injury_status": "Out",
@@ -114,6 +121,13 @@
       "team": "WAS",
       "pos": "WR"
     },
+    "6797": {
+      "name": "Justin Herbert",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAC",
+      "pos": "QB"
+    },
     "6803": {
       "name": "Brandon Aiyuk",
       "injury_status": "DNR",
@@ -133,13 +147,6 @@
       "injury_status": "IR",
       "status": "Inactive",
       "team": "CHI",
-      "pos": "TE"
-    },
-    "6865": {
-      "name": "Colby Parkinson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "LAR",
       "pos": "TE"
     },
     "6904": {
@@ -170,6 +177,13 @@
       "team": "PHI",
       "pos": "WR"
     },
+    "7526": {
+      "name": "Jaylen Waddle",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "DEN",
+      "pos": "WR"
+    },
     "7543": {
       "name": "Travis Etienne Jr.",
       "injury_status": "IR",
@@ -177,12 +191,12 @@
       "team": "NO",
       "pos": "RB"
     },
-    "7547": {
-      "name": "Amon-Ra St. Brown",
-      "injury_status": "Questionable",
+    "7611": {
+      "name": "Rhamondre Stevenson",
+      "injury_status": "Out",
       "status": "Active",
-      "team": "DET",
-      "pos": "WR"
+      "team": "NE",
+      "pos": "RB"
     },
     "8110": {
       "name": "Jake Ferguson",
@@ -221,7 +235,7 @@
     },
     "8137": {
       "name": "George Pickens",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "DAL",
       "pos": "WR"
@@ -259,6 +273,13 @@
       "injury_status": "IR",
       "status": "Inactive",
       "team": "DET",
+      "pos": "RB"
+    },
+    "8207": {
+      "name": "Tyler Goodson",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DAL",
       "pos": "RB"
     },
     "8676": {
@@ -303,6 +324,13 @@
       "team": "PHI",
       "pos": "WR"
     },
+    "9493": {
+      "name": "Puka Nacua",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "WR"
+    },
     "9508": {
       "name": "Tyjae Spears",
       "injury_status": "Out",
@@ -324,6 +352,13 @@
       "team": "CIN",
       "pos": "WR"
     },
+    "11565": {
+      "name": "J.J. McCarthy",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NYG",
+      "pos": "QB"
+    },
     "11577": {
       "name": "Will Shipley",
       "injury_status": "IR",
@@ -333,7 +368,7 @@
     },
     "11581": {
       "name": "MarShawn Lloyd",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "GB",
       "pos": "RB"
@@ -359,6 +394,13 @@
       "team": "TB",
       "pos": "WR"
     },
+    "11624": {
+      "name": "Xavier Worthy",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "KC",
+      "pos": "WR"
+    },
     "11626": {
       "name": "Xavier Legette",
       "injury_status": "IR",
@@ -373,6 +415,13 @@
       "team": "PIT",
       "pos": "WR"
     },
+    "11635": {
+      "name": "Ladd McConkey",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAC",
+      "pos": "WR"
+    },
     "11638": {
       "name": "Ricky Pearsall",
       "injury_status": "IR",
@@ -382,7 +431,7 @@
     },
     "11643": {
       "name": "Jaylen Wright",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIA",
       "pos": "RB"
@@ -394,16 +443,16 @@
       "team": "SF",
       "pos": "RB"
     },
-    "11729": {
-      "name": "Sione Vaki",
-      "injury_status": "Questionable",
+    "12470": {
+      "name": "Riley Leonard",
+      "injury_status": "Out",
       "status": "Active",
-      "team": "DET",
-      "pos": "RB"
+      "team": "IND",
+      "pos": "QB"
     },
     "12481": {
       "name": "Cam Skattebo",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NYG",
       "pos": "RB"
@@ -429,13 +478,6 @@
       "team": "DEN",
       "pos": "RB"
     },
-    "12492": {
-      "name": "Pat Bryant",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DEN",
-      "pos": "WR"
-    },
     "12508": {
       "name": "Jaxson Dart",
       "injury_status": "IR",
@@ -449,13 +491,6 @@
       "status": "Active",
       "team": "PIT",
       "pos": "QB"
-    },
-    "12514": {
-      "name": "Emeka Egbuka",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "TB",
-      "pos": "WR"
     },
     "12521": {
       "name": "Elijah Arroyo",
@@ -480,7 +515,7 @@
     },
     "12534": {
       "name": "Kyle Monangai",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "CHI",
       "pos": "RB"
@@ -492,6 +527,13 @@
       "team": "HOU",
       "pos": "WR"
     },
+    "12541": {
+      "name": "Dont'e Thornton Jr.",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "LV",
+      "pos": "WR"
+    },
     "13268": {
       "name": "Elijah Sarratt",
       "injury_status": "Out",
@@ -499,18 +541,18 @@
       "team": "BAL",
       "pos": "WR"
     },
+    "13275": {
+      "name": "Ty Simpson",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "QB"
+    },
     "13279": {
       "name": "Carnell Tate",
       "injury_status": "Out",
       "status": "Active",
       "team": "TEN",
-      "pos": "WR"
-    },
-    "13281": {
-      "name": "Jordyn Tyson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NO",
       "pos": "WR"
     },
     "13287": {
@@ -527,6 +569,13 @@
       "team": "PIT",
       "pos": "QB"
     },
+    "13298": {
+      "name": "KC Concepcion Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CLE",
+      "pos": "WR"
+    },
     "13302": {
       "name": "Adam Randall",
       "injury_status": "IR",
@@ -534,11 +583,25 @@
       "team": "BAL",
       "pos": "RB"
     },
+    "13306": {
+      "name": "Taylen Green",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "CLE",
+      "pos": "QB"
+    },
     "13320": {
       "name": "Zachariah Branch",
       "injury_status": "Out",
       "status": "Active",
       "team": "ATL",
+      "pos": "WR"
+    },
+    "13329": {
+      "name": "Malik Benson",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "LV",
       "pos": "WR"
     },
     "13347": {
@@ -557,17 +620,17 @@
     },
     "13380": {
       "name": "Brenen Thompson",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "LAC",
       "pos": "WR"
     },
-    "13405": {
-      "name": "Kaytron Allen",
-      "injury_status": "Questionable",
+    "13404": {
+      "name": "Garrett Nussmeier",
+      "injury_status": "Out",
       "status": "Active",
-      "team": "MIA",
-      "pos": "RB"
+      "team": "KC",
+      "pos": "QB"
     },
     "13417": {
       "name": "De'Zhaun Stribling",
@@ -582,6 +645,13 @@
       "status": "Active",
       "team": "PIT",
       "pos": "RB"
+    },
+    "13434": {
+      "name": "Will Kacmarek",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIA",
+      "pos": "TE"
     },
     "13602": {
       "name": "Jack Strand",

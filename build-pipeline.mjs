@@ -34,6 +34,7 @@ const trades = readJson("trades.json", []) || [];
 const moves = readJson("moves.json", []) || [];
 const seats = readJson("seats.json", []) || [];
 const rostersNow = readJson("rosters_now.json", []) || [];
+const playerStarts = readJson("player_starts.json", null);
 const calc = readUi("calculator.json", null) || {};
 const nameHints = Array.isArray(calc.players) ? calc.players.slice() : [];
 const nflPath = `${DATA}/players.nfl.json`;
@@ -73,6 +74,7 @@ const book = buildPipelineBook({
   rostersNow,
   curve,
   nameHints,
+  playerStarts,
 });
 
 writeUi("pipeline.json", book);

@@ -66,6 +66,7 @@ const steps = [
   ["build-head-to-head.mjs", leagueId],
   ["build-best-waiver-pickups.mjs", leagueId],
   ["build-cornerstone-trades.mjs", leagueId],
+  ["build-player-starts.mjs", leagueId],
   ["build-pipeline.mjs", leagueId],
   ["build-cosmetics.mjs", leagueId],
 ];

@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-09",
-  "n": 94,
+  "n": 96,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -261,6 +261,13 @@
       "team": "ATL",
       "pos": "RB"
     },
+    "8161": {
+      "name": "Malik Willis",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIA",
+      "pos": "QB"
+    },
     "8188": {
       "name": "Tyquan Thornton",
       "injury_status": "IR",
@@ -491,6 +498,13 @@
       "status": "Active",
       "team": "PIT",
       "pos": "QB"
+    },
+    "12519": {
+      "name": "Luther Burden III",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CHI",
+      "pos": "WR"
     },
     "12521": {
       "name": "Elijah Arroyo",

@@ -5049,7 +5049,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pipeline20261109010000";
+    const DATA_V = "pipeline20261109015500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18622,6 +18622,9 @@
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
         cornerstoneTradesOpenKey = "";
+        pipelineQ = "";
+        pipelinePickKey = "";
+        pipelineLook = "pipeline";
         receiptH2hA = "";
         receiptH2hB = "";
         receiptResetPlayerFilter();
@@ -24752,6 +24755,9 @@
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
         cornerstoneTradesOpenKey = "";
+        pipelineQ = "";
+        pipelinePickKey = "";
+        pipelineLook = "pipeline";
         receiptH2hA = "";
         receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -24813,6 +24819,14 @@
         receiptPickKey = "";
         receiptTicket = !!openId;
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      // Pipeline credit detail → player search (one layer). Do not skip to Your board.
+      if (receiptWhoList === "pipeline" && pipelinePickKey) {
+        pipelinePickKey = "";
+        pipelineQ = "";
+        focusNext = "[data-pipeline-q], .screen-h";
         render();
         return;
       }
@@ -36472,6 +36486,13 @@
       }
       if (view === "titles" || view === "draftdata" || view === "cuffs") {
         goBack(() => setHomeTab("history", { force: true }));
+        return true;
+      }
+      if (receiptWhoList === "pipeline" && pipelinePickKey) {
+        pipelinePickKey = "";
+        pipelineQ = "";
+        focusNext = "[data-pipeline-q], .screen-h";
+        render();
         return true;
       }
       if (view === "trade" && dataDashFromDoor()) { dataDashLeaveTicket(); return true; }

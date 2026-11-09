@@ -5057,7 +5057,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pipeline20261109010000";
+    const DATA_V = "pipeline20261109015500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -18630,6 +18630,9 @@ const html = `<!DOCTYPE html>
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
         cornerstoneTradesOpenKey = "";
+        pipelineQ = "";
+        pipelinePickKey = "";
+        pipelineLook = "pipeline";
         receiptH2hA = "";
         receiptH2hB = "";
         receiptResetPlayerFilter();
@@ -24760,6 +24763,9 @@ const html = `<!DOCTYPE html>
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
         cornerstoneTradesOpenKey = "";
+        pipelineQ = "";
+        pipelinePickKey = "";
+        pipelineLook = "pipeline";
         receiptH2hA = "";
         receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -24821,6 +24827,14 @@ const html = `<!DOCTYPE html>
         receiptPickKey = "";
         receiptTicket = !!openId;
         focusNext = ".screen-h";
+        render();
+        return;
+      }
+      // Pipeline credit detail → player search (one layer). Do not skip to Your board.
+      if (receiptWhoList === "pipeline" && pipelinePickKey) {
+        pipelinePickKey = "";
+        pipelineQ = "";
+        focusNext = "[data-pipeline-q], .screen-h";
         render();
         return;
       }
@@ -36482,6 +36496,13 @@ const html = `<!DOCTYPE html>
         goBack(() => setHomeTab("history", { force: true }));
         return true;
       }
+      if (receiptWhoList === "pipeline" && pipelinePickKey) {
+        pipelinePickKey = "";
+        pipelineQ = "";
+        focusNext = "[data-pipeline-q], .screen-h";
+        render();
+        return true;
+      }
       if (view === "trade" && dataDashFromDoor()) { dataDashLeaveTicket(); return true; }
       if (dataDashUnwindOne()) return true;
       if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
@@ -41327,7 +41348,12 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes("never replace a tile")
     || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "pipeline"')
     || !fnSrc("receiptPortalRows").includes('id === "pipeline"')
-    || !fnSrc("receiptPortalNeedsSearch").includes('key === "pipeline"')) {
+    || !fnSrc("receiptPortalNeedsSearch").includes('key === "pipeline"')
+    || !fnSrc("onBrandBack").includes('receiptWhoList === "pipeline" && pipelinePickKey')
+    || !fnSrc("closeTopmost").includes('receiptWhoList === "pipeline" && pipelinePickKey')
+    || !fnSrc("dataDashUnwindOne").includes('pipelinePickKey = ""')
+    || !fnSrc("dataDashOpenReport").includes('pipelinePickKey = ""')
+    || !fnSrc("receiptPortalLeave").includes('pipelinePickKey = ""')) {
     throw new Error("Pipeline must be a League Data door with player search + credit looks");
   }
   if (!uniq.has("biggest_choker") || defIds[9] !== "biggest_choker" || doorIds[9] !== "biggest_choker") {

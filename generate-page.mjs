@@ -5057,7 +5057,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pipeline20261109015500";
+    const DATA_V = "pipeline20261109020000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5201,7 +5201,7 @@ const html = `<!DOCTYPE html>
       { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
       { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Three top-10 boards: original waiver/FA → today, original → peak, and any claim → today (including drafted-then-dropped reclamations)." },
       { id: "cornerstone_trades", lab: "Cornerstone trades", desk: "lists", group: "memory", size: "full", why: "Top 10 highest-value players ever moved in a trade, priced the day they traded. Tap a row for both bags." },
-      { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Search any player — who owned them, who found them, who held longest, who paid the most. Pipeline credit weeds out short flips." },
+      { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Search any player — who found them, who started them, who held longest. Pipeline credit crowns belief: discover + lineup starts, short flips and bench stashes dinged." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -9499,8 +9499,8 @@ const html = `<!DOCTYPE html>
       }
       else if (id === "pipeline") {
         caption = pipelinePickKey
-          ? ("Every seat that owned this player. Credit look crowns one pipeline — discover + hold, short flips dinged. Highest paid is a fact, not the hero.")
-          : ("Search any player. See who owned them, who found them, who held longest, who paid the most — then Pipeline credit for the seat that actually ran them.");
+          ? ("Every seat that owned this player. Pipeline credit crowns belief — discover + actual lineup starts + hold. Bench stashes and short flips get dinged. Highest paid is a fact, not the hero.")
+          : ("Search any player. See who found them, who started them, who held longest — Pipeline credit for the seat that really believed.");
       }
       else if (id === "head_to_head") {
         if (receiptH2hA && receiptH2hB) {
@@ -15577,19 +15577,37 @@ const html = `<!DOCTYPE html>
           + (facts.highest_paid.date ? (" · " + esc(facts.highest_paid.date)) : "")
           + "</p>";
       }
-      html += '<p class="caption">First start awaits a week-by-week lineup book. Paid is market flatten at acquire — not FAAB.</p>';
+      if (facts.most_started) {
+        html += "<p><b>Most started</b> · " + esc(facts.most_started.name)
+          + " · " + esc(String(facts.most_started.starts)) + "×</p>";
+      }
+      if (facts.first_started) {
+        html += "<p><b>First started</b> · " + esc(facts.first_started.name)
+          + (facts.first_started.starts != null
+            ? (" · " + esc(String(facts.first_started.starts)) + "×")
+            : "")
+          + "</p>";
+      }
+      html += '<p class="caption">Belief = lineup starts (half the score) + finding them + holding them. Paid is market flatten at acquire — not FAAB.</p>';
       html += "</div>";
       html += '<p class="caption">' + esc(String((player.stints || []).length))
         + " stint" + ((player.stints || []).length === 1 ? "" : "s")
-        + " · short flips under 21 days are dinged for Pipeline credit.</p>";
+        + " · short flips and never-started stashes are dinged for Pipeline credit.</p>";
+      const seatStarts = {};
+      (player.seats || []).forEach(function (seat) {
+        if (seat && seat.user_id != null) seatStarts[String(seat.user_id)] = seat.starts || 0;
+      });
       (player.stints || []).forEach(function (s) {
         const when = (s.start || "") + (s.end && s.end !== s.start ? (" → " + s.end) : "");
         const val = s.acquire_value != null ? (" · " + fmt(s.acquire_value)) : "";
         const flag = s.short ? " · short" : "";
+        const started = seatStarts[String(s.user_id)] != null
+          ? (" · " + seatStarts[String(s.user_id)] + " starts")
+          : "";
         html += '<div class="row">'
           + '<div class="row-top"><div><div class="names">' + esc(s.name || "—") + "</div>"
           + '<div class="date">' + esc(pipelineAcquireLab(s.acquire) + " → " + pipelineAcquireLab(s.exit)
-            + " · " + (s.days != null ? s.days : "—") + "d" + val + flag)
+            + " · " + (s.days != null ? s.days : "—") + "d" + started + val + flag)
           + "</div>"
           + '<div class="date">' + esc(when) + "</div></div>"
           + '<div class="margin">' + esc(pipelineAcquireLab(s.exit)) + "</div></div></div>";
@@ -41344,6 +41362,8 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes("data-pipeline-q")
     || !inline.includes("data-pipeline-pick")
     || !inline.includes("data-pipeline-look")
+    || !inline.includes("Most started")
+    || !inline.includes("Belief = lineup starts")
     || !fnSrc("dataDashMigrateMyPicks").includes('"pipeline"')
     || !fnSrc("dataDashMigrateMyPicks").includes("never replace a tile")
     || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "pipeline"')

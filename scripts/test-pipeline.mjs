@@ -18,6 +18,9 @@ if (!page.includes('const DATA_V = "') || !/^const CACHE = "chuckle-shell-v\d+/m
 if (!build.includes("build-pipeline.mjs")) {
   fail("build.mjs must run build-pipeline.mjs");
 }
+if (!build.includes("build-player-starts.mjs")) {
+  fail("build.mjs must run build-player-starts.mjs before pipeline");
+}
 for (const need of [
   'id: "pipeline"',
   'lab: "Pipeline"',
@@ -29,6 +32,8 @@ for (const need of [
   'getLeagueJson("pipeline.json")',
   "const DATA_DASH_MAX = 16",
   "Pipeline credit",
+  "Most started",
+  "Belief = lineup starts",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -52,13 +57,25 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/pipeline.json", "utf8"),
 );
-if (Number(book.v) < 1 || !Array.isArray(book.players) || book.players.length < 100) {
-  fail("pipeline book missing players");
+if (Number(book.v) < 2 || !Array.isArray(book.players) || book.players.length < 100) {
+  fail("pipeline book missing players (need v>=2 with starts)");
+}
+if (!book.rule || !/0\.50 starts/.test(book.rule.metric || "")) {
+  fail("pipeline rule must weight starts at 0.50");
+}
+const startsRaw = "data/leagues/1315431339301806080/raw/player_starts.json";
+if (!fs.existsSync(startsRaw)) fail("missing " + startsRaw);
+const startsBook = JSON.parse(fs.readFileSync(startsRaw, "utf8"));
+if (!startsBook.n_rows || startsBook.n_rows < 1000) {
+  fail("player_starts tape too thin: " + startsBook.n_rows);
 }
 const puka = book.players.find((p) => /Puka Nacua/i.test(p.name || ""));
 if (!puka || !puka.facts || !puka.facts.pipeline) fail("expected Puka Nacua pipeline credit");
-if (!/ARae/i.test(puka.facts.pipeline.name || "")) {
-  fail("Puka pipeline credit should be ARae, got " + (puka.facts.pipeline.name || ""));
+if (!puka.facts.most_started || !(puka.facts.most_started.starts > 0)) {
+  fail("Puka should have most_started from lineup tape");
+}
+if (!/started/i.test(puka.facts.pipeline.because || "")) {
+  fail("Puka pipeline because should mention starts");
 }
 const allen = book.players.find((p) => p.name === "Josh Allen");
 if (!allen || !allen.facts.first_owned || allen.facts.first_owned.name !== "ARae") {
@@ -80,5 +97,8 @@ console.log(JSON.stringify({
   lab: "Pipeline",
   doors: 16,
   n_players: book.n_players,
+  n_start_rows: startsBook.n_rows,
   puka: puka.facts.pipeline.name,
+  puka_starts: puka.facts.pipeline.starts,
+  puka_most_started: puka.facts.most_started.name,
 }));

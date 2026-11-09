@@ -5074,7 +5074,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pipelineCats20261109153000";
+    const DATA_V = "pipelineBreakout20261109163000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5218,7 +5218,7 @@
       { id: "biggest_choker", lab: "Biggest choker", desk: "lists", group: "memory", size: "full", why: "Top 10 season chokes — missed playoffs after looking locked, or lost the chip as the favorite. Biggest of each year first." },
       { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Three top-10 boards: original waiver/FA → today, original → peak, and any claim → today (including drafted-then-dropped reclamations)." },
       { id: "cornerstone_trades", lab: "Cornerstone trades", desk: "lists", group: "memory", size: "full", why: "Top 10 highest-value players ever moved in a trade, priced the day they traded. Tap a row for both bags." },
-      { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Two lenses: Discovered (who found them) and Developed (who believed — starts + hold). Browse by position or search." },
+      { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Two lenses: Discovered (first lasting roster) and Developed (who saw the breakout). Browse by position or search." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -9508,7 +9508,7 @@
       }
       else if (id === "pipeline") {
         caption = pipelinePickKey
-          ? ("Every seat that owned this player. Discovered = who found them first. Developed = who believed — lineup starts + hold. Green still owns, yellow traded, red dropped.")
+          ? ("Every seat that owned this player. Discovered = first lasting draft/pickup (instant drops skipped). Developed = who saw the breakout in value + used them. Green still owns, yellow traded, red dropped.")
           : ("Discovered or Developed, then browse by position or search a name.");
       }
       else if (id === "head_to_head") {
@@ -15563,8 +15563,10 @@
 
     function pipelineCreditForCat(player, cat) {
       const facts = (player && player.facts) || {};
-      if (String(cat || pipelineCatId()) === "discovered") return facts.first_owned || null;
-      return facts.pipeline || null;
+      if (String(cat || pipelineCatId()) === "discovered") {
+        return facts.discovered || facts.first_owned || null;
+      }
+      return facts.developed || facts.pipeline || null;
     }
 
     function pipelineOwnerStatusFor(player, userId) {
@@ -15671,16 +15673,21 @@
         html += '<p class="caption">No seat wins ' + esc(lookLab) + " yet.</p>";
       }
       html += '<div class="pipeline-facts" aria-label="Pipeline facts">';
-      if (facts.first_owned) {
-        html += "<p><b>Discovered</b> · " + esc(facts.first_owned.name)
-          + " · " + esc(pipelineAcquireLab(facts.first_owned.acquire))
-          + (facts.first_owned.date ? (" · " + esc(facts.first_owned.date)) : "")
+      const disc = facts.discovered || facts.first_owned;
+      if (disc) {
+        html += "<p><b>Discovered</b> · " + esc(disc.name)
+          + " · " + esc(pipelineAcquireLab(disc.acquire))
+          + (disc.date ? (" · " + esc(disc.date)) : "")
+          + (disc.skipped_flips ? (" · skipped " + esc(String(disc.skipped_flips)) + " instant drop"
+            + (disc.skipped_flips === 1 ? "" : "s")) : "")
           + "</p>";
       }
-      if (facts.pipeline) {
-        html += "<p><b>Developed</b> · " + esc(facts.pipeline.name)
-          + (facts.pipeline.score != null ? (" · " + esc(String(facts.pipeline.score))) : "")
-          + (facts.pipeline.starts != null ? (" · " + esc(String(facts.pipeline.starts)) + " starts") : "")
+      const devel = facts.developed || facts.pipeline;
+      if (devel) {
+        html += "<p><b>Developed</b> · " + esc(devel.name)
+          + (devel.score != null ? (" · " + esc(String(devel.score))) : "")
+          + (devel.value_gain != null ? (" · breakout +" + esc(String(devel.value_gain))) : "")
+          + (devel.starts != null ? (" · " + esc(String(devel.starts)) + " starts") : "")
           + "</p>";
       }
       if (facts.longest) {
@@ -15704,18 +15711,22 @@
             : "")
           + "</p>";
       }
-      html += '<p class="caption">Discovered = first roster entry. Developed = belief score (starts + hold). Paid is market flatten at acquire — not FAAB.</p>';
+      html += '<p class="caption">Discovered = first lasting draft/pickup (instant drops skipped). Developed = breakout value-gain while owned + starts. Paid is market flatten at acquire — not FAAB.</p>';
       html += "</div>";
       html += '<p class="caption">' + esc(String((player.stints || []).length))
         + " stint" + ((player.stints || []).length === 1 ? "" : "s")
-        + " · short flips and never-started stashes are dinged for Developed credit.</p>";
+        + " · Developed crowns the seat that saw the rise before they moved on.</p>";
       const seatStarts = {};
       (player.seats || []).forEach(function (seat) {
         if (seat && seat.user_id != null) seatStarts[String(seat.user_id)] = seat.starts || 0;
       });
       (player.stints || []).forEach(function (s) {
         const when = (s.start || "") + (s.end && s.end !== s.start ? (" → " + s.end) : "");
-        const val = s.acquire_value != null ? (" · " + fmt(s.acquire_value)) : "";
+        const valIn = s.acquire_value != null ? (" · in " + fmt(s.acquire_value)) : "";
+        const valOut = s.exit_value != null ? (" · out " + fmt(s.exit_value)) : "";
+        const gain = s.value_gain != null && s.value_gain > 0
+          ? (" · +" + fmt(s.value_gain))
+          : "";
         const flag = s.short ? " · short" : "";
         const started = seatStarts[String(s.user_id)] != null
           ? (" · " + seatStarts[String(s.user_id)] + " starts")
@@ -15723,7 +15734,7 @@
         html += '<div class="row">'
           + '<div class="row-top"><div><div class="names">' + esc(s.name || "—") + "</div>"
           + '<div class="date">' + esc(pipelineAcquireLab(s.acquire) + " → " + pipelineAcquireLab(s.exit)
-            + " · " + (s.days != null ? s.days : "—") + "d" + started + val + flag)
+            + " · " + (s.days != null ? s.days : "—") + "d" + started + valIn + valOut + gain + flag)
           + "</div>"
           + '<div class="date">' + esc(when) + "</div></div>"
           + '<div class="margin">' + esc(pipelineAcquireLab(s.exit)) + "</div></div></div>";

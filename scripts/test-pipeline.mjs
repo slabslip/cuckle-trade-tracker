@@ -35,6 +35,10 @@ for (const need of [
   "Developed",
   "function pipelineCatId(",
   "function pipelineCreditForCat(",
+  "facts.discovered",
+  "facts.developed",
+  "instant drops",
+  "breakout",
   "data-pipeline-pos",
   "pipeline-pos-list",
   "fantasy rank (PPR)",
@@ -68,11 +72,14 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/pipeline.json", "utf8"),
 );
-if (Number(book.v) < 3 || !Array.isArray(book.players) || book.players.length < 100) {
-  fail("pipeline book missing players (need v>=3 with pos ranks)");
+if (Number(book.v) < 4 || !Array.isArray(book.players) || book.players.length < 100) {
+  fail("pipeline book missing players (need v>=4 with breakout cats)");
 }
-if (!book.rule || !/0\.50 starts/.test(book.rule.metric || "")) {
-  fail("pipeline rule must weight starts at 0.50");
+if (!book.rule || !/breakout/i.test(book.rule.metric || "")) {
+  fail("pipeline rule must describe breakout Developed credit");
+}
+if (!book.rule.discovered || !/instant drop/i.test(book.rule.discovered)) {
+  fail("pipeline rule must skip instant drops for Discovered");
 }
 if (!book.positions || book.positions.join(",") !== "QB,RB,WR,TE") {
   fail("pipeline book must list QB/RB/WR/TE positions");
@@ -102,11 +109,17 @@ if (!puka || !puka.facts || !puka.facts.pipeline) fail("expected Puka Nacua pipe
 if (!puka.facts.most_started || !(puka.facts.most_started.starts > 0)) {
   fail("Puka should have most_started from lineup tape");
 }
-if (!/started/i.test(puka.facts.pipeline.because || "")) {
-  fail("Puka pipeline because should mention starts");
+if (!puka.facts.discovered || !puka.facts.developed) {
+  fail("Puka should expose discovered + developed facts");
+}
+if (!/(started|breakout)/i.test(puka.facts.developed.because || "")) {
+  fail("Puka developed because should mention starts or breakout");
 }
 if (puka.facts.pipeline.owner_status !== "held" || !puka.facts.pipeline.still_owns) {
   fail("Puka pipeline winner should still own (held)");
+}
+if (puka.facts.discovered.name !== puka.facts.first_owned.name) {
+  fail("discovered should alias first_owned");
 }
 const aj = book.players.find((p) => /A\.J\. Green/i.test(p.name || ""));
 if (!aj || aj.facts.pipeline.owner_status !== "drop") {

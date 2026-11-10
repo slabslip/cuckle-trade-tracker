@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-10",
-  "n": 32,
+  "n": 31,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -140,13 +140,6 @@
       "injury_status": "Questionable",
       "status": "Inactive",
       "team": "LAR",
-      "pos": "WR"
-    },
-    "10232": {
-      "name": "Michael Wilson",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "ARI",
       "pos": "WR"
     },
     "11624": {

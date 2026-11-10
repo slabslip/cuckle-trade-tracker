@@ -97,7 +97,8 @@ for (const lg of leagues) {
   const season = String(lg.season);
   let last = 18;
   if (liveSeason && season === liveSeason && Number.isFinite(liveWeek)) {
-    last = Math.max(0, liveWeek - 1);
+    // Include the live week so in-progress / just-played nailbiters land on the board.
+    last = Math.max(0, liveWeek);
   }
   const rosterToUser = new Map();
   for (const s of seatsRaw) {

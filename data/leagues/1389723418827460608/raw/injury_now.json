@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-09",
-  "n": 31,
+  "as_of": "2026-11-10",
+  "n": 32,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -46,7 +46,7 @@
     },
     "5850": {
       "name": "Josh Jacobs",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "GB",
       "pos": "RB"
@@ -138,8 +138,15 @@
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "Questionable",
-      "status": "Active",
+      "status": "Inactive",
       "team": "LAR",
+      "pos": "WR"
+    },
+    "10232": {
+      "name": "Michael Wilson",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "ARI",
       "pos": "WR"
     },
     "11624": {

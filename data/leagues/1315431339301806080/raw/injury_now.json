@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-09",
-  "n": 96,
+  "as_of": "2026-11-10",
+  "n": 100,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -81,7 +81,7 @@
     },
     "5850": {
       "name": "Josh Jacobs",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "GB",
       "pos": "RB"
@@ -170,6 +170,13 @@
       "team": "BAL",
       "pos": "QB"
     },
+    "7090": {
+      "name": "Darnell Mooney",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NYG",
+      "pos": "WR"
+    },
     "7525": {
       "name": "DeVonta Smith",
       "injury_status": "Out",
@@ -200,7 +207,7 @@
     },
     "8110": {
       "name": "Jake Ferguson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "DAL",
       "pos": "TE"
@@ -284,10 +291,17 @@
     },
     "8207": {
       "name": "Tyler Goodson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "DAL",
       "pos": "RB"
+    },
+    "8210": {
+      "name": "Chig Okonkwo",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "WAS",
+      "pos": "TE"
     },
     "8676": {
       "name": "Rashid Shaheed",
@@ -334,7 +348,7 @@
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "Questionable",
-      "status": "Active",
+      "status": "Inactive",
       "team": "LAR",
       "pos": "WR"
     },
@@ -357,6 +371,13 @@
       "injury_status": "IR",
       "status": "Inactive",
       "team": "CIN",
+      "pos": "WR"
+    },
+    "10232": {
+      "name": "Michael Wilson",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "ARI",
       "pos": "WR"
     },
     "11565": {
@@ -620,8 +641,8 @@
     },
     "13347": {
       "name": "Demond Claiborne",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "MIN",
       "pos": "RB"
     },
@@ -637,6 +658,13 @@
       "injury_status": "Out",
       "status": "Active",
       "team": "LAC",
+      "pos": "WR"
+    },
+    "13402": {
+      "name": "Skyler Bell",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "BUF",
       "pos": "WR"
     },
     "13404": {

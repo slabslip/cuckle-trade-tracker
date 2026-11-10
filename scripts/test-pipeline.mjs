@@ -30,7 +30,7 @@ for (const need of [
   'data-pipeline-pick',
   'data-pipeline-cat',
   'getLeagueJson("pipeline.json")',
-  "const DATA_DASH_MAX = 18",
+  "const DATA_DASH_MAX = 19",
   "Discovered",
   "Developed",
   "function pipelineCatId(",
@@ -53,8 +53,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 18 || defIds.length !== 18) {
-    fail("DATA_DOORS / DEFAULT must be 18 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 19 || defIds.length !== 19) {
+    fail("DATA_DOORS / DEFAULT must be 19 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[15] !== "pipeline" || defIds[15] !== "pipeline") {
     fail("Pipeline must be door tile 16");
@@ -134,7 +134,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Pipeline",
-  doors: 18,
+  doors: 19,
   n_players: book.n_players,
   n_start_rows: startsBook.n_rows,
   puka: puka.facts.pipeline.name,

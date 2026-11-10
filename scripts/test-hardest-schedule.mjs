@@ -23,14 +23,14 @@ if (build.indexOf("build-projected-finish.mjs") > build.indexOf("build-hardest-s
 }
 for (const need of [
   'id: "hardest_schedule"',
-  'lab: "Hardest remaining schedule"',
+  'lab: "Toughest schedule"',
   "function hardestScheduleDetailHtml(",
   'data-hardest-schedule-open="',
   'closest("[data-hardest-schedule-open]")',
   'getLeagueJson("hardest-schedule.json")',
   "hardestScheduleOpenKey",
   "Every seat ranked hardest",
-  "const DATA_DASH_MAX = 18",
+  "const DATA_DASH_MAX = 19",
   'src.splice(after + 1, 0, "hardest_schedule")',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -40,8 +40,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 18 || defIds.length !== 18) {
-    fail("DATA_DOORS / DEFAULT must be 18 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 19 || defIds.length !== 19) {
+    fail("DATA_DOORS / DEFAULT must be 19 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[17] !== "hardest_schedule" || defIds[17] !== "hardest_schedule") {
     fail("Hardest remaining schedule must be door tile 18");
@@ -80,8 +80,8 @@ if (!fs.existsSync(design)) fail("missing " + design);
 
 console.log(JSON.stringify({
   ok: true,
-  lab: "Hardest remaining schedule",
-  doors: 18,
+  lab: "Toughest schedule",
+  doors: 19,
   n: book.n,
   remaining_weeks: book.remaining_weeks,
   top: book.seats.slice(0, 3).map((s) => ({

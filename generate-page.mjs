@@ -5082,7 +5082,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pipelineSkipFlips20261109170000";
+    const DATA_V = "pipelineDevelop20261110033000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -15719,11 +15719,11 @@ const html = `<!DOCTYPE html>
             : "")
           + "</p>";
       }
-      html += '<p class="caption">Discovered = first lasting draft/pickup (instant drops skipped). Developed = breakout value-gain while owned + starts. Paid is market flatten at acquire — not FAAB.</p>';
+      html += '<p class="caption">Discovered = first lasting draft/pickup (instant drops skipped). Developed = lasting breakout gain + lineup starts (short flips ignored). Paid is market flatten at acquire — not FAAB.</p>';
       html += "</div>";
       html += '<p class="caption">' + esc(String((player.stints || []).length))
         + " stint" + ((player.stints || []).length === 1 ? "" : "s")
-        + " · Developed crowns the seat that saw the rise before they moved on.</p>";
+        + " · Developed crowns who used them through the rise — not a one-start find.</p>";
       const seatStarts = {};
       (player.seats || []).forEach(function (seat) {
         if (seat && seat.user_id != null) seatStarts[String(seat.user_id)] = seat.starts || 0;

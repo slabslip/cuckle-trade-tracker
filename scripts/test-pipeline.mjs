@@ -72,8 +72,8 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/pipeline.json", "utf8"),
 );
-if (Number(book.v) < 4 || !Array.isArray(book.players) || book.players.length < 100) {
-  fail("pipeline book missing players (need v>=4 with breakout cats)");
+if (Number(book.v) < 5 || !Array.isArray(book.players) || book.players.length < 100) {
+  fail("pipeline book missing players (need v>=5 lasting breakout Developed)");
 }
 if (!book.rule || !/breakout/i.test(book.rule.metric || "")) {
   fail("pipeline rule must describe breakout Developed credit");
@@ -132,6 +132,14 @@ if (!cd || cd.facts.pipeline.owner_status !== "trade") {
 const allen = book.players.find((p) => p.name === "Josh Allen");
 if (!allen || !allen.facts.first_owned || allen.facts.first_owned.name !== "ARae") {
   fail("Josh Allen first owned should be ARae");
+}
+const wilson = book.players.find((p) => p.name === "Michael Wilson");
+if (!wilson || !wilson.facts.discovered || wilson.facts.discovered.name !== "TipsUp") {
+  fail("Michael Wilson Discovered should be TipsUp");
+}
+if (!wilson.facts.developed || wilson.facts.developed.name !== "TrumanCooper") {
+  fail("Michael Wilson Developed should be TrumanCooper (breakout + starts), got "
+    + ((wilson.facts.developed && wilson.facts.developed.name) || "null"));
 }
 
 const design = "design-pipeline.html";

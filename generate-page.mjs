@@ -5053,6 +5053,7 @@ const html = `<!DOCTYPE html>
     let managerArchetypesOpenKey = "";
     let bestBallHypeOpenKey = "";
     let biggestChokerOpenKey = "";
+    let closestGamesOpenKey = "";
     let cornerstoneTradesOpenKey = "";
     let pipelineQ = "";
     let pipelinePickKey = "";
@@ -5082,7 +5083,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261110115016";
+    const DATA_V = "closestGames20261110150000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5149,12 +5150,13 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 16;
+    const DATA_DASH_MAX = 17;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
+      "closest_games",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5169,12 +5171,13 @@ const html = `<!DOCTYPE html>
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
+      "closest_games",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
-      "cornerstone_trades", "pipeline",
+      "cornerstone_trades", "pipeline", "closest_games",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5191,6 +5194,7 @@ const html = `<!DOCTYPE html>
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades", "pipeline",
+      "closest_games",
       "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -5227,6 +5231,7 @@ const html = `<!DOCTYPE html>
       { id: "waiver_winners", lab: "Waiver winners", desk: "lists", group: "memory", size: "full", why: "Three top-10 boards: original waiver/FA → today, original → peak, and any claim → today (including drafted-then-dropped reclamations)." },
       { id: "cornerstone_trades", lab: "Cornerstone trades", desk: "lists", group: "memory", size: "full", why: "Top 10 highest-value players ever moved in a trade, priced the day they traded. Tap a row for both bags." },
       { id: "pipeline", lab: "Pipeline", desk: "lists", group: "memory", size: "full", why: "Two lenses: Discovered (who found them) and Developed (who believed — starts + hold). Browse by position or search." },
+      { id: "closest_games", lab: "Closest games", desk: "lists", group: "memory", size: "full", why: "Top 10 closest matches of all time by point margin. Tap a game for how that week shaped both teams' years." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5352,6 +5357,7 @@ const html = `<!DOCTYPE html>
     let managerArchetypesBook = null;
     let bestBallHypeBook = null;
     let biggestChokerBook = null;
+    let closestGamesBook = null;
     let bestWaiverPickupsBook = null;
     let cornerstoneTradesBook = null;
     let pipelineBook = null;
@@ -5816,6 +5822,7 @@ const html = `<!DOCTYPE html>
         || canon === "season_arcs" || canon === "manager_archetypes"
         || canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades" || canon === "pipeline"
+        || canon === "closest_games"
         || canon === "head_to_head";
     }
 
@@ -6069,6 +6076,27 @@ const html = `<!DOCTYPE html>
           };
         });
       }
+      if (canon === "closest_games") {
+        const games = (closestGamesBook && Array.isArray(closestGamesBook.games))
+          ? closestGamesBook.games.slice() : [];
+        return games.map(function (g, i) {
+          const a = g.a || {};
+          const b = g.b || {};
+          const phaseLab = g.phase === "playoff" ? "playoff" : "RS";
+          return {
+            key: String(g.key || ((g.season || "") + "-w" + (g.week || i))),
+            name: (a.name || "—") + " vs " + (b.name || "—"),
+            metric: (g.margin != null ? String(g.margin) : "—"),
+            sub: String(g.season || "") + " W" + String(g.week || "—")
+              + " · " + phaseLab
+              + " · " + String(a.points != null ? a.points : "—")
+              + "–" + String(b.points != null ? b.points : "—")
+              + " · tap for year impact",
+            rank: Number(g.rank) || (i + 1),
+            seat: g,
+          };
+        });
+      }
       if (canon === "waiver_winners") {
         const pack = function (rows, band) {
           return (rows || []).map(function (r, i) {
@@ -6319,6 +6347,11 @@ const html = `<!DOCTYPE html>
       // Biggest choker: one flat top-10 — no Top/Bottom or year bands unless asked.
       if (id === "biggest_choker" || (typeof receiptDoorCanon === "function"
         && receiptDoorCanon(id) === "biggest_choker")) {
+        return picked.map(wrap).join("");
+      }
+      // Closest games: one flat top-10 by margin.
+      if (id === "closest_games" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "closest_games")) {
         return picked.map(wrap).join("");
       }
       // Cornerstone trades: one flat top-10 by player value at time of trade.
@@ -7934,7 +7967,7 @@ const html = `<!DOCTYPE html>
         || id === "trade_mark" || id === "pick_print" || id === "my_picks"
         || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "biggest_choker" || id === "waiver_winners"
-        || id === "cornerstone_trades" || id === "pipeline"
+        || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
@@ -7996,6 +8029,7 @@ const html = `<!DOCTYPE html>
       if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes"
         || key === "best_ball_hype" || key === "biggest_choker"
         || key === "waiver_winners" || key === "cornerstone_trades" || key === "pipeline"
+        || key === "closest_games"
         || key === "head_to_head") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
@@ -8011,7 +8045,7 @@ const html = `<!DOCTYPE html>
       if (id === "draft_marks" || id === "held_firsts") return true;
       if (canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades"
-        || canon === "pipeline"
+        || canon === "pipeline" || canon === "closest_games"
         || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
@@ -8063,6 +8097,7 @@ const html = `<!DOCTYPE html>
         waiver_winners: '<path d="M12 19V7M8.5 10.5L12 7l3.5 3.5"/><path d="M5 19h14"/>',
         cornerstone_trades: '<path d="M12 3l2.2 4.5L19 8.2l-3.5 3.4.8 4.9L12 14.2 7.7 16.5l.8-4.9L5 8.2l4.8-.7L12 3z"/>',
         pipeline: '<path d="M4 12h16M8 8v8M16 8v8M12 6v12"/>',
+        closest_games: '<path d="M4 12h16"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
         forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
         passed_around: '<path d="M20 8a8 8 0 1 0 1.6 6"/><polyline points="16 8 20 8 20 4"/>',
@@ -8131,6 +8166,13 @@ const html = `<!DOCTYPE html>
       } else if (id === "biggest_choker") {
         const lead = biggestChokerBook && biggestChokerBook.seats && biggestChokerBook.seats[0];
         if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.season || ""));
+      } else if (id === "closest_games") {
+        const lead = closestGamesBook && closestGamesBook.games && closestGamesBook.games[0];
+        if (lead && lead.a && lead.b) {
+          fig = receiptDoorLeadFig(
+            (lead.a.name || "—") + " / " + (lead.b.name || "—"),
+            lead.margin != null ? String(lead.margin) : "");
+        }
       } else if (id === "waiver_winners") {
         const lead = bestWaiverPickupsBook && bestWaiverPickupsBook.to_today
           && bestWaiverPickupsBook.to_today[0];
@@ -9264,7 +9306,7 @@ const html = `<!DOCTYPE html>
       }
       if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners"
-        || id === "cornerstone_trades" || id === "pipeline") {
+        || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank,
             r.seat && r.seat.picker, r.seat && r.seat.player,
@@ -9285,6 +9327,9 @@ const html = `<!DOCTYPE html>
           }
           if (id === "biggest_choker" && !biggestChokerBook) {
             return '<p class="caption">Biggest choker book not loaded yet.</p>';
+          }
+          if (id === "closest_games" && !closestGamesBook) {
+            return '<p class="caption">Closest games book not loaded yet.</p>';
           }
           if (id === "waiver_winners" && !bestWaiverPickupsBook) {
             return '<p class="caption">Waiver winners book not loaded yet.</p>';
@@ -9382,6 +9427,24 @@ const html = `<!DOCTYPE html>
               + "</button>"
               + (open
                 ? ('<div class="detail">' + biggestChokerDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
+          if (id === "closest_games") {
+            const open = String(closestGamesOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + esc(r.name || "—") + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-closest-games-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + closestGamesDetailHtml(r.seat) + "</div>")
                 : "")
               + "</div>";
           }
@@ -9499,6 +9562,11 @@ const html = `<!DOCTYPE html>
           + " Missed playoffs = locked inside the top six by week-4/8 points rank, then finished outside the cut."
           + " Lost the chip = championship runner-up who had the better record, higher points rank, or led PF."
           + " Tap a row for the story.";
+      }
+      else if (id === "closest_games") {
+        caption = "Top 10 closest matches of all time — smallest point margin first."
+          + " Regular season and playoff weeks both count."
+          + " Tap a game for how that week sat inside each team's year (final place, playoffs, PF path).";
       }
       else if (id === "waiver_winners") {
         caption = "Three top-10 boards by dynasty-value lift on the same scale as Trade Value / calculator."
@@ -11885,6 +11953,7 @@ const html = `<!DOCTYPE html>
       managerArchetypesBook = null;
       bestBallHypeBook = null;
       biggestChokerBook = null;
+      closestGamesBook = null;
       bestWaiverPickupsBook = null;
       cornerstoneTradesBook = null;
       pipelineBook = null;
@@ -11903,6 +11972,7 @@ const html = `<!DOCTYPE html>
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
       biggestChokerOpenKey = "";
+      closestGamesOpenKey = "";
       cornerstoneTradesOpenKey = "";
       receiptH2hA = "";
       receiptH2hB = "";
@@ -11918,7 +11988,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -11938,6 +12008,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("manager-archetypes.json").catch(() => null),
         getLeagueJson("best-ball-hype.json").catch(() => null),
         getLeagueJson("biggest-choker.json").catch(() => null),
+        getLeagueJson("closest-games.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
         getLeagueJson("cornerstone-trades.json").catch(() => null),
         getLeagueJson("pipeline.json").catch(() => null),
@@ -12028,6 +12099,10 @@ const html = `<!DOCTYPE html>
         biggestChokerBook = biggestChokerRaw && Number(biggestChokerRaw.v) >= 1
           && Array.isArray(biggestChokerRaw.seats) ? biggestChokerRaw : null;
       } catch (err) { biggestChokerBook = null; }
+      try {
+        closestGamesBook = closestGamesRaw && Number(closestGamesRaw.v) >= 1
+          && Array.isArray(closestGamesRaw.games) ? closestGamesRaw : null;
+      } catch (err) { closestGamesBook = null; }
       try {
         bestWaiverPickupsBook = bestWaiverRaw && Number(bestWaiverRaw.v) >= 4
           && Array.isArray(bestWaiverRaw.to_today) && Array.isArray(bestWaiverRaw.to_peak)
@@ -13318,6 +13393,7 @@ const html = `<!DOCTYPE html>
       managerArchetypesOpenKey = "";
       bestBallHypeOpenKey = "";
       biggestChokerOpenKey = "";
+      closestGamesOpenKey = "";
       cornerstoneTradesOpenKey = "";
       pipelineQ = "";
       pipelinePickKey = "";
@@ -13608,6 +13684,13 @@ const html = `<!DOCTYPE html>
         const after = src.indexOf("best_ball_hype");
         if (after >= 0) src.splice(after + 1, 0, "pipeline");
         else src.push("pipeline");
+      }
+      // Dynasty: add Closest games after Pipeline — never replace a tile.
+      if (dynasty && src.indexOf("closest_games") < 0 && dataDashById("closest_games")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("pipeline");
+        if (after >= 0) src.splice(after + 1, 0, "closest_games");
+        else src.push("closest_games");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -15426,6 +15509,35 @@ const html = `<!DOCTYPE html>
       });
       if (!rows.length) return lead + '<p class="caption">No seats match.</p>';
       return lead + rows.join("");
+    }
+
+    function closestGamesDetailHtml(game) {
+      if (!game) return "";
+      const a = game.a || {};
+      const b = game.b || {};
+      const phaseLab = game.phase === "playoff" ? "Playoff" : "Regular season";
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">The game</p>';
+      html += "<p><b>" + esc(String(game.season || "")) + " · week " + esc(String(game.week || "—"))
+        + "</b> · " + esc(phaseLab)
+        + " · margin " + esc(String(game.margin != null ? game.margin : "—"))
+        + ".</p>";
+      html += "<p>" + esc(a.name || "—") + " " + esc(String(a.points != null ? a.points : "—"))
+        + " · " + esc(b.name || "—") + " " + esc(String(b.points != null ? b.points : "—"))
+        + ".</p>";
+      html += '<p class="pf-why-h">How it shaped their years</p>';
+      (game.years || []).forEach(function (y) {
+        if (!y) return;
+        html += "<p><b>" + esc(y.name || "—") + "</b>"
+          + (y.result ? (" · " + esc(y.result)) : "")
+          + (y.thesis ? (" — " + esc(y.thesis)) : "")
+          + "</p>";
+      });
+      if (!(game.years || []).length) {
+        html += '<p class="caption">Year path not on the arcs/standings book for this seat.</p>';
+      }
+      html += "</div>";
+      return html;
     }
 
     function biggestChokerDetailHtml(seat) {
@@ -18545,6 +18657,14 @@ const html = `<!DOCTYPE html>
           lead ? String(lead.season || "Open") : "Open",
           lead ? ((lead.name || "Lead") + " · " + (lead.lab || "choke")) : "Season chokes · top 10");
       }
+      if (id === "closest_games") {
+        const lead = closestGamesBook && closestGamesBook.games && closestGamesBook.games[0];
+        return dataDashHead(spec,
+          lead && lead.margin != null ? String(lead.margin) : "Open",
+          lead && lead.a && lead.b
+            ? ((lead.a.name || "—") + " vs " + (lead.b.name || "—") + " · closest")
+            : "Nailbiters · top 10");
+      }
       if (id === "waiver_winners") {
         const lead = bestWaiverPickupsBook && bestWaiverPickupsBook.to_today
           && bestWaiverPickupsBook.to_today[0];
@@ -18817,6 +18937,7 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        closestGamesOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
         pipelinePickKey = "";
@@ -24951,6 +25072,7 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        closestGamesOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
         pipelinePickKey = "";
@@ -37291,6 +37413,13 @@ const html = `<!DOCTYPE html>
         if (typeof render === "function") render();
         return;
       }
+      const closestGamesOpenBtn = e.target.closest("[data-closest-games-open]");
+      if (closestGamesOpenBtn) {
+        const key = closestGamesOpenBtn.getAttribute("data-closest-games-open") || "";
+        closestGamesOpenKey = (String(closestGamesOpenKey) === String(key)) ? "" : key;
+        render();
+        return;
+      }
       const biggestChokerOpenBtn = e.target.closest("[data-biggest-choker-open]");
       if (biggestChokerOpenBtn) {
         e.preventDefault();
@@ -37500,6 +37629,7 @@ const html = `<!DOCTYPE html>
         managerArchetypesOpenKey = "";
         bestBallHypeOpenKey = "";
         biggestChokerOpenKey = "";
+        closestGamesOpenKey = "";
         receiptH2hA = "";
         receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -41456,8 +41586,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 49 || uniq.size !== 49) {
-    throw new Error("DATA_REPORTS must hold exactly 49 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 50 || uniq.size !== 50) {
+    throw new Error("DATA_REPORTS must hold exactly 50 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -41483,28 +41613,29 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 16 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 17 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
     || defIds.indexOf("cornerstone_trades") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 16 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 17 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 16 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 16 default door tiles");
+  if (doorIds.length !== 17 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 17 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 14 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 14 catalog ids");
+  if (resIds.length !== 15 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 15 catalog ids");
   }
-  if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades") || !resIds.includes("pipeline")) {
-    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, and pipeline");
+  if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades") || !resIds.includes("pipeline")
+    || !resIds.includes("closest_games")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
@@ -41533,6 +41664,19 @@ if (!inline.includes("function dataDashHtml(")
   }
   if (!uniq.has("pipeline") || defIds[15] !== "pipeline" || doorIds[15] !== "pipeline") {
     throw new Error("Pipeline must be default board tile 16 (League Data door)");
+  }
+  if (!uniq.has("closest_games") || defIds[16] !== "closest_games" || doorIds[16] !== "closest_games") {
+    throw new Error("Closest games must be default board tile 17 (League Data door)");
+  }
+  if (!inline.includes('id: "closest_games"')
+    || !inline.includes('lab: "Closest games"')
+    || !inline.includes("function closestGamesDetailHtml(")
+    || !inline.includes('getLeagueJson("closest-games.json")')
+    || !inline.includes('data-closest-games-open="')
+    || !inline.includes("closestGamesOpenKey")
+    || !inline.includes('canon === "closest_games"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "closest_games")')) {
+    throw new Error("Closest games door must ship book load, expand detail, and dynasty board migrate");
   }
   if (!inline.includes('id: "pipeline"')
     || !inline.includes('lab: "Pipeline"')
@@ -42500,7 +42644,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 16")) {
+  || !inline.includes("const DATA_DASH_MAX = 17")) {
   throw new Error("Waiver winners must stay on League Data with three top-10 bands");
 }
 if (!inline.includes('id: "cornerstone_trades"')

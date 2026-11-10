@@ -63,6 +63,7 @@ const steps = [
   ["build-projected-finish.mjs", leagueId],
   ["build-season-arcs.mjs", leagueId],
   ["build-biggest-choker.mjs", leagueId],
+  ["build-closest-games.mjs", leagueId],
   ["build-head-to-head.mjs", leagueId],
   ["build-best-waiver-pickups.mjs", leagueId],
   ["build-cornerstone-trades.mjs", leagueId],

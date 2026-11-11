@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-10",
-  "n": 31,
+  "as_of": "2026-11-11",
+  "n": 30,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -127,13 +127,6 @@
       "status": "Inactive",
       "team": "ATL",
       "pos": "RB"
-    },
-    "8161": {
-      "name": "Malik Willis",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIA",
-      "pos": "QB"
     },
     "9493": {
       "name": "Puka Nacua",

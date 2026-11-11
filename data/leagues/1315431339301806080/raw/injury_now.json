@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-10",
+  "as_of": "2026-11-11",
   "n": 100,
   "players": {
     "2133": {
@@ -270,8 +270,8 @@
     },
     "8161": {
       "name": "Malik Willis",
-      "injury_status": "Questionable",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "MIA",
       "pos": "QB"
     },
@@ -375,8 +375,8 @@
     },
     "10232": {
       "name": "Michael Wilson",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "ARI",
       "pos": "WR"
     },

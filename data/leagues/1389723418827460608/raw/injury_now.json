@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-11",
-  "n": 30,
+  "n": 28,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -11,7 +11,7 @@
     },
     "2216": {
       "name": "Mike Evans",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "SF",
       "pos": "WR"
@@ -39,7 +39,7 @@
     },
     "5849": {
       "name": "Kyler Murray",
-      "injury_status": "Out",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "MIN",
       "pos": "QB"
@@ -53,21 +53,21 @@
     },
     "5859": {
       "name": "A.J. Brown",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NE",
       "pos": "WR"
     },
     "5872": {
       "name": "Deebo Samuel Sr.",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "SF",
       "pos": "WR"
     },
     "5892": {
       "name": "David Montgomery",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
@@ -95,7 +95,7 @@
     },
     "7611": {
       "name": "Rhamondre Stevenson",
-      "injury_status": "Out",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "NE",
       "pos": "RB"
@@ -109,14 +109,14 @@
     },
     "8137": {
       "name": "George Pickens",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "DAL",
       "pos": "WR"
     },
     "8146": {
       "name": "Garrett Wilson",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
@@ -130,14 +130,14 @@
     },
     "9493": {
       "name": "Puka Nacua",
-      "injury_status": "Questionable",
+      "injury_status": "Doubtful",
       "status": "Inactive",
       "team": "LAR",
       "pos": "WR"
     },
     "11624": {
       "name": "Xavier Worthy",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "KC",
       "pos": "WR"
@@ -148,13 +148,6 @@
       "status": "Active",
       "team": "LAC",
       "pos": "WR"
-    },
-    "12481": {
-      "name": "Cam Skattebo",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "NYG",
-      "pos": "RB"
     },
     "12489": {
       "name": "RJ Harvey",
@@ -172,7 +165,7 @@
     },
     "12529": {
       "name": "TreVeyon Henderson",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NE",
       "pos": "RB"
@@ -193,7 +186,7 @@
     },
     "13279": {
       "name": "Carnell Tate",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "TEN",
       "pos": "WR"
@@ -204,13 +197,6 @@
       "status": "Inactive",
       "team": "ARI",
       "pos": "RB"
-    },
-    "13298": {
-      "name": "KC Concepcion Jr.",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CLE",
-      "pos": "WR"
     }
   }
 }

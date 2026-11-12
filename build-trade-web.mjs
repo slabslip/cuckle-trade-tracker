@@ -4,12 +4,15 @@
  *
  *   node build-trade-web.mjs [league_id]
  *
- * Maps what each traded-away player turned into for the seat that sent them.
+ * Maps what each traded-away player turned into for the seat that sent them,
+ * with DynastyProcess flatten P&L on each connector.
  */
 import { existsSync, readFileSync } from "node:fs";
 import {
   CUCKLE_LEAGUE_ID,
+  DATA,
   LEAGUE_ID,
+  detectLeagueFormat,
   leagueRawDir,
   readJson,
   readUi,
@@ -33,6 +36,13 @@ const members = readUi("members.json", []) || [];
 const picksBook = readUi("picks.json", null);
 const playersNfl = readJson("players.nfl.json", {}) || {};
 
+const format = detectLeagueFormat(readJson("leagues.json", []) || []);
+const curveName = format.format_key === "1qb" ? "value_curve_1qb.json" : "value_curve.json";
+const curvePath = `${DATA}/${curveName}`;
+const curve = existsSync(curvePath)
+  ? JSON.parse(readFileSync(curvePath, "utf8"))
+  : (readJson("value_curve.json", []) || []);
+
 const nameByUser = {};
 for (const m of members) {
   if (m && m.user_id != null && m.name) nameByUser[String(m.user_id)] = String(m.name);
@@ -45,6 +55,7 @@ const book = buildTradeWebBook({
   moves,
   nameByUser,
   playersNfl,
+  curve,
   leagueId: LEAGUE_ID,
   asOf: new Date().toISOString().slice(0, 10),
 });
@@ -56,22 +67,37 @@ console.log(JSON.stringify({
   ok: true,
   v: book.v,
   n_players: book.n_players,
+  curve: curveName,
+  pricing: book.pricing,
   sample: (book.players || []).slice(0, 5).map((p) => ({
     name: p.name,
     n_exits: p.n_exits,
+    trail_pnl: p.trail_pnl,
     seats: p.seats,
   })),
   golden: golden ? {
     name: golden.name,
     n_exits: golden.n_exits,
+    trail_pnl: golden.trail_pnl,
     webs: (golden.webs || []).map((w) => ({
       seat: w.seat,
       date: w.date,
       partner: w.partner,
+      gave_value: w.gave_value,
+      got_value: w.got_value,
+      deal_pnl: w.deal_pnl,
+      mark_pnl: w.mark_pnl,
+      trail_pnl: w.trail_pnl,
       thesis: w.thesis,
+      graph_nodes: w.graph && w.graph.nodes ? w.graph.nodes.length : 0,
+      graph_edges: w.graph && w.graph.edges ? w.graph.edges.length : 0,
       branches: (w.branches || []).map((b) => ({
         label: b.label,
         status: b.status,
+        value_in: b.value_in,
+        value_now: b.value_now,
+        mark_pnl: b.mark_pnl,
+        deal_pnl: b.deal_pnl,
         children: (b.children || []).map((c) => c.label),
       })),
     })),

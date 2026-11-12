@@ -1837,11 +1837,56 @@
     .home-wire-empty {
       margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted);
     }
-    /* Trade web — blockchain-style asset trail. */
+    /* Trade web — blockchain-style asset trail + SVG node link. */
     .trade-web-search { margin: 0 0 10px; }
     .trade-web-tree { margin: 8px 0 14px; padding-left: 2px; }
     .trade-web-root {
       font-weight: 650; margin: 0 0 6px;
+    }
+    .trade-web-pnl {
+      display: flex; flex-wrap: wrap; gap: 10px 14px;
+      margin: 0 0 10px; font-size: 0.86rem;
+    }
+    .trade-web-pnl span b { font-variant-numeric: tabular-nums; }
+    .trade-web-pnl .up { color: var(--green, #6ecf8e); }
+    .trade-web-pnl .down { color: var(--red, #e07070); }
+    .trade-web-svg-wrap {
+      margin: 8px 0 12px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-top: 1px solid rgba(200, 200, 208, 0.14);
+      border-bottom: 1px solid rgba(200, 200, 208, 0.14);
+      background:
+        radial-gradient(ellipse at 20% 40%, rgba(110, 140, 190, 0.08), transparent 55%),
+        radial-gradient(ellipse at 80% 60%, rgba(180, 150, 90, 0.06), transparent 50%);
+    }
+    .trade-web-svg { display: block; min-width: 520px; width: 100%; height: auto; }
+    .trade-web-svg .tw-edge { fill: none; stroke: rgba(200, 200, 208, 0.45); stroke-width: 1.6; }
+    .trade-web-svg .tw-edge-mark { stroke: rgba(110, 207, 142, 0.55); }
+    .trade-web-svg .tw-edge-flip, .trade-web-svg .tw-edge-exit {
+      stroke: rgba(212, 180, 90, 0.7);
+    }
+    .trade-web-svg .tw-edge-lab {
+      fill: var(--muted, #9a9aa6); font-size: 10px; font-weight: 650;
+      font-variant-numeric: tabular-nums;
+    }
+    .trade-web-svg .tw-edge-lab.up { fill: var(--green, #6ecf8e); }
+    .trade-web-svg .tw-edge-lab.down { fill: var(--red, #e07070); }
+    .trade-web-svg .tw-node-asset {
+      fill: rgba(28, 30, 38, 0.92); stroke: rgba(200, 200, 208, 0.4); stroke-width: 1.2;
+    }
+    .trade-web-svg .tw-node-trade {
+      fill: rgba(50, 42, 28, 0.95); stroke: rgba(212, 180, 90, 0.65); stroke-width: 1.2;
+    }
+    .trade-web-svg .tw-node-sent {
+      fill: rgba(40, 36, 48, 0.95); stroke: rgba(180, 160, 220, 0.55); stroke-width: 1.4;
+    }
+    .trade-web-svg .tw-node-lab {
+      fill: #e8e8ee; font-size: 11px; font-weight: 650;
+    }
+    .trade-web-svg .tw-node-sub {
+      fill: var(--muted, #9a9aa6); font-size: 9px;
+      font-variant-numeric: tabular-nums;
     }
     .trade-web-branch {
       position: relative;
@@ -5113,7 +5158,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeWeb20261112172544";
+    const DATA_V = "tradeWebPnl20261112174733";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5264,7 +5309,7 @@
       { id: "closest_games", lab: "Closest games", desk: "lists", group: "memory", size: "full", why: "Top 10 closest matches of all time by point margin. Tap a game for how that week shaped both teams' years." },
       { id: "hardest_schedule", lab: "Toughest schedule", desk: "lists", group: "memory", size: "full", why: "Every seat ranked by rest-of-regular-season strength of schedule. Rebuilds each week with Expected finish. Tap a seat for the remaining slate." },
       { id: "ring_leaders", lab: "Ring leaders", desk: "lists", group: "memory", size: "full", why: "Top 25 players by league championship rings. A ring counts when they were rostered on that year's champion. Tap a row for the title teams." },
-      { id: "trade_web", lab: "Trade web", desk: "lists", group: "memory", size: "full", why: "Pick a player. Map what trading them away turned into — every return piece, then where those pieces went next." },
+      { id: "trade_web", lab: "Trade web", desk: "lists", group: "memory", size: "full", why: "Pick a player. Web every hop from the exit to today — picks that became players, flips, and ±value on each connector." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -8271,7 +8316,12 @@
         if (lead) fig = receiptDoorLeadFig(lead.player, String(lead.rings != null ? lead.rings : ""));
       } else if (id === "trade_web") {
         const lead = tradeWebBook && tradeWebBook.players && tradeWebBook.players[0];
-        if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.n_exits != null ? lead.n_exits : ""));
+        if (lead) {
+          const trail = lead.trail_pnl != null
+            ? ((Number(lead.trail_pnl) >= 0 ? "+" : "") + fmt(lead.trail_pnl))
+            : String(lead.n_exits != null ? lead.n_exits : "");
+          fig = receiptDoorLeadFig(lead.name, trail);
+        }
       } else if (id === "waiver_winners") {
         const lead = bestWaiverPickupsBook && bestWaiverPickupsBook.to_today
           && bestWaiverPickupsBook.to_today[0];
@@ -9728,8 +9778,8 @@
       }
       else if (id === "trade_web") {
         caption = tradeWebPickKey
-          ? "Each exit maps the return bag, then where those pieces went next — trades, drops, still-held, still-pick."
-          : "Search a traded player. The web shows what that seat got back, then what those pieces became.";
+          ? "Web from the exit to today. Connectors carry day-of value and ±P&L; picks keep hopping until they draft into a player or stay open."
+          : "Search a traded player. The web maps history → today with value profit and loss on every hop.";
       }
       else if (id === "waiver_winners") {
         caption = "Three top-10 boards by dynasty-value lift on the same scale as Trade Value / calculator."
@@ -12285,7 +12335,7 @@
           && Array.isArray(ringLeadersRaw.players) ? ringLeadersRaw : null;
       } catch (err) { ringLeadersBook = null; }
       try {
-        tradeWebBook = tradeWebRaw && Number(tradeWebRaw.v) >= 1
+        tradeWebBook = tradeWebRaw && Number(tradeWebRaw.v) >= 2
           && Array.isArray(tradeWebRaw.players) ? tradeWebRaw : null;
       } catch (err) { tradeWebBook = null; }
       try {
@@ -15839,7 +15889,20 @@
       if (status === "dropped") return "dropped";
       if (status === "drafted") return "drafted";
       if (status === "no_return") return "no return";
+      if (status === "sent") return "traded away";
+      if (status === "deal") return "trade";
       return status || "";
+    }
+
+    function tradeWebSigned(n) {
+      if (n == null || Number.isNaN(Number(n))) return "—";
+      const v = Number(n);
+      return (v > 0 ? "+" : "") + fmt(v);
+    }
+
+    function tradeWebPnlClass(n) {
+      if (n == null || Number.isNaN(Number(n))) return "";
+      return Number(n) >= 0 ? "up" : "down";
     }
 
     function tradeWebNodeHtml(node, depth) {
@@ -15847,6 +15910,12 @@
       const st = String(node.status || "");
       const metaBits = [];
       if (st) metaBits.push(tradeWebStatusLab(st));
+      if (node.value_in != null) metaBits.push("in " + fmt(node.value_in));
+      if (node.value_now != null && (st === "held" || st === "still_pick")) {
+        metaBits.push("now " + fmt(node.value_now));
+      }
+      if (node.mark_pnl != null) metaBits.push("mark " + tradeWebSigned(node.mark_pnl));
+      if (node.deal_pnl != null) metaBits.push("flip " + tradeWebSigned(node.deal_pnl));
       if (node.exit && node.exit.date) metaBits.push(String(node.exit.date));
       if (node.exit && node.exit.to) metaBits.push("to " + node.exit.to);
       if (node.became) metaBits.push("became " + node.became);
@@ -15870,6 +15939,250 @@
         + "</div>";
     }
 
+    function tradeWebBuildGraph(web) {
+      if (!web || !web.root) return { nodes: [], edges: [] };
+      const nodes = [];
+      const edges = [];
+      const rootId = "root";
+      nodes.push({
+        id: rootId,
+        label: web.root.label,
+        kind: "player",
+        status: "sent",
+        seat: web.seat,
+        value: web.gave_value,
+        depth: 0,
+        slot: 0,
+      });
+      const hubId = "tx:" + String(web.transaction_id || "0");
+      nodes.push({
+        id: hubId,
+        label: web.date || "trade",
+        kind: "trade",
+        status: "deal",
+        seat: web.seat,
+        pnl: web.deal_pnl,
+        value: web.gave_value,
+        depth: 1,
+        slot: 0,
+      });
+      edges.push({
+        from: rootId,
+        to: hubId,
+        date: web.date || null,
+        value: web.gave_value,
+        pnl: web.deal_pnl,
+        lab: web.deal_pnl != null ? tradeWebSigned(web.deal_pnl)
+          : (web.gave_value != null ? fmt(web.gave_value) : ""),
+        kind: "exit",
+      });
+      let slotCounter = 0;
+      function walk(node, parentId, depth) {
+        if (!node) return;
+        const mySlot = slotCounter++;
+        const id = String(node.asset_key || node.label || "n") + "@" + depth + "." + mySlot;
+        nodes.push({
+          id: id,
+          label: node.label,
+          kind: node.kind || "asset",
+          status: node.status,
+          seat: node.seat,
+          value: node.value_now != null ? node.value_now : node.value_in,
+          value_in: node.value_in,
+          value_now: node.value_now,
+          mark_pnl: node.mark_pnl,
+          deal_pnl: node.deal_pnl,
+          depth: depth,
+          slot: mySlot,
+        });
+        edges.push({
+          from: parentId,
+          to: id,
+          date: node.receive_date || null,
+          value: node.value_in,
+          pnl: null,
+          lab: node.value_in != null ? fmt(node.value_in) : "",
+          kind: "receive",
+        });
+        if (node.status === "traded" && node.children && node.children.length) {
+          const flipId = "flip:" + id;
+          nodes.push({
+            id: flipId,
+            label: (node.exit && node.exit.date) || "flip",
+            kind: "trade",
+            status: "deal",
+            seat: node.seat,
+            pnl: node.deal_pnl,
+            value: node.value_out,
+            depth: depth + 1,
+            slot: mySlot,
+          });
+          edges.push({
+            from: id,
+            to: flipId,
+            date: node.exit && node.exit.date || null,
+            value: node.value_out,
+            pnl: node.deal_pnl,
+            lab: node.deal_pnl != null ? tradeWebSigned(node.deal_pnl)
+              : (node.value_out != null ? fmt(node.value_out) : "flip"),
+            kind: "flip",
+          });
+          for (let i = 0; i < node.children.length; i++) walk(node.children[i], flipId, depth + 2);
+        } else if (node.children && node.children.length) {
+          for (let i = 0; i < node.children.length; i++) walk(node.children[i], id, depth + 1);
+        } else if (node.mark_pnl != null) {
+          const last = edges[edges.length - 1];
+          if (last && last.to === id) {
+            last.pnl = node.mark_pnl;
+            last.lab = tradeWebSigned(node.mark_pnl)
+              + (node.value_now != null ? (" now " + fmt(node.value_now)) : "");
+            last.kind = "mark";
+          }
+        }
+      }
+      const branches = web.branches || [];
+      for (let i = 0; i < branches.length; i++) walk(branches[i], hubId, 2);
+      return { nodes: nodes, edges: edges };
+    }
+
+    function tradeWebGraphSvg(web) {
+      const graph = (web && web.graph && web.graph.nodes && web.graph.nodes.length)
+        ? web.graph
+        : tradeWebBuildGraph(web);
+      if (!graph || !graph.nodes || !graph.nodes.length) return "";
+      const nodes = graph.nodes;
+      const edges = graph.edges || [];
+      let maxDepth = 0;
+      let maxSlot = 0;
+      for (let i = 0; i < nodes.length; i++) {
+        if ((nodes[i].depth || 0) > maxDepth) maxDepth = nodes[i].depth || 0;
+        if ((nodes[i].slot || 0) > maxSlot) maxSlot = nodes[i].slot || 0;
+      }
+      const colW = 150;
+      const rowH = 64;
+      const padX = 28;
+      const padY = 28;
+      const width = Math.max(520, padX * 2 + (maxDepth + 1) * colW);
+      const height = Math.max(220, padY * 2 + (maxSlot + 1) * rowH);
+      const pos = {};
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        pos[n.id] = {
+          x: padX + (Number(n.depth) || 0) * colW + 50,
+          y: padY + (Number(n.slot) || 0) * rowH + 24,
+        };
+      }
+      // Spread nodes that share a depth by their order among that depth.
+      const byDepth = {};
+      for (let i = 0; i < nodes.length; i++) {
+        const d = String(nodes[i].depth || 0);
+        if (!byDepth[d]) byDepth[d] = [];
+        byDepth[d].push(nodes[i]);
+      }
+      Object.keys(byDepth).forEach(function (d) {
+        const list = byDepth[d];
+        list.sort(function (a, b) { return (a.slot || 0) - (b.slot || 0); });
+        for (let i = 0; i < list.length; i++) {
+          pos[list[i].id].y = padY + i * rowH + 24;
+        }
+      });
+      const h = Math.max(height, padY * 2 + Object.keys(byDepth).reduce(function (m, d) {
+        return Math.max(m, byDepth[d].length);
+      }, 0) * rowH);
+
+      let edgeSvg = "";
+      for (let i = 0; i < edges.length; i++) {
+        const e = edges[i];
+        const a = pos[e.from];
+        const b = pos[e.to];
+        if (!a || !b) continue;
+        const mx = (a.x + b.x) / 2;
+        const my = (a.y + b.y) / 2 - 8;
+        const kind = String(e.kind || "link");
+        const cls = "tw-edge"
+          + (kind === "mark" ? " tw-edge-mark" : "")
+          + (kind === "flip" || kind === "exit" ? " tw-edge-flip" : "");
+        edgeSvg += '<path class="' + cls + '" d="M' + a.x + " " + a.y
+          + " C " + (a.x + 40) + " " + a.y + ", " + (b.x - 40) + " " + b.y
+          + ", " + b.x + " " + b.y + '" />';
+        const lab = e.lab || (e.pnl != null ? tradeWebSigned(e.pnl)
+          : (e.value != null ? fmt(e.value) : ""));
+        if (lab) {
+          const tone = e.pnl != null ? tradeWebPnlClass(e.pnl) : "";
+          edgeSvg += '<text class="tw-edge-lab' + (tone ? (" " + tone) : "") + '" x="'
+            + mx + '" y="' + my + '" text-anchor="middle">' + esc(lab) + "</text>";
+        }
+      }
+
+      let nodeSvg = "";
+      for (let i = 0; i < nodes.length; i++) {
+        const n = nodes[i];
+        const p = pos[n.id];
+        if (!p) continue;
+        const isTrade = n.kind === "trade";
+        const isSent = n.status === "sent";
+        const rw = isTrade ? 44 : 54;
+        const rh = isTrade ? 28 : 34;
+        const cls = isSent ? "tw-node-sent" : (isTrade ? "tw-node-trade" : "tw-node-asset");
+        if (isTrade) {
+          nodeSvg += '<rect class="' + cls + '" x="' + (p.x - rw / 2) + '" y="' + (p.y - rh / 2)
+            + '" width="' + rw + '" height="' + rh + '" rx="4" />';
+        } else {
+          nodeSvg += '<ellipse class="' + cls + '" cx="' + p.x + '" cy="' + p.y
+            + '" rx="' + (rw / 2) + '" ry="' + (rh / 2) + '" />';
+        }
+        const lab = String(n.label || "—");
+        const shortLab = lab.length > 14 ? (lab.slice(0, 13) + "…") : lab;
+        nodeSvg += '<text class="tw-node-lab" x="' + p.x + '" y="' + (p.y - 2)
+          + '" text-anchor="middle">' + esc(shortLab) + "</text>";
+        let sub = "";
+        if (n.mark_pnl != null) sub = tradeWebSigned(n.mark_pnl);
+        else if (n.deal_pnl != null || n.pnl != null) {
+          sub = tradeWebSigned(n.deal_pnl != null ? n.deal_pnl : n.pnl);
+        } else if (n.value != null) sub = fmt(n.value);
+        else if (n.status) sub = tradeWebStatusLab(n.status);
+        if (sub) {
+          nodeSvg += '<text class="tw-node-sub" x="' + p.x + '" y="' + (p.y + 12)
+            + '" text-anchor="middle">' + esc(sub) + "</text>";
+        }
+      }
+
+      return '<div class="trade-web-svg-wrap" role="img" aria-label="Trade web graph">'
+        + '<svg class="trade-web-svg" viewBox="0 0 ' + width + " " + h
+        + '" width="' + width + '" height="' + h + '" xmlns="http://www.w3.org/2000/svg">'
+        + edgeSvg + nodeSvg
+        + "</svg></div>";
+    }
+
+    function tradeWebPnlStrip(web) {
+      if (!web) return "";
+      const bits = [];
+      if (web.gave_value != null) {
+        bits.push("<span>Gave <b>" + esc(fmt(web.gave_value)) + "</b></span>");
+      }
+      if (web.got_value != null) {
+        bits.push("<span>Got <b>" + esc(fmt(web.got_value)) + "</b></span>");
+      }
+      if (web.deal_pnl != null) {
+        bits.push('<span class="' + tradeWebPnlClass(web.deal_pnl) + '">Deal <b>'
+          + esc(tradeWebSigned(web.deal_pnl)) + "</b></span>");
+      }
+      if (web.mark_pnl != null) {
+        bits.push('<span class="' + tradeWebPnlClass(web.mark_pnl) + '">Open mark <b>'
+          + esc(tradeWebSigned(web.mark_pnl)) + "</b></span>");
+      }
+      if (web.realized_pnl != null) {
+        bits.push('<span class="' + tradeWebPnlClass(web.realized_pnl) + '">Later flips <b>'
+          + esc(tradeWebSigned(web.realized_pnl)) + "</b></span>");
+      }
+      if (web.trail_pnl != null) {
+        bits.push('<span class="' + tradeWebPnlClass(web.trail_pnl) + '">Trail <b>'
+          + esc(tradeWebSigned(web.trail_pnl)) + "</b></span>");
+      }
+      if (!bits.length) return "";
+      return '<div class="trade-web-pnl">' + bits.join("") + "</div>";
+    }
+
     function tradeWebExitHtml(web) {
       if (!web) return "";
       let html = '<div class="trade-web-tree">';
@@ -15878,7 +16191,9 @@
         + (web.partner ? (" to " + esc(web.partner)) : "")
         + (web.date ? (" · " + esc(web.date)) : "")
         + "</p>";
+      html += tradeWebPnlStrip(web);
       if (web.thesis) html += '<p class="caption">' + esc(web.thesis) + "</p>";
+      html += tradeWebGraphSvg(web);
       html += '<p class="pf-why-h">What it turned into</p>';
       const branches = web.branches || [];
       if (!branches.length) {
@@ -15898,13 +16213,14 @@
     }
 
     function tradeWebRowHtml(p) {
+      const trail = p.trail_pnl != null ? tradeWebSigned(p.trail_pnl) : "—";
       return '<button type="button" class="trade-web-pick-row" data-trade-web-pick="'
         + esc(String(p.key || p.asset_key || "")) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(p.name || "—") + "</div>"
         + '<div class="date">' + esc(p.seat_lab || "")
         + (p.n_exits ? (" · " + p.n_exits + " exit" + (p.n_exits === 1 ? "" : "s")) : "")
         + "</div></div>"
-        + '<div class="margin">' + esc(String(p.n_exits != null ? p.n_exits : "—")) + "</div></div>"
+        + '<div class="margin ' + tradeWebPnlClass(p.trail_pnl) + '">' + esc(trail) + "</div></div>"
         + "</button>";
     }
 
@@ -15929,7 +16245,7 @@
           + "</div>";
       } else {
         const top = (tradeWebBook.players || []).slice(0, 20);
-        list = '<p class="caption">Search a player — or browse the most-moved names. Tap one to map what that trade turned into.</p>'
+        list = '<p class="caption">Search a player — web from the exit to today with ±value on each hop.</p>'
           + '<div class="pipeline-pos-list">'
           + top.map(tradeWebRowHtml).join("")
           + "</div>";
@@ -19082,9 +19398,12 @@
       }
       if (id === "trade_web") {
         const lead = tradeWebBook && tradeWebBook.players && tradeWebBook.players[0];
+        const trail = lead && lead.trail_pnl != null
+          ? ((Number(lead.trail_pnl) >= 0 ? "+" : "") + fmt(lead.trail_pnl))
+          : (lead && lead.n_exits != null ? String(lead.n_exits) : "Open");
         return dataDashHead(spec,
-          lead && lead.n_exits != null ? String(lead.n_exits) : "Open",
-          lead ? ((lead.name || "Lead") + " · trade exits") : "What a trade turned into");
+          trail,
+          lead ? ((lead.name || "Lead") + " · trail P&L") : "Trade web · value trail");
       }
       if (id === "waiver_winners") {
         const lead = bestWaiverPickupsBook && bestWaiverPickupsBook.to_today

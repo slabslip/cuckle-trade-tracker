@@ -21,12 +21,16 @@ for (const need of [
   'lab: "Trade web"',
   "function tradeWebPortalHtml(",
   "function tradeWebPlayerHtml(",
+  "function tradeWebGraphSvg(",
+  "function tradeWebBuildGraph(",
+  "function tradeWebPnlStrip(",
   'data-trade-web-q',
   'data-trade-web-pick="',
   'getLeagueJson("trade-web.json")',
   "tradeWebPickKey",
   "const DATA_DASH_MAX = 20",
   'src.splice(after + 1, 0, "trade_web")',
+  "trade-web-svg",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -47,8 +51,8 @@ for (const need of [
 const book = JSON.parse(
   fs.readFileSync("data/leagues/1315431339301806080/ui/trade-web.json", "utf8"),
 );
-if (Number(book.v) < 1 || !Array.isArray(book.players) || book.players.length < 10) {
-  fail("trade-web book missing players");
+if (Number(book.v) < 2 || !Array.isArray(book.players) || book.players.length < 10) {
+  fail("trade-web book missing players (v2+)");
 }
 const golden = book.players.find((p) => String(p.player_id) === "12501"
   || String(p.name).toLowerCase().includes("matthew golden"));
@@ -57,6 +61,12 @@ const web = golden.webs[0];
 if (web.seat !== "TrumanCooper") fail("Golden exit should be TrumanCooper");
 if (!(web.branches || []).some((b) => /Ridley/i.test(b.label))) fail("Golden bag should include Ridley");
 if (!(web.branches || []).some((b) => /Bell/i.test(b.label))) fail("Golden bag should include Bell");
+if (web.gave_value == null || web.got_value == null) fail("Golden web needs deal values");
+if (web.deal_pnl == null) fail("Golden web needs deal_pnl");
+if (web.graph) fail("trade-web book must omit graph (rebuild in UI)");
+if (!(web.branches || []).some((b) => b.value_in != null)) {
+  fail("Golden branches need value_in on connectors");
+}
 
 const design = "design-trade-web.html";
 if (!fs.existsSync(design)) fail("missing " + design);
@@ -77,6 +87,15 @@ console.log(JSON.stringify({
     seat: web.seat,
     partner: web.partner,
     date: web.date,
-    branches: web.branches.map((b) => ({ label: b.label, status: b.status })),
+    gave_value: web.gave_value,
+    got_value: web.got_value,
+    deal_pnl: web.deal_pnl,
+    trail_pnl: web.trail_pnl,
+    branches: web.branches.map((b) => ({
+      label: b.label,
+      status: b.status,
+      value_in: b.value_in,
+      mark_pnl: b.mark_pnl,
+    })),
   },
 }));

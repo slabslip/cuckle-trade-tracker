@@ -124,6 +124,53 @@ test("values and deal P&L ride connectors", () => {
   assert.ok(!web.graph); // slim book omits graph; UI rebuilds it
 });
 
+test("pick receive hop does not re-expand the same trade bag", () => {
+  const legs = [
+    { transaction_id: "txA", direction: "out", from_user_id: "truman", kind: "player", asset_key: "player:g", label: "Matthew Golden" },
+    { transaction_id: "txA", direction: "in", to_user_id: "sf", kind: "player", asset_key: "player:g", label: "Matthew Golden" },
+    { transaction_id: "txA", direction: "out", from_user_id: "sf", kind: "player", asset_key: "player:c", label: "CeeDee Lamb" },
+    { transaction_id: "txA", direction: "in", to_user_id: "truman", kind: "player", asset_key: "player:c", label: "CeeDee Lamb" },
+    { transaction_id: "txA", direction: "out", from_user_id: "sf", kind: "pick", asset_key: "pick:2027:2:1", label: "2027 2nd" },
+    { transaction_id: "txA", direction: "in", to_user_id: "truman", kind: "pick", asset_key: "pick:2027:2:1", label: "2027 2nd" },
+  ];
+  const trades = [{ transaction_id: "txA", date: "2026-08-14", season: "2026", week: 1 }];
+  const book = buildTradeWebBook({
+    legs,
+    trades,
+    nameByUser: { truman: "TrumanCooper", sf: "SF69erss" },
+    playersNfl: { g: { full_name: "Matthew Golden" }, c: { full_name: "CeeDee Lamb" } },
+    picksBook: {
+      "pick:2027:2:1": {
+        label: "2027 2nd (SF69erss)",
+        still_pick: true,
+        holder: "TrumanCooper",
+        hops: [
+          // Receive-day hop from prior owner — must NOT recurse the bag.
+          {
+            date: "2026-08-14",
+            from: "SF69erss",
+            to: "TrumanCooper",
+            t0: 2787,
+            out: 2787,
+            exit: "flip",
+            transaction_id: "txA",
+          },
+        ],
+      },
+    },
+    leagueId: "L1",
+    asOf: "2026-11-12",
+  });
+  const golden = book.players.find((p) => p.player_id === "g");
+  assert.ok(golden);
+  const pick = golden.webs[0].branches.find((b) => String(b.asset_key) === "pick:2027:2:1");
+  assert.ok(pick);
+  assert.equal(pick.status, "still_pick");
+  assert.equal((pick.children || []).length, 0);
+  // No recursive CeeDee under the pick.
+  assert.ok(!(pick.children || []).some((c) => /CeeDee/i.test(c.label || "")));
+});
+
 test("buildTradeWebBook indexes traded players", () => {
   const book = buildTradeWebBook({
     legs: LEGS,

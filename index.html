@@ -5195,7 +5195,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "pastChampionsChip20261112223000";
+    const DATA_V = "tradeWebShareFull20261112224500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -16299,13 +16299,15 @@
         + '<button type="button" class="chip" data-trade-web-zoom="in" aria-label="Zoom in">+</button>'
         + '<button type="button" class="chip" data-trade-web-zoom="reset" aria-label="Reset zoom">Reset</button>'
         + '<button type="button" class="chip" data-trade-web-share="' + esc(String(webIdx || 0))
-        + '" aria-label="Copy trade web image">Copy image</button>'
+        + '" aria-label="Copy full trade web image">Copy full web</button>'
         + "</div>"
         + '<div class="trade-web-svg-wrap" data-trade-web-stage role="img" '
         + 'aria-label="Trade web graph — pinch or scroll to zoom, drag to pan">'
         + '<div class="trade-web-svg-stage" data-trade-web-stage-inner style="' + stageStyle + '">'
         + '<svg class="trade-web-svg" viewBox="0 0 ' + width + " " + h
-        + '" width="' + width + '" height="' + h + '" xmlns="http://www.w3.org/2000/svg">'
+        + '" width="' + width + '" height="' + h
+        + '" data-trade-web-full-w="' + width + '" data-trade-web-full-h="' + h
+        + '" xmlns="http://www.w3.org/2000/svg">'
         + edgeSvg + nodeSvg
         + "</svg></div></div>"
         + (tradeWebShareNote
@@ -16383,11 +16385,31 @@
     function tradeWebShareBlobFromSvg(svgEl, web, done) {
       if (!svgEl || typeof done !== "function") return;
       try {
+        // Full graph only — ignore on-screen zoom/pan. Fit the entire viewBox into
+        // one shareable PNG so the recipient can pinch-zoom anywhere.
         const clone = svgEl.cloneNode(true);
         clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        const vb = String(clone.getAttribute("viewBox") || "0 0 560 240").split(/[s,]+/).map(Number);
-        const vw = vb[2] || 560;
-        const vh = vb[3] || 240;
+        clone.removeAttribute("style");
+        clone.removeAttribute("class");
+        const attrW = Number(clone.getAttribute("data-trade-web-full-w")
+          || clone.getAttribute("width") || 0);
+        const attrH = Number(clone.getAttribute("data-trade-web-full-h")
+          || clone.getAttribute("height") || 0);
+        const vbRaw = String(clone.getAttribute("viewBox") || "").trim();
+        const vb = vbRaw ? vbRaw.split(/[s,]+/).map(Number) : [];
+        const vw = (attrW > 0 ? attrW : (vb[2] > 0 ? vb[2] : 560));
+        const vh = (attrH > 0 ? attrH : (vb[3] > 0 ? vb[3] : 240));
+        const pad = 28;
+        const headerH = 126;
+        // Cap export so huge webs still fit one image; keep full viewBox, shrink raster size.
+        const maxGraph = 2800;
+        const fit = Math.min(1, maxGraph / Math.max(vw, vh, 1));
+        const drawW = Math.max(1, Math.round(vw * fit));
+        const drawH = Math.max(1, Math.round(vh * fit));
+        clone.setAttribute("viewBox", "0 0 " + vw + " " + vh);
+        // Intrinsic image size = fitted size (not the raw 10k+ layout px).
+        clone.setAttribute("width", String(drawW));
+        clone.setAttribute("height", String(drawH));
         const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
         style.textContent = tradeWebShareCss();
         clone.insertBefore(style, clone.firstChild);
@@ -16404,12 +16426,10 @@
         const img = new Image();
         img.onload = function () {
           try {
-            const pad = 28;
-            const headerH = 118;
-            const scale = 2;
+            const scale = drawW >= 1600 ? 1.5 : 2;
             const canvas = document.createElement("canvas");
-            canvas.width = Math.round((vw + pad * 2) * scale);
-            canvas.height = Math.round((vh + headerH + pad) * scale);
+            canvas.width = Math.round((drawW + pad * 2) * scale);
+            canvas.height = Math.round((drawH + headerH + pad) * scale);
             const ctx = canvas.getContext("2d");
             if (!ctx) {
               URL.revokeObjectURL(url);
@@ -16418,17 +16438,21 @@
             }
             ctx.scale(scale, scale);
             ctx.fillStyle = "#0b0b0d";
-            ctx.fillRect(0, 0, vw + pad * 2, vh + headerH + pad);
+            ctx.fillRect(0, 0, drawW + pad * 2, drawH + headerH + pad);
             ctx.fillStyle = "#e8e8ee";
             ctx.font = "750 22px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
             const title = ((web && web.root && web.root.label) || "Trade web");
             ctx.fillText(title, pad, 36);
             ctx.fillStyle = "#c8c8d0";
             ctx.font = "600 14px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-            const line2 = (web && web.seat ? web.seat : "Seat")
-              + (web && web.partner ? (" → " + web.partner) : "")
-              + (web && web.date ? (" · " + web.date) : "");
-            ctx.fillText(line2, pad, 60);
+            const origin = web && web.origin && web.origin.seat
+              ? web.origin.seat
+              : (web && web.seat ? web.seat : "—");
+            const now = web && web.now && web.now.seat ? web.now.seat : "—";
+            const hops = web && web.n_hops != null
+              ? (" · " + web.n_hops + " hop" + (Number(web.n_hops) === 1 ? "" : "s"))
+              : "";
+            ctx.fillText(origin + " → " + now + hops, pad, 60);
             ctx.fillStyle = "#9a9aa6";
             ctx.font = "500 13px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
             const bits = [];
@@ -16436,11 +16460,12 @@
             if (web && web.mark_pnl != null) bits.push("Aged " + tradeWebSigned(web.mark_pnl));
             if (web && web.realized_pnl != null) bits.push("Later " + tradeWebSigned(web.realized_pnl));
             if (web && web.trail_pnl != null) bits.push("Trail " + tradeWebSigned(web.trail_pnl));
-            ctx.fillText(bits.join(" · ") || "Trade web", pad, 84);
+            ctx.fillText(bits.join(" · ") || "Full trade web", pad, 84);
             ctx.fillStyle = "#8a8a93";
             ctx.font = "500 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
-            ctx.fillText("Chuckle Fantasy · Trade web", pad, 106);
-            ctx.drawImage(img, pad, headerH);
+            ctx.fillText("Chuckle Fantasy · Full trade web — pinch to zoom", pad, 106);
+            // Full viewBox already rasterized into drawW×drawH via SVG width/height.
+            ctx.drawImage(img, pad, headerH, drawW, drawH);
             if (canvas.toBlob) {
               canvas.toBlob(function (blob) {
                 URL.revokeObjectURL(url);
@@ -16488,20 +16513,17 @@
       const picked = tradeWebPlayerByKey(tradeWebPickKey);
       const web = tradeWebActiveWeb(picked);
       const vizSel = '#app [data-trade-web-viz="' + String(Number(webIdx) || 0) + '"] .trade-web-svg';
-      if (!web || !document.querySelector(vizSel)) {
+      const svgLive = document.querySelector(vizSel);
+      if (!web || !svgLive) {
         tradeWebShareNote = "Web not ready to copy.";
         if (typeof render === "function") render();
         return;
       }
-      tradeWebShareNote = "Building image…";
+      // Snapshot the live SVG node before any note re-render.
+      const svgSnap = svgLive.cloneNode(true);
+      tradeWebShareNote = "Building full web…";
       if (typeof render === "function") render();
-      const svg = document.querySelector(vizSel);
-      if (!svg) {
-        tradeWebShareNote = "Web not ready to copy.";
-        if (typeof render === "function") render();
-        return;
-      }
-      tradeWebShareBlobFromSvg(svg, web, function (blob) {
+      tradeWebShareBlobFromSvg(svgSnap, web, function (blob) {
         if (!blob) {
           tradeWebShareNote = "Could not build that image.";
           if (typeof render === "function") render();
@@ -16509,7 +16531,7 @@
         }
         const name = ((web.root && web.root.label) || "player").toLowerCase()
           .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "player";
-        const fileName = "cuckle-trade-web-" + name + ".png";
+        const fileName = "cuckle-trade-web-" + name + "-full.png";
         const text = tradeWebShareText(web);
         let file = null;
         try {
@@ -16524,7 +16546,7 @@
         } catch (err) { canFiles = false; }
         if (canFiles) {
           navigator.share(payload).then(function () {
-            tradeWebShareNote = "Sent image";
+            tradeWebShareNote = "Sent full web";
             if (typeof render === "function") render();
           }).catch(function (err) {
             if (err && err.name === "AbortError") {
@@ -16532,20 +16554,20 @@
               if (typeof render === "function") render();
               return;
             }
-            tradeWebShareSave(blob, fileName, "Saved image");
+            tradeWebShareSave(blob, fileName, "Saved full web");
           });
           return;
         }
         if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
           navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () {
-            tradeWebShareNote = "Copied image — paste into a text";
+            tradeWebShareNote = "Copied full web — paste into a text";
             if (typeof render === "function") render();
           }).catch(function () {
-            tradeWebShareSave(blob, fileName, "Saved image");
+            tradeWebShareSave(blob, fileName, "Saved full web");
           });
           return;
         }
-        tradeWebShareSave(blob, fileName, "Saved image");
+        tradeWebShareSave(blob, fileName, "Saved full web");
       });
     }
 

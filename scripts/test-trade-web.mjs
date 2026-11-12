@@ -42,9 +42,18 @@ for (const need of [
   "const DATA_DASH_MAX = 21",
   'src.splice(after + 1, 0, "trade_web")',
   "trade-web-svg",
-  "Copy image",
+  "Copy full web",
+  "Building full web",
+  "data-trade-web-full-w=",
+  "pinch to zoom",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
+}
+if (!gen.includes("maxGraph")
+  || !gen.includes("data-trade-web-full-w")
+  || !gen.includes("data-trade-web-full-h")
+  || !gen.includes("Full trade web — pinch to zoom")) {
+  fail("share must fit the full SVG viewBox into the export (not the on-screen viewport)");
 }
 {
   const doors = (page.match(/const DATA_DOORS = \[([\s\S]*?)\];/) || [])[1] || "";

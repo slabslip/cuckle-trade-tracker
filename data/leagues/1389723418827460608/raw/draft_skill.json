@@ -5487,8 +5487,8 @@
       "drafted_by": "kotula69",
       "startup": false,
       "pick_cost": 997,
-      "player_today": 1636,
-      "surplus": 639,
+      "player_today": 0,
+      "surplus": -997,
       "flag": "priced_as_2027r5"
     },
     {
@@ -7027,8 +7027,8 @@
       "name": "kotula69",
       "used": 30,
       "graded": 28,
-      "surplus": 63235,
-      "per_pick": 2258.3928571428573,
+      "surplus": 61599,
+      "per_pick": 2199.964285714286,
       "best": {
         "player": "Garrett Wilson",
         "season": "2026",

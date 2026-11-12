@@ -10142,6 +10142,24 @@
     }
   },
   {
+    "transaction_id": "1426279296460144640",
+    "type": "free_agent",
+    "league_id": "1389723418827460608",
+    "season": "2026",
+    "week": 10,
+    "created": 1794413992565,
+    "date": "2026-11-11",
+    "roster_ids": [
+      8
+    ],
+    "adds": {
+      "1433": 8
+    },
+    "drops": {
+      "650": 8
+    }
+  },
+  {
     "transaction_id": "1426257770146959360",
     "type": "free_agent",
     "league_id": "1389723418827460608",

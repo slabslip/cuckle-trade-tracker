@@ -3321,8 +3321,8 @@
       "drafted_by": "Tbow00",
       "startup": false,
       "pick_cost": 997,
-      "player_today": 0,
-      "surplus": -997,
+      "player_today": null,
+      "surplus": null,
       "flag": "unpriced"
     },
     {
@@ -7023,6 +7023,24 @@
       }
     },
     {
+      "user_id": "1132151393051095040",
+      "name": "Tbow00",
+      "used": 30,
+      "graded": 28,
+      "surplus": 62927,
+      "per_pick": 2247.3928571428573,
+      "best": {
+        "player": "Tetairoa McMillan",
+        "season": "2026",
+        "surplus": 5644
+      },
+      "worst": {
+        "player": "New England Patriots",
+        "season": "2026",
+        "surplus": -997
+      }
+    },
+    {
       "user_id": "740721014035660800",
       "name": "kotula69",
       "used": 30,
@@ -7036,24 +7054,6 @@
       },
       "worst": {
         "player": "Jacksonville Jaguars",
-        "season": "2026",
-        "surplus": -997
-      }
-    },
-    {
-      "user_id": "1132151393051095040",
-      "name": "Tbow00",
-      "used": 30,
-      "graded": 29,
-      "surplus": 61930,
-      "per_pick": 2135.5172413793102,
-      "best": {
-        "player": "Tetairoa McMillan",
-        "season": "2026",
-        "surplus": 5644
-      },
-      "worst": {
-        "player": "New England Patriots",
         "season": "2026",
         "surplus": -997
       }

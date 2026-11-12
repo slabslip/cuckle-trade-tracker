@@ -5121,11 +5121,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-<<<<<<< HEAD
-    const DATA_V = "tradeWeb20261112172532";
-=======
-    const DATA_V = "tradeWeb20261112172258";
->>>>>>> cursor/trade-web-33b5
+    const DATA_V = "tradeWeb20261112172544";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now

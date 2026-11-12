@@ -1858,17 +1858,39 @@ const html = `<!DOCTYPE html>
     .trade-web-pnl span b { font-variant-numeric: tabular-nums; }
     .trade-web-pnl .up { color: var(--green, #6ecf8e); }
     .trade-web-pnl .down { color: var(--red, #e07070); }
+    .trade-web-viz { margin: 8px 0 12px; }
+    .trade-web-viz-tools {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      margin: 0 0 8px;
+    }
+    .trade-web-viz-tools .chip { min-width: 2.2rem; justify-content: center; }
+    .trade-web-viz-tools .tw-zoom-lab {
+      font-size: 0.78rem; color: var(--muted); font-variant-numeric: tabular-nums;
+      min-width: 3.2rem;
+    }
+    .trade-web-share-note {
+      margin: 6px 0 0; font-size: 0.78rem; color: var(--muted);
+    }
     .trade-web-svg-wrap {
-      margin: 8px 0 12px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+      position: relative;
+      overflow: hidden;
+      touch-action: none;
+      cursor: grab;
+      height: min(52vh, 420px);
       border-top: 1px solid rgba(200, 200, 208, 0.14);
       border-bottom: 1px solid rgba(200, 200, 208, 0.14);
       background:
         radial-gradient(ellipse at 20% 40%, rgba(110, 140, 190, 0.08), transparent 55%),
         radial-gradient(ellipse at 80% 60%, rgba(180, 150, 90, 0.06), transparent 50%);
     }
-    .trade-web-svg { display: block; min-width: 520px; width: 100%; height: auto; }
+    .trade-web-svg-wrap.is-panning { cursor: grabbing; }
+    .trade-web-svg-stage {
+      transform-origin: 0 0;
+      will-change: transform;
+      display: inline-block;
+      min-width: 100%;
+    }
+    .trade-web-svg { display: block; min-width: 520px; width: auto; height: auto; }
     .trade-web-svg .tw-edge { fill: none; stroke: rgba(200, 200, 208, 0.45); stroke-width: 1.6; }
     .trade-web-svg .tw-edge-mark { stroke: rgba(110, 207, 142, 0.55); }
     .trade-web-svg .tw-edge-next, .trade-web-svg .tw-edge-exit {
@@ -5141,6 +5163,11 @@ const html = `<!DOCTYPE html>
     let ringLeadersOpenKey = "";
     let tradeWebQ = "";
     let tradeWebPickKey = "";
+    let tradeWebZoom = 1;
+    let tradeWebPanX = 0;
+    let tradeWebPanY = 0;
+    let tradeWebShareNote = "";
+    let tradeWebPtr = null; // { id, x, y, panX, panY } or pinch { mode, dist, zoom, cx, cy }
     let cornerstoneTradesOpenKey = "";
     let pipelineQ = "";
     let pipelinePickKey = "";
@@ -5170,7 +5197,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeWebClear20261112184455";
+    const DATA_V = "tradeWebZoom20261112214527";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -6681,6 +6708,10 @@ const html = `<!DOCTYPE html>
       if (receiptListWho && tile === "trade_web") {
         tradeWebPickKey = receiptListWho;
         tradeWebQ = "";
+        tradeWebZoom = 1;
+        tradeWebPanX = 0;
+        tradeWebPanY = 0;
+        tradeWebShareNote = "";
       }
       if (typeof render === "function") render();
       return true;
@@ -16057,7 +16088,7 @@ const html = `<!DOCTYPE html>
       return { nodes: nodes, edges: edges };
     }
 
-    function tradeWebGraphSvg(web) {
+    function tradeWebGraphSvg(web, webIdx) {
       const graph = (web && web.graph && web.graph.nodes && web.graph.nodes.length)
         ? web.graph
         : tradeWebBuildGraph(web);
@@ -16162,11 +16193,263 @@ const html = `<!DOCTYPE html>
         }
       }
 
-      return '<div class="trade-web-svg-wrap" role="img" aria-label="Trade web graph">'
+      const zoomPct = Math.round((Number(tradeWebZoom) || 1) * 100);
+      const stageStyle = "transform: translate(" + Number(tradeWebPanX || 0) + "px, "
+        + Number(tradeWebPanY || 0) + "px) scale(" + (Number(tradeWebZoom) || 1) + ");";
+      return '<div class="trade-web-viz" data-trade-web-viz="' + esc(String(webIdx || 0)) + '">'
+        + '<div class="trade-web-viz-tools" role="toolbar" aria-label="Trade web zoom and share">'
+        + '<button type="button" class="chip" data-trade-web-zoom="out" aria-label="Zoom out">−</button>'
+        + '<span class="tw-zoom-lab">' + esc(String(zoomPct)) + "%</span>"
+        + '<button type="button" class="chip" data-trade-web-zoom="in" aria-label="Zoom in">+</button>'
+        + '<button type="button" class="chip" data-trade-web-zoom="reset" aria-label="Reset zoom">Reset</button>'
+        + '<button type="button" class="chip" data-trade-web-share="' + esc(String(webIdx || 0))
+        + '" aria-label="Copy trade web image">Copy image</button>'
+        + "</div>"
+        + '<div class="trade-web-svg-wrap" data-trade-web-stage role="img" '
+        + 'aria-label="Trade web graph — pinch or scroll to zoom, drag to pan">'
+        + '<div class="trade-web-svg-stage" data-trade-web-stage-inner style="' + stageStyle + '">'
         + '<svg class="trade-web-svg" viewBox="0 0 ' + width + " " + h
         + '" width="' + width + '" height="' + h + '" xmlns="http://www.w3.org/2000/svg">'
         + edgeSvg + nodeSvg
-        + "</svg></div>";
+        + "</svg></div></div>"
+        + (tradeWebShareNote
+          ? ('<p class="trade-web-share-note">' + esc(tradeWebShareNote) + "</p>")
+          : "")
+        + "</div>";
+    }
+
+    function tradeWebClampZoom(z) {
+      const n = Number(z);
+      if (!Number.isFinite(n)) return 1;
+      return Math.max(0.6, Math.min(4, Math.round(n * 100) / 100));
+    }
+
+    function tradeWebApplyStageTransform() {
+      const inner = document.querySelector("#app [data-trade-web-stage-inner]");
+      if (!inner) return;
+      inner.style.transform = "translate(" + Number(tradeWebPanX || 0) + "px, "
+        + Number(tradeWebPanY || 0) + "px) scale(" + (Number(tradeWebZoom) || 1) + ")";
+      const lab = document.querySelector("#app .trade-web-viz-tools .tw-zoom-lab");
+      if (lab) lab.textContent = Math.round((Number(tradeWebZoom) || 1) * 100) + "%";
+    }
+
+    function tradeWebZoomBy(factor, clientX, clientY) {
+      const wrap = document.querySelector("#app [data-trade-web-stage]");
+      const prev = Number(tradeWebZoom) || 1;
+      const next = tradeWebClampZoom(prev * factor);
+      if (next === prev) return;
+      if (wrap && clientX != null && clientY != null) {
+        const rect = wrap.getBoundingClientRect();
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        // Keep the point under the cursor stable while scaling.
+        tradeWebPanX = x - ((x - Number(tradeWebPanX || 0)) * (next / prev));
+        tradeWebPanY = y - ((y - Number(tradeWebPanY || 0)) * (next / prev));
+      }
+      tradeWebZoom = next;
+      tradeWebApplyStageTransform();
+    }
+
+    function tradeWebResetView() {
+      tradeWebZoom = 1;
+      tradeWebPanX = 0;
+      tradeWebPanY = 0;
+      tradeWebApplyStageTransform();
+    }
+
+    function tradeWebShareCss() {
+      return [
+        ".tw-edge{fill:none;stroke:rgba(200,200,208,.55);stroke-width:1.6}",
+        ".tw-edge-mark{stroke:rgba(110,207,142,.7)}",
+        ".tw-edge-next,.tw-edge-exit{stroke:rgba(212,180,90,.8)}",
+        ".tw-edge-lab{fill:#9a9aa6;font-size:10px;font-weight:650;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}",
+        ".tw-edge-lab.up{fill:#6ecf8e}",
+        ".tw-edge-lab.down{fill:#e07070}",
+        ".tw-node-asset{fill:#1c1e26;stroke:rgba(200,200,208,.45);stroke-width:1.2}",
+        ".tw-node-trade{fill:#322a1c;stroke:rgba(212,180,90,.7);stroke-width:1.2}",
+        ".tw-node-sent{fill:#282430;stroke:rgba(180,160,220,.6);stroke-width:1.4}",
+        ".tw-node-lab{fill:#e8e8ee;font-size:11px;font-weight:650;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}",
+        ".tw-node-sub{fill:#9a9aa6;font-size:9px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}",
+      ].join("");
+    }
+
+    function tradeWebShareText(web) {
+      if (!web) return "Trade web";
+      const name = (web.root && web.root.label) || "player";
+      const trail = web.trail_pnl != null ? tradeWebSigned(web.trail_pnl) : "—";
+      return (web.seat || "Seat") + " traded away " + name
+        + (web.partner ? (" to " + web.partner) : "")
+        + (web.date ? (" · " + web.date) : "")
+        + " · trail " + trail;
+    }
+
+    function tradeWebShareBlobFromSvg(svgEl, web, done) {
+      if (!svgEl || typeof done !== "function") return;
+      try {
+        const clone = svgEl.cloneNode(true);
+        clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        const vb = String(clone.getAttribute("viewBox") || "0 0 560 240").split(/[\s,]+/).map(Number);
+        const vw = vb[2] || 560;
+        const vh = vb[3] || 240;
+        const style = document.createElementNS("http://www.w3.org/2000/svg", "style");
+        style.textContent = tradeWebShareCss();
+        clone.insertBefore(style, clone.firstChild);
+        const bg = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+        bg.setAttribute("x", "0");
+        bg.setAttribute("y", "0");
+        bg.setAttribute("width", String(vw));
+        bg.setAttribute("height", String(vh));
+        bg.setAttribute("fill", "#12141a");
+        clone.insertBefore(bg, style.nextSibling);
+        const xml = new XMLSerializer().serializeToString(clone);
+        const svgBlob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+        const url = URL.createObjectURL(svgBlob);
+        const img = new Image();
+        img.onload = function () {
+          try {
+            const pad = 28;
+            const headerH = 118;
+            const scale = 2;
+            const canvas = document.createElement("canvas");
+            canvas.width = Math.round((vw + pad * 2) * scale);
+            canvas.height = Math.round((vh + headerH + pad) * scale);
+            const ctx = canvas.getContext("2d");
+            if (!ctx) {
+              URL.revokeObjectURL(url);
+              done(null);
+              return;
+            }
+            ctx.scale(scale, scale);
+            ctx.fillStyle = "#0b0b0d";
+            ctx.fillRect(0, 0, vw + pad * 2, vh + headerH + pad);
+            ctx.fillStyle = "#e8e8ee";
+            ctx.font = "750 22px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+            const title = ((web && web.root && web.root.label) || "Trade web");
+            ctx.fillText(title, pad, 36);
+            ctx.fillStyle = "#c8c8d0";
+            ctx.font = "600 14px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+            const line2 = (web && web.seat ? web.seat : "Seat")
+              + (web && web.partner ? (" → " + web.partner) : "")
+              + (web && web.date ? (" · " + web.date) : "");
+            ctx.fillText(line2, pad, 60);
+            ctx.fillStyle = "#9a9aa6";
+            ctx.font = "500 13px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+            const bits = [];
+            if (web && web.deal_pnl != null) bits.push("Deal " + tradeWebSigned(web.deal_pnl));
+            if (web && web.mark_pnl != null) bits.push("Aged " + tradeWebSigned(web.mark_pnl));
+            if (web && web.realized_pnl != null) bits.push("Later " + tradeWebSigned(web.realized_pnl));
+            if (web && web.trail_pnl != null) bits.push("Trail " + tradeWebSigned(web.trail_pnl));
+            ctx.fillText(bits.join(" · ") || "Trade web", pad, 84);
+            ctx.fillStyle = "#8a8a93";
+            ctx.font = "500 12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif";
+            ctx.fillText("Chuckle Fantasy · Trade web", pad, 106);
+            ctx.drawImage(img, pad, headerH);
+            if (canvas.toBlob) {
+              canvas.toBlob(function (blob) {
+                URL.revokeObjectURL(url);
+                done(blob || null);
+              }, "image/png");
+            } else {
+              const dataUrl = canvas.toDataURL("image/png");
+              const parts = dataUrl.split(",");
+              const bin = atob(parts[1] || "");
+              const arr = new Uint8Array(bin.length);
+              for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+              URL.revokeObjectURL(url);
+              done(new Blob([arr], { type: "image/png" }));
+            }
+          } catch (err) {
+            URL.revokeObjectURL(url);
+            done(null);
+          }
+        };
+        img.onerror = function () {
+          URL.revokeObjectURL(url);
+          done(null);
+        };
+        img.src = url;
+      } catch (err) {
+        done(null);
+      }
+    }
+
+    function tradeWebShareSave(blob, fileName, note) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fileName || "cuckle-trade-web.png";
+      a.rel = "noopener";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(function () { URL.revokeObjectURL(url); }, 2500);
+      tradeWebShareNote = note || "Saved image";
+      if (typeof render === "function") render();
+    }
+
+    function tradeWebShareNow(webIdx) {
+      const picked = tradeWebPlayerByKey(tradeWebPickKey);
+      const web = picked && picked.webs && picked.webs[Number(webIdx) || 0];
+      const vizSel = '#app [data-trade-web-viz="' + String(Number(webIdx) || 0) + '"] .trade-web-svg';
+      if (!web || !document.querySelector(vizSel)) {
+        tradeWebShareNote = "Web not ready to copy.";
+        if (typeof render === "function") render();
+        return;
+      }
+      tradeWebShareNote = "Building image…";
+      if (typeof render === "function") render();
+      const svg = document.querySelector(vizSel);
+      if (!svg) {
+        tradeWebShareNote = "Web not ready to copy.";
+        if (typeof render === "function") render();
+        return;
+      }
+      tradeWebShareBlobFromSvg(svg, web, function (blob) {
+        if (!blob) {
+          tradeWebShareNote = "Could not build that image.";
+          if (typeof render === "function") render();
+          return;
+        }
+        const name = ((web.root && web.root.label) || "player").toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "player";
+        const fileName = "cuckle-trade-web-" + name + ".png";
+        const text = tradeWebShareText(web);
+        let file = null;
+        try {
+          if (typeof File === "function") file = new File([blob], fileName, { type: "image/png" });
+        } catch (err) { file = null; }
+        const payload = file
+          ? { files: [file], title: "Trade web", text: text }
+          : { title: "Trade web", text: text };
+        let canFiles = false;
+        try {
+          canFiles = !!(file && navigator.canShare && navigator.canShare({ files: [file] }));
+        } catch (err) { canFiles = false; }
+        if (canFiles) {
+          navigator.share(payload).then(function () {
+            tradeWebShareNote = "Sent image";
+            if (typeof render === "function") render();
+          }).catch(function (err) {
+            if (err && err.name === "AbortError") {
+              tradeWebShareNote = "";
+              if (typeof render === "function") render();
+              return;
+            }
+            tradeWebShareSave(blob, fileName, "Saved image");
+          });
+          return;
+        }
+        if (navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+          navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]).then(function () {
+            tradeWebShareNote = "Copied image — paste into a text";
+            if (typeof render === "function") render();
+          }).catch(function () {
+            tradeWebShareSave(blob, fileName, "Saved image");
+          });
+          return;
+        }
+        tradeWebShareSave(blob, fileName, "Saved image");
+      });
     }
 
     function tradeWebPnlStrip(web) {
@@ -16200,7 +16483,7 @@ const html = `<!DOCTYPE html>
         + "Later trades = P&amp;L when a return piece was traded again. Trail = net value created or destroyed.</p>";
     }
 
-    function tradeWebExitHtml(web) {
+    function tradeWebExitHtml(web, webIdx) {
       if (!web) return "";
       let html = '<div class="trade-web-tree">';
       html += '<p class="trade-web-root">' + esc(web.seat || "Seat")
@@ -16210,7 +16493,7 @@ const html = `<!DOCTYPE html>
         + "</p>";
       html += tradeWebPnlStrip(web);
       if (web.thesis) html += '<p class="caption">' + esc(web.thesis) + "</p>";
-      html += tradeWebGraphSvg(web);
+      html += tradeWebGraphSvg(web, webIdx || 0);
       html += '<p class="pf-why-h">What it turned into</p>';
       const branches = web.branches || [];
       if (!branches.length) {
@@ -16226,7 +16509,7 @@ const html = `<!DOCTYPE html>
       if (!row) return "";
       const webs = row.webs || [];
       if (!webs.length) return '<p class="caption">No trade exits on the book for this player.</p>';
-      return webs.map(tradeWebExitHtml).join("");
+      return webs.map(function (w, i) { return tradeWebExitHtml(w, i); }).join("");
     }
 
     function tradeWebRowHtml(p) {
@@ -38209,6 +38492,10 @@ const html = `<!DOCTYPE html>
         e.stopPropagation();
         tradeWebPickKey = tradeWebPickBtn.getAttribute("data-trade-web-pick") || "";
         tradeWebQ = "";
+        tradeWebZoom = 1;
+        tradeWebPanX = 0;
+        tradeWebPanY = 0;
+        tradeWebShareNote = "";
         if (typeof render === "function") render();
         return;
       }
@@ -38217,7 +38504,28 @@ const html = `<!DOCTYPE html>
         e.preventDefault();
         e.stopPropagation();
         tradeWebPickKey = "";
+        tradeWebZoom = 1;
+        tradeWebPanX = 0;
+        tradeWebPanY = 0;
+        tradeWebShareNote = "";
         if (typeof render === "function") render();
+        return;
+      }
+      const tradeWebZoomBtn = e.target.closest("[data-trade-web-zoom]");
+      if (tradeWebZoomBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const mode = tradeWebZoomBtn.getAttribute("data-trade-web-zoom") || "";
+        if (mode === "in") tradeWebZoomBy(1.25);
+        else if (mode === "out") tradeWebZoomBy(1 / 1.25);
+        else tradeWebResetView();
+        return;
+      }
+      const tradeWebShareBtn = e.target.closest("[data-trade-web-share]");
+      if (tradeWebShareBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        tradeWebShareNow(tradeWebShareBtn.getAttribute("data-trade-web-share") || "0");
         return;
       }
       const biggestChokerOpenBtn = e.target.closest("[data-biggest-choker-open]");
@@ -40286,10 +40594,84 @@ const html = `<!DOCTYPE html>
         calcSeatMenu = "";
         render();
       }
+      const twStage = e.target.closest && e.target.closest("[data-trade-web-stage]");
+      if (twStage && e.isPrimary !== false && !(tradeWebPtr && tradeWebPtr.mode === "pinch")) {
+        tradeWebPtr = {
+          mode: "pan",
+          id: e.pointerId,
+          x: e.clientX,
+          y: e.clientY,
+          panX: Number(tradeWebPanX || 0),
+          panY: Number(tradeWebPanY || 0),
+        };
+        twStage.classList.add("is-panning");
+        try { twStage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      }
       if (!ledgerComposeOpen()) return;
       const form = document.querySelector("#app [data-ledger-wager-form], #app [data-ledger-counter-form]");
       if (form) ledgerCaptureCompose(form, { merge: false });
     }, true);
+    document.getElementById("app").addEventListener("pointermove", (e) => {
+      if (!tradeWebPtr || tradeWebPtr.mode !== "pan" || e.pointerId !== tradeWebPtr.id) return;
+      tradeWebPanX = tradeWebPtr.panX + (e.clientX - tradeWebPtr.x);
+      tradeWebPanY = tradeWebPtr.panY + (e.clientY - tradeWebPtr.y);
+      tradeWebApplyStageTransform();
+    });
+    function tradeWebPtrEnd(e) {
+      if (!tradeWebPtr || (e && e.pointerId != null && e.pointerId !== tradeWebPtr.id)) return;
+      const wrap = document.querySelector("#app [data-trade-web-stage]");
+      if (wrap) wrap.classList.remove("is-panning");
+      tradeWebPtr = null;
+    }
+    document.getElementById("app").addEventListener("pointerup", tradeWebPtrEnd);
+    document.getElementById("app").addEventListener("pointercancel", tradeWebPtrEnd);
+    document.getElementById("app").addEventListener("wheel", (e) => {
+      const wrap = e.target.closest && e.target.closest("[data-trade-web-stage]");
+      if (!wrap) return;
+      e.preventDefault();
+      const factor = e.deltaY < 0 ? 1.12 : (1 / 1.12);
+      tradeWebZoomBy(factor, e.clientX, e.clientY);
+    }, { passive: false });
+    document.getElementById("app").addEventListener("touchstart", (e) => {
+      const wrap = e.target.closest && e.target.closest("[data-trade-web-stage]");
+      if (!wrap || !e.touches || e.touches.length !== 2) return;
+      wrap.classList.remove("is-panning");
+      const a = e.touches[0];
+      const b = e.touches[1];
+      const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) || 1;
+      tradeWebPtr = {
+        mode: "pinch",
+        dist: dist,
+        zoom: Number(tradeWebZoom) || 1,
+        cx: (a.clientX + b.clientX) / 2,
+        cy: (a.clientY + b.clientY) / 2,
+      };
+    }, { passive: true });
+    document.getElementById("app").addEventListener("touchmove", (e) => {
+      if (!tradeWebPtr || tradeWebPtr.mode !== "pinch" || !e.touches || e.touches.length !== 2) return;
+      e.preventDefault();
+      const a = e.touches[0];
+      const b = e.touches[1];
+      const dist = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY) || 1;
+      const next = tradeWebClampZoom(tradeWebPtr.zoom * (dist / (tradeWebPtr.dist || dist)));
+      const prev = Number(tradeWebZoom) || 1;
+      if (next === prev) return;
+      const wrap = document.querySelector("#app [data-trade-web-stage]");
+      if (wrap) {
+        const rect = wrap.getBoundingClientRect();
+        const x = tradeWebPtr.cx - rect.left;
+        const y = tradeWebPtr.cy - rect.top;
+        tradeWebPanX = x - ((x - Number(tradeWebPanX || 0)) * (next / prev));
+        tradeWebPanY = y - ((y - Number(tradeWebPanY || 0)) * (next / prev));
+      }
+      tradeWebZoom = next;
+      tradeWebApplyStageTransform();
+    }, { passive: false });
+    document.getElementById("app").addEventListener("touchend", (e) => {
+      if (tradeWebPtr && tradeWebPtr.mode === "pinch" && (!e.touches || e.touches.length < 2)) {
+        tradeWebPtr = null;
+      }
+    }, { passive: true });
     document.getElementById("app").addEventListener("focusout", (e) => {
       const calcSearch = e.target && e.target.closest && e.target.closest("[data-calc-filter]");
       if (calcSearch) {
@@ -42521,15 +42903,20 @@ if (!inline.includes("function dataDashHtml(")
     || !inline.includes('lab: "Trade web"')
     || !inline.includes("function tradeWebPortalHtml(")
     || !inline.includes("function tradeWebPlayerHtml(")
+    || !inline.includes("function tradeWebShareNow(")
+    || !inline.includes("function tradeWebZoomBy(")
     || !inline.includes('getLeagueJson("trade-web.json")')
     || !inline.includes('data-trade-web-q')
     || !inline.includes('data-trade-web-pick="')
+    || !inline.includes("data-trade-web-zoom=")
+    || !inline.includes("data-trade-web-share=")
+    || !inline.includes("data-trade-web-stage")
     || !inline.includes("tradeWebPickKey")
     || !inline.includes('canon === "trade_web"')
     || !fnSrc("receiptPortalRows").includes('id === "trade_web"')
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_web")')
     || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "trade_web"')) {
-    throw new Error("Trade web door must ship search portal, book load, and add-only dynasty migrate");
+    throw new Error("Trade web door must ship search portal, zoom/share, book load, and add-only dynasty migrate");
   }
   if (!inline.includes('id: "ring_leaders"')
     || !inline.includes('lab: "Ring leaders"')

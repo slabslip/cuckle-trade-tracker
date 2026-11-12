@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+/** Trade web door: search a player → map what the trade turned into. */
+import fs from "node:fs";
+
+function fail(msg) {
+  console.error(msg);
+  process.exit(1);
+}
+
+const page = fs.readFileSync("index.html", "utf8");
+const gen = fs.readFileSync("generate-page.mjs", "utf8");
+const sw = fs.readFileSync("sw.js", "utf8");
+const build = fs.readFileSync("build.mjs", "utf8");
+
+if (!page.includes('const DATA_V = "') || !/^const CACHE = "chuckle-shell-v\d+/m.test(sw)) {
+  fail("trade web must keep DATA_V and SW cache");
+}
+if (!build.includes("build-trade-web.mjs")) fail("build.mjs must run build-trade-web.mjs");
+for (const need of [
+  'id: "trade_web"',
+  'lab: "Trade web"',
+  "function tradeWebPortalHtml(",
+  "function tradeWebPlayerHtml(",
+  'data-trade-web-q',
+  'data-trade-web-pick="',
+  'getLeagueJson("trade-web.json")',
+  "tradeWebPickKey",
+  "const DATA_DASH_MAX = 20",
+  'src.splice(after + 1, 0, "trade_web")',
+]) {
+  if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
+}
+{
+  const doors = (page.match(/const DATA_DOORS = \[([\s\S]*?)\];/) || [])[1] || "";
+  const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
+  const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+  const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
+  if (doorIds.length !== 20 || defIds.length !== 20) {
+    fail("DATA_DOORS / DEFAULT must be 20 tiles, got " + doorIds.length + "/" + defIds.length);
+  }
+  if (doorIds[19] !== "trade_web" || defIds[19] !== "trade_web") {
+    fail("Trade web must be door tile 20");
+  }
+  if (doorIds[18] !== "ring_leaders") fail("must not displace Ring leaders");
+}
+
+const book = JSON.parse(
+  fs.readFileSync("data/leagues/1315431339301806080/ui/trade-web.json", "utf8"),
+);
+if (Number(book.v) < 1 || !Array.isArray(book.players) || book.players.length < 10) {
+  fail("trade-web book missing players");
+}
+const golden = book.players.find((p) => String(p.player_id) === "12501"
+  || String(p.name).toLowerCase().includes("matthew golden"));
+if (!golden || !golden.webs || !golden.webs.length) fail("Matthew Golden web missing");
+const web = golden.webs[0];
+if (web.seat !== "TrumanCooper") fail("Golden exit should be TrumanCooper");
+if (!(web.branches || []).some((b) => /Ridley/i.test(b.label))) fail("Golden bag should include Ridley");
+if (!(web.branches || []).some((b) => /Bell/i.test(b.label))) fail("Golden bag should include Bell");
+
+const design = "design-trade-web.html";
+if (!fs.existsSync(design)) fail("missing " + design);
+{
+  const html = fs.readFileSync(design, "utf8");
+  if (!html.includes("cuckle.auth.v2") || html.includes("cuckle.auth.v1")) {
+    fail(design + " must seed auth v2");
+  }
+  if (!html.includes("trade_web")) fail(design + " must open trade_web");
+}
+
+console.log(JSON.stringify({
+  ok: true,
+  lab: "Trade web",
+  doors: 20,
+  n_players: book.n_players,
+  golden: {
+    seat: web.seat,
+    partner: web.partner,
+    date: web.date,
+    branches: web.branches.map((b) => ({ label: b.label, status: b.status })),
+  },
+}));

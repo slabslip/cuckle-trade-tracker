@@ -1845,6 +1845,40 @@ const html = `<!DOCTYPE html>
     .home-wire-empty {
       margin: 0; font-size: 0.78rem; font-weight: 650; color: var(--muted);
     }
+    /* Trade web — blockchain-style asset trail. */
+    .trade-web-search { margin: 0 0 10px; }
+    .trade-web-tree { margin: 8px 0 14px; padding-left: 2px; }
+    .trade-web-root {
+      font-weight: 650; margin: 0 0 6px;
+    }
+    .trade-web-branch {
+      position: relative;
+      margin: 0 0 8px;
+      padding: 8px 10px 8px 12px;
+      border-left: 2px solid rgba(200, 200, 208, 0.28);
+    }
+    .trade-web-branch .tw-lab { font-weight: 600; }
+    .trade-web-branch .tw-meta {
+      color: var(--muted); font-size: 0.92em; margin-top: 2px;
+    }
+    .trade-web-kids {
+      margin: 6px 0 0 10px;
+      padding-left: 10px;
+      border-left: 1px dashed rgba(200, 200, 208, 0.35);
+    }
+    .trade-web-kid { margin: 4px 0; }
+    .trade-web-status-held, .trade-web-status-still_pick { color: var(--green, #6ecf8e); }
+    .trade-web-status-traded { color: var(--gold, #d4b45a); }
+    .trade-web-status-dropped { color: var(--red, #e07070); }
+    .trade-web-status-drafted { color: var(--blue, #7aa7ff); }
+    button.trade-web-pick-row {
+      display: block; width: 100%; text-align: left;
+      background: transparent; border: 0; color: inherit;
+      padding: 10px 2px; cursor: pointer;
+      border-bottom: 1px solid rgba(200, 200, 208, 0.12);
+    }
+    button.trade-web-pick-row:focus-visible { outline: 2px solid #c8c8d0; outline-offset: 2px; }
+
     /* Projected finish expandable why + champ + toilet brackets (BB cut). */
     .pf-why { margin: 0; padding: 0; }
     .pf-why-h {
@@ -5056,6 +5090,8 @@ const html = `<!DOCTYPE html>
     let closestGamesOpenKey = "";
     let hardestScheduleOpenKey = "";
     let ringLeadersOpenKey = "";
+    let tradeWebQ = "";
+    let tradeWebPickKey = "";
     let cornerstoneTradesOpenKey = "";
     let pipelineQ = "";
     let pipelinePickKey = "";
@@ -5085,7 +5121,11 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261112171110";
+<<<<<<< HEAD
+    const DATA_V = "tradeWeb20261112172532";
+=======
+    const DATA_V = "tradeWeb20261112172258";
+>>>>>>> cursor/trade-web-33b5
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5152,13 +5192,13 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 19;
+    const DATA_DASH_MAX = 20;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
-      "closest_games", "hardest_schedule", "ring_leaders",
+      "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5173,13 +5213,13 @@ const html = `<!DOCTYPE html>
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
-      "closest_games", "hardest_schedule", "ring_leaders",
+      "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
-      "cornerstone_trades", "pipeline", "closest_games", "hardest_schedule", "ring_leaders",
+      "cornerstone_trades", "pipeline", "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5196,7 +5236,7 @@ const html = `<!DOCTYPE html>
       "forever", "passed_around", "least_traded", "profit_loss", "seat_draft",
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades", "pipeline",
-      "closest_games", "hardest_schedule", "ring_leaders",
+      "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
       "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -5236,6 +5276,7 @@ const html = `<!DOCTYPE html>
       { id: "closest_games", lab: "Closest games", desk: "lists", group: "memory", size: "full", why: "Top 10 closest matches of all time by point margin. Tap a game for how that week shaped both teams' years." },
       { id: "hardest_schedule", lab: "Toughest schedule", desk: "lists", group: "memory", size: "full", why: "Every seat ranked by rest-of-regular-season strength of schedule. Rebuilds each week with Expected finish. Tap a seat for the remaining slate." },
       { id: "ring_leaders", lab: "Ring leaders", desk: "lists", group: "memory", size: "full", why: "Top 25 players by league championship rings. A ring counts when they were rostered on that year's champion. Tap a row for the title teams." },
+      { id: "trade_web", lab: "Trade web", desk: "lists", group: "memory", size: "full", why: "Pick a player. Map what trading them away turned into — every return piece, then where those pieces went next." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5364,6 +5405,7 @@ const html = `<!DOCTYPE html>
     let closestGamesBook = null;
     let hardestScheduleBook = null;
     let ringLeadersBook = null;
+    let tradeWebBook = null;
     let bestWaiverPickupsBook = null;
     let cornerstoneTradesBook = null;
     let pipelineBook = null;
@@ -5829,6 +5871,7 @@ const html = `<!DOCTYPE html>
         || canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades" || canon === "pipeline"
         || canon === "closest_games" || canon === "hardest_schedule" || canon === "ring_leaders"
+        || canon === "trade_web"
         || canon === "head_to_head";
     }
 
@@ -6589,6 +6632,10 @@ const html = `<!DOCTYPE html>
       }
       if (receiptListWho && tile === "manager_archetypes") {
         managerArchetypesOpenKey = receiptListWho;
+      }
+      if (receiptListWho && tile === "trade_web") {
+        tradeWebPickKey = receiptListWho;
+        tradeWebQ = "";
       }
       if (typeof render === "function") render();
       return true;
@@ -8017,7 +8064,7 @@ const html = `<!DOCTYPE html>
         || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
-        || id === "hardest_schedule" || id === "ring_leaders"
+        || id === "hardest_schedule" || id === "ring_leaders" || id === "trade_web"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
@@ -8080,6 +8127,7 @@ const html = `<!DOCTYPE html>
         || key === "best_ball_hype" || key === "biggest_choker"
         || key === "waiver_winners" || key === "cornerstone_trades" || key === "pipeline"
         || key === "closest_games" || key === "hardest_schedule" || key === "ring_leaders"
+        || key === "trade_web"
         || key === "head_to_head") return false;
       if (isFinishCareerTile(key)) return false;
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
@@ -8096,7 +8144,7 @@ const html = `<!DOCTYPE html>
       if (canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades"
         || canon === "pipeline" || canon === "closest_games"
-        || canon === "hardest_schedule" || canon === "ring_leaders"
+        || canon === "hardest_schedule" || canon === "ring_leaders" || canon === "trade_web"
         || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
@@ -8151,6 +8199,7 @@ const html = `<!DOCTYPE html>
         closest_games: '<path d="M4 12h16"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>',
         hardest_schedule: '<path d="M4 19V9l4 3 4-5 4 4v8z"/><path d="M4 19h16"/>',
         ring_leaders: '<path d="M8 6h8v2.5l-1.2.8V11H9.2V9.3L8 8.5V6z"/><path d="M7 18h10"/><path d="M9 11v7M15 11v7M12 11v7"/>',
+        trade_web: '<circle cx="6" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M12 8v2M12 14v2M14 12h2"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
         forever: '<path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/>',
         passed_around: '<path d="M20 8a8 8 0 1 0 1.6 6"/><polyline points="16 8 20 8 20 4"/>',
@@ -8232,6 +8281,9 @@ const html = `<!DOCTYPE html>
       } else if (id === "ring_leaders") {
         const lead = ringLeadersBook && ringLeadersBook.players && ringLeadersBook.players[0];
         if (lead) fig = receiptDoorLeadFig(lead.player, String(lead.rings != null ? lead.rings : ""));
+      } else if (id === "trade_web") {
+        const lead = tradeWebBook && tradeWebBook.players && tradeWebBook.players[0];
+        if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.n_exits != null ? lead.n_exits : ""));
       } else if (id === "waiver_winners") {
         const lead = bestWaiverPickupsBook && bestWaiverPickupsBook.to_today
           && bestWaiverPickupsBook.to_today[0];
@@ -8933,6 +8985,7 @@ const html = `<!DOCTYPE html>
 
     function receiptPortalRows(id, q) {
       if (id === "pipeline") return pipelinePortalHtml();
+      if (id === "trade_web") return tradeWebPortalHtml();
       const needle = String(q || "").trim().toLowerCase();
       const hit = function (parts) {
         if (!needle) return true;
@@ -9684,6 +9737,11 @@ const html = `<!DOCTYPE html>
         caption = "Top 25 players by league championship rings."
           + " A ring counts when they were on that champion's full roster the week of the title."
           + " Big number is rings. Subline is the title teams. Tap a row for each crown.";
+      }
+      else if (id === "trade_web") {
+        caption = tradeWebPickKey
+          ? "Each exit maps the return bag, then where those pieces went next — trades, drops, still-held, still-pick."
+          : "Search a traded player. The web shows what that seat got back, then what those pieces became.";
       }
       else if (id === "waiver_winners") {
         caption = "Three top-10 boards by dynasty-value lift on the same scale as Trade Value / calculator."
@@ -12073,6 +12131,7 @@ const html = `<!DOCTYPE html>
       closestGamesBook = null;
       hardestScheduleBook = null;
       ringLeadersBook = null;
+      tradeWebBook = null;
       bestWaiverPickupsBook = null;
       cornerstoneTradesBook = null;
       pipelineBook = null;
@@ -12080,6 +12139,8 @@ const html = `<!DOCTYPE html>
       pipelinePickKey = "";
       pipelineCat = "developed";
       pipelinePos = "";
+      tradeWebQ = "";
+      tradeWebPickKey = "";
       headToHeadBook = null;
       overnight = null;
       overnightLoading = false;
@@ -12109,7 +12170,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, ringLeadersRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -12132,6 +12193,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("closest-games.json").catch(() => null),
         getLeagueJson("hardest-schedule.json").catch(() => null),
         getLeagueJson("ring-leaders.json").catch(() => null),
+        getLeagueJson("trade-web.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
         getLeagueJson("cornerstone-trades.json").catch(() => null),
         getLeagueJson("pipeline.json").catch(() => null),
@@ -12234,6 +12296,10 @@ const html = `<!DOCTYPE html>
         ringLeadersBook = ringLeadersRaw && Number(ringLeadersRaw.v) >= 1
           && Array.isArray(ringLeadersRaw.players) ? ringLeadersRaw : null;
       } catch (err) { ringLeadersBook = null; }
+      try {
+        tradeWebBook = tradeWebRaw && Number(tradeWebRaw.v) >= 1
+          && Array.isArray(tradeWebRaw.players) ? tradeWebRaw : null;
+      } catch (err) { tradeWebBook = null; }
       try {
         bestWaiverPickupsBook = bestWaiverRaw && Number(bestWaiverRaw.v) >= 4
           && Array.isArray(bestWaiverRaw.to_today) && Array.isArray(bestWaiverRaw.to_peak)
@@ -13532,6 +13598,8 @@ const html = `<!DOCTYPE html>
       pipelinePickKey = "";
       pipelineCat = "developed";
       pipelinePos = "";
+      tradeWebQ = "";
+      tradeWebPickKey = "";
       receiptH2hA = "";
       receiptH2hB = "";
       if (typeof receiptPlReset === "function") receiptPlReset();
@@ -13838,6 +13906,13 @@ const html = `<!DOCTYPE html>
         const after = src.indexOf("hardest_schedule");
         if (after >= 0) src.splice(after + 1, 0, "ring_leaders");
         else src.push("ring_leaders");
+      }
+      // Dynasty: add Trade web after Ring leaders — never replace a tile.
+      if (dynasty && src.indexOf("trade_web") < 0 && dataDashById("trade_web")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("ring_leaders");
+        if (after >= 0) src.splice(after + 1, 0, "trade_web");
+        else src.push("trade_web");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -15740,6 +15815,145 @@ const html = `<!DOCTYPE html>
       html += "</div>";
       return html;
     }
+
+
+    function tradeWebPlayerByKey(key) {
+      const want = String(key || "");
+      if (!want || !tradeWebBook || !Array.isArray(tradeWebBook.players)) return null;
+      for (let i = 0; i < tradeWebBook.players.length; i++) {
+        if (String(tradeWebBook.players[i].key) === want
+          || String(tradeWebBook.players[i].asset_key) === want
+          || String(tradeWebBook.players[i].player_id) === want) {
+          return tradeWebBook.players[i];
+        }
+      }
+      return null;
+    }
+
+    function tradeWebSearchHits(q, limit) {
+      const needle = String(q || "").trim().toLowerCase();
+      if (!needle || !tradeWebBook || !Array.isArray(tradeWebBook.players)) return [];
+      const out = [];
+      for (let i = 0; i < tradeWebBook.players.length; i++) {
+        const p = tradeWebBook.players[i];
+        const hay = ((p.name || "") + " " + (p.seat_lab || "") + " " + (p.thesis || "")).toLowerCase();
+        if (hay.indexOf(needle) < 0) continue;
+        out.push(p);
+        if (out.length >= (limit || 20)) break;
+      }
+      return out;
+    }
+
+    function tradeWebStatusLab(status) {
+      if (status === "held") return "still held";
+      if (status === "still_pick") return "still a pick";
+      if (status === "traded") return "traded again";
+      if (status === "dropped") return "dropped";
+      if (status === "drafted") return "drafted";
+      if (status === "no_return") return "no return";
+      return status || "";
+    }
+
+    function tradeWebNodeHtml(node, depth) {
+      if (!node) return "";
+      const st = String(node.status || "");
+      const metaBits = [];
+      if (st) metaBits.push(tradeWebStatusLab(st));
+      if (node.exit && node.exit.date) metaBits.push(String(node.exit.date));
+      if (node.exit && node.exit.to) metaBits.push("to " + node.exit.to);
+      if (node.became) metaBits.push("became " + node.became);
+      if (node.holder && st === "still_pick") metaBits.push("held by " + node.holder);
+      let kids = "";
+      const children = node.children || [];
+      if (children.length) {
+        kids = '<div class="trade-web-kids">'
+          + children.map(function (c) {
+            return '<div class="trade-web-kid">' + tradeWebNodeHtml(c, (depth || 0) + 1) + "</div>";
+          }).join("")
+          + "</div>";
+      }
+      const cls = depth ? "trade-web-kid-inner" : "trade-web-branch";
+      return '<div class="' + cls + '">'
+        + '<div class="tw-lab">' + esc(node.label || "—") + "</div>"
+        + (metaBits.length
+          ? ('<div class="tw-meta trade-web-status-' + esc(st) + '">' + esc(metaBits.join(" · ")) + "</div>")
+          : "")
+        + kids
+        + "</div>";
+    }
+
+    function tradeWebExitHtml(web) {
+      if (!web) return "";
+      let html = '<div class="trade-web-tree">';
+      html += '<p class="trade-web-root">' + esc(web.seat || "Seat")
+        + " traded away <b>" + esc((web.root && web.root.label) || "player") + "</b>"
+        + (web.partner ? (" to " + esc(web.partner)) : "")
+        + (web.date ? (" · " + esc(web.date)) : "")
+        + "</p>";
+      if (web.thesis) html += '<p class="caption">' + esc(web.thesis) + "</p>";
+      html += '<p class="pf-why-h">What it turned into</p>';
+      const branches = web.branches || [];
+      if (!branches.length) {
+        html += '<p class="caption">No return bag on that deal.</p>';
+      } else {
+        html += branches.map(function (b) { return tradeWebNodeHtml(b, 0); }).join("");
+      }
+      html += "</div>";
+      return html;
+    }
+
+    function tradeWebPlayerHtml(row) {
+      if (!row) return "";
+      const webs = row.webs || [];
+      if (!webs.length) return '<p class="caption">No trade exits on the book for this player.</p>';
+      return webs.map(tradeWebExitHtml).join("");
+    }
+
+    function tradeWebRowHtml(p) {
+      return '<button type="button" class="trade-web-pick-row" data-trade-web-pick="'
+        + esc(String(p.key || p.asset_key || "")) + '">'
+        + '<div class="row-top"><div><div class="names">' + esc(p.name || "—") + "</div>"
+        + '<div class="date">' + esc(p.seat_lab || "")
+        + (p.n_exits ? (" · " + p.n_exits + " exit" + (p.n_exits === 1 ? "" : "s")) : "")
+        + "</div></div>"
+        + '<div class="margin">' + esc(String(p.n_exits != null ? p.n_exits : "—")) + "</div></div>"
+        + "</button>";
+    }
+
+    function tradeWebPortalHtml() {
+      if (!tradeWebBook) {
+        return '<p class="caption">Trade web book not loaded yet.</p>';
+      }
+      const picked = tradeWebPlayerByKey(tradeWebPickKey);
+      if (picked) {
+        return '<div class="trade-web-search">'
+          + '<p class="caption"><button type="button" class="chip" data-trade-web-clear="1">← Players</button> '
+          + esc(picked.name) + "</p></div>"
+          + tradeWebPlayerHtml(picked);
+      }
+      const q = String(tradeWebQ || "");
+      let list = "";
+      if (q.trim()) {
+        const hits = tradeWebSearchHits(q, 25);
+        if (!hits.length) list = '<p class="caption">No traded player matches.</p>';
+        else list = '<div class="pipeline-pos-list">'
+          + hits.map(tradeWebRowHtml).join("")
+          + "</div>";
+      } else {
+        const top = (tradeWebBook.players || []).slice(0, 20);
+        list = '<p class="caption">Search a player — or browse the most-moved names. Tap one to map what that trade turned into.</p>'
+          + '<div class="pipeline-pos-list">'
+          + top.map(tradeWebRowHtml).join("")
+          + "</div>";
+      }
+      return '<div class="trade-web-search">'
+        + '<label class="receipt-look"><span>Player</span>'
+        + '<input type="search" class="cuffs-q" data-trade-web-q placeholder="Search a player — e.g. Matthew Golden"'
+        + ' value="' + esc(q) + '" autocomplete="off" spellcheck="false" aria-label="Search a player">'
+        + "</label></div>"
+        + list;
+    }
+
 
     function biggestChokerDetailHtml(seat) {
       if (!seat) return "";
@@ -18878,6 +19092,12 @@ const html = `<!DOCTYPE html>
           lead && lead.rings != null ? String(lead.rings) : "Open",
           lead ? ((lead.player || "Lead") + " · rings") : "Championship rings · top 25");
       }
+      if (id === "trade_web") {
+        const lead = tradeWebBook && tradeWebBook.players && tradeWebBook.players[0];
+        return dataDashHead(spec,
+          lead && lead.n_exits != null ? String(lead.n_exits) : "Open",
+          lead ? ((lead.name || "Lead") + " · trade exits") : "What a trade turned into");
+      }
       if (id === "waiver_winners") {
         const lead = bestWaiverPickupsBook && bestWaiverPickupsBook.to_today
           && bestWaiverPickupsBook.to_today[0];
@@ -19158,6 +19378,8 @@ const html = `<!DOCTYPE html>
         pipelinePickKey = "";
         pipelineCat = "developed";
         pipelinePos = "";
+        tradeWebQ = "";
+        tradeWebPickKey = "";
         receiptH2hA = "";
         receiptH2hB = "";
         receiptResetPlayerFilter();
@@ -25295,6 +25517,8 @@ const html = `<!DOCTYPE html>
         pipelinePickKey = "";
         pipelineCat = "developed";
         pipelinePos = "";
+        tradeWebQ = "";
+        tradeWebPickKey = "";
         receiptH2hA = "";
         receiptH2hB = "";
         if (typeof receiptPlReset === "function") receiptPlReset();
@@ -37655,6 +37879,23 @@ const html = `<!DOCTYPE html>
         if (typeof render === "function") render();
         return;
       }
+      const tradeWebPickBtn = e.target.closest("[data-trade-web-pick]");
+      if (tradeWebPickBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        tradeWebPickKey = tradeWebPickBtn.getAttribute("data-trade-web-pick") || "";
+        tradeWebQ = "";
+        if (typeof render === "function") render();
+        return;
+      }
+      const tradeWebClearBtn = e.target.closest("[data-trade-web-clear]");
+      if (tradeWebClearBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        tradeWebPickKey = "";
+        if (typeof render === "function") render();
+        return;
+      }
       const biggestChokerOpenBtn = e.target.closest("[data-biggest-choker-open]");
       if (biggestChokerOpenBtn) {
         e.preventDefault();
@@ -39981,6 +40222,20 @@ const html = `<!DOCTYPE html>
         }
         return;
       }
+      const tradeWebQBox = e.target.closest("[data-trade-web-q]");
+      if (tradeWebQBox) {
+        tradeWebQ = tradeWebQBox.value || "";
+        tradeWebPickKey = "";
+        const start = tradeWebQBox.selectionStart;
+        const end = tradeWebQBox.selectionEnd;
+        render();
+        const back = document.querySelector("#app [data-trade-web-q]");
+        if (back) {
+          back.focus({ preventScroll: true });
+          try { back.setSelectionRange(start, end); } catch (err) { /* ignore */ }
+        }
+        return;
+      }
       const pipelineQBox = e.target.closest("[data-pipeline-q]");
       if (pipelineQBox) {
         pipelineQ = pipelineQBox.value || "";
@@ -41823,8 +42078,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 52 || uniq.size !== 52) {
-    throw new Error("DATA_REPORTS must hold exactly 52 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 53 || uniq.size !== 53) {
+    throw new Error("DATA_REPORTS must hold exactly 53 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -41836,8 +42091,9 @@ if (!inline.includes("function dataDashHtml(")
     || !uniq.has("season_arcs") || !uniq.has("manager_archetypes") || !uniq.has("trade_helper")
     || !uniq.has("best_ball_hype") || !uniq.has("biggest_choker") || !uniq.has("waiver_winners")
     || !uniq.has("closest_games") || !uniq.has("hardest_schedule") || !uniq.has("ring_leaders")
+    || !uniq.has("trade_web")
     || !uniq.has("head_to_head")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, and Head to head");
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, Trade web, and Head to head");
   }
   const needIds = ["trade_helper", "fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -41851,30 +42107,30 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 19 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 20 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
     || defIds.indexOf("cornerstone_trades") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 19 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 20 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 19 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 19 default door tiles");
+  if (doorIds.length !== 20 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 20 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 17 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 17 catalog ids");
+  if (resIds.length !== 18 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 18 catalog ids");
   }
   if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades") || !resIds.includes("pipeline")
     || !resIds.includes("closest_games") || !resIds.includes("hardest_schedule")
-    || !resIds.includes("ring_leaders")) {
-    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders");
+    || !resIds.includes("ring_leaders") || !resIds.includes("trade_web")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders, trade_web");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
@@ -41913,6 +42169,9 @@ if (!inline.includes("function dataDashHtml(")
   if (!uniq.has("ring_leaders") || defIds[18] !== "ring_leaders" || doorIds[18] !== "ring_leaders") {
     throw new Error("Ring leaders must be default board tile 19 (League Data door)");
   }
+  if (!uniq.has("trade_web") || defIds[19] !== "trade_web" || doorIds[19] !== "trade_web") {
+    throw new Error("Trade web must be default board tile 20 (League Data door)");
+  }
   if (!inline.includes('id: "closest_games"')
     || !inline.includes('lab: "Closest games"')
     || !inline.includes("function closestGamesDetailHtml(")
@@ -41933,6 +42192,20 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "hardest_schedule")')
     || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "hardest_schedule"')) {
     throw new Error("Toughest schedule door must ship book load, expand detail, and add-only dynasty migrate");
+  }
+  if (!inline.includes('id: "trade_web"')
+    || !inline.includes('lab: "Trade web"')
+    || !inline.includes("function tradeWebPortalHtml(")
+    || !inline.includes("function tradeWebPlayerHtml(")
+    || !inline.includes('getLeagueJson("trade-web.json")')
+    || !inline.includes('data-trade-web-q')
+    || !inline.includes('data-trade-web-pick="')
+    || !inline.includes("tradeWebPickKey")
+    || !inline.includes('canon === "trade_web"')
+    || !fnSrc("receiptPortalRows").includes('id === "trade_web"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_web")')
+    || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "trade_web"')) {
+    throw new Error("Trade web door must ship search portal, book load, and add-only dynasty migrate");
   }
   if (!inline.includes('id: "ring_leaders"')
     || !inline.includes('lab: "Ring leaders"')
@@ -42911,7 +43184,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 19")) {
+  || !inline.includes("const DATA_DASH_MAX = 20")) {
   throw new Error("Waiver winners must stay on League Data with three top-10 bands");
 }
 if (!inline.includes('id: "cornerstone_trades"')

@@ -1840,6 +1840,9 @@
     /* Trade web — blockchain-style asset trail + SVG node link. */
     .trade-web-search { margin: 0 0 10px; }
     .trade-web-tree { margin: 8px 0 14px; padding-left: 2px; }
+    .trade-web-pkg { margin: 8px 0 72px; padding-left: 2px; }
+    .trade-web-pkg .tw-lab { text-decoration: underline; text-underline-offset: 2px; }
+    .trade-web-search .chip.back { position: relative; z-index: 2; }
     .trade-web-root {
       font-weight: 650; margin: 0 0 6px;
     }
@@ -5155,6 +5158,9 @@
     let ringLeadersOpenKey = "";
     let tradeWebQ = "";
     let tradeWebPickKey = "";
+    let tradeWebFullById = {}; // player_id → full web payload
+    let tradeWebFullLoading = "";
+    let tradeWebFocusKey = ""; // asset_key clicked inside a web
     let tradeWebZoom = 1;
     let tradeWebPanX = 0;
     let tradeWebPanY = 0;
@@ -5189,7 +5195,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeWebZoom20261112214527";
+    const DATA_V = "tradeWebFull20261112220000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5340,7 +5346,7 @@
       { id: "closest_games", lab: "Closest games", desk: "lists", group: "memory", size: "full", why: "Top 10 closest matches of all time by point margin. Tap a game for how that week shaped both teams' years." },
       { id: "hardest_schedule", lab: "Toughest schedule", desk: "lists", group: "memory", size: "full", why: "Every seat ranked by rest-of-regular-season strength of schedule. Rebuilds each week with Expected finish. Tap a seat for the remaining slate." },
       { id: "ring_leaders", lab: "Ring leaders", desk: "lists", group: "memory", size: "full", why: "Top 25 players by league championship rings. A ring counts when they were rostered on that year's champion. Tap a row for the title teams." },
-      { id: "trade_web", lab: "Trade web", desk: "lists", group: "memory", size: "full", why: "Pick a player. Follow what that trade turned into — later deals, aging value, and the net trail of value created or destroyed." },
+      { id: "trade_web", lab: "Trade web", desk: "lists", group: "memory", size: "full", why: "Pick a player. Full league lineage from first seat to now — every manager, every package along the way. Tap a piece to open its web." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -6700,6 +6706,7 @@
       if (receiptListWho && tile === "trade_web") {
         tradeWebPickKey = receiptListWho;
         tradeWebQ = "";
+        tradeWebFocusKey = "";
         tradeWebZoom = 1;
         tradeWebPanX = 0;
         tradeWebPanY = 0;
@@ -9813,8 +9820,8 @@
       }
       else if (id === "trade_web") {
         caption = tradeWebPickKey
-          ? "One exit → the bag → later trades → today. Deal is trade-day got−gave; Aged is how held pieces moved since; Trail nets it all."
-          : "Search a traded player. See whether later trades grew or destroyed the value of that first piece.";
+          ? "Same public web for everyone. Spine follows the player across seats; branches are every asset that moved in those trades. Tap a node to open that piece."
+          : "Search any traded player. See where they started, every hop, and where they are now.";
       }
       else if (id === "waiver_winners") {
         caption = "Three top-10 boards by dynasty-value lift on the same scale as Trade Value / calculator."
@@ -12370,8 +12377,11 @@
           && Array.isArray(ringLeadersRaw.players) ? ringLeadersRaw : null;
       } catch (err) { ringLeadersBook = null; }
       try {
-        tradeWebBook = tradeWebRaw && Number(tradeWebRaw.v) >= 2
+        tradeWebBook = tradeWebRaw && Number(tradeWebRaw.v) >= 3
           && Array.isArray(tradeWebRaw.players) ? tradeWebRaw : null;
+        tradeWebFullById = {};
+        tradeWebFullLoading = "";
+        tradeWebFocusKey = "";
       } catch (err) { tradeWebBook = null; }
       try {
         bestWaiverPickupsBook = bestWaiverRaw && Number(bestWaiverRaw.v) >= 4
@@ -15903,13 +15913,38 @@
       return null;
     }
 
+    function tradeWebEnsureFull(row) {
+      if (!row || !row.player_id) return;
+      const pid = String(row.player_id);
+      if (tradeWebFullById[pid] || tradeWebFullLoading === pid) return;
+      const path = row.full || ("trade-web/p/" + pid + ".json");
+      tradeWebFullLoading = pid;
+      getLeagueJson(path).then(function (raw) {
+        if (raw && raw.web) tradeWebFullById[pid] = raw.web;
+        if (tradeWebFullLoading === pid) tradeWebFullLoading = "";
+        if (typeof render === "function") render();
+      }).catch(function () {
+        if (tradeWebFullLoading === pid) tradeWebFullLoading = "";
+        if (typeof render === "function") render();
+      });
+    }
+
+    function tradeWebActiveWeb(row) {
+      if (!row) return null;
+      const pid = String(row.player_id || "");
+      if (pid && tradeWebFullById[pid]) return tradeWebFullById[pid];
+      return (row.webs && row.webs[0]) || null;
+    }
+
     function tradeWebSearchHits(q, limit) {
       const needle = String(q || "").trim().toLowerCase();
       if (!needle || !tradeWebBook || !Array.isArray(tradeWebBook.players)) return [];
       const out = [];
       for (let i = 0; i < tradeWebBook.players.length; i++) {
         const p = tradeWebBook.players[i];
-        const hay = ((p.name || "") + " " + (p.seat_lab || "") + " " + (p.thesis || "")).toLowerCase();
+        const hay = ((p.name || "") + " " + (p.seat_lab || "") + " "
+          + (p.origin_lab || "") + " " + (p.now_lab || "") + " "
+          + (p.thesis || "")).toLowerCase();
         if (hay.indexOf(needle) < 0) continue;
         out.push(p);
         if (out.length >= (limit || 20)) break;
@@ -15924,8 +15959,10 @@
       if (status === "dropped") return "dropped";
       if (status === "drafted") return "drafted";
       if (status === "no_return") return "no return";
-      if (status === "sent") return "traded away";
+      if (status === "sent" || status === "origin") return "traded away";
       if (status === "deal") return "trade";
+      if (status === "cycle") return "seen earlier";
+      if (status === "truncated") return "truncated";
       return status || "";
     }
 
@@ -15945,6 +15982,7 @@
       const st = String(node.status || "");
       const metaBits = [];
       if (st) metaBits.push(tradeWebStatusLab(st));
+      if (node.seat) metaBits.push(node.seat);
       if (node.value_in != null) metaBits.push("in " + fmt(node.value_in));
       if (node.value_now != null && (st === "held" || st === "still_pick")) {
         metaBits.push("now " + fmt(node.value_now));
@@ -15965,8 +16003,12 @@
           + "</div>";
       }
       const cls = depth ? "trade-web-kid-inner" : "trade-web-branch";
+      const focusKey = node.asset_key ? String(node.asset_key) : "";
+      const labAttr = focusKey
+        ? (' data-trade-web-focus="' + esc(focusKey) + '" style="cursor:pointer"')
+        : "";
       return '<div class="' + cls + '">'
-        + '<div class="tw-lab">' + esc(node.label || "—") + "</div>"
+        + '<div class="tw-lab"' + labAttr + ">" + esc(node.label || "—") + "</div>"
         + (metaBits.length
           ? ('<div class="tw-meta trade-web-status-' + esc(st) + '">' + esc(metaBits.join(" · ")) + "</div>")
           : "")
@@ -15979,37 +16021,25 @@
       const nodes = [];
       const edges = [];
       const rootId = "root";
+      const rn = web.root_node;
       nodes.push({
         id: rootId,
-        label: web.root.label,
+        label: (rn && rn.label) || web.root.label,
         kind: "player",
-        status: "sent",
-        seat: web.seat,
-        value: web.gave_value,
+        status: rn && rn.status === "held" ? "held" : "origin",
+        seat: (rn && rn.seat)
+          || (web.origin && web.origin.seat)
+          || web.seat,
+        value: rn && rn.value_out != null
+          ? rn.value_out
+          : (web.origin && web.origin.value != null ? web.origin.value : web.gave_value),
+        value_in: rn ? rn.value_in : null,
+        value_now: rn ? rn.value_now : null,
+        mark_pnl: rn ? rn.mark_pnl : null,
+        deal_pnl: rn ? rn.deal_pnl : null,
+        asset_key: (rn && rn.asset_key) || web.root.asset_key,
         depth: 0,
         slot: 0,
-      });
-      const hubId = "tx:" + String(web.transaction_id || "0");
-      nodes.push({
-        id: hubId,
-        label: web.date || "trade",
-        kind: "trade",
-        status: "deal",
-        seat: web.seat,
-        pnl: web.deal_pnl,
-        value: web.gave_value,
-        depth: 1,
-        slot: 0,
-      });
-      edges.push({
-        from: rootId,
-        to: hubId,
-        date: web.date || null,
-        value: web.gave_value,
-        pnl: web.deal_pnl,
-        lab: web.deal_pnl != null ? tradeWebSigned(web.deal_pnl)
-          : (web.gave_value != null ? fmt(web.gave_value) : ""),
-        kind: "exit",
       });
       let slotCounter = 0;
       function walk(node, parentId, depth) {
@@ -16022,6 +16052,8 @@
           kind: node.kind || "asset",
           status: node.status,
           seat: node.seat,
+          asset_key: node.asset_key,
+          role: node.role || null,
           value: node.value_now != null ? node.value_now : node.value_in,
           value_in: node.value_in,
           value_now: node.value_now,
@@ -16037,16 +16069,16 @@
           value: node.value_in,
           pnl: null,
           lab: node.value_in != null ? fmt(node.value_in) : "",
-          kind: "receive",
+          kind: node.role === "spine" ? "spine" : "package",
         });
         if (node.status === "traded" && node.children && node.children.length) {
           const nextId = "next:" + id;
           nodes.push({
             id: nextId,
-            label: (node.exit && node.exit.date) || "next trade",
+            label: (node.exit && node.exit.date) || "trade",
             kind: "trade",
             status: "deal",
-            seat: node.seat,
+            seat: node.exit && node.exit.to ? node.exit.to : node.seat,
             pnl: node.deal_pnl,
             value: node.value_out,
             depth: depth + 1,
@@ -16059,7 +16091,7 @@
             value: node.value_out,
             pnl: node.deal_pnl,
             lab: node.deal_pnl != null ? tradeWebSigned(node.deal_pnl)
-              : (node.value_out != null ? fmt(node.value_out) : "next"),
+              : (node.value_out != null ? fmt(node.value_out) : "trade"),
             kind: "next_trade",
           });
           for (let i = 0; i < node.children.length; i++) walk(node.children[i], nextId, depth + 2);
@@ -16075,8 +16107,64 @@
           }
         }
       }
-      const branches = web.branches || [];
-      for (let i = 0; i < branches.length; i++) walk(branches[i], hubId, 2);
+      if (rn) {
+        if (rn.status === "traded" && rn.children && rn.children.length) {
+          const hubId = "tx:root";
+          nodes.push({
+            id: hubId,
+            label: (rn.exit && rn.exit.date) || web.date || "trade",
+            kind: "trade",
+            status: "deal",
+            seat: rn.exit && rn.exit.to ? rn.exit.to : rn.seat,
+            pnl: rn.deal_pnl != null ? rn.deal_pnl : web.deal_pnl,
+            value: rn.value_out != null ? rn.value_out : web.gave_value,
+            depth: 1,
+            slot: 0,
+          });
+          edges.push({
+            from: rootId,
+            to: hubId,
+            date: (rn.exit && rn.exit.date) || web.date || null,
+            value: rn.value_out != null ? rn.value_out : web.gave_value,
+            pnl: rn.deal_pnl != null ? rn.deal_pnl : web.deal_pnl,
+            lab: (rn.deal_pnl != null || web.deal_pnl != null)
+              ? tradeWebSigned(rn.deal_pnl != null ? rn.deal_pnl : web.deal_pnl)
+              : (rn.value_out != null ? fmt(rn.value_out)
+                : (web.gave_value != null ? fmt(web.gave_value) : "")),
+            kind: "exit",
+          });
+          for (let i = 0; i < rn.children.length; i++) walk(rn.children[i], hubId, 2);
+        } else if (rn.children && rn.children.length) {
+          for (let i = 0; i < rn.children.length; i++) walk(rn.children[i], rootId, 1);
+        } else if (rn.mark_pnl != null) {
+          /* held at origin — no edges yet */
+        }
+      } else {
+        const hubId = "tx:" + String(web.transaction_id || "0");
+        nodes.push({
+          id: hubId,
+          label: web.date || "trade",
+          kind: "trade",
+          status: "deal",
+          seat: web.seat,
+          pnl: web.deal_pnl,
+          value: web.gave_value,
+          depth: 1,
+          slot: 0,
+        });
+        edges.push({
+          from: rootId,
+          to: hubId,
+          date: web.date || null,
+          value: web.gave_value,
+          pnl: web.deal_pnl,
+          lab: web.deal_pnl != null ? tradeWebSigned(web.deal_pnl)
+            : (web.gave_value != null ? fmt(web.gave_value) : ""),
+          kind: "exit",
+        });
+        const branches = web.branches || [];
+        for (let i = 0; i < branches.length; i++) walk(branches[i], hubId, 2);
+      }
       return { nodes: nodes, edges: edges };
     }
 
@@ -16136,7 +16224,7 @@
         const kind = String(e.kind || "link");
         const cls = "tw-edge"
           + (kind === "mark" ? " tw-edge-mark" : "")
-          + (kind === "next_trade" || kind === "exit" ? " tw-edge-next" : "");
+          + (kind === "next_trade" || kind === "exit" || kind === "spine" ? " tw-edge-next" : "");
         edgeSvg += '<path class="' + cls + '" d="M' + a.x + " " + a.y
           + " C " + (a.x + 40) + " " + a.y + ", " + (b.x - 40) + " " + b.y
           + ", " + b.x + " " + b.y + '" />';
@@ -16155,33 +16243,39 @@
         const p = pos[n.id];
         if (!p) continue;
         const isTrade = n.kind === "trade";
-        const isSent = n.status === "sent";
-        const rw = isTrade ? 44 : 54;
-        const rh = isTrade ? 28 : 34;
+        const isSent = n.status === "sent" || n.status === "origin" || n.status === "traded";
+        const canFocus = n.asset_key && n.kind !== "trade";
+        const focusAttr = canFocus
+          ? (' data-trade-web-focus="' + esc(String(n.asset_key)) + '" style="cursor:pointer"')
+          : "";
+        const rw = isTrade ? 44 : 64;
+        const rh = isTrade ? 28 : 40;
         const cls = isSent ? "tw-node-sent" : (isTrade ? "tw-node-trade" : "tw-node-asset");
         if (isTrade) {
           nodeSvg += '<rect class="' + cls + '" x="' + (p.x - rw / 2) + '" y="' + (p.y - rh / 2)
             + '" width="' + rw + '" height="' + rh + '" rx="4" />';
         } else {
           nodeSvg += '<ellipse class="' + cls + '" cx="' + p.x + '" cy="' + p.y
-            + '" rx="' + (rw / 2) + '" ry="' + (rh / 2) + '" />';
+            + '" rx="' + (rw / 2) + '" ry="' + (rh / 2) + '"' + focusAttr + " />";
         }
         const lab = String(n.label || "—");
         const shortLab = lab.length > 18 ? (lab.slice(0, 17) + "…") : lab;
         nodeSvg += '<text class="tw-node-lab" x="' + p.x + '" y="' + (p.y - 2)
-          + '" text-anchor="middle">' + esc(shortLab) + "</text>";
+          + '" text-anchor="middle"' + focusAttr + ">" + esc(shortLab) + "</text>";
         let sub = "";
-        if (n.status === "sent" && n.value != null) sub = "gave " + fmt(n.value);
-        else if (n.kind === "trade" && n.pnl != null) sub = tradeWebSigned(n.pnl);
+        if ((n.status === "sent" || n.status === "origin" || n.status === "traded") && n.value != null) {
+          sub = (n.seat ? (n.seat + " · ") : "") + fmt(n.value);
+        } else if (n.kind === "trade" && n.pnl != null) sub = tradeWebSigned(n.pnl);
         else if (n.mark_pnl != null) sub = "aged " + tradeWebSigned(n.mark_pnl);
         else if (n.deal_pnl != null) sub = tradeWebSigned(n.deal_pnl);
+        else if (n.seat && n.status) sub = n.seat;
         else if (n.value_now != null && n.value_in != null) {
           sub = fmt(n.value_in) + "→" + fmt(n.value_now);
         } else if (n.value != null) sub = fmt(n.value);
         else if (n.status) sub = tradeWebStatusLab(n.status);
         if (sub) {
           nodeSvg += '<text class="tw-node-sub" x="' + p.x + '" y="' + (p.y + 12)
-            + '" text-anchor="middle">' + esc(sub) + "</text>";
+            + '" text-anchor="middle"' + focusAttr + ">" + esc(sub) + "</text>";
         }
       }
 
@@ -16269,9 +16363,10 @@
       if (!web) return "Trade web";
       const name = (web.root && web.root.label) || "player";
       const trail = web.trail_pnl != null ? tradeWebSigned(web.trail_pnl) : "—";
-      return (web.seat || "Seat") + " traded away " + name
-        + (web.partner ? (" to " + web.partner) : "")
-        + (web.date ? (" · " + web.date) : "")
+      const origin = web.origin && web.origin.seat ? web.origin.seat : (web.seat || "—");
+      const now = web.now && web.now.seat ? web.now.seat : "—";
+      return name + ": " + origin + " → " + now
+        + (web.n_hops != null ? (" · " + web.n_hops + " hop" + (Number(web.n_hops) === 1 ? "" : "s")) : "")
         + " · trail " + trail;
     }
 
@@ -16381,7 +16476,7 @@
 
     function tradeWebShareNow(webIdx) {
       const picked = tradeWebPlayerByKey(tradeWebPickKey);
-      const web = picked && picked.webs && picked.webs[Number(webIdx) || 0];
+      const web = tradeWebActiveWeb(picked);
       const vizSel = '#app [data-trade-web-viz="' + String(Number(webIdx) || 0) + '"] .trade-web-svg';
       if (!web || !document.querySelector(vizSel)) {
         tradeWebShareNote = "Web not ready to copy.";
@@ -16475,42 +16570,113 @@
         + "Later trades = P&amp;L when a return piece was traded again. Trail = net value created or destroyed.</p>";
     }
 
+    function tradeWebSpineHtml(web) {
+      const spine = web && web.spine ? web.spine : [];
+      if (!spine.length) return "";
+      let html = '<p class="pf-why-h">Path</p><p class="caption">';
+      html += spine.map(function (s) {
+        const bit = esc(s.seat || "—");
+        if (s.exit && s.exit.to) return bit + " → " + esc(s.exit.to);
+        return bit;
+      }).join(" · ");
+      html += "</p>";
+      return html;
+    }
+
+    function tradeWebFocusPanel(web) {
+      if (!tradeWebFocusKey || !web || !web.root_node) return "";
+      const want = String(tradeWebFocusKey);
+      function find(node) {
+        if (!node) return null;
+        if (String(node.asset_key) === want) return node;
+        const kids = node.children || [];
+        for (let i = 0; i < kids.length; i++) {
+          const hit = find(kids[i]);
+          if (hit) return hit;
+        }
+        return null;
+      }
+      const node = find(web.root_node);
+      if (!node) return "";
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">Selected piece</p>';
+      html += "<p><b>" + esc(node.label || "—") + "</b>"
+        + (node.seat ? (" · " + esc(node.seat)) : "")
+        + (node.status ? (" · " + esc(tradeWebStatusLab(node.status))) : "")
+        + "</p>";
+      if (node.value_in != null || node.value_now != null || node.deal_pnl != null) {
+        html += "<p>"
+          + (node.value_in != null ? ("In " + esc(fmt(node.value_in))) : "")
+          + (node.value_now != null ? (" · now " + esc(fmt(node.value_now))) : "")
+          + (node.mark_pnl != null ? (" · aged " + esc(tradeWebSigned(node.mark_pnl))) : "")
+          + (node.deal_pnl != null ? (" · deal " + esc(tradeWebSigned(node.deal_pnl))) : "")
+          + "</p>";
+      }
+      if (node.exit && node.exit.to) {
+        html += "<p>Sent " + esc(String(node.exit.date || ""))
+          + " to " + esc(node.exit.to) + ".</p>";
+      }
+      if (String(node.asset_key || "").indexOf("player:") === 0
+        && String(node.asset_key) !== String(web.root && web.root.asset_key)) {
+        html += '<p><button type="button" class="chip" data-trade-web-open="'
+          + esc(String(node.asset_key)) + '">Open full web</button></p>';
+      }
+      html += '<p><button type="button" class="chip" data-trade-web-focus-clear="1">Clear selection</button></p>';
+      html += "</div>";
+      return html;
+    }
+
     function tradeWebExitHtml(web, webIdx) {
       if (!web) return "";
       let html = '<div class="trade-web-tree">';
-      html += '<p class="trade-web-root">' + esc(web.seat || "Seat")
-        + " traded away <b>" + esc((web.root && web.root.label) || "player") + "</b>"
-        + (web.partner ? (" to " + esc(web.partner)) : "")
-        + (web.date ? (" · " + esc(web.date)) : "")
+      const origin = web.origin && web.origin.seat ? web.origin.seat : (web.seat || "—");
+      const now = web.now && web.now.seat ? web.now.seat : "—";
+      html += '<p class="trade-web-root"><b>' + esc((web.root && web.root.label) || "player") + "</b>"
+        + " · " + esc(origin) + " → " + esc(now)
+        + (web.n_hops != null ? (" · " + esc(String(web.n_hops)) + " hop"
+          + (Number(web.n_hops) === 1 ? "" : "s")) : "")
         + "</p>";
       html += tradeWebPnlStrip(web);
       if (web.thesis) html += '<p class="caption">' + esc(web.thesis) + "</p>";
-      html += tradeWebGraphSvg(web, webIdx || 0);
-      html += '<p class="pf-why-h">What it turned into</p>';
-      const branches = web.branches || [];
+      html += tradeWebSpineHtml(web);
+      html += tradeWebFocusPanel(web);
+      if (web.root_node || (web.branches && web.branches.length)) {
+        html += tradeWebGraphSvg(web, webIdx || 0);
+      } else {
+        html += '<p class="caption">Loading full lineage…</p>';
+      }
+      html += '<div class="trade-web-pkg">';
+      html += '<p class="pf-why-h">Package tree</p>';
+      const root = web.root_node;
+      const branches = root ? (root.children || []) : (web.branches || []);
       if (!branches.length) {
-        html += '<p class="caption">No return bag on that deal.</p>';
+        html += '<p class="caption">No package branches on the book yet.</p>';
       } else {
         html += branches.map(function (b) { return tradeWebNodeHtml(b, 0); }).join("");
       }
-      html += "</div>";
+      html += "</div></div>";
       return html;
     }
 
     function tradeWebPlayerHtml(row) {
       if (!row) return "";
-      const webs = row.webs || [];
-      if (!webs.length) return '<p class="caption">No trade exits on the book for this player.</p>';
-      return webs.map(function (w, i) { return tradeWebExitHtml(w, i); }).join("");
+      tradeWebEnsureFull(row);
+      const web = tradeWebActiveWeb(row);
+      if (!web) return '<p class="caption">No lineage on the book for this player.</p>';
+      const loading = tradeWebFullLoading && String(tradeWebFullLoading) === String(row.player_id)
+        && !(row.player_id && tradeWebFullById[String(row.player_id)]);
+      return (loading ? '<p class="caption">Loading full web…</p>' : "")
+        + tradeWebExitHtml(web, 0);
     }
 
     function tradeWebRowHtml(p) {
       const trail = p.trail_pnl != null ? tradeWebSigned(p.trail_pnl) : "—";
+      const path = (p.origin_lab || "") + (p.now_lab ? (" → " + p.now_lab) : "");
       return '<button type="button" class="trade-web-pick-row" data-trade-web-pick="'
         + esc(String(p.key || p.asset_key || "")) + '">'
         + '<div class="row-top"><div><div class="names">' + esc(p.name || "—") + "</div>"
-        + '<div class="date">' + esc(p.seat_lab || "")
-        + (p.n_exits ? (" · " + p.n_exits + " exit" + (p.n_exits === 1 ? "" : "s")) : "")
+        + '<div class="date">' + esc(path || p.seat_lab || "")
+        + (p.n_hops != null ? (" · " + p.n_hops + " hop" + (p.n_hops === 1 ? "" : "s")) : "")
         + "</div></div>"
         + '<div class="margin ' + tradeWebPnlClass(p.trail_pnl) + '">' + esc(trail) + "</div></div>"
         + "</button>";
@@ -16523,7 +16689,7 @@
       const picked = tradeWebPlayerByKey(tradeWebPickKey);
       if (picked) {
         return '<div class="trade-web-search">'
-          + '<p class="caption"><button type="button" class="chip" data-trade-web-clear="1">← Players</button> '
+          + '<p class="caption"><button type="button" class="chip back" data-trade-web-clear="1">← Players</button> '
           + esc(picked.name) + "</p></div>"
           + tradeWebPlayerHtml(picked);
       }
@@ -16537,14 +16703,14 @@
           + "</div>";
       } else {
         const top = (tradeWebBook.players || []).slice(0, 20);
-        list = '<p class="caption">Search a player — see if later trades grew or destroyed that first piece.</p>'
+        list = '<p class="caption">Search a player — full league path from first seat to now.</p>'
           + '<div class="pipeline-pos-list">'
           + top.map(tradeWebRowHtml).join("")
           + "</div>";
       }
       return '<div class="trade-web-search">'
         + '<label class="receipt-look"><span>Player</span>'
-        + '<input type="search" class="cuffs-q" data-trade-web-q placeholder="Search a player — e.g. Matthew Golden"'
+        + '<input type="search" class="cuffs-q" data-trade-web-q placeholder="Search a player — e.g. Bucky Irving"'
         + ' value="' + esc(q) + '" autocomplete="off" spellcheck="false" aria-label="Search a player">'
         + "</label></div>"
         + list;
@@ -37855,6 +38021,20 @@
         render();
         return true;
       }
+      if (receiptWhoList === "trade_web" && tradeWebPickKey) {
+        tradeWebPickKey = "";
+        tradeWebFocusKey = "";
+        tradeWebQ = "";
+        receiptListWho = "";
+        tradeWebZoom = 1;
+        tradeWebPanX = 0;
+        tradeWebPanY = 0;
+        tradeWebShareNote = "";
+        focusNext = "[data-trade-web-q], .screen-h";
+        if (typeof syncUrl === "function") syncUrl();
+        render();
+        return true;
+      }
       if (view === "trade" && dataDashFromDoor()) { dataDashLeaveTicket(); return true; }
       if (dataDashUnwindOne()) return true;
       if (view === "home" && homeTab === "history" && dataSet) { showDataSetList(); return true; }
@@ -38483,11 +38663,14 @@
         e.preventDefault();
         e.stopPropagation();
         tradeWebPickKey = tradeWebPickBtn.getAttribute("data-trade-web-pick") || "";
+        receiptListWho = tradeWebPickKey || "";
         tradeWebQ = "";
+        tradeWebFocusKey = "";
         tradeWebZoom = 1;
         tradeWebPanX = 0;
         tradeWebPanY = 0;
         tradeWebShareNote = "";
+        if (typeof syncUrl === "function") syncUrl();
         if (typeof render === "function") render();
         return;
       }
@@ -38496,10 +38679,54 @@
         e.preventDefault();
         e.stopPropagation();
         tradeWebPickKey = "";
+        tradeWebFocusKey = "";
+        receiptListWho = "";
         tradeWebZoom = 1;
         tradeWebPanX = 0;
         tradeWebPanY = 0;
         tradeWebShareNote = "";
+        focusNext = "[data-trade-web-q], .screen-h";
+        if (typeof syncUrl === "function") syncUrl();
+        if (typeof render === "function") render();
+        return;
+      }
+      const tradeWebOpenBtn = e.target.closest("[data-trade-web-open]");
+      if (tradeWebOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const openKey = tradeWebOpenBtn.getAttribute("data-trade-web-open") || "";
+        if (openKey) {
+          tradeWebPickKey = openKey;
+          receiptListWho = openKey;
+          tradeWebFocusKey = "";
+          tradeWebQ = "";
+          tradeWebZoom = 1;
+          tradeWebPanX = 0;
+          tradeWebPanY = 0;
+          tradeWebShareNote = "";
+          if (typeof syncUrl === "function") syncUrl();
+          if (typeof render === "function") render();
+        }
+        return;
+      }
+      const tradeWebFocusBtn = e.target.closest("[data-trade-web-focus]");
+      if (tradeWebFocusBtn) {
+        // SVG nodes focus via pointerup; HTML package-tree labels use click.
+        if (tradeWebFocusBtn.closest && tradeWebFocusBtn.closest("[data-trade-web-stage]")) {
+          return;
+        }
+        e.preventDefault();
+        e.stopPropagation();
+        const fk = tradeWebFocusBtn.getAttribute("data-trade-web-focus") || "";
+        tradeWebFocusKey = (String(tradeWebFocusKey) === String(fk)) ? "" : fk;
+        if (typeof render === "function") render();
+        return;
+      }
+      const tradeWebFocusClearBtn = e.target.closest("[data-trade-web-focus-clear]");
+      if (tradeWebFocusClearBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        tradeWebFocusKey = "";
         if (typeof render === "function") render();
         return;
       }
@@ -40587,7 +40814,20 @@
         render();
       }
       const twStage = e.target.closest && e.target.closest("[data-trade-web-stage]");
-      if (twStage && e.isPrimary !== false && !(tradeWebPtr && tradeWebPtr.mode === "pinch")) {
+      const twFocusHit = e.target.closest && e.target.closest("[data-trade-web-focus]");
+      if (twStage && twFocusHit && e.isPrimary !== false
+        && !(tradeWebPtr && tradeWebPtr.mode === "pinch")) {
+        // Tap-to-focus on SVG nodes — do not start a pan that eats the gesture.
+        tradeWebPtr = {
+          mode: "focus",
+          id: e.pointerId,
+          x: e.clientX,
+          y: e.clientY,
+          key: twFocusHit.getAttribute("data-trade-web-focus") || "",
+        };
+        try { twStage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      } else if (twStage && !twFocusHit && e.isPrimary !== false
+        && !(tradeWebPtr && tradeWebPtr.mode === "pinch")) {
         tradeWebPtr = {
           mode: "pan",
           id: e.pointerId,
@@ -40613,7 +40853,15 @@
       if (!tradeWebPtr || (e && e.pointerId != null && e.pointerId !== tradeWebPtr.id)) return;
       const wrap = document.querySelector("#app [data-trade-web-stage]");
       if (wrap) wrap.classList.remove("is-panning");
+      const mode = tradeWebPtr.mode;
+      const key = tradeWebPtr.key || "";
+      const moved = Math.abs((e.clientX || 0) - tradeWebPtr.x) > 6
+        || Math.abs((e.clientY || 0) - tradeWebPtr.y) > 6;
       tradeWebPtr = null;
+      if (mode === "focus" && !moved && key) {
+        tradeWebFocusKey = (String(tradeWebFocusKey) === String(key)) ? "" : key;
+        if (typeof render === "function") render();
+      }
     }
     document.getElementById("app").addEventListener("pointerup", tradeWebPtrEnd);
     document.getElementById("app").addEventListener("pointercancel", tradeWebPtrEnd);
@@ -40924,6 +41172,11 @@
       if (tradeWebQBox) {
         tradeWebQ = tradeWebQBox.value || "";
         tradeWebPickKey = "";
+        tradeWebFocusKey = "";
+        if (receiptListWho) {
+          receiptListWho = "";
+          if (typeof syncUrl === "function") syncUrl();
+        }
         const start = tradeWebQBox.selectionStart;
         const end = tradeWebQBox.selectionEnd;
         render();

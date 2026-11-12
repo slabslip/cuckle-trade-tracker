@@ -4,16 +4,18 @@
  *
  *   node build-trade-web.mjs [league_id]
  *
- * Maps what each traded-away player turned into for the seat that sent them,
- * with DynastyProcess flatten P&L on each connector.
+ * Writes:
+ *   ui/trade-web.json           — searchable index (spine + origin/now, no deep tree)
+ *   ui/trade-web/p/<id>.json    — full lineage web per player (click to open)
  */
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import {
   CUCKLE_LEAGUE_ID,
   DATA,
   LEAGUE_ID,
   detectLeagueFormat,
   leagueRawDir,
+  leagueUiDir,
   readJson,
   readUi,
   setLeagueId,
@@ -59,48 +61,96 @@ const book = buildTradeWebBook({
   leagueId: LEAGUE_ID,
   asOf: new Date().toISOString().slice(0, 10),
 });
-writeUi("trade-web.json", book);
+
+function stripDeep(web) {
+  if (!web) return null;
+  return {
+    root: web.root,
+    origin: web.origin || null,
+    now: web.now || null,
+    spine: web.spine || [],
+    seat: web.seat,
+    partner: web.partner || null,
+    date: web.date || null,
+    n_hops: web.n_hops || 0,
+    thesis: web.thesis || "",
+    gave_value: web.gave_value,
+    got_value: web.got_value,
+    deal_pnl: web.deal_pnl,
+    mark_pnl: web.mark_pnl,
+    realized_pnl: web.realized_pnl,
+    trail_pnl: web.trail_pnl,
+    // Deep tree lives in trade-web/p/<id>.json
+    root_node: null,
+    branches: [],
+  };
+}
+
+const playerDir = `${leagueUiDir()}/trade-web/p`;
+mkdirSync(playerDir, { recursive: true });
+// Clear stale player files from prior builds.
+try {
+  rmSync(playerDir, { recursive: true, force: true });
+} catch (err) { /* ignore */ }
+mkdirSync(playerDir, { recursive: true });
+
+let fullBytes = 0;
+for (const p of book.players || []) {
+  const full = (p.webs && p.webs[0]) || null;
+  if (!full) continue;
+  const body = JSON.stringify({ v: book.v, player_id: p.player_id, name: p.name, web: full }) + "\n";
+  const path = `${playerDir}/${p.player_id}.json`;
+  writeFileSync(path, body);
+  fullBytes += body.length;
+  if (LEAGUE_ID === CUCKLE_LEAGUE_ID) {
+    const legacyDir = `${DATA}/ui/trade-web/p`;
+    mkdirSync(legacyDir, { recursive: true });
+    writeFileSync(`${legacyDir}/${p.player_id}.json`, body);
+  }
+  p.webs = [stripDeep(full)];
+  p.full = `trade-web/p/${p.player_id}.json`;
+}
+
+const index = {
+  ...book,
+  full_dir: "trade-web/p",
+};
+writeUi("trade-web.json", index);
 
 const golden = (book.players || []).find((p) => String(p.player_id) === "12501"
   || String(p.name).toLowerCase().includes("matthew golden"));
+const bucky = (book.players || []).find((p) => String(p.player_id) === "11584"
+  || String(p.name).toLowerCase().includes("bucky"));
+
+function peek(p) {
+  if (!p) return null;
+  const w = p.webs && p.webs[0];
+  return {
+    name: p.name,
+    n_hops: p.n_hops,
+    origin: p.origin_lab,
+    now: p.now_lab,
+    trail_pnl: p.trail_pnl,
+    thesis: w && w.thesis,
+    full: p.full,
+  };
+}
+
 console.log(JSON.stringify({
   ok: true,
   v: book.v,
   n_players: book.n_players,
   curve: curveName,
-  pricing: book.pricing,
+  index_bytes: JSON.stringify(index).length,
+  full_bytes: fullBytes,
   sample: (book.players || []).slice(0, 5).map((p) => ({
     name: p.name,
-    n_exits: p.n_exits,
+    n_hops: p.n_hops,
     trail_pnl: p.trail_pnl,
-    seats: p.seats,
+    origin: p.origin_lab,
+    now: p.now_lab,
   })),
-  golden: golden ? {
-    name: golden.name,
-    n_exits: golden.n_exits,
-    trail_pnl: golden.trail_pnl,
-    webs: (golden.webs || []).map((w) => ({
-      seat: w.seat,
-      date: w.date,
-      partner: w.partner,
-      gave_value: w.gave_value,
-      got_value: w.got_value,
-      deal_pnl: w.deal_pnl,
-      mark_pnl: w.mark_pnl,
-      trail_pnl: w.trail_pnl,
-      thesis: w.thesis,
-      graph_nodes: w.graph && w.graph.nodes ? w.graph.nodes.length : 0,
-      graph_edges: w.graph && w.graph.edges ? w.graph.edges.length : 0,
-      branches: (w.branches || []).map((b) => ({
-        label: b.label,
-        status: b.status,
-        value_in: b.value_in,
-        value_now: b.value_now,
-        mark_pnl: b.mark_pnl,
-        deal_pnl: b.deal_pnl,
-        children: (b.children || []).map((c) => c.label),
-      })),
-    })),
-  } : null,
-  out: "ui/trade-web.json",
+  golden: peek(golden),
+  bucky: peek(bucky),
+  out: "ui/trade-web.json + ui/trade-web/p/*.json",
 }, null, 2));

@@ -24,13 +24,19 @@ for (const need of [
   "function tradeWebGraphSvg(",
   "function tradeWebBuildGraph(",
   "function tradeWebPnlStrip(",
+  "function tradeWebShareNow(",
+  "function tradeWebZoomBy(",
   'data-trade-web-q',
   'data-trade-web-pick="',
+  'data-trade-web-zoom=',
+  'data-trade-web-share=',
+  'data-trade-web-stage',
   'getLeagueJson("trade-web.json")',
   "tradeWebPickKey",
   "const DATA_DASH_MAX = 20",
   'src.splice(after + 1, 0, "trade_web")',
   "trade-web-svg",
+  "Copy image",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }

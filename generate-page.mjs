@@ -5203,7 +5203,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeWebFull20261112220000";
+    const DATA_V = "pastChampionsChip20261112223000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5270,13 +5270,14 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 20;
+    const DATA_DASH_MAX = 21;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "past_champions",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5292,6 +5293,7 @@ const html = `<!DOCTYPE html>
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "past_champions",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
@@ -13895,7 +13897,7 @@ const html = `<!DOCTYPE html>
       const keepTop = {
         projected_finish: 1, my_draft: 1, manager_archetypes: 1, season_arcs: 1,
       };
-      const softDrop = ["past_champions", "season_place", "league_draft",
+      const softDrop = ["season_place", "league_draft",
         "league_trades", "week_scores", "draft_board"];
       const softDropAt = function (fromIdx) {
         for (let d = 0; d < softDrop.length; d++) {
@@ -14004,6 +14006,14 @@ const html = `<!DOCTYPE html>
         const after = src.indexOf("ring_leaders");
         if (after >= 0) src.splice(after + 1, 0, "trade_web");
         else src.push("trade_web");
+      }
+      // Dynasty: add Past champions after Trade web — never replace a tile.
+      // (Biggest choker may have swapped it off older boards; put it back.)
+      if (dynasty && src.indexOf("past_champions") < 0 && dataDashById("past_champions")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("trade_web");
+        if (after >= 0) src.splice(after + 1, 0, "past_champions");
+        else src.push("past_champions");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -43066,19 +43076,20 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 20 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 21 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
     || defIds.indexOf("cornerstone_trades") < 0
+    || defIds.indexOf("past_champions") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 20 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 21 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 20 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 20 default door tiles");
+  if (doorIds.length !== 21 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 21 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
@@ -43110,8 +43121,9 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes('src[champAt] = "biggest_choker"')
     || !fnSrc("dataDashMigrateMyPicks").includes('src[placeAt] = "head_to_head"')
     || !fnSrc("dataDashMigrateMyPicks").includes('src[passedAt] = "waiver_winners"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "past_champions")')
     || fnSrc("dataDashMigrateMyPicks").includes('src[src.length - 1] = "trade_helper"')) {
-    throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype + Biggest choker + Head to head + Waiver winners on saved dynasty boards");
+    throw new Error("Your board must surface Trade helper + soft-pin Season arcs + Best Ball Hype + Biggest choker + Head to head + Waiver winners + Past champions on saved dynasty boards");
   }
   if (!uniq.has("best_ball_hype") || defIds[14] !== "best_ball_hype" || doorIds[14] !== "best_ball_hype") {
     throw new Error("Best Ball Hype must be default board tile 15 (League Data door)");
@@ -43130,6 +43142,9 @@ if (!inline.includes("function dataDashHtml(")
   }
   if (!uniq.has("trade_web") || defIds[19] !== "trade_web" || doorIds[19] !== "trade_web") {
     throw new Error("Trade web must be default board tile 20 (League Data door)");
+  }
+  if (!uniq.has("past_champions") || defIds[20] !== "past_champions" || doorIds[20] !== "past_champions") {
+    throw new Error("Past champions must be default board tile 21 (League Data door)");
   }
   if (!inline.includes('id: "closest_games"')
     || !inline.includes('lab: "Closest games"')
@@ -44154,7 +44169,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 20")) {
+  || !inline.includes("const DATA_DASH_MAX = 21")) {
   throw new Error("Waiver winners must stay on League Data with three top-10 bands");
 }
 if (!inline.includes('id: "cornerstone_trades"')

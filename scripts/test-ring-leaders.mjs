@@ -27,7 +27,7 @@ for (const need of [
   'getLeagueJson("ring-leaders.json")',
   "ringLeadersOpenKey",
   "Top 25 players by league championship rings",
-  "const DATA_DASH_MAX = 20",
+  "const DATA_DASH_MAX = 21",
   'src.splice(after + 1, 0, "ring_leaders")',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -37,8 +37,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 20 || defIds.length !== 20) {
-    fail("DATA_DOORS / DEFAULT must be 20 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 21 || defIds.length !== 21) {
+    fail("DATA_DOORS / DEFAULT must be 21 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[18] !== "ring_leaders" || defIds[18] !== "ring_leaders") {
     fail("Ring leaders must be door tile 19");
@@ -75,7 +75,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Ring leaders",
-  doors: 20,
+  doors: 21,
   n_players: book.n_players,
   top: book.players.slice(0, 5).map((p) => ({
     rank: p.rank,

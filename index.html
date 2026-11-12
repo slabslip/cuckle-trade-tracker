@@ -5195,7 +5195,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeWebFull20261112220000";
+    const DATA_V = "pastChampionsChip20261112223000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5262,13 +5262,14 @@
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 20;
+    const DATA_DASH_MAX = 21;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "past_champions",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5284,6 +5285,7 @@
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "past_champions",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
@@ -13887,7 +13889,7 @@
       const keepTop = {
         projected_finish: 1, my_draft: 1, manager_archetypes: 1, season_arcs: 1,
       };
-      const softDrop = ["past_champions", "season_place", "league_draft",
+      const softDrop = ["season_place", "league_draft",
         "league_trades", "week_scores", "draft_board"];
       const softDropAt = function (fromIdx) {
         for (let d = 0; d < softDrop.length; d++) {
@@ -13996,6 +13998,14 @@
         const after = src.indexOf("ring_leaders");
         if (after >= 0) src.splice(after + 1, 0, "trade_web");
         else src.push("trade_web");
+      }
+      // Dynasty: add Past champions after Trade web — never replace a tile.
+      // (Biggest choker may have swapped it off older boards; put it back.)
+      if (dynasty && src.indexOf("past_champions") < 0 && dataDashById("past_champions")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("trade_web");
+        if (after >= 0) src.splice(after + 1, 0, "past_champions");
+        else src.push("past_champions");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");

@@ -27,7 +27,7 @@ for (const need of [
   'getLeagueJson("closest-games.json")',
   "closestGamesOpenKey",
   "Top 10 closest matches",
-  "const DATA_DASH_MAX = 20",
+  "const DATA_DASH_MAX = 21",
   'src.splice(after + 1, 0, "closest_games")',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -37,8 +37,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0_9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 20 || defIds.length !== 20) {
-    fail("DATA_DOORS / DEFAULT must be 20 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 21 || defIds.length !== 21) {
+    fail("DATA_DOORS / DEFAULT must be 21 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[16] !== "closest_games" || defIds[16] !== "closest_games") {
     fail("Closest games must be door tile 17");
@@ -76,7 +76,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Closest games",
-  doors: 20,
+  doors: 21,
   n_games: book.n_games,
   top: book.games.slice(0, 3).map((g) => ({
     rank: g.rank,

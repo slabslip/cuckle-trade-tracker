@@ -30,7 +30,7 @@ for (const need of [
   "cornerstoneTradesOpenKey",
   "Cornerstone trades: one flat top-10",
   "day they traded",
-  "const DATA_DASH_MAX = 20",
+  "const DATA_DASH_MAX = 21",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -39,8 +39,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 20 || defIds.length !== 20) {
-    fail("DATA_DOORS / DEFAULT must be 20 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 21 || defIds.length !== 21) {
+    fail("DATA_DOORS / DEFAULT must be 21 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[11] !== "cornerstone_trades" || defIds[11] !== "cornerstone_trades") {
     fail("Cornerstone trades must be door tile 12");

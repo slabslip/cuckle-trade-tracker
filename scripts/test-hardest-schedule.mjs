@@ -30,7 +30,7 @@ for (const need of [
   'getLeagueJson("hardest-schedule.json")',
   "hardestScheduleOpenKey",
   "Every seat ranked hardest",
-  "const DATA_DASH_MAX = 21",
+  "const DATA_DASH_MAX = 22",
   'src.splice(after + 1, 0, "hardest_schedule")',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -40,8 +40,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 21 || defIds.length !== 21) {
-    fail("DATA_DOORS / DEFAULT must be 21 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 22 || defIds.length !== 22) {
+    fail("DATA_DOORS / DEFAULT must be 22 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[17] !== "hardest_schedule" || defIds[17] !== "hardest_schedule") {
     fail("Hardest remaining schedule must be door tile 18");
@@ -81,7 +81,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Toughest schedule",
-  doors: 21,
+  doors: 22,
   n: book.n,
   remaining_weeks: book.remaining_weeks,
   top: book.seats.slice(0, 3).map((s) => ({

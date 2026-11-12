@@ -39,7 +39,7 @@ for (const need of [
   'getLeagueJson("trade-web.json")',
   "tradeWebPickKey",
   "Number(tradeWebRaw.v) >= 3",
-  "const DATA_DASH_MAX = 21",
+  "const DATA_DASH_MAX = 22",
   'src.splice(after + 1, 0, "trade_web")',
   "trade-web-svg",
   "Copy full web",
@@ -60,8 +60,8 @@ if (!gen.includes("maxGraph")
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 21 || defIds.length !== 21) {
-    fail("DATA_DOORS / DEFAULT must be 21 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 22 || defIds.length !== 22) {
+    fail("DATA_DOORS / DEFAULT must be 22 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[19] !== "trade_web" || defIds[19] !== "trade_web") {
     fail("Trade web must be door tile 20");
@@ -120,7 +120,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Trade web",
-  doors: 21,
+  doors: 22,
   n_players: book.n_players,
   golden: {
     origin: web.origin?.seat,

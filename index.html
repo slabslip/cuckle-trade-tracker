@@ -5155,6 +5155,7 @@
     let biggestChokerOpenKey = "";
     let closestGamesOpenKey = "";
     let hardestScheduleOpenKey = "";
+    let medianMonitorOpenKey = "";
     let ringLeadersOpenKey = "";
     let tradeWebQ = "";
     let tradeWebPickKey = "";
@@ -5195,7 +5196,7 @@
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeWebShareFull20261112224500";
+    const DATA_V = "medianMonitor20261112230000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5262,14 +5263,14 @@
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 21;
+    const DATA_DASH_MAX = 22;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions",
+      "past_champions", "median_monitor",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5285,13 +5286,14 @@
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions",
+      "past_champions", "median_monitor",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
       "cornerstone_trades", "pipeline", "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "median_monitor",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5309,6 +5311,7 @@
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "median_monitor",
       "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -5349,6 +5352,7 @@
       { id: "hardest_schedule", lab: "Toughest schedule", desk: "lists", group: "memory", size: "full", why: "Every seat ranked by rest-of-regular-season strength of schedule. Rebuilds each week with Expected finish. Tap a seat for the remaining slate." },
       { id: "ring_leaders", lab: "Ring leaders", desk: "lists", group: "memory", size: "full", why: "Top 25 players by league championship rings. A ring counts when they were rostered on that year's champion. Tap a row for the title teams." },
       { id: "trade_web", lab: "Trade web", desk: "lists", group: "memory", size: "full", why: "Pick a player. Full league lineage from first seat to now — every manager, every package along the way. Tap a piece to open its web." },
+      { id: "median_monitor", lab: "Median monitor", desk: "lists", group: "who", size: "full", why: "This season under Sleeper’s extra game vs league median — H2H plus above/below median each week. Tap a seat for the week tape." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5476,6 +5480,7 @@
     let biggestChokerBook = null;
     let closestGamesBook = null;
     let hardestScheduleBook = null;
+    let medianMonitorBook = null;
     let ringLeadersBook = null;
     let tradeWebBook = null;
     let bestWaiverPickupsBook = null;
@@ -5942,7 +5947,8 @@
         || canon === "season_arcs" || canon === "manager_archetypes"
         || canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades" || canon === "pipeline"
-        || canon === "closest_games" || canon === "hardest_schedule" || canon === "ring_leaders"
+        || canon === "closest_games" || canon === "hardest_schedule" || canon === "median_monitor"
+        || canon === "ring_leaders"
         || canon === "trade_web"
         || canon === "head_to_head";
     }
@@ -6236,6 +6242,26 @@
           };
         });
       }
+      if (canon === "median_monitor") {
+        const seats = (medianMonitorBook && Array.isArray(medianMonitorBook.seats))
+          ? medianMonitorBook.seats.slice() : [];
+        return seats.map(function (s, i) {
+          return {
+            key: String(s.key || s.user_id || i),
+            name: s.name,
+            metric: s.combined_record || "—",
+            sub: ("H2H " + (s.h2h_record || "—")
+              + " · med " + (s.median_record || "—")
+              + (s.place_h2h != null
+                ? (" · H2H #" + s.place_h2h + " → #" + (s.place_combined || s.rank))
+                : "")
+              + (s.delta_lab && s.delta_lab !== "—" ? (" " + s.delta_lab) : "")
+              + " · tap for weeks"),
+            rank: Number(s.rank) || (i + 1),
+            seat: s,
+          };
+        });
+      }
       if (canon === "ring_leaders") {
         const players = (ringLeadersBook && Array.isArray(ringLeadersBook.players))
           ? ringLeadersBook.players.slice() : [];
@@ -6511,6 +6537,11 @@
       // Hardest remaining schedule: full league ranked hardest → easiest.
       if (id === "hardest_schedule" || (typeof receiptDoorCanon === "function"
         && receiptDoorCanon(id) === "hardest_schedule")) {
+        return picked.map(wrap).join("");
+      }
+      // Median monitor: full league ranked by combined H2H + vs-median.
+      if (id === "median_monitor" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "median_monitor")) {
         return picked.map(wrap).join("");
       }
       // Ring leaders: flat top-25 by championship rings.
@@ -8141,7 +8172,8 @@
         || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
-        || id === "hardest_schedule" || id === "ring_leaders" || id === "trade_web"
+        || id === "hardest_schedule" || id === "median_monitor" || id === "ring_leaders"
+        || id === "trade_web"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
@@ -8203,7 +8235,8 @@
       if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes"
         || key === "best_ball_hype" || key === "biggest_choker"
         || key === "waiver_winners" || key === "cornerstone_trades" || key === "pipeline"
-        || key === "closest_games" || key === "hardest_schedule" || key === "ring_leaders"
+        || key === "closest_games" || key === "hardest_schedule" || key === "median_monitor"
+        || key === "ring_leaders"
         || key === "trade_web"
         || key === "head_to_head") return false;
       if (isFinishCareerTile(key)) return false;
@@ -8221,7 +8254,8 @@
       if (canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades"
         || canon === "pipeline" || canon === "closest_games"
-        || canon === "hardest_schedule" || canon === "ring_leaders" || canon === "trade_web"
+        || canon === "hardest_schedule" || canon === "median_monitor"
+        || canon === "ring_leaders" || canon === "trade_web"
         || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
@@ -8275,6 +8309,7 @@
         pipeline: '<path d="M4 12h16M8 8v8M16 8v8M12 6v12"/>',
         closest_games: '<path d="M4 12h16"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>',
         hardest_schedule: '<path d="M4 19V9l4 3 4-5 4 4v8z"/><path d="M4 19h16"/>',
+        median_monitor: '<path d="M4 12h16"/><path d="M12 4v16"/><circle cx="12" cy="12" r="3"/>',
         ring_leaders: '<path d="M8 6h8v2.5l-1.2.8V11H9.2V9.3L8 8.5V6z"/><path d="M7 18h10"/><path d="M9 11v7M15 11v7M12 11v7"/>',
         trade_web: '<circle cx="6" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M12 8v2M12 14v2M14 12h2"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
@@ -8355,6 +8390,11 @@
       } else if (id === "hardest_schedule") {
         const lead = hardestScheduleBook && hardestScheduleBook.seats && hardestScheduleBook.seats[0];
         if (lead) fig = receiptDoorLeadFig(lead.name, lead.sos_lab || "");
+      } else if (id === "median_monitor") {
+        const lead = medianMonitorBook && medianMonitorBook.seats && medianMonitorBook.seats[0];
+        if (lead) {
+          fig = receiptDoorLeadFig(lead.name, lead.combined_record || "");
+        }
       } else if (id === "ring_leaders") {
         const lead = ringLeadersBook && ringLeadersBook.players && ringLeadersBook.players[0];
         if (lead) fig = receiptDoorLeadFig(lead.player, String(lead.rings != null ? lead.rings : ""));
@@ -9501,12 +9541,14 @@
       if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
-        || id === "hardest_schedule" || id === "ring_leaders") {
+        || id === "hardest_schedule" || id === "median_monitor" || id === "ring_leaders") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank,
             r.seat && r.seat.picker, r.seat && r.seat.player,
             r.seat && r.seat.asset, r.seat && r.seat.to_name,
             r.seat && r.seat.sos_lab, r.seat && r.seat.thesis,
+            r.seat && r.seat.combined_record, r.seat && r.seat.h2h_record,
+            r.seat && r.seat.median_record,
             r.seat && r.seat.team_lab, r.seat && (r.seat.teams || []).join(" ")]);
         });
         if (!items.length) {
@@ -9530,6 +9572,9 @@
           }
           if (id === "hardest_schedule" && !hardestScheduleBook) {
             return '<p class="caption">Toughest schedule book not loaded yet.</p>';
+          }
+          if (id === "median_monitor" && !medianMonitorBook) {
+            return '<p class="caption">Median monitor book not loaded yet.</p>';
           }
           if (id === "ring_leaders" && !ringLeadersBook) {
             return '<p class="caption">Ring leaders book not loaded yet.</p>';
@@ -9666,6 +9711,24 @@
               + "</button>"
               + (open
                 ? ('<div class="detail">' + hardestScheduleDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
+          if (id === "median_monitor") {
+            const open = String(medianMonitorOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-median-monitor-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + medianMonitorDetailHtml(r.seat) + "</div>")
                 : "")
               + "</div>";
           }
@@ -9814,6 +9877,17 @@
           + " Same SoS as Expected finish (mean remaining-opponent adjusted pythagorean)."
           + (rem ? (" Weeks " + rem + ".") : "")
           + " Hellscape = hardest · Cupcake = easiest. Rebuilds each week. Tap a seat for the remaining slate.";
+      }
+      else if (id === "median_monitor") {
+        const wk = medianMonitorBook && Array.isArray(medianMonitorBook.weeks)
+          ? medianMonitorBook.weeks : [];
+        const season = medianMonitorBook && medianMonitorBook.season != null
+          ? String(medianMonitorBook.season) : "This";
+        caption = season + " season under Sleeper’s Extra Game vs League Median."
+          + " Each regular-season week: H2H result + above/below median (exact = tie)."
+          + " Median = average of the two middle scores."
+          + (wk.length ? (" Weeks 1–" + wk[wk.length - 1] + " on the book.") : "")
+          + " Big number is the combined record. Tap a seat for the week tape.";
       }
       else if (id === "ring_leaders") {
         caption = "Top 25 players by league championship rings."
@@ -12212,6 +12286,7 @@
       biggestChokerBook = null;
       closestGamesBook = null;
       hardestScheduleBook = null;
+      medianMonitorBook = null;
       ringLeadersBook = null;
       tradeWebBook = null;
       bestWaiverPickupsBook = null;
@@ -12236,6 +12311,7 @@
       biggestChokerOpenKey = "";
       closestGamesOpenKey = "";
       hardestScheduleOpenKey = "";
+      medianMonitorOpenKey = "";
       ringLeadersOpenKey = "";
       cornerstoneTradesOpenKey = "";
       receiptH2hA = "";
@@ -12252,7 +12328,7 @@
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, medianMonitorRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -12274,6 +12350,7 @@
         getLeagueJson("biggest-choker.json").catch(() => null),
         getLeagueJson("closest-games.json").catch(() => null),
         getLeagueJson("hardest-schedule.json").catch(() => null),
+        getLeagueJson("median-monitor.json").catch(() => null),
         getLeagueJson("ring-leaders.json").catch(() => null),
         getLeagueJson("trade-web.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
@@ -12374,6 +12451,10 @@
         hardestScheduleBook = hardestScheduleRaw && Number(hardestScheduleRaw.v) >= 1
           && Array.isArray(hardestScheduleRaw.seats) ? hardestScheduleRaw : null;
       } catch (err) { hardestScheduleBook = null; }
+      try {
+        medianMonitorBook = medianMonitorRaw && Number(medianMonitorRaw.v) >= 1
+          && Array.isArray(medianMonitorRaw.seats) ? medianMonitorRaw : null;
+      } catch (err) { medianMonitorBook = null; }
       try {
         ringLeadersBook = ringLeadersRaw && Number(ringLeadersRaw.v) >= 1
           && Array.isArray(ringLeadersRaw.players) ? ringLeadersRaw : null;
@@ -13677,6 +13758,7 @@
       biggestChokerOpenKey = "";
       closestGamesOpenKey = "";
       hardestScheduleOpenKey = "";
+      medianMonitorOpenKey = "";
       ringLeadersOpenKey = "";
       cornerstoneTradesOpenKey = "";
       pipelineQ = "";
@@ -14006,6 +14088,13 @@
         const after = src.indexOf("trade_web");
         if (after >= 0) src.splice(after + 1, 0, "past_champions");
         else src.push("past_champions");
+      }
+      // Dynasty: add Median monitor after Past champions — never replace a tile.
+      if (dynasty && src.indexOf("median_monitor") < 0 && dataDashById("median_monitor")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("past_champions");
+        if (after >= 0) src.splice(after + 1, 0, "median_monitor");
+        else src.push("median_monitor");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -15878,6 +15967,36 @@
             + (o.opp_record ? (" · " + esc(o.opp_record)) : "")
             + (o.opp_place_now != null ? (" · #" + esc(String(o.opp_place_now))) : "")
             + (winPct ? (" · " + esc(winPct)) : "")
+            + "</p>";
+        });
+      }
+      html += "</div>";
+      return html;
+    }
+
+    function medianMonitorDetailHtml(seat) {
+      if (!seat) return "";
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">In plain English</p>';
+      html += "<p><b>" + esc(seat.name || "Seat") + "</b> · #" + esc(String(seat.rank || "—"))
+        + " on the median board · combined <b>" + esc(seat.combined_record || "—") + "</b>.</p>";
+      if (seat.thesis) html += "<p>" + esc(seat.thesis) + "</p>";
+      html += '<p class="pf-why-h">Week tape</p>';
+      const weeks = seat.weeks || [];
+      if (!weeks.length) {
+        html += '<p class="caption">No regular-season weeks on the book yet.</p>';
+      } else {
+        weeks.forEach(function (w) {
+          const vs = w.vs_median != null
+            ? ((Number(w.vs_median) >= 0 ? "+" : "") + String(w.vs_median))
+            : "—";
+          html += "<p><b>W" + esc(String(w.week != null ? w.week : "—")) + "</b> "
+            + esc(String(w.points != null ? w.points : "—"))
+            + " · med " + esc(String(w.median != null ? w.median : "—"))
+            + " (" + esc(vs) + ")"
+            + " · H2H " + esc(w.h2h_result || "—")
+            + " vs " + esc(w.opp || "—")
+            + " · med " + esc(w.median_result || "—")
             + "</p>";
         });
       }
@@ -19880,6 +19999,15 @@
           lead ? (lead.sos_lab || "Open") : "Open",
           lead ? ((lead.name || "Lead") + " · hardest rem SoS") : "Hardest rest-of-RS · all seats");
       }
+      if (id === "median_monitor") {
+        const lead = medianMonitorBook && medianMonitorBook.seats && medianMonitorBook.seats[0];
+        const nWk = medianMonitorBook && medianMonitorBook.week_count
+          ? (medianMonitorBook.week_count + " wk")
+          : "Open";
+        return dataDashHead(spec,
+          lead ? (lead.combined_record || nWk) : nWk,
+          lead ? ((lead.name || "Lead") + " · vs median board") : "H2H + median · this season");
+      }
       if (id === "ring_leaders") {
         const lead = ringLeadersBook && ringLeadersBook.players && ringLeadersBook.players[0];
         return dataDashHead(spec,
@@ -20169,6 +20297,7 @@
         biggestChokerOpenKey = "";
         closestGamesOpenKey = "";
         hardestScheduleOpenKey = "";
+        medianMonitorOpenKey = "";
         ringLeadersOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
@@ -26308,6 +26437,7 @@
         biggestChokerOpenKey = "";
         closestGamesOpenKey = "";
         hardestScheduleOpenKey = "";
+        medianMonitorOpenKey = "";
         ringLeadersOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
@@ -38681,6 +38811,15 @@
         if (typeof render === "function") render();
         return;
       }
+      const medianMonitorOpenBtn = e.target.closest("[data-median-monitor-open]");
+      if (medianMonitorOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = medianMonitorOpenBtn.getAttribute("data-median-monitor-open") || "";
+        medianMonitorOpenKey = (String(medianMonitorOpenKey) === String(key)) ? "" : key;
+        if (typeof render === "function") render();
+        return;
+      }
       const ringLeadersOpenBtn = e.target.closest("[data-ring-leaders-open]");
       if (ringLeadersOpenBtn) {
         e.preventDefault();
@@ -38990,6 +39129,7 @@
         biggestChokerOpenKey = "";
         closestGamesOpenKey = "";
         hardestScheduleOpenKey = "";
+        medianMonitorOpenKey = "";
         ringLeadersOpenKey = "";
         receiptH2hA = "";
         receiptH2hB = "";

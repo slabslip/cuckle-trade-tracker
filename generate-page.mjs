@@ -5163,6 +5163,7 @@ const html = `<!DOCTYPE html>
     let biggestChokerOpenKey = "";
     let closestGamesOpenKey = "";
     let hardestScheduleOpenKey = "";
+    let medianMonitorOpenKey = "";
     let ringLeadersOpenKey = "";
     let tradeWebQ = "";
     let tradeWebPickKey = "";
@@ -5203,7 +5204,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "tradeWebShareFull20261112224500";
+    const DATA_V = "medianMonitor20261112230000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5270,14 +5271,14 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 21;
+    const DATA_DASH_MAX = 22;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions",
+      "past_champions", "median_monitor",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5293,13 +5294,14 @@ const html = `<!DOCTYPE html>
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions",
+      "past_champions", "median_monitor",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
       "cornerstone_trades", "pipeline", "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "median_monitor",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5317,6 +5319,7 @@ const html = `<!DOCTYPE html>
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
+      "median_monitor",
       "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -5357,6 +5360,7 @@ const html = `<!DOCTYPE html>
       { id: "hardest_schedule", lab: "Toughest schedule", desk: "lists", group: "memory", size: "full", why: "Every seat ranked by rest-of-regular-season strength of schedule. Rebuilds each week with Expected finish. Tap a seat for the remaining slate." },
       { id: "ring_leaders", lab: "Ring leaders", desk: "lists", group: "memory", size: "full", why: "Top 25 players by league championship rings. A ring counts when they were rostered on that year's champion. Tap a row for the title teams." },
       { id: "trade_web", lab: "Trade web", desk: "lists", group: "memory", size: "full", why: "Pick a player. Full league lineage from first seat to now — every manager, every package along the way. Tap a piece to open its web." },
+      { id: "median_monitor", lab: "Median monitor", desk: "lists", group: "who", size: "full", why: "This season under Sleeper’s extra game vs league median — H2H plus above/below median each week. Tap a seat for the week tape." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5484,6 +5488,7 @@ const html = `<!DOCTYPE html>
     let biggestChokerBook = null;
     let closestGamesBook = null;
     let hardestScheduleBook = null;
+    let medianMonitorBook = null;
     let ringLeadersBook = null;
     let tradeWebBook = null;
     let bestWaiverPickupsBook = null;
@@ -5950,7 +5955,8 @@ const html = `<!DOCTYPE html>
         || canon === "season_arcs" || canon === "manager_archetypes"
         || canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades" || canon === "pipeline"
-        || canon === "closest_games" || canon === "hardest_schedule" || canon === "ring_leaders"
+        || canon === "closest_games" || canon === "hardest_schedule" || canon === "median_monitor"
+        || canon === "ring_leaders"
         || canon === "trade_web"
         || canon === "head_to_head";
     }
@@ -6244,6 +6250,26 @@ const html = `<!DOCTYPE html>
           };
         });
       }
+      if (canon === "median_monitor") {
+        const seats = (medianMonitorBook && Array.isArray(medianMonitorBook.seats))
+          ? medianMonitorBook.seats.slice() : [];
+        return seats.map(function (s, i) {
+          return {
+            key: String(s.key || s.user_id || i),
+            name: s.name,
+            metric: s.combined_record || "—",
+            sub: ("H2H " + (s.h2h_record || "—")
+              + " · med " + (s.median_record || "—")
+              + (s.place_h2h != null
+                ? (" · H2H #" + s.place_h2h + " → #" + (s.place_combined || s.rank))
+                : "")
+              + (s.delta_lab && s.delta_lab !== "—" ? (" " + s.delta_lab) : "")
+              + " · tap for weeks"),
+            rank: Number(s.rank) || (i + 1),
+            seat: s,
+          };
+        });
+      }
       if (canon === "ring_leaders") {
         const players = (ringLeadersBook && Array.isArray(ringLeadersBook.players))
           ? ringLeadersBook.players.slice() : [];
@@ -6519,6 +6545,11 @@ const html = `<!DOCTYPE html>
       // Hardest remaining schedule: full league ranked hardest → easiest.
       if (id === "hardest_schedule" || (typeof receiptDoorCanon === "function"
         && receiptDoorCanon(id) === "hardest_schedule")) {
+        return picked.map(wrap).join("");
+      }
+      // Median monitor: full league ranked by combined H2H + vs-median.
+      if (id === "median_monitor" || (typeof receiptDoorCanon === "function"
+        && receiptDoorCanon(id) === "median_monitor")) {
         return picked.map(wrap).join("");
       }
       // Ring leaders: flat top-25 by championship rings.
@@ -8149,7 +8180,8 @@ const html = `<!DOCTYPE html>
         || id === "season_place" || id === "season_title" || id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
-        || id === "hardest_schedule" || id === "ring_leaders" || id === "trade_web"
+        || id === "hardest_schedule" || id === "median_monitor" || id === "ring_leaders"
+        || id === "trade_web"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
         || id === "cuffs_board" || id === "book_top") return "research";
@@ -8211,7 +8243,8 @@ const html = `<!DOCTYPE html>
       if (key === "projected_finish" || key === "season_arcs" || key === "manager_archetypes"
         || key === "best_ball_hype" || key === "biggest_choker"
         || key === "waiver_winners" || key === "cornerstone_trades" || key === "pipeline"
-        || key === "closest_games" || key === "hardest_schedule" || key === "ring_leaders"
+        || key === "closest_games" || key === "hardest_schedule" || key === "median_monitor"
+        || key === "ring_leaders"
         || key === "trade_web"
         || key === "head_to_head") return false;
       if (isFinishCareerTile(key)) return false;
@@ -8229,7 +8262,8 @@ const html = `<!DOCTYPE html>
       if (canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades"
         || canon === "pipeline" || canon === "closest_games"
-        || canon === "hardest_schedule" || canon === "ring_leaders" || canon === "trade_web"
+        || canon === "hardest_schedule" || canon === "median_monitor"
+        || canon === "ring_leaders" || canon === "trade_web"
         || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
     }
@@ -8283,6 +8317,7 @@ const html = `<!DOCTYPE html>
         pipeline: '<path d="M4 12h16M8 8v8M16 8v8M12 6v12"/>',
         closest_games: '<path d="M4 12h16"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>',
         hardest_schedule: '<path d="M4 19V9l4 3 4-5 4 4v8z"/><path d="M4 19h16"/>',
+        median_monitor: '<path d="M4 12h16"/><path d="M12 4v16"/><circle cx="12" cy="12" r="3"/>',
         ring_leaders: '<path d="M8 6h8v2.5l-1.2.8V11H9.2V9.3L8 8.5V6z"/><path d="M7 18h10"/><path d="M9 11v7M15 11v7M12 11v7"/>',
         trade_web: '<circle cx="6" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M12 8v2M12 14v2M14 12h2"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
@@ -8363,6 +8398,11 @@ const html = `<!DOCTYPE html>
       } else if (id === "hardest_schedule") {
         const lead = hardestScheduleBook && hardestScheduleBook.seats && hardestScheduleBook.seats[0];
         if (lead) fig = receiptDoorLeadFig(lead.name, lead.sos_lab || "");
+      } else if (id === "median_monitor") {
+        const lead = medianMonitorBook && medianMonitorBook.seats && medianMonitorBook.seats[0];
+        if (lead) {
+          fig = receiptDoorLeadFig(lead.name, lead.combined_record || "");
+        }
       } else if (id === "ring_leaders") {
         const lead = ringLeadersBook && ringLeadersBook.players && ringLeadersBook.players[0];
         if (lead) fig = receiptDoorLeadFig(lead.player, String(lead.rings != null ? lead.rings : ""));
@@ -9509,12 +9549,14 @@ const html = `<!DOCTYPE html>
       if (id === "projected_finish" || id === "season_arcs" || id === "manager_archetypes"
         || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
-        || id === "hardest_schedule" || id === "ring_leaders") {
+        || id === "hardest_schedule" || id === "median_monitor" || id === "ring_leaders") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank,
             r.seat && r.seat.picker, r.seat && r.seat.player,
             r.seat && r.seat.asset, r.seat && r.seat.to_name,
             r.seat && r.seat.sos_lab, r.seat && r.seat.thesis,
+            r.seat && r.seat.combined_record, r.seat && r.seat.h2h_record,
+            r.seat && r.seat.median_record,
             r.seat && r.seat.team_lab, r.seat && (r.seat.teams || []).join(" ")]);
         });
         if (!items.length) {
@@ -9538,6 +9580,9 @@ const html = `<!DOCTYPE html>
           }
           if (id === "hardest_schedule" && !hardestScheduleBook) {
             return '<p class="caption">Toughest schedule book not loaded yet.</p>';
+          }
+          if (id === "median_monitor" && !medianMonitorBook) {
+            return '<p class="caption">Median monitor book not loaded yet.</p>';
           }
           if (id === "ring_leaders" && !ringLeadersBook) {
             return '<p class="caption">Ring leaders book not loaded yet.</p>';
@@ -9674,6 +9719,24 @@ const html = `<!DOCTYPE html>
               + "</button>"
               + (open
                 ? ('<div class="detail">' + hardestScheduleDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
+          if (id === "median_monitor") {
+            const open = String(medianMonitorOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + seatLabel(r.name, { link: false }) + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-median-monitor-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + medianMonitorDetailHtml(r.seat) + "</div>")
                 : "")
               + "</div>";
           }
@@ -9822,6 +9885,17 @@ const html = `<!DOCTYPE html>
           + " Same SoS as Expected finish (mean remaining-opponent adjusted pythagorean)."
           + (rem ? (" Weeks " + rem + ".") : "")
           + " Hellscape = hardest · Cupcake = easiest. Rebuilds each week. Tap a seat for the remaining slate.";
+      }
+      else if (id === "median_monitor") {
+        const wk = medianMonitorBook && Array.isArray(medianMonitorBook.weeks)
+          ? medianMonitorBook.weeks : [];
+        const season = medianMonitorBook && medianMonitorBook.season != null
+          ? String(medianMonitorBook.season) : "This";
+        caption = season + " season under Sleeper’s Extra Game vs League Median."
+          + " Each regular-season week: H2H result + above/below median (exact = tie)."
+          + " Median = average of the two middle scores."
+          + (wk.length ? (" Weeks 1–" + wk[wk.length - 1] + " on the book.") : "")
+          + " Big number is the combined record. Tap a seat for the week tape.";
       }
       else if (id === "ring_leaders") {
         caption = "Top 25 players by league championship rings."
@@ -12220,6 +12294,7 @@ const html = `<!DOCTYPE html>
       biggestChokerBook = null;
       closestGamesBook = null;
       hardestScheduleBook = null;
+      medianMonitorBook = null;
       ringLeadersBook = null;
       tradeWebBook = null;
       bestWaiverPickupsBook = null;
@@ -12244,6 +12319,7 @@ const html = `<!DOCTYPE html>
       biggestChokerOpenKey = "";
       closestGamesOpenKey = "";
       hardestScheduleOpenKey = "";
+      medianMonitorOpenKey = "";
       ringLeadersOpenKey = "";
       cornerstoneTradesOpenKey = "";
       receiptH2hA = "";
@@ -12260,7 +12336,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, medianMonitorRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -12282,6 +12358,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("biggest-choker.json").catch(() => null),
         getLeagueJson("closest-games.json").catch(() => null),
         getLeagueJson("hardest-schedule.json").catch(() => null),
+        getLeagueJson("median-monitor.json").catch(() => null),
         getLeagueJson("ring-leaders.json").catch(() => null),
         getLeagueJson("trade-web.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
@@ -12382,6 +12459,10 @@ const html = `<!DOCTYPE html>
         hardestScheduleBook = hardestScheduleRaw && Number(hardestScheduleRaw.v) >= 1
           && Array.isArray(hardestScheduleRaw.seats) ? hardestScheduleRaw : null;
       } catch (err) { hardestScheduleBook = null; }
+      try {
+        medianMonitorBook = medianMonitorRaw && Number(medianMonitorRaw.v) >= 1
+          && Array.isArray(medianMonitorRaw.seats) ? medianMonitorRaw : null;
+      } catch (err) { medianMonitorBook = null; }
       try {
         ringLeadersBook = ringLeadersRaw && Number(ringLeadersRaw.v) >= 1
           && Array.isArray(ringLeadersRaw.players) ? ringLeadersRaw : null;
@@ -13685,6 +13766,7 @@ const html = `<!DOCTYPE html>
       biggestChokerOpenKey = "";
       closestGamesOpenKey = "";
       hardestScheduleOpenKey = "";
+      medianMonitorOpenKey = "";
       ringLeadersOpenKey = "";
       cornerstoneTradesOpenKey = "";
       pipelineQ = "";
@@ -14014,6 +14096,13 @@ const html = `<!DOCTYPE html>
         const after = src.indexOf("trade_web");
         if (after >= 0) src.splice(after + 1, 0, "past_champions");
         else src.push("past_champions");
+      }
+      // Dynasty: add Median monitor after Past champions — never replace a tile.
+      if (dynasty && src.indexOf("median_monitor") < 0 && dataDashById("median_monitor")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("past_champions");
+        if (after >= 0) src.splice(after + 1, 0, "median_monitor");
+        else src.push("median_monitor");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -15886,6 +15975,36 @@ const html = `<!DOCTYPE html>
             + (o.opp_record ? (" · " + esc(o.opp_record)) : "")
             + (o.opp_place_now != null ? (" · #" + esc(String(o.opp_place_now))) : "")
             + (winPct ? (" · " + esc(winPct)) : "")
+            + "</p>";
+        });
+      }
+      html += "</div>";
+      return html;
+    }
+
+    function medianMonitorDetailHtml(seat) {
+      if (!seat) return "";
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">In plain English</p>';
+      html += "<p><b>" + esc(seat.name || "Seat") + "</b> · #" + esc(String(seat.rank || "—"))
+        + " on the median board · combined <b>" + esc(seat.combined_record || "—") + "</b>.</p>";
+      if (seat.thesis) html += "<p>" + esc(seat.thesis) + "</p>";
+      html += '<p class="pf-why-h">Week tape</p>';
+      const weeks = seat.weeks || [];
+      if (!weeks.length) {
+        html += '<p class="caption">No regular-season weeks on the book yet.</p>';
+      } else {
+        weeks.forEach(function (w) {
+          const vs = w.vs_median != null
+            ? ((Number(w.vs_median) >= 0 ? "+" : "") + String(w.vs_median))
+            : "—";
+          html += "<p><b>W" + esc(String(w.week != null ? w.week : "—")) + "</b> "
+            + esc(String(w.points != null ? w.points : "—"))
+            + " · med " + esc(String(w.median != null ? w.median : "—"))
+            + " (" + esc(vs) + ")"
+            + " · H2H " + esc(w.h2h_result || "—")
+            + " vs " + esc(w.opp || "—")
+            + " · med " + esc(w.median_result || "—")
             + "</p>";
         });
       }
@@ -19888,6 +20007,15 @@ const html = `<!DOCTYPE html>
           lead ? (lead.sos_lab || "Open") : "Open",
           lead ? ((lead.name || "Lead") + " · hardest rem SoS") : "Hardest rest-of-RS · all seats");
       }
+      if (id === "median_monitor") {
+        const lead = medianMonitorBook && medianMonitorBook.seats && medianMonitorBook.seats[0];
+        const nWk = medianMonitorBook && medianMonitorBook.week_count
+          ? (medianMonitorBook.week_count + " wk")
+          : "Open";
+        return dataDashHead(spec,
+          lead ? (lead.combined_record || nWk) : nWk,
+          lead ? ((lead.name || "Lead") + " · vs median board") : "H2H + median · this season");
+      }
       if (id === "ring_leaders") {
         const lead = ringLeadersBook && ringLeadersBook.players && ringLeadersBook.players[0];
         return dataDashHead(spec,
@@ -20177,6 +20305,7 @@ const html = `<!DOCTYPE html>
         biggestChokerOpenKey = "";
         closestGamesOpenKey = "";
         hardestScheduleOpenKey = "";
+        medianMonitorOpenKey = "";
         ringLeadersOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
@@ -26316,6 +26445,7 @@ const html = `<!DOCTYPE html>
         biggestChokerOpenKey = "";
         closestGamesOpenKey = "";
         hardestScheduleOpenKey = "";
+        medianMonitorOpenKey = "";
         ringLeadersOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
@@ -38689,6 +38819,15 @@ const html = `<!DOCTYPE html>
         if (typeof render === "function") render();
         return;
       }
+      const medianMonitorOpenBtn = e.target.closest("[data-median-monitor-open]");
+      if (medianMonitorOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = medianMonitorOpenBtn.getAttribute("data-median-monitor-open") || "";
+        medianMonitorOpenKey = (String(medianMonitorOpenKey) === String(key)) ? "" : key;
+        if (typeof render === "function") render();
+        return;
+      }
       const ringLeadersOpenBtn = e.target.closest("[data-ring-leaders-open]");
       if (ringLeadersOpenBtn) {
         e.preventDefault();
@@ -38998,6 +39137,7 @@ const html = `<!DOCTYPE html>
         biggestChokerOpenKey = "";
         closestGamesOpenKey = "";
         hardestScheduleOpenKey = "";
+        medianMonitorOpenKey = "";
         ringLeadersOpenKey = "";
         receiptH2hA = "";
         receiptH2hB = "";
@@ -43069,8 +43209,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 53 || uniq.size !== 53) {
-    throw new Error("DATA_REPORTS must hold exactly 53 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 54 || uniq.size !== 54) {
+    throw new Error("DATA_REPORTS must hold exactly 54 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -43082,9 +43222,9 @@ if (!inline.includes("function dataDashHtml(")
     || !uniq.has("season_arcs") || !uniq.has("manager_archetypes") || !uniq.has("trade_helper")
     || !uniq.has("best_ball_hype") || !uniq.has("biggest_choker") || !uniq.has("waiver_winners")
     || !uniq.has("closest_games") || !uniq.has("hardest_schedule") || !uniq.has("ring_leaders")
-    || !uniq.has("trade_web")
+    || !uniq.has("trade_web") || !uniq.has("median_monitor")
     || !uniq.has("head_to_head")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, Trade web, and Head to head");
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, Trade web, Median monitor, and Head to head");
   }
   const needIds = ["trade_helper", "fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -43098,31 +43238,33 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 21 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 22 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
     || defIds.indexOf("cornerstone_trades") < 0
     || defIds.indexOf("past_champions") < 0
+    || defIds.indexOf("median_monitor") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 21 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 22 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 21 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 21 default door tiles");
+  if (doorIds.length !== 22 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 22 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 18 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 18 catalog ids");
+  if (resIds.length !== 19 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 19 catalog ids");
   }
   if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades") || !resIds.includes("pipeline")
     || !resIds.includes("closest_games") || !resIds.includes("hardest_schedule")
-    || !resIds.includes("ring_leaders") || !resIds.includes("trade_web")) {
-    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders, trade_web");
+    || !resIds.includes("ring_leaders") || !resIds.includes("trade_web")
+    || !resIds.includes("median_monitor")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders, trade_web, median_monitor");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
@@ -43168,6 +43310,9 @@ if (!inline.includes("function dataDashHtml(")
   if (!uniq.has("past_champions") || defIds[20] !== "past_champions" || doorIds[20] !== "past_champions") {
     throw new Error("Past champions must be default board tile 21 (League Data door)");
   }
+  if (!uniq.has("median_monitor") || defIds[21] !== "median_monitor" || doorIds[21] !== "median_monitor") {
+    throw new Error("Median monitor must be default board tile 22 (League Data door)");
+  }
   if (!inline.includes('id: "closest_games"')
     || !inline.includes('lab: "Closest games"')
     || !inline.includes("function closestGamesDetailHtml(")
@@ -43188,6 +43333,17 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "hardest_schedule")')
     || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "hardest_schedule"')) {
     throw new Error("Toughest schedule door must ship book load, expand detail, and add-only dynasty migrate");
+  }
+  if (!inline.includes('id: "median_monitor"')
+    || !inline.includes('lab: "Median monitor"')
+    || !inline.includes("function medianMonitorDetailHtml(")
+    || !inline.includes('getLeagueJson("median-monitor.json")')
+    || !inline.includes('data-median-monitor-open="')
+    || !inline.includes("medianMonitorOpenKey")
+    || !inline.includes('canon === "median_monitor"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "median_monitor")')
+    || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "median_monitor"')) {
+    throw new Error("Median monitor door must ship book load, expand detail, and add-only dynasty migrate");
   }
   if (!inline.includes('id: "trade_web"')
     || !inline.includes('lab: "Trade web"')
@@ -44191,7 +44347,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 21")) {
+  || !inline.includes("const DATA_DASH_MAX = 22")) {
   throw new Error("Waiver winners must stay on League Data with three top-10 bands");
 }
 if (!inline.includes('id: "cornerstone_trades"')

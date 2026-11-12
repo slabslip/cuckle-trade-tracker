@@ -65,6 +65,7 @@ const steps = [
   ["build-biggest-choker.mjs", leagueId],
   ["build-closest-games.mjs", leagueId],
   ["build-hardest-schedule.mjs", leagueId],
+  ["build-median-monitor.mjs", leagueId],
   ["build-ring-leaders.mjs", leagueId],
   ["build-trade-web.mjs", leagueId],
   ["build-head-to-head.mjs", leagueId],

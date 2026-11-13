@@ -14,7 +14,7 @@ if (!page.includes('const DATA_V = "') ) fail("must keep DATA_V");
 for (const need of [
   'id: "past_champions"',
   'lab: "Past champions"',
-  "const DATA_DASH_MAX = 22",
+  "const DATA_DASH_MAX = 24",
   'src.splice(after + 1, 0, "past_champions")',
   'canon === "past_champions"',
 ]) {
@@ -25,8 +25,8 @@ const doors = (page.match(/const DATA_DOORS = \[([\s\S]*?)\];/) || [])[1] || "";
 const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
 const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
 const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-if (doorIds.length !== 22 || defIds.length !== 22) {
-  fail("DATA_DOORS / DEFAULT must be 22 tiles, got " + doorIds.length + "/" + defIds.length);
+if (doorIds.length !== 24 || defIds.length !== 24) {
+  fail("DATA_DOORS / DEFAULT must be 24 tiles, got " + doorIds.length + "/" + defIds.length);
 }
 if (doorIds[20] !== "past_champions" || defIds[20] !== "past_champions") {
   fail("Past champions must be door tile 21");

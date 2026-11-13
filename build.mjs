@@ -73,6 +73,8 @@ const steps = [
   ["build-cornerstone-trades.mjs", leagueId],
   ["build-player-starts.mjs", leagueId],
   ["build-pipeline.mjs", leagueId],
+  ["build-most-shared.mjs", leagueId],
+  ["build-day-traded.mjs", leagueId],
   ["build-cosmetics.mjs", leagueId],
 ];
 

@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-12",
-  "n": 93,
+  "as_of": "2026-11-13",
+  "n": 95,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -16,13 +16,6 @@
       "team": "SF",
       "pos": "WR"
     },
-    "3163": {
-      "name": "Jared Goff",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DET",
-      "pos": "QB"
-    },
     "3214": {
       "name": "Hunter Henry",
       "injury_status": "Questionable",
@@ -30,12 +23,12 @@
       "team": "NE",
       "pos": "TE"
     },
-    "4035": {
-      "name": "Alvin Kamara",
+    "3271": {
+      "name": "Tyler Higbee",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "NO",
-      "pos": "RB"
+      "team": "LAR",
+      "pos": "TE"
     },
     "4137": {
       "name": "James Conner",
@@ -135,12 +128,12 @@
       "team": "JAX",
       "pos": "WR"
     },
-    "6797": {
-      "name": "Justin Herbert",
+    "5967": {
+      "name": "Tony Pollard",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "LAC",
-      "pos": "QB"
+      "team": "TEN",
+      "pos": "RB"
     },
     "6803": {
       "name": "Brandon Aiyuk",
@@ -219,9 +212,16 @@
       "team": "DET",
       "pos": "WR"
     },
+    "7571": {
+      "name": "Rashod Bateman",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "BAL",
+      "pos": "WR"
+    },
     "7611": {
       "name": "Rhamondre Stevenson",
-      "injury_status": "Doubtful",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NE",
       "pos": "RB"
@@ -303,6 +303,13 @@
       "team": "DET",
       "pos": "RB"
     },
+    "8210": {
+      "name": "Chig Okonkwo",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "WAS",
+      "pos": "TE"
+    },
     "8698": {
       "name": "Jake Tonges",
       "injury_status": "IR",
@@ -340,16 +347,9 @@
     },
     "9493": {
       "name": "Puka Nacua",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "LAR",
-      "pos": "WR"
-    },
-    "9502": {
-      "name": "Tank Dell",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "HOU",
       "pos": "WR"
     },
     "9508": {
@@ -357,6 +357,13 @@
       "injury_status": "Questionable",
       "status": "Active",
       "team": "TEN",
+      "pos": "RB"
+    },
+    "9511": {
+      "name": "Keaton Mitchell",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAC",
       "pos": "RB"
     },
     "10219": {
@@ -526,6 +533,13 @@
       "status": "Inactive",
       "team": "NYG",
       "pos": "QB"
+    },
+    "12509": {
+      "name": "Tre' Harris",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAC",
+      "pos": "WR"
     },
     "12519": {
       "name": "Luther Burden III",

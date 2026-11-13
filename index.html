@@ -39277,24 +39277,38 @@
         if (typeof render === "function") render();
         return;
       }
+      const tradeWebBackBtn = e.target.closest("[data-trade-web-back]");
+      if (tradeWebBackBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const step = tradeWebBackBtn.getAttribute("data-trade-web-back") || "players";
+        if (step === "trades") {
+          tradeWebTxId = "";
+          tradeWebFocusKey = "";
+          tradeWebZoom = 1;
+          tradeWebPanX = 0;
+          tradeWebPanY = 0;
+          tradeWebShareNote = "";
+        } else {
+          tradeWebPickKey = "";
+          tradeWebTxId = "";
+          tradeWebFocusKey = "";
+          receiptListWho = "";
+          tradeWebZoom = 1;
+          tradeWebPanX = 0;
+          tradeWebPanY = 0;
+          tradeWebShareNote = "";
+          focusNext = "[data-trade-web-q], .screen-h";
+          if (typeof syncUrl === "function") syncUrl();
+        }
+        if (typeof render === "function") render();
+        return;
+      }
       const tradeWebTxBtn = e.target.closest("[data-trade-web-tx]");
       if (tradeWebTxBtn) {
         e.preventDefault();
         e.stopPropagation();
         tradeWebTxId = tradeWebTxBtn.getAttribute("data-trade-web-tx") || "";
-        tradeWebFocusKey = "";
-        tradeWebZoom = 1;
-        tradeWebPanX = 0;
-        tradeWebPanY = 0;
-        tradeWebShareNote = "";
-        if (typeof render === "function") render();
-        return;
-      }
-      const tradeWebTxClearBtn = e.target.closest("[data-trade-web-tx-clear]");
-      if (tradeWebTxClearBtn) {
-        e.preventDefault();
-        e.stopPropagation();
-        tradeWebTxId = "";
         tradeWebFocusKey = "";
         tradeWebZoom = 1;
         tradeWebPanX = 0;

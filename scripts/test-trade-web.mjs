@@ -46,6 +46,10 @@ for (const need of [
   "Building full web",
   "data-trade-web-full-w=",
   "pinch to zoom",
+  "function tradeWebDealDate(",
+  "function tradeWebDealLabel(",
+  "tw-node-date",
+  "date on the deal",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
@@ -54,6 +58,15 @@ if (!gen.includes("maxGraph")
   || !gen.includes("data-trade-web-full-h")
   || !gen.includes("Full trade web — pinch to zoom")) {
   fail("share must fit the full SVG viewBox into the export (not the on-screen viewport)");
+}
+// Deal hubs must carry date on the bubble — not as the main label between assets.
+if (gen.includes('label: (node.exit && node.exit.date) || "trade"')
+  || gen.includes("label: web.date || \"trade\"")
+  || gen.includes("label: (rn.exit && rn.exit.date) || web.date || \"trade\"")) {
+  fail("trade hubs must not use raw ISO dates as the bubble label");
+}
+if (!gen.includes('lab: ""') || !gen.includes("tradeWebDealLabel(")) {
+  fail("deal edges should stay unlabeled; date/destination live on the trade bubble");
 }
 {
   const doors = (page.match(/const DATA_DOORS = \[([\s\S]*?)\];/) || [])[1] || "";

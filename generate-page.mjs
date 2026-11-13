@@ -1918,6 +1918,10 @@ const html = `<!DOCTYPE html>
     .trade-web-svg .tw-node-sent {
       fill: rgba(40, 36, 48, 0.95); stroke: rgba(180, 160, 220, 0.55); stroke-width: 1.4;
     }
+    .trade-web-svg .tw-node-date {
+      fill: rgba(212, 180, 90, 0.95); font-size: 8px; font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
     .trade-web-svg .tw-node-lab {
       fill: #e8e8ee; font-size: 11px; font-weight: 650;
     }
@@ -1925,6 +1929,8 @@ const html = `<!DOCTYPE html>
       fill: var(--muted, #9a9aa6); font-size: 9px;
       font-variant-numeric: tabular-nums;
     }
+    .trade-web-svg .tw-node-sub.up { fill: var(--green, #6ecf8e); }
+    .trade-web-svg .tw-node-sub.down { fill: var(--red, #e07070); }
     .trade-web-branch {
       position: relative;
       margin: 0 0 8px;
@@ -5204,7 +5210,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261113104342";
+    const DATA_V = "tradeWebDateOnDeal20261113110000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -9904,7 +9910,7 @@ const html = `<!DOCTYPE html>
       }
       else if (id === "trade_web") {
         caption = tradeWebPickKey
-          ? "Same public web for everyone. Spine follows the player across seats; branches are every asset that moved in those trades. Tap a node to open that piece."
+          ? "Same public web for everyone. Player / pick bubbles connect through gold deal boxes — date on the deal, arrow to who got them, P&L under that. Package branches are every asset in those trades. Tap a piece to open its web."
           : "Search any traded player. See where they started, every hop, and where they are now.";
       }
       else if (id === "waiver_winners") {
@@ -16114,6 +16120,33 @@ const html = `<!DOCTYPE html>
       return Number(n) >= 0 ? "up" : "down";
     }
 
+    /** Short deal date for overlay on a trade bubble (not a node between bubbles). */
+    function tradeWebDealDate(ymd) {
+      const p = String(ymd || "").split("-");
+      if (p.length < 2) return String(ymd || "").trim();
+      const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+      const m = months[Number(p[1]) - 1] || p[1];
+      const yy = String(p[0] || "").slice(-2);
+      const day = p[2] ? String(Number(p[2])) : "";
+      if (day) return m + " " + day + " '" + yy;
+      return m + " '" + yy;
+    }
+
+    /** Trade-hub label: where the piece went — never the raw date. */
+    function tradeWebDealLabel(toSeat, fromSeat) {
+      const to = String(toSeat || "").trim();
+      if (to) {
+        const short = to.length > 12 ? (to.slice(0, 11) + "…") : to;
+        return "→ " + short;
+      }
+      const from = String(fromSeat || "").trim();
+      if (from) {
+        const short = from.length > 12 ? (from.slice(0, 11) + "…") : from;
+        return "from " + short;
+      }
+      return "Trade";
+    }
+
     function tradeWebNodeHtml(node, depth) {
       if (!node) return "";
       const st = String(node.status || "");
@@ -16210,25 +16243,28 @@ const html = `<!DOCTYPE html>
         });
         if (node.status === "traded" && node.children && node.children.length) {
           const nextId = "next:" + id;
+          const toSeat = node.exit && node.exit.to ? node.exit.to : null;
+          const fromSeat = (node.exit && node.exit.from) || node.seat || null;
           nodes.push({
             id: nextId,
-            label: (node.exit && node.exit.date) || "trade",
+            label: tradeWebDealLabel(toSeat, fromSeat),
             kind: "trade",
             status: "deal",
-            seat: node.exit && node.exit.to ? node.exit.to : node.seat,
+            seat: toSeat || node.seat,
+            date: (node.exit && node.exit.date) || null,
             pnl: node.deal_pnl,
             value: node.value_out,
             depth: depth + 1,
             slot: mySlot,
           });
+          // Deal edges stay unlabeled — date/P&L live on the trade bubble.
           edges.push({
             from: id,
             to: nextId,
             date: node.exit && node.exit.date || null,
             value: node.value_out,
             pnl: node.deal_pnl,
-            lab: node.deal_pnl != null ? tradeWebSigned(node.deal_pnl)
-              : (node.value_out != null ? fmt(node.value_out) : "trade"),
+            lab: "",
             kind: "next_trade",
           });
           for (let i = 0; i < node.children.length; i++) walk(node.children[i], nextId, depth + 2);
@@ -16247,12 +16283,19 @@ const html = `<!DOCTYPE html>
       if (rn) {
         if (rn.status === "traded" && rn.children && rn.children.length) {
           const hubId = "tx:root";
+          const toSeat = rn.exit && rn.exit.to ? rn.exit.to : null;
+          const fromSeat = (rn.exit && rn.exit.from)
+            || rn.seat
+            || (web.origin && web.origin.seat)
+            || web.seat
+            || null;
           nodes.push({
             id: hubId,
-            label: (rn.exit && rn.exit.date) || web.date || "trade",
+            label: tradeWebDealLabel(toSeat, fromSeat),
             kind: "trade",
             status: "deal",
-            seat: rn.exit && rn.exit.to ? rn.exit.to : rn.seat,
+            seat: toSeat || rn.seat,
+            date: (rn.exit && rn.exit.date) || web.date || null,
             pnl: rn.deal_pnl != null ? rn.deal_pnl : web.deal_pnl,
             value: rn.value_out != null ? rn.value_out : web.gave_value,
             depth: 1,
@@ -16264,10 +16307,7 @@ const html = `<!DOCTYPE html>
             date: (rn.exit && rn.exit.date) || web.date || null,
             value: rn.value_out != null ? rn.value_out : web.gave_value,
             pnl: rn.deal_pnl != null ? rn.deal_pnl : web.deal_pnl,
-            lab: (rn.deal_pnl != null || web.deal_pnl != null)
-              ? tradeWebSigned(rn.deal_pnl != null ? rn.deal_pnl : web.deal_pnl)
-              : (rn.value_out != null ? fmt(rn.value_out)
-                : (web.gave_value != null ? fmt(web.gave_value) : "")),
+            lab: "",
             kind: "exit",
           });
           for (let i = 0; i < rn.children.length; i++) walk(rn.children[i], hubId, 2);
@@ -16278,12 +16318,15 @@ const html = `<!DOCTYPE html>
         }
       } else {
         const hubId = "tx:" + String(web.transaction_id || "0");
+        const toSeat = web.partner || null;
+        const fromSeat = web.seat || null;
         nodes.push({
           id: hubId,
-          label: web.date || "trade",
+          label: tradeWebDealLabel(toSeat, fromSeat),
           kind: "trade",
           status: "deal",
-          seat: web.seat,
+          seat: toSeat || web.seat,
+          date: web.date || null,
           pnl: web.deal_pnl,
           value: web.gave_value,
           depth: 1,
@@ -16295,8 +16338,7 @@ const html = `<!DOCTYPE html>
           date: web.date || null,
           value: web.gave_value,
           pnl: web.deal_pnl,
-          lab: web.deal_pnl != null ? tradeWebSigned(web.deal_pnl)
-            : (web.gave_value != null ? fmt(web.gave_value) : ""),
+          lab: "",
           kind: "exit",
         });
         const branches = web.branches || [];
@@ -16318,10 +16360,10 @@ const html = `<!DOCTYPE html>
         if ((nodes[i].depth || 0) > maxDepth) maxDepth = nodes[i].depth || 0;
         if ((nodes[i].slot || 0) > maxSlot) maxSlot = nodes[i].slot || 0;
       }
-      const colW = 168;
-      const rowH = 72;
+      const colW = 172;
+      const rowH = 78;
       const padX = 24;
-      const padY = 24;
+      const padY = 28;
       const width = Math.max(560, padX * 2 + (maxDepth + 1) * colW);
       const height = Math.max(240, padY * 2 + (maxSlot + 1) * rowH);
       const pos = {};
@@ -16329,7 +16371,7 @@ const html = `<!DOCTYPE html>
         const n = nodes[i];
         pos[n.id] = {
           x: padX + (Number(n.depth) || 0) * colW + 50,
-          y: padY + (Number(n.slot) || 0) * rowH + 24,
+          y: padY + (Number(n.slot) || 0) * rowH + 28,
         };
       }
       // Spread nodes that share a depth by their order among that depth.
@@ -16343,7 +16385,7 @@ const html = `<!DOCTYPE html>
         const list = byDepth[d];
         list.sort(function (a, b) { return (a.slot || 0) - (b.slot || 0); });
         for (let i = 0; i < list.length; i++) {
-          pos[list[i].id].y = padY + i * rowH + 24;
+          pos[list[i].id].y = padY + i * rowH + 28;
         }
       });
       const h = Math.max(height, padY * 2 + Object.keys(byDepth).reduce(function (m, d) {
@@ -16365,9 +16407,9 @@ const html = `<!DOCTYPE html>
         edgeSvg += '<path class="' + cls + '" d="M' + a.x + " " + a.y
           + " C " + (a.x + 40) + " " + a.y + ", " + (b.x - 40) + " " + b.y
           + ", " + b.x + " " + b.y + '" />';
-        const lab = e.lab || (e.pnl != null ? tradeWebSigned(e.pnl)
-          : (e.value != null ? fmt(e.value) : ""));
-        if (lab) {
+        // Skip empty labs (deal edges). Never print raw dates on edges.
+        const lab = e.lab || "";
+        if (lab && !/^\d{4}-\d{2}-\d{2}/.test(String(lab))) {
           const tone = e.pnl != null ? tradeWebPnlClass(e.pnl) : "";
           edgeSvg += '<text class="tw-edge-lab' + (tone ? (" " + tone) : "") + '" x="'
             + mx + '" y="' + my + '" text-anchor="middle">' + esc(lab) + "</text>";
@@ -16385,34 +16427,54 @@ const html = `<!DOCTYPE html>
         const focusAttr = canFocus
           ? (' data-trade-web-focus="' + esc(String(n.asset_key)) + '" style="cursor:pointer"')
           : "";
-        const rw = isTrade ? 44 : 64;
-        const rh = isTrade ? 28 : 40;
+        const rw = isTrade ? 78 : 64;
+        const rh = isTrade ? 42 : 40;
         const cls = isSent ? "tw-node-sent" : (isTrade ? "tw-node-trade" : "tw-node-asset");
         if (isTrade) {
           nodeSvg += '<rect class="' + cls + '" x="' + (p.x - rw / 2) + '" y="' + (p.y - rh / 2)
-            + '" width="' + rw + '" height="' + rh + '" rx="4" />';
+            + '" width="' + rw + '" height="' + rh + '" rx="5" />';
+          // Date sits ON the deal bubble — never as a node between bubbles.
+          const when = tradeWebDealDate(n.date || (/^\d{4}-\d{2}-\d{2}/.test(String(n.label || ""))
+            ? n.label : ""));
+          if (when) {
+            nodeSvg += '<text class="tw-node-date" x="' + p.x + '" y="' + (p.y - rh / 2 + 11)
+              + '" text-anchor="middle">' + esc(when) + "</text>";
+          }
+          let dealLab = String(n.label || "");
+          // Legacy graphs may still use an ISO date as the label — rewrite.
+          if (!dealLab || /^\d{4}-\d{2}-\d{2}/.test(dealLab) || dealLab === "trade") {
+            dealLab = tradeWebDealLabel(n.seat, null);
+          }
+          const shortLab = dealLab.length > 16 ? (dealLab.slice(0, 15) + "…") : dealLab;
+          nodeSvg += '<text class="tw-node-lab" x="' + p.x + '" y="' + (p.y + 5)
+            + '" text-anchor="middle">' + esc(shortLab) + "</text>";
+          if (n.pnl != null) {
+            const tone = tradeWebPnlClass(n.pnl);
+            nodeSvg += '<text class="tw-node-sub' + (tone ? (" " + tone) : "") + '" x="' + p.x
+              + '" y="' + (p.y + rh / 2 - 5) + '" text-anchor="middle">'
+              + esc(tradeWebSigned(n.pnl)) + "</text>";
+          }
         } else {
           nodeSvg += '<ellipse class="' + cls + '" cx="' + p.x + '" cy="' + p.y
             + '" rx="' + (rw / 2) + '" ry="' + (rh / 2) + '"' + focusAttr + " />";
-        }
-        const lab = String(n.label || "—");
-        const shortLab = lab.length > 18 ? (lab.slice(0, 17) + "…") : lab;
-        nodeSvg += '<text class="tw-node-lab" x="' + p.x + '" y="' + (p.y - 2)
-          + '" text-anchor="middle"' + focusAttr + ">" + esc(shortLab) + "</text>";
-        let sub = "";
-        if ((n.status === "sent" || n.status === "origin" || n.status === "traded") && n.value != null) {
-          sub = (n.seat ? (n.seat + " · ") : "") + fmt(n.value);
-        } else if (n.kind === "trade" && n.pnl != null) sub = tradeWebSigned(n.pnl);
-        else if (n.mark_pnl != null) sub = "aged " + tradeWebSigned(n.mark_pnl);
-        else if (n.deal_pnl != null) sub = tradeWebSigned(n.deal_pnl);
-        else if (n.seat && n.status) sub = n.seat;
-        else if (n.value_now != null && n.value_in != null) {
-          sub = fmt(n.value_in) + "→" + fmt(n.value_now);
-        } else if (n.value != null) sub = fmt(n.value);
-        else if (n.status) sub = tradeWebStatusLab(n.status);
-        if (sub) {
-          nodeSvg += '<text class="tw-node-sub" x="' + p.x + '" y="' + (p.y + 12)
-            + '" text-anchor="middle"' + focusAttr + ">" + esc(sub) + "</text>";
+          const lab = String(n.label || "—");
+          const shortLab = lab.length > 18 ? (lab.slice(0, 17) + "…") : lab;
+          nodeSvg += '<text class="tw-node-lab" x="' + p.x + '" y="' + (p.y - 2)
+            + '" text-anchor="middle"' + focusAttr + ">" + esc(shortLab) + "</text>";
+          let sub = "";
+          if ((n.status === "sent" || n.status === "origin" || n.status === "traded") && n.value != null) {
+            sub = (n.seat ? (n.seat + " · ") : "") + fmt(n.value);
+          } else if (n.mark_pnl != null) sub = "aged " + tradeWebSigned(n.mark_pnl);
+          else if (n.deal_pnl != null) sub = tradeWebSigned(n.deal_pnl);
+          else if (n.seat && n.status) sub = n.seat;
+          else if (n.value_now != null && n.value_in != null) {
+            sub = fmt(n.value_in) + "→" + fmt(n.value_now);
+          } else if (n.value != null) sub = fmt(n.value);
+          else if (n.status) sub = tradeWebStatusLab(n.status);
+          if (sub) {
+            nodeSvg += '<text class="tw-node-sub" x="' + p.x + '" y="' + (p.y + 12)
+              + '" text-anchor="middle"' + focusAttr + ">" + esc(sub) + "</text>";
+          }
         }
       }
 
@@ -16493,8 +16555,11 @@ const html = `<!DOCTYPE html>
         ".tw-node-asset{fill:#1c1e26;stroke:rgba(200,200,208,.45);stroke-width:1.2}",
         ".tw-node-trade{fill:#322a1c;stroke:rgba(212,180,90,.7);stroke-width:1.2}",
         ".tw-node-sent{fill:#282430;stroke:rgba(180,160,220,.6);stroke-width:1.4}",
+        ".tw-node-date{fill:rgba(212,180,90,.95);font-size:8px;font-weight:700;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}",
         ".tw-node-lab{fill:#e8e8ee;font-size:11px;font-weight:650;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}",
         ".tw-node-sub{fill:#9a9aa6;font-size:9px;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}",
+        ".tw-node-sub.up{fill:#6ecf8e}",
+        ".tw-node-sub.down{fill:#e07070}",
       ].join("");
     }
 
@@ -16725,8 +16790,8 @@ const html = `<!DOCTYPE html>
       }
       if (!bits.length) return "";
       return '<div class="trade-web-pnl">' + bits.join("") + "</div>"
-        + '<p class="trade-web-legend">Deal = got − gave that day. Aged = how still-held pieces moved since. '
-        + "Later trades = P&amp;L when a return piece was traded again. Trail = net value created or destroyed.</p>";
+        + '<p class="trade-web-legend">Gold boxes are deals: date on the box, arrow to who got the piece, P&amp;L underneath. '
+        + "Deal = got − gave that day. Aged = still-held pieces since. Later = when a return piece was traded again. Trail = net.</p>";
     }
 
     function tradeWebSpineHtml(web) {

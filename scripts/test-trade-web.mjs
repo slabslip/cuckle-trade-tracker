@@ -56,6 +56,39 @@ for (const need of [
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }
+{
+  const lib = fs.readFileSync("lib/trade-web.mjs", "utf8");
+  if (!lib.includes("childKey !== key") || !lib.includes("path[path.length - 1] !== key")) {
+    fail("trade-web must allow same-asset pick/player hops so drafted picks keep going");
+  }
+  if (!fs.readFileSync("revalue.mjs", "utf8").includes("became_key:")) {
+    fail("revalue buildPicks must persist became_key/player_key");
+  }
+  const pick = JSON.parse(fs.readFileSync(
+    "data/leagues/1315431339301806080/ui/picks.json", "utf8",
+  ))["pick:2024:2:8"];
+  if (!pick || pick.became !== "Brian Thomas" || pick.player_key !== "player:11631") {
+    fail("Bubba 2024 2nd must resolve to Brian Thomas with player_key");
+  }
+  const damien = JSON.parse(fs.readFileSync(
+    "data/leagues/1315431339301806080/ui/trade-web/p/1833.json", "utf8",
+  ));
+  const web = damien.web || damien;
+  function find(node, pred) {
+    if (!node) return null;
+    if (pred(node)) return node;
+    for (const c of node.children || []) {
+      const hit = find(c, pred);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  const tips = find(web.root_node, (n) => n.asset_key === "pick:2024:2:8" && n.seat === "TipsUp");
+  if (!tips || tips.status !== "drafted") fail("Damien web TipsUp Bubba 2nd must be drafted");
+  if (!(tips.children || []).some((c) => c.asset_key === "player:11631" || /Brian Thomas/i.test(c.label || ""))) {
+    fail("TipsUp Bubba 2024 2nd must continue into Brian Thomas");
+  }
+}
 if (!gen.includes("maxGraph")
   || !gen.includes("data-trade-web-full-w")
   || !gen.includes("data-trade-web-full-h")

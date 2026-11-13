@@ -84,8 +84,11 @@ test("Golden career web follows him to SF and packages Ridley flip", () => {
   const spine = kids.find((b) => b.role === "spine" && b.asset_key === "player:g");
   assert.ok(ridley);
   assert.equal(ridley.status, "traded");
-  assert.equal(ridley.children.length, 1);
-  assert.equal(ridley.children[0].label, "2029 4th");
+  // Package pieces keep hopping: return bag (2029 4th) + Ridley continuing at SF.
+  assert.ok(ridley.children.some((c) => /4th/i.test(c.label)));
+  const ridleyAtSf = ridley.children.find((c) => c.asset_key === "player:r");
+  assert.ok(ridleyAtSf);
+  assert.equal(ridleyAtSf.seat, "SF69erss");
   assert.equal(bell.status, "held");
   assert.ok(spine);
   assert.equal(spine.seat, "SF69erss");
@@ -200,4 +203,122 @@ test("buildTradeWebBook indexes traded players", () => {
   assert.ok(golden);
   assert.equal(golden.webs.length, 1);
   assert.ok(golden.webs[0].root_node);
+});
+
+test("drafted pick with player_key attaches what it became", () => {
+  const legs = [
+    { transaction_id: "txD", direction: "out", from_user_id: "truman", kind: "player", asset_key: "player:g", label: "Matthew Golden" },
+    { transaction_id: "txD", direction: "in", to_user_id: "sf", kind: "player", asset_key: "player:g", label: "Matthew Golden" },
+    { transaction_id: "txD", direction: "out", from_user_id: "sf", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+    { transaction_id: "txD", direction: "in", to_user_id: "truman", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+  ];
+  const trades = [{ transaction_id: "txD", date: "2024-05-25", season: "2024", week: 1 }];
+  const book = buildTradeWebBook({
+    legs,
+    trades,
+    nameByUser: { truman: "TrumanCooper", sf: "SF69erss" },
+    playersNfl: {
+      g: { full_name: "Matthew Golden" },
+      "11631": { full_name: "Brian Thomas" },
+    },
+    picksBook: {
+      "pick:2024:2:8": {
+        label: "2024 2nd (BubbaCuckShremp)",
+        became: "Brian Thomas",
+        player_key: "player:11631",
+        became_key: "player:11631",
+        used_by: "TrumanCooper",
+        still_pick: false,
+        hops: [],
+      },
+    },
+    leagueId: "L1",
+    asOf: "2026-11-12",
+  });
+  const golden = book.players.find((p) => p.player_id === "g");
+  function find(node, pred) {
+    if (!node) return null;
+    if (pred(node)) return node;
+    for (const c of node.children || []) {
+      const hit = find(c, pred);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  const pick = find(golden.webs[0].root_node, (n) => n.asset_key === "pick:2024:2:8");
+  assert.ok(pick);
+  assert.equal(pick.status, "drafted");
+  assert.equal(pick.became, "Brian Thomas");
+  assert.ok((pick.children || []).some((c) => c.asset_key === "player:11631"));
+});
+
+test("package pick flipped then drafted keeps going to what it became", () => {
+  // Bubba → ARae (with some focus player), then ARae → TipsUp; TipsUp drafts Brian Thomas.
+  const legs = [
+    { transaction_id: "tx1", direction: "out", from_user_id: "bubba", kind: "player", asset_key: "player:x", label: "Some Player" },
+    { transaction_id: "tx1", direction: "in", to_user_id: "arae", kind: "player", asset_key: "player:x", label: "Some Player" },
+    { transaction_id: "tx1", direction: "out", from_user_id: "arae", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+    { transaction_id: "tx1", direction: "in", to_user_id: "bubba", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+    { transaction_id: "tx2", direction: "out", from_user_id: "bubba", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+    { transaction_id: "tx2", direction: "in", to_user_id: "arae", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+    { transaction_id: "tx2", direction: "out", from_user_id: "arae", kind: "player", asset_key: "player:y", label: "Return Piece" },
+    { transaction_id: "tx2", direction: "in", to_user_id: "bubba", kind: "player", asset_key: "player:y", label: "Return Piece" },
+    { transaction_id: "tx3", direction: "out", from_user_id: "arae", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+    { transaction_id: "tx3", direction: "in", to_user_id: "tips", kind: "pick", asset_key: "pick:2024:2:8", label: "2024 2nd" },
+    { transaction_id: "tx3", direction: "out", from_user_id: "tips", kind: "player", asset_key: "player:z", label: "Tips Bag" },
+    { transaction_id: "tx3", direction: "in", to_user_id: "arae", kind: "player", asset_key: "player:z", label: "Tips Bag" },
+  ];
+  const trades = [
+    { transaction_id: "tx1", date: "2024-02-01", season: "2024", week: 1 },
+    { transaction_id: "tx2", date: "2024-02-15", season: "2024", week: 1 },
+    { transaction_id: "tx3", date: "2024-05-25", season: "2024", week: 1 },
+  ];
+  const book = buildTradeWebBook({
+    legs,
+    trades,
+    nameByUser: {
+      bubba: "BubbaCuckShremp",
+      arae: "ARae",
+      tips: "TipsUp",
+    },
+    playersNfl: {
+      x: { full_name: "Some Player" },
+      y: { full_name: "Return Piece" },
+      z: { full_name: "Tips Bag" },
+      "11631": { full_name: "Brian Thomas" },
+    },
+    picksBook: {
+      "pick:2024:2:8": {
+        label: "2024 2nd (BubbaCuckShremp)",
+        became: "Brian Thomas",
+        player_key: "player:11631",
+        became_key: "player:11631",
+        used_by: "TipsUp",
+        still_pick: false,
+        hops: [],
+      },
+    },
+    leagueId: "L1",
+    asOf: "2026-11-12",
+  });
+  const root = book.players.find((p) => p.player_id === "x");
+  assert.ok(root);
+  function find(node, pred) {
+    if (!node) return null;
+    if (pred(node)) return node;
+    for (const c of node.children || []) {
+      const hit = find(c, pred);
+      if (hit) return hit;
+    }
+    return null;
+  }
+  const tipsPick = find(root.webs[0].root_node, (n) => (
+    n.asset_key === "pick:2024:2:8" && n.seat === "TipsUp"
+  ));
+  assert.ok(tipsPick, "pick must continue to TipsUp");
+  assert.equal(tipsPick.status, "drafted");
+  assert.ok(
+    (tipsPick.children || []).some((c) => c.asset_key === "player:11631" || c.label === "Brian Thomas"),
+    "TipsUp pick must show Brian Thomas",
+  );
 });

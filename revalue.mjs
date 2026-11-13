@@ -609,6 +609,9 @@ async function main() {
       out[key] = {
         label: pickDisplay(year, round, originOf(raw[0].leg), null, null),
         became: playerRes?.label || null,
+        // Persist ids so Trade web can attach the drafted player without nameIndex.
+        player_key: playerRes?.player_key || null,
+        became_key: playerRes?.player_key || null,
         used_by: playerRes?.drafted_by_user_id
           ? (nameById[playerRes.drafted_by_user_id] || playerRes.drafted_by_user_id)
           : null,

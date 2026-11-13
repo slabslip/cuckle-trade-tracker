@@ -6,10 +6,10 @@
  *
  * finishes + ownership stints → ui/ass-denominator.json
  */
-import { existsSync, readFileSync } from "node:fs";
 import {
-  DATA,
   LEAGUE_ID,
+  loadNflPlayers,
+  nflNameHints,
   readJson,
   readUi,
   setLeagueId,
@@ -48,20 +48,9 @@ if (pipeline && Array.isArray(pipeline.players)) {
     }
   }
 }
-const nflPath = `${DATA}/players.nfl.json`;
-let nflPlayers = {};
-if (existsSync(nflPath)) {
-  try {
-    nflPlayers = JSON.parse(readFileSync(nflPath, "utf8")) || {};
-    for (const [id, p] of Object.entries(nflPlayers)) {
-      if (!p || typeof p !== "object") continue;
-      const name = [p.first_name, p.last_name].filter(Boolean).join(" ").trim();
-      if (name) nameHints.push({ sleeper_id: id, name });
-    }
-  } catch {
-    nflPlayers = {};
-  }
-}
+
+const nflPlayers = await loadNflPlayers();
+nameHints.push(...nflNameHints(nflPlayers));
 
 const asOf = (() => {
   let d = "";
@@ -96,6 +85,7 @@ console.log(JSON.stringify({
   v: book.v,
   n: book.n,
   as_of: book.as_of,
+  nfl: Object.keys(nflPlayers || {}).length,
   top3: (book.players || []).slice(0, 3).map((p) => ({
     rank: p.rank,
     name: p.name,

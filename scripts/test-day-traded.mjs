@@ -56,6 +56,19 @@ if (!book.players.every((p) => p.rank && p.name && p.churn >= 1
   && p.adds != null && p.drops != null && Array.isArray(p.recent))) {
   fail("each player needs rank/name/adds/drops/churn/recent");
 }
+{
+  const unnamed = book.players.filter((p) => /^Player\s+\d+$/i.test(String(p.name || "")));
+  if (unnamed.length) {
+    fail("day-traded must resolve real names, got Player #### for "
+      + unnamed.map((p) => p.player_id).join(","));
+  }
+}
+if (!fs.readFileSync("build-day-traded.mjs", "utf8").includes("loadNflPlayers")) {
+  fail("build-day-traded.mjs must loadNflPlayers so wire names resolve");
+}
+if (!fs.readFileSync("lib.mjs", "utf8").includes("export async function loadNflPlayers")) {
+  fail("lib.mjs must export loadNflPlayers");
+}
 const design = "design-day-traded.html";
 if (!fs.existsSync(design)) fail("missing " + design);
 {
@@ -69,7 +82,7 @@ if (!fs.existsSync(design)) fail("missing " + design);
 console.log(JSON.stringify({
   ok: true,
   lab: "Day traded",
-  doors: 24,
+  doors: 25,
   n: book.n,
   top: book.players.slice(0, 3).map((p) => ({
     rank: p.rank,

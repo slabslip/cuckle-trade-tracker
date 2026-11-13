@@ -194,6 +194,49 @@ export async function sleeperGet(path) {
   return res.json();
 }
 
+/**
+ * NFL player catalog for name resolution.
+ * Cached at data/players.nfl.json (gitignored). Fetches from Sleeper when
+ * missing or stale (>24h) so wire/history books never ship "Player ####".
+ */
+export async function loadNflPlayers({ maxAgeMs = 24 * 60 * 60 * 1000 } = {}) {
+  const cache = `${DATA}/players.nfl.json`;
+  if (fs.existsSync(cache)) {
+    const age = Date.now() - fs.statSync(cache).mtimeMs;
+    if (maxAgeMs == null || age < maxAgeMs) {
+      try {
+        return JSON.parse(fs.readFileSync(cache, "utf8")) || {};
+      } catch {
+        /* fall through to fetch */
+      }
+    }
+  }
+  const players = await sleeperGet("/players/nfl");
+  if (!players || typeof players !== "object") return {};
+  fs.mkdirSync(DATA, { recursive: true });
+  fs.writeFileSync(cache, JSON.stringify(players));
+  return players;
+}
+
+export function nflPlayerName(players, pid) {
+  const id = String(pid || "").replace(/^player:/, "");
+  if (!id) return "";
+  const p = players && players[id];
+  if (!p || typeof p !== "object") return "";
+  return String(p.full_name || `${p.first_name || ""} ${p.last_name || ""}`.trim() || "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function nflNameHints(players) {
+  const out = [];
+  for (const [id, p] of Object.entries(players || {})) {
+    const name = nflPlayerName(players, id);
+    if (name) out.push({ sleeper_id: String(id), name });
+  }
+  return out;
+}
+
 export function parseCsv(text) {
   const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter((l) => l.length);
   if (!lines.length) return [];

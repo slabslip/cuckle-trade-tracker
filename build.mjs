@@ -75,6 +75,7 @@ const steps = [
   ["build-pipeline.mjs", leagueId],
   ["build-most-shared.mjs", leagueId],
   ["build-day-traded.mjs", leagueId],
+  ["build-ass-denominator.mjs", leagueId],
   ["build-cosmetics.mjs", leagueId],
 ];
 

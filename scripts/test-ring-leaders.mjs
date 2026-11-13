@@ -27,7 +27,7 @@ for (const need of [
   'getLeagueJson("ring-leaders.json")',
   "ringLeadersOpenKey",
   "Top 25 players by league championship rings",
-  "const DATA_DASH_MAX = 24",
+  "const DATA_DASH_MAX = 25",
   'src.splice(after + 1, 0, "ring_leaders")',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -37,8 +37,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 24 || defIds.length !== 24) {
-    fail("DATA_DOORS / DEFAULT must be 24 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 25 || defIds.length !== 25) {
+    fail("DATA_DOORS / DEFAULT must be 25 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[18] !== "ring_leaders" || defIds[18] !== "ring_leaders") {
     fail("Ring leaders must be door tile 19");

@@ -30,7 +30,7 @@ for (const need of [
   'getLeagueJson("hardest-schedule.json")',
   "hardestScheduleOpenKey",
   "Every seat ranked hardest",
-  "const DATA_DASH_MAX = 24",
+  "const DATA_DASH_MAX = 25",
   'src.splice(after + 1, 0, "hardest_schedule")',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -40,8 +40,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 24 || defIds.length !== 24) {
-    fail("DATA_DOORS / DEFAULT must be 24 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 25 || defIds.length !== 25) {
+    fail("DATA_DOORS / DEFAULT must be 25 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[17] !== "hardest_schedule" || defIds[17] !== "hardest_schedule") {
     fail("Hardest remaining schedule must be door tile 18");

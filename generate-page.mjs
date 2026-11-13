@@ -5193,6 +5193,7 @@ const html = `<!DOCTYPE html>
     let medianMonitorOpenKey = "";
     let mostSharedOpenKey = "";
     let dayTradedOpenKey = "";
+    let assDenominatorOpenKey = "";
     let ringLeadersOpenKey = "";
     let tradeWebQ = "";
     let tradeWebPickKey = "";
@@ -5234,7 +5235,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "mostSharedDayTraded20261113193000";
+    const DATA_V = "assDenominator20261113194500";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5301,14 +5302,14 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 24;
+    const DATA_DASH_MAX = 25;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions", "median_monitor", "most_shared", "day_traded",
+      "past_champions", "median_monitor", "most_shared", "day_traded", "ass_denominator",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5324,14 +5325,14 @@ const html = `<!DOCTYPE html>
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions", "median_monitor", "most_shared", "day_traded",
+      "past_champions", "median_monitor", "most_shared", "day_traded", "ass_denominator",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
       "cornerstone_trades", "pipeline", "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "median_monitor", "most_shared", "day_traded",
+      "median_monitor", "most_shared", "day_traded", "ass_denominator",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5349,7 +5350,7 @@ const html = `<!DOCTYPE html>
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "median_monitor", "most_shared", "day_traded",
+      "median_monitor", "most_shared", "day_traded", "ass_denominator",
       "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -5393,6 +5394,7 @@ const html = `<!DOCTYPE html>
       { id: "median_monitor", lab: "Median monitor", desk: "lists", group: "who", size: "full", why: "This season under Sleeper’s extra game vs league median — H2H plus above/below median each week. Tap a seat for the week tape." },
       { id: "most_shared", lab: "Most shared", desk: "lists", group: "memory", size: "full", why: "Players who have been on the most different rosters — draft, trades, and the wire. Tap a player for every seat." },
       { id: "day_traded", lab: "Day traded", desk: "lists", group: "memory", size: "full", why: "Players most added and dropped on the wire. Ranked by adds + drops. Tap for the recent tape." },
+      { id: "ass_denominator", lab: "Ass denominator", desk: "lists", group: "memory", size: "full", why: "Players held longest on the worst rosters — weighted days on bottom-half and sacko seats. Tap for the seat tape." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5523,6 +5525,7 @@ const html = `<!DOCTYPE html>
     let medianMonitorBook = null;
     let mostSharedBook = null;
     let dayTradedBook = null;
+    let assDenominatorBook = null;
     let ringLeadersBook = null;
     let tradeWebBook = null;
     let bestWaiverPickupsBook = null;
@@ -5990,7 +5993,7 @@ const html = `<!DOCTYPE html>
         || canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades" || canon === "pipeline"
         || canon === "closest_games" || canon === "hardest_schedule" || canon === "median_monitor"
-        || canon === "most_shared" || canon === "day_traded"
+        || canon === "most_shared" || canon === "day_traded" || canon === "ass_denominator"
         || canon === "ring_leaders"
         || canon === "trade_web"
         || canon === "head_to_head";
@@ -6338,6 +6341,24 @@ const html = `<!DOCTYPE html>
           };
         });
       }
+      if (canon === "ass_denominator") {
+        const players = (assDenominatorBook && Array.isArray(assDenominatorBook.players))
+          ? assDenominatorBook.players.slice() : [];
+        return players.map(function (p, i) {
+          return {
+            key: String(p.key || p.player_id || i),
+            name: p.name,
+            metric: String(p.bad_days != null ? p.bad_days : "—"),
+            sub: (p.seat_lab || "—")
+              + (p.n_bad_seats != null
+                ? (" · " + p.n_bad_seats + " bad seat" + (Number(p.n_bad_seats) === 1 ? "" : "s"))
+                : "")
+              + " · tap for seats",
+            rank: Number(p.rank) || (i + 1),
+            seat: p,
+          };
+        });
+      }
       if (canon === "ring_leaders") {
         const players = (ringLeadersBook && Array.isArray(ringLeadersBook.players))
           ? ringLeadersBook.players.slice() : [];
@@ -6621,9 +6642,10 @@ const html = `<!DOCTYPE html>
         return picked.map(wrap).join("");
       }
       // Most shared / Day traded: flat top boards.
-      if (id === "most_shared" || id === "day_traded"
+      if (id === "most_shared" || id === "day_traded" || id === "ass_denominator"
         || (typeof receiptDoorCanon === "function"
-          && (receiptDoorCanon(id) === "most_shared" || receiptDoorCanon(id) === "day_traded"))) {
+          && (receiptDoorCanon(id) === "most_shared" || receiptDoorCanon(id) === "day_traded"
+            || receiptDoorCanon(id) === "ass_denominator"))) {
         return picked.map(wrap).join("");
       }
       // Ring leaders: flat top-25 by championship rings.
@@ -8256,7 +8278,7 @@ const html = `<!DOCTYPE html>
         || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
         || id === "hardest_schedule" || id === "median_monitor" || id === "most_shared"
-        || id === "day_traded" || id === "ring_leaders"
+        || id === "day_traded" || id === "ass_denominator" || id === "ring_leaders"
         || id === "trade_web"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
@@ -8320,7 +8342,7 @@ const html = `<!DOCTYPE html>
         || key === "best_ball_hype" || key === "biggest_choker"
         || key === "waiver_winners" || key === "cornerstone_trades" || key === "pipeline"
         || key === "closest_games" || key === "hardest_schedule" || key === "median_monitor"
-        || key === "most_shared" || key === "day_traded"
+        || key === "most_shared" || key === "day_traded" || key === "ass_denominator"
         || key === "ring_leaders"
         || key === "trade_web"
         || key === "head_to_head") return false;
@@ -8340,7 +8362,7 @@ const html = `<!DOCTYPE html>
         || canon === "waiver_winners" || canon === "cornerstone_trades"
         || canon === "pipeline" || canon === "closest_games"
         || canon === "hardest_schedule" || canon === "median_monitor"
-        || canon === "most_shared" || canon === "day_traded"
+        || canon === "most_shared" || canon === "day_traded" || canon === "ass_denominator"
         || canon === "ring_leaders" || canon === "trade_web"
         || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
@@ -8398,6 +8420,7 @@ const html = `<!DOCTYPE html>
         median_monitor: '<path d="M4 12h16"/><path d="M12 4v16"/><circle cx="12" cy="12" r="3"/>',
         most_shared: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
         day_traded: '<path d="M7 7h10v10H7z"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/>',
+        ass_denominator: '<path d="M12 3v18"/><path d="M5 8h14"/><path d="M7 16h10"/>',
         ring_leaders: '<path d="M8 6h8v2.5l-1.2.8V11H9.2V9.3L8 8.5V6z"/><path d="M7 18h10"/><path d="M9 11v7M15 11v7M12 11v7"/>',
         trade_web: '<circle cx="6" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M12 8v2M12 14v2M14 12h2"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
@@ -8484,6 +8507,9 @@ const html = `<!DOCTYPE html>
       } else if (id === "day_traded") {
         const lead = dayTradedBook && dayTradedBook.players && dayTradedBook.players[0];
         if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.churn != null ? lead.churn : ""));
+      } else if (id === "ass_denominator") {
+        const lead = assDenominatorBook && assDenominatorBook.players && assDenominatorBook.players[0];
+        if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.bad_days != null ? lead.bad_days : ""));
       } else if (id === "median_monitor") {
         const lead = medianMonitorBook && medianMonitorBook.seats && medianMonitorBook.seats[0];
         if (lead) {
@@ -9636,7 +9662,7 @@ const html = `<!DOCTYPE html>
         || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
         || id === "hardest_schedule" || id === "median_monitor" || id === "most_shared"
-        || id === "day_traded" || id === "ring_leaders") {
+        || id === "day_traded" || id === "ass_denominator" || id === "ring_leaders") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank,
             r.seat && r.seat.picker, r.seat && r.seat.player,
@@ -9673,6 +9699,9 @@ const html = `<!DOCTYPE html>
           }
           if (id === "day_traded" && !dayTradedBook) {
             return '<p class="caption">Day traded book not loaded yet.</p>';
+          }
+          if (id === "ass_denominator" && !assDenominatorBook) {
+            return '<p class="caption">Ass denominator book not loaded yet.</p>';
           }
           if (id === "median_monitor" && !medianMonitorBook) {
             return '<p class="caption">Median monitor book not loaded yet.</p>';
@@ -9869,6 +9898,24 @@ const html = `<!DOCTYPE html>
                 : "")
               + "</div>";
           }
+          if (id === "ass_denominator") {
+            const open = String(assDenominatorOpenKey || "") === String(r.key || "")
+              || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
+            const head = '<div class="row-top"><div><div class="names">'
+              + esc((r.rank || "") + ". ") + esc(r.name || "—") + "</div>"
+              + (r.sub ? '<div class="date">' + esc(r.sub) + "</div>" : "")
+              + "</div>"
+              + '<div class="margin">' + esc(r.metric || "—") + "</div></div>";
+            return '<div class="row-x' + (open ? " open" : "") + '">'
+              + '<button type="button" class="row-x-btn" data-ass-denominator-open="'
+              + esc(String(r.key || "")) + '" aria-expanded="' + (open ? "true" : "false") + '">'
+              + head
+              + "</button>"
+              + (open
+                ? ('<div class="detail">' + assDenominatorDetailHtml(r.seat) + "</div>")
+                : "")
+              + "</div>";
+          }
           if (id === "ring_leaders") {
             const open = String(ringLeadersOpenKey || "") === String(r.key || "")
               || (!!receiptListWho && String(receiptListWho) === String(r.key || ""));
@@ -10020,6 +10067,9 @@ const html = `<!DOCTYPE html>
       }
       else if (id === "day_traded") {
         caption = "Players most added and dropped on the wire. Big number is adds + drops. Tap for the recent tape.";
+      }
+      else if (id === "ass_denominator") {
+        caption = "Players held longest on the worst rosters. Big number is weighted days on bottom-half and sacko seats. Tap for the seat tape.";
       }
       else if (id === "median_monitor") {
         const wk = medianMonitorBook && Array.isArray(medianMonitorBook.weeks)
@@ -12438,6 +12488,7 @@ const html = `<!DOCTYPE html>
       medianMonitorBook = null;
       mostSharedBook = null;
       dayTradedBook = null;
+      assDenominatorBook = null;
       ringLeadersBook = null;
       tradeWebBook = null;
       bestWaiverPickupsBook = null;
@@ -12466,6 +12517,7 @@ const html = `<!DOCTYPE html>
       medianMonitorOpenKey = "";
       mostSharedOpenKey = "";
       dayTradedOpenKey = "";
+      assDenominatorOpenKey = "";
       ringLeadersOpenKey = "";
       cornerstoneTradesOpenKey = "";
       receiptH2hA = "";
@@ -12482,7 +12534,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, medianMonitorRaw, mostSharedRaw, dayTradedRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, medianMonitorRaw, mostSharedRaw, dayTradedRaw, assDenominatorRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -12507,6 +12559,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("median-monitor.json").catch(() => null),
         getLeagueJson("most-shared.json").catch(() => null),
         getLeagueJson("day-traded.json").catch(() => null),
+        getLeagueJson("ass-denominator.json").catch(() => null),
         getLeagueJson("ring-leaders.json").catch(() => null),
         getLeagueJson("trade-web.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
@@ -12619,6 +12672,10 @@ const html = `<!DOCTYPE html>
         dayTradedBook = dayTradedRaw && Number(dayTradedRaw.v) >= 1
           && Array.isArray(dayTradedRaw.players) ? dayTradedRaw : null;
       } catch (err) { dayTradedBook = null; }
+      try {
+        assDenominatorBook = assDenominatorRaw && Number(assDenominatorRaw.v) >= 1
+          && Array.isArray(assDenominatorRaw.players) ? assDenominatorRaw : null;
+      } catch (err) { assDenominatorBook = null; }
       try {
         ringLeadersBook = ringLeadersRaw && Number(ringLeadersRaw.v) >= 1
           && Array.isArray(ringLeadersRaw.players) ? ringLeadersRaw : null;
@@ -13925,6 +13982,7 @@ const html = `<!DOCTYPE html>
       medianMonitorOpenKey = "";
       mostSharedOpenKey = "";
       dayTradedOpenKey = "";
+      assDenominatorOpenKey = "";
       ringLeadersOpenKey = "";
       cornerstoneTradesOpenKey = "";
       pipelineQ = "";
@@ -14276,6 +14334,13 @@ const html = `<!DOCTYPE html>
         const after = src.indexOf("most_shared");
         if (after >= 0) src.splice(after + 1, 0, "day_traded");
         else src.push("day_traded");
+      }
+      // Dynasty: add Ass denominator after Day traded — never replace a tile.
+      if (dynasty && src.indexOf("ass_denominator") < 0 && dataDashById("ass_denominator")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("day_traded");
+        if (after >= 0) src.splice(after + 1, 0, "ass_denominator");
+        else src.push("ass_denominator");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -16264,6 +16329,37 @@ const html = `<!DOCTYPE html>
           html += "<p><b>" + esc(when) + "</b> · " + esc(kind)
             + " · " + esc(type)
             + (ev.seat ? (" · " + esc(ev.seat)) : "")
+            + "</p>";
+        });
+      }
+      html += "</div>";
+      return html;
+    }
+
+    function assDenominatorDetailHtml(row) {
+      if (!row) return "";
+      let html = '<div class="pf-why">';
+      html += '<p class="pf-why-h">In plain English</p>';
+      html += "<p><b>" + esc(row.name || "Player") + "</b> spent "
+        + esc(String(row.bad_days != null ? row.bad_days : "—"))
+        + " weighted days on the worst seats"
+        + (row.n_bad_seats != null
+          ? (" · " + esc(String(row.n_bad_seats)) + " bad seat"
+            + (Number(row.n_bad_seats) === 1 ? "" : "s"))
+          : "")
+        + ".</p>";
+      html += '<p class="caption">Bottom-half finishes count; sacko years weigh more. Top-half time does not.</p>';
+      html += '<p class="pf-why-h">Worst seats</p>';
+      const seats = row.seats || [];
+      if (!seats.length) {
+        html += '<p class="caption">No bad-seat tape on the book.</p>';
+      } else {
+        seats.forEach(function (s) {
+          html += "<p><b>" + esc(s.name || "—") + "</b>"
+            + (s.bad_days != null ? (" · " + esc(String(s.bad_days)) + " weighted days") : "")
+            + (s.worst_place != null && s.worst_season
+              ? (" · worst #" + esc(String(s.worst_place)) + " in " + esc(String(s.worst_season)))
+              : "")
             + "</p>";
         });
       }
@@ -20644,6 +20740,12 @@ const html = `<!DOCTYPE html>
           lead && lead.churn != null ? String(lead.churn) : "Open",
           lead ? ((lead.name || "Lead") + " · wire churn") : "Most added + dropped");
       }
+      if (id === "ass_denominator") {
+        const lead = assDenominatorBook && assDenominatorBook.players && assDenominatorBook.players[0];
+        return dataDashHead(spec,
+          lead && lead.bad_days != null ? String(lead.bad_days) : "Open",
+          lead ? ((lead.name || "Lead") + " · worst seats") : "Held on the worst rosters");
+      }
       if (id === "ring_leaders") {
         const lead = ringLeadersBook && ringLeadersBook.players && ringLeadersBook.players[0];
         return dataDashHead(spec,
@@ -20936,6 +21038,7 @@ const html = `<!DOCTYPE html>
         medianMonitorOpenKey = "";
         mostSharedOpenKey = "";
         dayTradedOpenKey = "";
+        assDenominatorOpenKey = "";
         ringLeadersOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
@@ -27079,6 +27182,7 @@ const html = `<!DOCTYPE html>
         medianMonitorOpenKey = "";
         mostSharedOpenKey = "";
         dayTradedOpenKey = "";
+        assDenominatorOpenKey = "";
         ringLeadersOpenKey = "";
         cornerstoneTradesOpenKey = "";
         pipelineQ = "";
@@ -39491,6 +39595,15 @@ const html = `<!DOCTYPE html>
         if (typeof render === "function") render();
         return;
       }
+      const assDenominatorOpenBtn = e.target.closest("[data-ass-denominator-open]");
+      if (assDenominatorOpenBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const key = assDenominatorOpenBtn.getAttribute("data-ass-denominator-open") || "";
+        assDenominatorOpenKey = (String(assDenominatorOpenKey) === String(key)) ? "" : key;
+        if (typeof render === "function") render();
+        return;
+      }
       const ringLeadersOpenBtn = e.target.closest("[data-ring-leaders-open]");
       if (ringLeadersOpenBtn) {
         e.preventDefault();
@@ -39846,6 +39959,7 @@ const html = `<!DOCTYPE html>
         medianMonitorOpenKey = "";
         mostSharedOpenKey = "";
         dayTradedOpenKey = "";
+        assDenominatorOpenKey = "";
         ringLeadersOpenKey = "";
         receiptH2hA = "";
         receiptH2hB = "";
@@ -43917,8 +44031,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 56 || uniq.size !== 56) {
-    throw new Error("DATA_REPORTS must hold exactly 56 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 57 || uniq.size !== 57) {
+    throw new Error("DATA_REPORTS must hold exactly 57 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -43931,9 +44045,9 @@ if (!inline.includes("function dataDashHtml(")
     || !uniq.has("best_ball_hype") || !uniq.has("biggest_choker") || !uniq.has("waiver_winners")
     || !uniq.has("closest_games") || !uniq.has("hardest_schedule") || !uniq.has("ring_leaders")
     || !uniq.has("trade_web") || !uniq.has("median_monitor")
-    || !uniq.has("most_shared") || !uniq.has("day_traded")
+    || !uniq.has("most_shared") || !uniq.has("day_traded") || !uniq.has("ass_denominator")
     || !uniq.has("head_to_head")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, Trade web, Median monitor, Most shared, Day traded, and Head to head");
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, Trade web, Median monitor, Most shared, Day traded, Ass denominator, and Head to head");
   }
   const needIds = ["trade_helper", "fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -43947,7 +44061,7 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 24 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 25 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
@@ -43956,27 +44070,28 @@ if (!inline.includes("function dataDashHtml(")
     || defIds.indexOf("median_monitor") < 0
     || defIds.indexOf("most_shared") < 0
     || defIds.indexOf("day_traded") < 0
+    || defIds.indexOf("ass_denominator") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 24 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 25 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 24 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 24 default door tiles");
+  if (doorIds.length !== 25 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 25 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 21 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 21 catalog ids");
+  if (resIds.length !== 22 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 22 catalog ids");
   }
   if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades") || !resIds.includes("pipeline")
     || !resIds.includes("closest_games") || !resIds.includes("hardest_schedule")
     || !resIds.includes("ring_leaders") || !resIds.includes("trade_web")
     || !resIds.includes("median_monitor")
-    || !resIds.includes("most_shared") || !resIds.includes("day_traded")) {
-    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders, trade_web, median_monitor, most_shared, day_traded");
+    || !resIds.includes("most_shared") || !resIds.includes("day_traded") || !resIds.includes("ass_denominator")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders, trade_web, median_monitor, most_shared, day_traded, ass_denominator");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
@@ -44031,6 +44146,9 @@ if (!inline.includes("function dataDashHtml(")
   if (!uniq.has("day_traded") || defIds[23] !== "day_traded" || doorIds[23] !== "day_traded") {
     throw new Error("Day traded must be default board tile 24 (League Data door)");
   }
+  if (!uniq.has("ass_denominator") || defIds[24] !== "ass_denominator" || doorIds[24] !== "ass_denominator") {
+    throw new Error("Ass denominator must be default board tile 25 (League Data door)");
+  }
   if (!inline.includes('id: "closest_games"')
     || !inline.includes('lab: "Closest games"')
     || !inline.includes("function closestGamesDetailHtml(")
@@ -44084,6 +44202,17 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "day_traded")')
     || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "day_traded"')) {
     throw new Error("Day traded door must ship book load, expand detail, and add-only dynasty migrate");
+  }
+  if (!inline.includes('id: "ass_denominator"')
+    || !inline.includes('lab: "Ass denominator"')
+    || !inline.includes("function assDenominatorDetailHtml(")
+    || !inline.includes('getLeagueJson("ass-denominator.json")')
+    || !inline.includes('data-ass-denominator-open="')
+    || !inline.includes("assDenominatorOpenKey")
+    || !inline.includes('canon === "ass_denominator"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "ass_denominator")')
+    || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "ass_denominator"')) {
+    throw new Error("Ass denominator door must ship book load, expand detail, and add-only dynasty migrate");
   }
   if (!inline.includes('id: "trade_web"')
     || !inline.includes('lab: "Trade web"')
@@ -45087,7 +45216,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 24")) {
+  || !inline.includes("const DATA_DASH_MAX = 25")) {
   throw new Error("Waiver winners must stay on League Data with three top-10 bands");
 }
 if (!inline.includes('id: "cornerstone_trades"')

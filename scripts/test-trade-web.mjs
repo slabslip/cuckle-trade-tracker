@@ -53,6 +53,11 @@ for (const need of [
   "tw-deal-lab",
   "tw-deal-pnl",
   "tradeWebDealParties",
+  "tradeWebTxId",
+  "tradeWebListTrades",
+  "tradeWebScopeFromTx",
+  "Start from a trade",
+  "data-trade-web-tx",
   "min(62vh, 560px)",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);

@@ -50,6 +50,9 @@ for (const need of [
   "function tradeWebDealLabel(",
   "tw-node-date",
   "date on the deal",
+  "tw-deal-lab",
+  "tw-deal-pnl",
+  "min(62vh, 560px)",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
 }

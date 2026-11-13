@@ -49,9 +49,10 @@ for (const need of [
   "function tradeWebDealDate(",
   "function tradeWebDealLabel(",
   "tw-node-date",
-  "date on the deal",
+  "tw-deal-title-band",
   "tw-deal-lab",
   "tw-deal-pnl",
+  "tradeWebDealParties",
   "min(62vh, 560px)",
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -95,14 +96,20 @@ if (!gen.includes("maxGraph")
   || !gen.includes("Full trade web — pinch to zoom")) {
   fail("share must fit the full SVG viewBox into the export (not the on-screen viewport)");
 }
-// Deal hubs must carry date on the bubble — not as the main label between assets.
+// Deal date/parties live as a title above the piece cluster — not a hub in the flow.
 if (gen.includes('label: (node.exit && node.exit.date) || "trade"')
   || gen.includes("label: web.date || \"trade\"")
   || gen.includes("label: (rn.exit && rn.exit.date) || web.date || \"trade\"")) {
-  fail("trade hubs must not use raw ISO dates as the bubble label");
+  fail("trade titles must not use raw ISO dates as the main label");
 }
-if (!gen.includes('lab: ""') || !gen.includes("tradeWebDealLabel(")) {
-  fail("deal edges should stay unlabeled; date/destination live on the trade bubble");
+if (!gen.includes("tw-deal-title-band") || !gen.includes("deals.push") || !gen.includes("tradeWebDealLabel(")) {
+  fail("deals must render as title overlays above piece groups");
+}
+{
+  const buildOnly = gen.replace(/function tradeWebGraphSvg[\s\S]*$/, "");
+  if (/nodes\.push\(\{[^}]*kind:\s*"trade"/s.test(buildOnly)) {
+    fail("tradeWebBuildGraph must not emit gold deal hub nodes");
+  }
 }
 {
   const doors = (page.match(/const DATA_DOORS = \[([\s\S]*?)\];/) || [])[1] || "";

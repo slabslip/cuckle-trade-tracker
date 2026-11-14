@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-13",
-  "n": 37,
+  "as_of": "2026-11-14",
+  "n": 30,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -11,17 +11,10 @@
     },
     "2216": {
       "name": "Mike Evans",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "SF",
       "pos": "WR"
-    },
-    "3214": {
-      "name": "Hunter Henry",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "TE"
     },
     "4881": {
       "name": "Lamar Jackson",
@@ -32,7 +25,7 @@
     },
     "5844": {
       "name": "T.J. Hockenson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIN",
       "pos": "TE"
@@ -51,32 +44,11 @@
       "team": "NE",
       "pos": "WR"
     },
-    "5872": {
-      "name": "Deebo Samuel Sr.",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "SF",
-      "pos": "WR"
-    },
     "5892": {
       "name": "David Montgomery",
       "injury_status": "Questionable",
       "status": "Active",
       "team": "HOU",
-      "pos": "RB"
-    },
-    "5947": {
-      "name": "Jakobi Meyers",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "JAX",
-      "pos": "WR"
-    },
-    "5967": {
-      "name": "Tony Pollard",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "TEN",
       "pos": "RB"
     },
     "7525": {
@@ -121,19 +93,19 @@
       "team": "NE",
       "pos": "WR"
     },
-    "8137": {
-      "name": "George Pickens",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DAL",
-      "pos": "WR"
-    },
     "8146": {
       "name": "Garrett Wilson",
       "injury_status": "Questionable",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
+    },
+    "8151": {
+      "name": "Kenneth Walker III",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "KC",
+      "pos": "RB"
     },
     "8154": {
       "name": "Brian Robinson Jr.",
@@ -149,23 +121,23 @@
       "team": "LAR",
       "pos": "WR"
     },
-    "10219": {
-      "name": "Chris Rodriguez Jr.",
+    "9756": {
+      "name": "Jordan Addison",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "JAX",
-      "pos": "RB"
+      "team": "MIN",
+      "pos": "WR"
     },
-    "10236": {
-      "name": "Dalton Kincaid",
+    "11625": {
+      "name": "Adonai Mitchell",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "BUF",
-      "pos": "TE"
+      "team": "NYJ",
+      "pos": "WR"
     },
     "11628": {
       "name": "Marvin Harrison Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "HOU",
       "pos": "WR"
@@ -177,33 +149,12 @@
       "team": "LAC",
       "pos": "WR"
     },
-    "12474": {
-      "name": "Woody Marks",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "HOU",
-      "pos": "RB"
-    },
     "12489": {
       "name": "RJ Harvey",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "DEN",
       "pos": "RB"
-    },
-    "12490": {
-      "name": "Bhayshul Tuten",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "JAX",
-      "pos": "RB"
-    },
-    "12506": {
-      "name": "Harold Fannin Jr.",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CLE",
-      "pos": "TE"
     },
     "12519": {
       "name": "Luther Burden III",
@@ -242,7 +193,7 @@
     },
     "13279": {
       "name": "Carnell Tate",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "TEN",
       "pos": "WR"

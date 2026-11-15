@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-14",
+  "as_of": "2026-11-15",
   "n": 30,
   "players": {
     "2133": {
@@ -46,7 +46,7 @@
     },
     "5892": {
       "name": "David Montgomery",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
@@ -67,8 +67,8 @@
     },
     "7543": {
       "name": "Travis Etienne Jr.",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "NO",
       "pos": "RB"
     },
@@ -102,7 +102,7 @@
     },
     "8151": {
       "name": "Kenneth Walker III",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "KC",
       "pos": "RB"
@@ -165,8 +165,8 @@
     },
     "12529": {
       "name": "TreVeyon Henderson",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "NE",
       "pos": "RB"
     },

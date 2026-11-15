@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-14",
+  "as_of": "2026-11-15",
   "n": 80,
   "players": {
     "2133": {
@@ -81,7 +81,7 @@
     },
     "5892": {
       "name": "David Montgomery",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
@@ -151,8 +151,8 @@
     },
     "7543": {
       "name": "Travis Etienne Jr.",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "NO",
       "pos": "RB"
     },
@@ -162,6 +162,13 @@
       "status": "Active",
       "team": "DET",
       "pos": "WR"
+    },
+    "7600": {
+      "name": "Pat Freiermuth",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PIT",
+      "pos": "TE"
     },
     "7611": {
       "name": "Rhamondre Stevenson",
@@ -207,7 +214,7 @@
     },
     "8151": {
       "name": "Kenneth Walker III",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "KC",
       "pos": "RB"
@@ -289,13 +296,6 @@
       "team": "TEN",
       "pos": "RB"
     },
-    "9511": {
-      "name": "Keaton Mitchell",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "LAC",
-      "pos": "RB"
-    },
     "9756": {
       "name": "Jordan Addison",
       "injury_status": "Questionable",
@@ -361,8 +361,8 @@
     },
     "11626": {
       "name": "Xavier Legette",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "CAR",
       "pos": "WR"
     },
@@ -452,8 +452,8 @@
     },
     "12529": {
       "name": "TreVeyon Henderson",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "NE",
       "pos": "RB"
     },
@@ -550,7 +550,7 @@
     },
     "13380": {
       "name": "Brenen Thompson",
-      "injury_status": "Questionable",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "LAC",
       "pos": "WR"

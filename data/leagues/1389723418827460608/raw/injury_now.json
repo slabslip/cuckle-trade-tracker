@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-15",
-  "n": 30,
+  "n": 28,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -37,13 +37,6 @@
       "team": "GB",
       "pos": "RB"
     },
-    "5859": {
-      "name": "A.J. Brown",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "WR"
-    },
     "5892": {
       "name": "David Montgomery",
       "injury_status": "Out",
@@ -70,20 +63,6 @@
       "injury_status": "Questionable",
       "status": "Active",
       "team": "NO",
-      "pos": "RB"
-    },
-    "7547": {
-      "name": "Amon-Ra St. Brown",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DET",
-      "pos": "WR"
-    },
-    "7611": {
-      "name": "Rhamondre Stevenson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
       "pos": "RB"
     },
     "8121": {
@@ -127,6 +106,13 @@
       "status": "Active",
       "team": "MIN",
       "pos": "WR"
+    },
+    "11564": {
+      "name": "Drake Maye",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NE",
+      "pos": "QB"
     },
     "11625": {
       "name": "Adonai Mitchell",

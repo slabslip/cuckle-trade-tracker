@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-15",
-  "n": 80,
+  "n": 77,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -71,13 +71,6 @@
       "status": "Active",
       "team": "GB",
       "pos": "RB"
-    },
-    "5859": {
-      "name": "A.J. Brown",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "WR"
     },
     "5892": {
       "name": "David Montgomery",
@@ -156,26 +149,12 @@
       "team": "NO",
       "pos": "RB"
     },
-    "7547": {
-      "name": "Amon-Ra St. Brown",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DET",
-      "pos": "WR"
-    },
     "7600": {
       "name": "Pat Freiermuth",
       "injury_status": "Questionable",
       "status": "Active",
       "team": "PIT",
       "pos": "TE"
-    },
-    "7611": {
-      "name": "Rhamondre Stevenson",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NE",
-      "pos": "RB"
     },
     "8110": {
       "name": "Jake Ferguson",
@@ -324,6 +303,13 @@
       "team": "ARI",
       "pos": "WR"
     },
+    "11564": {
+      "name": "Drake Maye",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NE",
+      "pos": "QB"
+    },
     "11577": {
       "name": "Will Shipley",
       "injury_status": "IR",
@@ -399,13 +385,6 @@
       "injury_status": "PUP",
       "status": "Active",
       "team": "SF",
-      "pos": "RB"
-    },
-    "11729": {
-      "name": "Sione Vaki",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "DET",
       "pos": "RB"
     },
     "12484": {

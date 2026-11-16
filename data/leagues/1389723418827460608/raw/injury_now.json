@@ -1,7 +1,14 @@
 {
-  "as_of": "2026-11-15",
-  "n": 28,
+  "as_of": "2026-11-16",
+  "n": 30,
   "players": {
+    "1466": {
+      "name": "Travis Kelce",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "KC",
+      "pos": "TE"
+    },
     "2133": {
       "name": "Davante Adams",
       "injury_status": "IR",
@@ -37,6 +44,13 @@
       "team": "GB",
       "pos": "RB"
     },
+    "5859": {
+      "name": "A.J. Brown",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "NE",
+      "pos": "WR"
+    },
     "5892": {
       "name": "David Montgomery",
       "injury_status": "Out",
@@ -58,12 +72,12 @@
       "team": "DEN",
       "pos": "WR"
     },
-    "7543": {
-      "name": "Travis Etienne Jr.",
+    "8112": {
+      "name": "Drake London",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "NO",
-      "pos": "RB"
+      "team": "ATL",
+      "pos": "WR"
     },
     "8121": {
       "name": "Romeo Doubs",
@@ -72,11 +86,11 @@
       "team": "NE",
       "pos": "WR"
     },
-    "8146": {
-      "name": "Garrett Wilson",
+    "8126": {
+      "name": "Wan'Dale Robinson",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "NYJ",
+      "team": "TEN",
       "pos": "WR"
     },
     "8151": {
@@ -102,24 +116,24 @@
     },
     "9756": {
       "name": "Jordan Addison",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIN",
       "pos": "WR"
     },
     "11564": {
       "name": "Drake Maye",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NE",
       "pos": "QB"
     },
-    "11625": {
-      "name": "Adonai Mitchell",
-      "injury_status": "Questionable",
+    "11604": {
+      "name": "Brock Bowers",
+      "injury_status": "Out",
       "status": "Active",
-      "team": "NYJ",
-      "pos": "WR"
+      "team": "LV",
+      "pos": "TE"
     },
     "11628": {
       "name": "Marvin Harrison Jr.",
@@ -130,10 +144,17 @@
     },
     "11635": {
       "name": "Ladd McConkey",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "LAC",
       "pos": "WR"
+    },
+    "12474": {
+      "name": "Woody Marks",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "HOU",
+      "pos": "RB"
     },
     "12489": {
       "name": "RJ Harvey",
@@ -172,7 +193,7 @@
     },
     "13276": {
       "name": "Omar Cooper Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
@@ -190,13 +211,6 @@
       "status": "Inactive",
       "team": "ARI",
       "pos": "RB"
-    },
-    "13346": {
-      "name": "Denzel Boston",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CLE",
-      "pos": "WR"
     }
   }
 }

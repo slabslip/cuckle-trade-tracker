@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-16",
+  "as_of": "2026-11-17",
   "n": 30,
   "players": {
     "1466": {
@@ -117,7 +117,7 @@
     "9756": {
       "name": "Jordan Addison",
       "injury_status": "Out",
-      "status": "Active",
+      "status": "Inactive",
       "team": "MIN",
       "pos": "WR"
     },

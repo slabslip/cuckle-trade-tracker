@@ -5487,8 +5487,8 @@
       "drafted_by": "kotula69",
       "startup": false,
       "pick_cost": 997,
-      "player_today": 0,
-      "surplus": -997,
+      "player_today": 1636,
+      "surplus": 639,
       "flag": "priced_as_2027r5"
     },
     {
@@ -7023,6 +7023,24 @@
       }
     },
     {
+      "user_id": "740721014035660800",
+      "name": "kotula69",
+      "used": 30,
+      "graded": 28,
+      "surplus": 63235,
+      "per_pick": 2258.3928571428573,
+      "best": {
+        "player": "Garrett Wilson",
+        "season": "2026",
+        "surplus": 5386
+      },
+      "worst": {
+        "player": "Jacksonville Jaguars",
+        "season": "2026",
+        "surplus": -997
+      }
+    },
+    {
       "user_id": "1132151393051095040",
       "name": "Tbow00",
       "used": 30,
@@ -7036,24 +7054,6 @@
       },
       "worst": {
         "player": "New England Patriots",
-        "season": "2026",
-        "surplus": -997
-      }
-    },
-    {
-      "user_id": "740721014035660800",
-      "name": "kotula69",
-      "used": 30,
-      "graded": 28,
-      "surplus": 61599,
-      "per_pick": 2199.964285714286,
-      "best": {
-        "player": "Garrett Wilson",
-        "season": "2026",
-        "surplus": 5386
-      },
-      "worst": {
-        "player": "Jacksonville Jaguars",
         "season": "2026",
         "surplus": -997
       }

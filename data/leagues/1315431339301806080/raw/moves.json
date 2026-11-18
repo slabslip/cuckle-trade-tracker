@@ -48934,6 +48934,54 @@
     }
   },
   {
+    "transaction_id": "1428464873150373888",
+    "type": "waiver",
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "week": 10,
+    "created": 1794935074654,
+    "date": "2026-11-17",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "4033": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1428464852485046272",
+    "type": "waiver",
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "week": 10,
+    "created": 1794935069728,
+    "date": "2026-11-17",
+    "roster_ids": [
+      5
+    ],
+    "adds": {
+      "10231": 5
+    },
+    "drops": {}
+  },
+  {
+    "transaction_id": "1428461332763512832",
+    "type": "waiver",
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "week": 10,
+    "created": 1794934230561,
+    "date": "2026-11-17",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "13075": 7
+    },
+    "drops": {}
+  },
+  {
     "transaction_id": "1428461087799406592",
     "type": "free_agent",
     "league_id": "1315431339301806080",
@@ -48947,6 +48995,60 @@
     "adds": {},
     "drops": {
       "13011": 7
+    }
+  },
+  {
+    "transaction_id": "1428643069598646272",
+    "type": "waiver",
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "week": 10,
+    "created": 1794977559999,
+    "date": "2026-11-18",
+    "roster_ids": [
+      10
+    ],
+    "adds": {
+      "3155": 10
+    },
+    "drops": {
+      "11593": 10
+    }
+  },
+  {
+    "transaction_id": "1428592363067932672",
+    "type": "waiver",
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "week": 10,
+    "created": 1794965470619,
+    "date": "2026-11-18",
+    "roster_ids": [
+      2
+    ],
+    "adds": {
+      "12496": 2
+    },
+    "drops": {
+      "12510": 2
+    }
+  },
+  {
+    "transaction_id": "1428790831489257472",
+    "type": "free_agent",
+    "league_id": "1315431339301806080",
+    "season": "2026",
+    "week": 11,
+    "created": 1795012789178,
+    "date": "2026-11-18",
+    "roster_ids": [
+      7
+    ],
+    "adds": {
+      "11199": 7
+    },
+    "drops": {
+      "6803": 7
     }
   }
 ]

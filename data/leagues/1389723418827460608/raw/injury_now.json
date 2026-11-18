@@ -1,14 +1,7 @@
 {
   "as_of": "2026-11-18",
-  "n": 30,
+  "n": 27,
   "players": {
-    "1466": {
-      "name": "Travis Kelce",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "KC",
-      "pos": "TE"
-    },
     "2133": {
       "name": "Davante Adams",
       "injury_status": "IR",
@@ -18,7 +11,7 @@
     },
     "2216": {
       "name": "Mike Evans",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "SF",
       "pos": "WR"
@@ -32,7 +25,7 @@
     },
     "5844": {
       "name": "T.J. Hockenson",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "MIN",
       "pos": "TE"
@@ -51,23 +44,16 @@
       "team": "NE",
       "pos": "WR"
     },
-    "5892": {
-      "name": "David Montgomery",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "HOU",
-      "pos": "RB"
-    },
     "7525": {
       "name": "DeVonta Smith",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "PHI",
       "pos": "WR"
     },
     "7526": {
       "name": "Jaylen Waddle",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "DEN",
       "pos": "WR"
@@ -95,7 +81,7 @@
     },
     "8151": {
       "name": "Kenneth Walker III",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "KC",
       "pos": "RB"
@@ -128,30 +114,37 @@
       "team": "NE",
       "pos": "QB"
     },
+    "11583": {
+      "name": "Jonathon Brooks",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "CAR",
+      "pos": "RB"
+    },
     "11604": {
       "name": "Brock Bowers",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "LV",
       "pos": "TE"
     },
     "11628": {
       "name": "Marvin Harrison Jr.",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "HOU",
       "pos": "WR"
     },
     "11635": {
       "name": "Ladd McConkey",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "LAC",
       "pos": "WR"
     },
     "12474": {
       "name": "Woody Marks",
-      "injury_status": "Out",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
@@ -163,20 +156,6 @@
       "team": "DEN",
       "pos": "RB"
     },
-    "12519": {
-      "name": "Luther Burden III",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CHI",
-      "pos": "WR"
-    },
-    "12529": {
-      "name": "TreVeyon Henderson",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "NE",
-      "pos": "RB"
-    },
     "12533": {
       "name": "Jacory Croskey-Merritt",
       "injury_status": "IR",
@@ -186,21 +165,21 @@
     },
     "12534": {
       "name": "Kyle Monangai",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "CHI",
       "pos": "RB"
     },
     "13276": {
       "name": "Omar Cooper Jr.",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
     },
     "13279": {
       "name": "Carnell Tate",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "TEN",
       "pos": "WR"

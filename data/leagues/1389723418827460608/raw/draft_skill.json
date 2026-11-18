@@ -3321,8 +3321,8 @@
       "drafted_by": "Tbow00",
       "startup": false,
       "pick_cost": 997,
-      "player_today": null,
-      "surplus": null,
+      "player_today": 0,
+      "surplus": -997,
       "flag": "unpriced"
     },
     {
@@ -7044,9 +7044,9 @@
       "user_id": "1132151393051095040",
       "name": "Tbow00",
       "used": 30,
-      "graded": 28,
-      "surplus": 62927,
-      "per_pick": 2247.3928571428573,
+      "graded": 29,
+      "surplus": 61930,
+      "per_pick": 2135.5172413793102,
       "best": {
         "player": "Tetairoa McMillan",
         "season": "2026",

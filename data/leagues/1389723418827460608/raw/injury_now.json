@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-17",
+  "as_of": "2026-11-18",
   "n": 30,
   "players": {
     "1466": {
@@ -88,8 +88,8 @@
     },
     "8126": {
       "name": "Wan'Dale Robinson",
-      "injury_status": "Questionable",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "TEN",
       "pos": "WR"
     },

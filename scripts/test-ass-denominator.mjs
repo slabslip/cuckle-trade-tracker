@@ -26,7 +26,7 @@ for (const need of [
   'closest("[data-ass-denominator-open]")',
   'getLeagueJson("ass-denominator.json")',
   "assDenominatorOpenKey",
-  "const DATA_DASH_MAX = 25",
+  "const DATA_DASH_MAX = 26",
   'src.splice(after + 1, 0, "ass_denominator")',
 ]) {
   if (!page.includes(need) && !gen.includes(need)) fail("missing: " + need);
@@ -36,8 +36,8 @@ for (const need of [
   const def = (page.match(/const DATA_DASH_DEFAULT = \[([\s\S]*?)\];/) || [])[1] || "";
   const doorIds = [...doors.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
   const defIds = [...def.matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 25 || defIds.length !== 25) {
-    fail("DATA_DOORS / DEFAULT must be 25 tiles, got " + doorIds.length + "/" + defIds.length);
+  if (doorIds.length !== 26 || defIds.length !== 26) {
+    fail("DATA_DOORS / DEFAULT must be 26 tiles, got " + doorIds.length + "/" + defIds.length);
   }
   if (doorIds[24] !== "ass_denominator" || defIds[24] !== "ass_denominator") {
     fail("Ass denominator must be door tile 25");

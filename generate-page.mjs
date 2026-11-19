@@ -5235,7 +5235,7 @@ const html = `<!DOCTYPE html>
     let lens = "t0";
     let runLens = "y2";
     let lensPicker = "trade";
-    const DATA_V = "news20261118205152";
+    const DATA_V = "tradeFirsts20261118200000";
     /**
      * League home's five lists, in one place. They used to be five accordion packs stacked down
      * the screen, each with its own header and any number of them expanded at once; they are now
@@ -5302,14 +5302,14 @@ const html = `<!DOCTYPE html>
     let seatDirection = null;
     let seatTradeBlocks = {};
     const DATA_DASH_MIN = 6;
-    const DATA_DASH_MAX = 25;
+    const DATA_DASH_MAX = 26;
     const DATA_DOORS = [
       "projected_finish", "my_draft", "manager_archetypes", "season_arcs",
       "my_trades", "trade_helper", "league_trades", "league_draft",
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions", "median_monitor", "most_shared", "day_traded", "ass_denominator",
+      "past_champions", "median_monitor", "most_shared", "day_traded", "ass_denominator", "trade_firsts",
     ];
     const DATA_BLOCK_MAX = 8;
     const DATA_BANDS = [
@@ -5325,14 +5325,14 @@ const html = `<!DOCTYPE html>
       "profit_loss", "biggest_choker", "waiver_winners", "cornerstone_trades",
       "season_place", "week_scores", "best_ball_hype", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "past_champions", "median_monitor", "most_shared", "day_traded", "ass_denominator",
+      "past_champions", "median_monitor", "most_shared", "day_traded", "ass_denominator", "trade_firsts",
     ];
     const DATA_DASH_RESEARCH = [
       "manager_archetypes", "season_arcs", "biggest_choker", "week_scores",
       "best_ball_hype", "projected_finish", "my_trades", "head_to_head",
       "past_champions", "draft_board", "waiver_winners", "my_draft",
       "cornerstone_trades", "pipeline", "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "median_monitor", "most_shared", "day_traded", "ass_denominator",
+      "median_monitor", "most_shared", "day_traded", "ass_denominator", "trade_firsts",
     ];
     const DATA_DASH_REDRAFT = [
       "rs_avg", "playoff_n", "playoff_avg", "pot_net",
@@ -5350,7 +5350,7 @@ const html = `<!DOCTYPE html>
       "fill_holes", "move_extras", "trade_helper", "my_block", "league_block", "block_fits",
       "vs_you", "head_to_head", "waiver_winners", "cornerstone_trades", "pipeline",
       "closest_games", "hardest_schedule", "ring_leaders", "trade_web",
-      "median_monitor", "most_shared", "day_traded", "ass_denominator",
+      "median_monitor", "most_shared", "day_traded", "ass_denominator", "trade_firsts",
       "book_top", "seat_manners",
     ];
     const DATA_REPORT_REDRAFT_LABS = {
@@ -5395,6 +5395,7 @@ const html = `<!DOCTYPE html>
       { id: "most_shared", lab: "Most shared", desk: "lists", group: "memory", size: "full", why: "Players who have been on the most different rosters — draft, trades, and the wire. Tap a player for every seat." },
       { id: "day_traded", lab: "Day traded", desk: "lists", group: "memory", size: "full", why: "Players most added and dropped on the wire. Ranked by adds + drops. Tap for the recent tape." },
       { id: "ass_denominator", lab: "Ass denominator", desk: "lists", group: "memory", size: "full", why: "Players held longest on the worst rosters — weighted days on bottom-half and sacko seats. Tap for the seat tape." },
+      { id: "trade_firsts", lab: "Trade FIRSTS", desk: "lists", group: "memory", size: "full", why: "Pick a seat, then every deal where they sent a first-round draft pick." },
       { id: "head_to_head", lab: "Head to head", desk: "lists", group: "who", size: "full", why: "All-time W-L between two seats. Pick both teams — regular season and playoffs, every year on the book." },
       { id: "draft_board", lab: "Draft capital", desk: "draft", size: "full", why: "Who still holds future firsts." },
       { id: "cuffs_board", lab: "Depth cuffs", desk: "cuffs", size: "full", why: "Who insures starters, and who does not." },
@@ -5526,6 +5527,7 @@ const html = `<!DOCTYPE html>
     let mostSharedBook = null;
     let dayTradedBook = null;
     let assDenominatorBook = null;
+    let tradeFirstsBook = null;
     let ringLeadersBook = null;
     let tradeWebBook = null;
     let bestWaiverPickupsBook = null;
@@ -5993,7 +5995,7 @@ const html = `<!DOCTYPE html>
         || canon === "best_ball_hype" || canon === "biggest_choker"
         || canon === "waiver_winners" || canon === "cornerstone_trades" || canon === "pipeline"
         || canon === "closest_games" || canon === "hardest_schedule" || canon === "median_monitor"
-        || canon === "most_shared" || canon === "day_traded" || canon === "ass_denominator"
+        || canon === "most_shared" || canon === "day_traded" || canon === "ass_denominator" || canon === "trade_firsts"
         || canon === "ring_leaders"
         || canon === "trade_web"
         || canon === "head_to_head";
@@ -8278,7 +8280,7 @@ const html = `<!DOCTYPE html>
         || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
         || id === "hardest_schedule" || id === "median_monitor" || id === "most_shared"
-        || id === "day_traded" || id === "ass_denominator" || id === "ring_leaders"
+        || id === "day_traded" || id === "ass_denominator" || id === "trade_firsts" || id === "ring_leaders"
         || id === "trade_web"
         || id === "head_to_head") return "memory";
       if (id === "fill_holes" || id === "move_extras" || id === "uninsured"
@@ -8324,6 +8326,7 @@ const html = `<!DOCTYPE html>
       if (id === "playoff_avg") return "A seat, a playoff finish";
       if (id === "pot_net") return "A seat, money, a year";
       if (id === "past_champions") return "A year, a seat";
+      if (id === "trade_firsts") return "A partner, a first, a date";
       if (id === "vs_you") return "A name";
       if (id === "week_scores") return "A seat, a week, a year";
       if (id === "firsts_held") return "A seat, a year";
@@ -8350,6 +8353,7 @@ const html = `<!DOCTYPE html>
       if (key === "firsts_held" || key === "seat_draft" || key === "week_scores") return false;
       if (key === "my_trades" && !receiptHistPair) return false;
       if (key === "league_draft" && !receiptDraftSeat) return false;
+      if (key === "trade_firsts" && !receiptTradeFirstsSeat) return false;
       return true;
     }
 
@@ -8362,7 +8366,7 @@ const html = `<!DOCTYPE html>
         || canon === "waiver_winners" || canon === "cornerstone_trades"
         || canon === "pipeline" || canon === "closest_games"
         || canon === "hardest_schedule" || canon === "median_monitor"
-        || canon === "most_shared" || canon === "day_traded" || canon === "ass_denominator"
+        || canon === "most_shared" || canon === "day_traded" || canon === "ass_denominator" || canon === "trade_firsts"
         || canon === "ring_leaders" || canon === "trade_web"
         || canon === "head_to_head") return true;
       return DATA_DOORS.indexOf(canon) >= 0 || DATA_DOORS.indexOf(id) >= 0;
@@ -8421,6 +8425,7 @@ const html = `<!DOCTYPE html>
         most_shared: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
         day_traded: '<path d="M7 7h10v10H7z"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/>',
         ass_denominator: '<path d="M12 3v18"/><path d="M5 8h14"/><path d="M7 16h10"/>',
+        trade_firsts: '<path d="M7 8h10v8H7z"/><path d="M12 4v4M9 12h6"/>',
         ring_leaders: '<path d="M8 6h8v2.5l-1.2.8V11H9.2V9.3L8 8.5V6z"/><path d="M7 18h10"/><path d="M9 11v7M15 11v7M12 11v7"/>',
         trade_web: '<circle cx="6" cy="12" r="2"/><circle cx="12" cy="6" r="2"/><circle cx="12" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 12h2M12 8v2M12 14v2M14 12h2"/>',
         head_to_head: '<circle cx="8" cy="12" r="3"/><circle cx="16" cy="12" r="3"/><path d="M11 12h2"/>',
@@ -8510,6 +8515,9 @@ const html = `<!DOCTYPE html>
       } else if (id === "ass_denominator") {
         const lead = assDenominatorBook && assDenominatorBook.players && assDenominatorBook.players[0];
         if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.bad_days != null ? lead.bad_days : ""));
+      } else if (id === "trade_firsts") {
+        const lead = tradeFirstsBook && tradeFirstsBook.seats && tradeFirstsBook.seats[0];
+        if (lead) fig = receiptDoorLeadFig(lead.name, String(lead.n_firsts != null ? lead.n_firsts : ""));
       } else if (id === "median_monitor") {
         const lead = medianMonitorBook && medianMonitorBook.seats && medianMonitorBook.seats[0];
         if (lead) {
@@ -9225,9 +9233,83 @@ const html = `<!DOCTYPE html>
       return html;
     }
 
+    function tradeFirstsSeatByKey(key) {
+      const want = String(key || "");
+      if (!want || !tradeFirstsBook || !Array.isArray(tradeFirstsBook.seats)) return null;
+      for (let i = 0; i < tradeFirstsBook.seats.length; i++) {
+        const s = tradeFirstsBook.seats[i];
+        if (String(s.key || s.user_id) === want || String(s.name) === want) return s;
+      }
+      return null;
+    }
+
+    function tradeFirstsPortalHtml(q) {
+      if (!tradeFirstsBook || !Array.isArray(tradeFirstsBook.seats)) {
+        return '<p class="caption">Trade FIRSTS book not loaded yet.</p>';
+      }
+      const needle = String(q || "").trim().toLowerCase();
+      const hit = function (parts) {
+        if (!needle) return true;
+        return parts.join(" ").toLowerCase().indexOf(needle) >= 0;
+      };
+      const seatKey = String(receiptTradeFirstsSeat || "");
+      if (!seatKey) {
+        const you = typeof authSeatCanonName === "function" ? authSeatCanonName() : "";
+        const rows = tradeFirstsBook.seats.filter(function (s) {
+          return hit([s.name, String(s.n_firsts || ""), String(s.n_trades || "")]);
+        });
+        if (!rows.length) return '<p class="caption">No seats match.</p>';
+        return rows.map(function (s) {
+          const youCls = you && s.name === you ? " you" : "";
+          return '<button type="button" class="row' + youCls + '" data-trade-firsts-seat="'
+            + esc(String(s.key || s.user_id || "")) + '">'
+            + '<div class="row-top"><div><div class="names">' + esc(s.name || "—") + "</div>"
+            + '<div class="date">' + esc(String(s.n_firsts || 0) + " first"
+              + (Number(s.n_firsts) === 1 ? "" : "s")
+              + " · " + String(s.n_trades || 0) + " deal"
+              + (Number(s.n_trades) === 1 ? "" : "s"))
+            + "</div></div>"
+            + '<div class="margin">' + esc(String(s.n_firsts != null ? s.n_firsts : "—"))
+            + "</div></div></button>";
+        }).join("");
+      }
+      const seat = tradeFirstsSeatByKey(seatKey);
+      if (!seat) {
+        return '<p class="caption">Seat not on the Trade FIRSTS book.</p>';
+      }
+      const trades = (seat.trades || []).filter(function (t) {
+        return hit([
+          t.partner_name,
+          t.date,
+          (t.firsts_out || []).map(function (f) { return f.label; }).join(" "),
+          (t.out_labels || []).join(" "),
+          (t.in_labels || []).join(" "),
+        ]);
+      });
+      if (!trades.length) {
+        return '<p class="caption">' + esc(seat.name || "This seat")
+          + " has not sent a first-round pick in a completed deal.</p>";
+      }
+      return trades.map(function (t) {
+        const firsts = (t.firsts_out || []).map(function (f) { return f.label; }).filter(Boolean);
+        const got = (t.in_labels || []).slice(0, 4);
+        const when = t.date ? String(t.date) : "—";
+        const sub = (firsts.length ? firsts.join(" · ") : "1st sent")
+          + " → " + (t.partner_name || "—")
+          + (got.length ? (" · got " + got.join(" · ")) : "");
+        return '<button type="button" class="row" data-receipt-open-trade="'
+          + esc(String(t.transaction_id || "")) + '"'
+          + (seat.user_id ? (' data-seat="' + esc(String(seat.user_id)) + '"') : "") + ">"
+          + '<div class="row-top"><div><div class="names">' + esc(t.partner_name || "—") + "</div>"
+          + '<div class="date">' + esc(sub) + "</div></div>"
+          + '<div class="margin">' + esc(when) + "</div></div></button>";
+      }).join("");
+    }
+
     function receiptPortalRows(id, q) {
       if (id === "pipeline") return pipelinePortalHtml();
       if (id === "trade_web") return tradeWebPortalHtml();
+      if (id === "trade_firsts") return tradeFirstsPortalHtml(q);
       const needle = String(q || "").trim().toLowerCase();
       const hit = function (parts) {
         if (!needle) return true;
@@ -9662,7 +9744,7 @@ const html = `<!DOCTYPE html>
         || id === "best_ball_hype" || id === "biggest_choker" || id === "waiver_winners"
         || id === "cornerstone_trades" || id === "pipeline" || id === "closest_games"
         || id === "hardest_schedule" || id === "median_monitor" || id === "most_shared"
-        || id === "day_traded" || id === "ass_denominator" || id === "ring_leaders") {
+        || id === "day_traded" || id === "ass_denominator" || id === "trade_firsts" || id === "ring_leaders") {
         const items = dataListItems(id).filter(function (r) {
           return hit([r.name, r.metric, r.sub, r.rank,
             r.seat && r.seat.picker, r.seat && r.seat.player,
@@ -9965,7 +10047,11 @@ const html = `<!DOCTYPE html>
     function receiptWhoListHtml(id) {
       const spec = dataDashById(id);
       const netSeat = (id === "pot_net" && receiptNetWho) ? finishNetWhoSeat() : null;
-      const head = (netSeat && netSeat.name) || (spec && spec.lab) || "Portal";
+      const tradeFirstsSeat = (id === "trade_firsts" && receiptTradeFirstsSeat)
+        ? tradeFirstsSeatByKey(receiptTradeFirstsSeat) : null;
+      const head = (netSeat && netSeat.name)
+        || (tradeFirstsSeat && tradeFirstsSeat.name)
+        || (spec && spec.lab) || "Portal";
       const rows = receiptPortalRows(id, receiptQ);
       const pickSeat = id === "pick_print"
         ? receiptPickPortalSeat(receiptQ)
@@ -10070,6 +10156,14 @@ const html = `<!DOCTYPE html>
       }
       else if (id === "ass_denominator") {
         caption = "Players held longest on the worst rosters. Big number is weighted days on bottom-half and sacko seats. Tap for the seat tape.";
+      }
+      else if (id === "trade_firsts" && receiptTradeFirstsSeat) {
+        const seat = tradeFirstsSeatByKey(receiptTradeFirstsSeat);
+        caption = (seat && seat.name ? seat.name : "This seat")
+          + " — every completed deal where they sent a first-round pick. Newest first. Tap a deal for the receipt.";
+      }
+      else if (id === "trade_firsts") {
+        caption = "Pick a seat. Big number is first-round picks they have sent in trades. Tap a seat for the deal list.";
       }
       else if (id === "median_monitor") {
         const wk = medianMonitorBook && Array.isArray(medianMonitorBook.weeks)
@@ -10208,6 +10302,9 @@ const html = `<!DOCTYPE html>
       const draftBack = (id === "league_draft" && receiptDraftSeat)
         ? '<button type="button" class="chip" data-draft-back="1">← Seats</button> '
         : "";
+      const tradeFirstsBack = (id === "trade_firsts" && receiptTradeFirstsSeat)
+        ? '<button type="button" class="chip" data-trade-firsts-back="1">← Seats</button> '
+        : "";
       const h2hBack = (id === "head_to_head" && (receiptH2hA || receiptH2hB))
         ? '<button type="button" class="chip" data-h2h-back="1">Clear</button> '
         : "";
@@ -10218,7 +10315,7 @@ const html = `<!DOCTYPE html>
         ? { who: receiptListWho }
         : (receiptListSlice ? { slice: receiptListSlice } : {});
       return '<section class="data-dash receipt-portal-list" aria-label="' + esc(head) + '">'
-        + '<p class="caption">' + vsBack + netBack + histBack + draftBack + h2hBack + listAll
+        + '<p class="caption">' + vsBack + netBack + histBack + draftBack + tradeFirstsBack + h2hBack + listAll
         + '<button type="button" class="chip back" data-receipt-who-back="1">← Your board</button></p>'
         + (id === "profit_loss" ? receiptPlRoomsHtml() : "")
         + '<div class="tile-share-row">'
@@ -12489,6 +12586,7 @@ const html = `<!DOCTYPE html>
       mostSharedBook = null;
       dayTradedBook = null;
       assDenominatorBook = null;
+      tradeFirstsBook = null;
       ringLeadersBook = null;
       tradeWebBook = null;
       bestWaiverPickupsBook = null;
@@ -12534,7 +12632,7 @@ const html = `<!DOCTYPE html>
       const gen = ++leagueLoadGen;
       const wantId = (activeLeague && activeLeague.sleeper_league_id) || "1315431339301806080";
       // Independent league JSON can load in parallel — sequential awaits were ~7 RTTs on cold boot.
-      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, medianMonitorRaw, mostSharedRaw, dayTradedRaw, assDenominatorRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
+      const [membersRaw, leagueRaw, titlesRaw, marksRaw, newsRaw, votesRaw, picksRaw, cuffsRaw, calcRaw, cosRaw, peRaw, dirRaw, weekRaw, finishesRaw, projFinishRaw, seasonArcsRaw, managerArchRaw, bestBallHypeRaw, biggestChokerRaw, closestGamesRaw, hardestScheduleRaw, medianMonitorRaw, mostSharedRaw, dayTradedRaw, assDenominatorRaw, tradeFirstsRaw, ringLeadersRaw, tradeWebRaw, bestWaiverRaw, cornerstoneTradesRaw, pipelineRaw, headToHeadRaw] = await Promise.all([
         getLeagueJson("members.json"),
         getLeagueJson("league.json"),
         getLeagueJson("titles.json").catch(() => ({ titles: [] })),
@@ -12560,6 +12658,7 @@ const html = `<!DOCTYPE html>
         getLeagueJson("most-shared.json").catch(() => null),
         getLeagueJson("day-traded.json").catch(() => null),
         getLeagueJson("ass-denominator.json").catch(() => null),
+        getLeagueJson("trade-firsts.json").catch(() => null),
         getLeagueJson("ring-leaders.json").catch(() => null),
         getLeagueJson("trade-web.json").catch(() => null),
         getLeagueJson("best-waiver-pickups.json").catch(() => null),
@@ -12676,6 +12775,10 @@ const html = `<!DOCTYPE html>
         assDenominatorBook = assDenominatorRaw && Number(assDenominatorRaw.v) >= 1
           && Array.isArray(assDenominatorRaw.players) ? assDenominatorRaw : null;
       } catch (err) { assDenominatorBook = null; }
+      try {
+        tradeFirstsBook = tradeFirstsRaw && Number(tradeFirstsRaw.v) >= 1
+          && Array.isArray(tradeFirstsRaw.seats) ? tradeFirstsRaw : null;
+      } catch (err) { tradeFirstsBook = null; }
       try {
         ringLeadersBook = ringLeadersRaw && Number(ringLeadersRaw.v) >= 1
           && Array.isArray(ringLeadersRaw.players) ? ringLeadersRaw : null;
@@ -13970,6 +14073,7 @@ const html = `<!DOCTYPE html>
       receiptHistPair = "";
       receiptHistTeam = "all";
       receiptDraftSeat = "";
+      receiptTradeFirstsSeat = "";
       receiptSeatWarming = "";
       receiptSeatFailed = "";
       projectedFinishOpenKey = "";
@@ -14341,6 +14445,13 @@ const html = `<!DOCTYPE html>
         const after = src.indexOf("day_traded");
         if (after >= 0) src.splice(after + 1, 0, "ass_denominator");
         else src.push("ass_denominator");
+      }
+      // Dynasty: add Trade FIRSTS after Ass denominator — never replace a tile.
+      if (dynasty && src.indexOf("trade_firsts") < 0 && dataDashById("trade_firsts")
+        && src.length < DATA_DASH_MAX) {
+        const after = src.indexOf("ass_denominator");
+        if (after >= 0) src.splice(after + 1, 0, "trade_firsts");
+        else src.push("trade_firsts");
       }
       if (dynasty && src.indexOf("trade_helper") < 0 && dataDashById("trade_helper")) {
         const vs = src.indexOf("vs_you");
@@ -20746,6 +20857,12 @@ const html = `<!DOCTYPE html>
           lead && lead.bad_days != null ? String(lead.bad_days) : "Open",
           lead ? ((lead.name || "Lead") + " · worst seats") : "Held on the worst rosters");
       }
+      if (id === "trade_firsts") {
+        const lead = tradeFirstsBook && tradeFirstsBook.seats && tradeFirstsBook.seats[0];
+        return dataDashHead(spec,
+          lead && lead.n_firsts != null ? String(lead.n_firsts) : "Open",
+          lead ? ((lead.name || "Lead") + " · firsts sent") : "Pick a seat · firsts sent");
+      }
       if (id === "ring_leaders") {
         const lead = ringLeadersBook && ringLeadersBook.players && ringLeadersBook.players[0];
         return dataDashHead(spec,
@@ -21028,6 +21145,7 @@ const html = `<!DOCTYPE html>
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
+        receiptTradeFirstsSeat = "";
         projectedFinishOpenKey = "";
         seasonArcsOpenKey = "";
         managerArchetypesOpenKey = "";
@@ -26529,6 +26647,7 @@ const html = `<!DOCTYPE html>
     let receiptHistPair = "";
     let receiptHistTeam = "all";
     let receiptDraftSeat = "";
+    let receiptTradeFirstsSeat = "";
     let receiptPlayerQ = "";
     let receiptPlayerPick = "";
     let receiptPlayerOpen = false;
@@ -27139,6 +27258,7 @@ const html = `<!DOCTYPE html>
         }
         if (receiptDraftSeat) {
           receiptDraftSeat = "";
+          receiptTradeFirstsSeat = "";
           receiptQ = "";
           receiptDoorFilter = "all";
           render();
@@ -27170,6 +27290,7 @@ const html = `<!DOCTYPE html>
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
+        receiptTradeFirstsSeat = "";
         receiptVsWho = "";
         receiptNetWho = "";
         projectedFinishOpenKey = "";
@@ -39949,6 +40070,7 @@ const html = `<!DOCTYPE html>
         receiptHistPair = "";
         receiptHistTeam = "all";
         receiptDraftSeat = "";
+        receiptTradeFirstsSeat = "";
         projectedFinishOpenKey = "";
         seasonArcsOpenKey = "";
         managerArchetypesOpenKey = "";
@@ -40008,6 +40130,7 @@ const html = `<!DOCTYPE html>
       const draftBackBtn = e.target.closest("[data-draft-back]");
       if (draftBackBtn) {
         receiptDraftSeat = "";
+        receiptTradeFirstsSeat = "";
         receiptQ = "";
         receiptDoorFilter = "all";
         render();
@@ -40018,6 +40141,20 @@ const html = `<!DOCTYPE html>
         receiptDraftSeat = draftSeatBtn.getAttribute("data-draft-seat") || "";
         receiptQ = "";
         receiptDoorFilter = "used";
+        render();
+        return;
+      }
+      const tradeFirstsBackBtn = e.target.closest("[data-trade-firsts-back]");
+      if (tradeFirstsBackBtn) {
+        receiptTradeFirstsSeat = "";
+        receiptQ = "";
+        render();
+        return;
+      }
+      const tradeFirstsSeatBtn = e.target.closest("[data-trade-firsts-seat]");
+      if (tradeFirstsSeatBtn) {
+        receiptTradeFirstsSeat = tradeFirstsSeatBtn.getAttribute("data-trade-firsts-seat") || "";
+        receiptQ = "";
         render();
         return;
       }
@@ -44031,8 +44168,8 @@ if (!inline.includes("function dataDashHtml(")
   const reportBlock = inline.slice(reportStart, reportEnd);
   const reportIds = [...reportBlock.matchAll(/id: "([a-z0-9_]+)"/g)].map((m) => m[1]);
   const uniq = new Set(reportIds);
-  if (reportIds.length !== 57 || uniq.size !== 57) {
-    throw new Error("DATA_REPORTS must hold exactly 57 unique reports, found " + reportIds.length);
+  if (reportIds.length !== 58 || uniq.size !== 58) {
+    throw new Error("DATA_REPORTS must hold exactly 58 unique reports, found " + reportIds.length);
   }
   if (uniq.has("firsts_held") || inline.includes('lab: "Who has firsts"')
     || inline.includes('data-dash-open="firsts_held"')) {
@@ -44045,9 +44182,9 @@ if (!inline.includes("function dataDashHtml(")
     || !uniq.has("best_ball_hype") || !uniq.has("biggest_choker") || !uniq.has("waiver_winners")
     || !uniq.has("closest_games") || !uniq.has("hardest_schedule") || !uniq.has("ring_leaders")
     || !uniq.has("trade_web") || !uniq.has("median_monitor")
-    || !uniq.has("most_shared") || !uniq.has("day_traded") || !uniq.has("ass_denominator")
+    || !uniq.has("most_shared") || !uniq.has("day_traded") || !uniq.has("ass_denominator") || !uniq.has("trade_firsts")
     || !uniq.has("head_to_head")) {
-    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, Trade web, Median monitor, Most shared, Day traded, Ass denominator, and Head to head");
+    throw new Error("DATA_REPORTS must include career, RS/playoff, pot, Manager avg finish, Projected finish, Season arcs, Manager type, Trade helper, Best Ball Hype, Biggest choker, Waiver winners, Closest games, Toughest schedule, Ring leaders, Trade web, Median monitor, Most shared, Day traded, Ass denominator, Trade FIRSTS, and Head to head");
   }
   const needIds = ["trade_helper", "fill_holes", "move_extras", "poach_cuffs", "stash_young",
     "my_block", "league_block", "block_fits"];
@@ -44061,7 +44198,7 @@ if (!inline.includes("function dataDashHtml(")
   const defStart = inline.indexOf("    const DATA_DASH_DEFAULT = [");
   const defEnd = inline.indexOf("];", defStart);
   const defIds = [...inline.slice(defStart, defEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (defIds.length !== 25 || defIds.some((id) => !uniq.has(id))
+  if (defIds.length !== 26 || defIds.some((id) => !uniq.has(id))
     || defIds[0] !== "projected_finish" || defIds[1] !== "my_draft"
     || defIds[2] !== "manager_archetypes" || defIds[3] !== "season_arcs"
     || defIds[4] !== "my_trades"
@@ -44071,27 +44208,28 @@ if (!inline.includes("function dataDashHtml(")
     || defIds.indexOf("most_shared") < 0
     || defIds.indexOf("day_traded") < 0
     || defIds.indexOf("ass_denominator") < 0
+    || defIds.indexOf("trade_firsts") < 0
     || defIds.indexOf("firsts_held") >= 0) {
-    throw new Error("DATA_DASH_DEFAULT must be the 25 door tiles without Who has firsts");
+    throw new Error("DATA_DASH_DEFAULT must be the 26 door tiles without Who has firsts");
   }
   const doorStart = inline.indexOf("    const DATA_DOORS = [");
   const doorEnd = inline.indexOf("];", doorStart);
   const doorIds = [...inline.slice(doorStart, doorEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (doorIds.length !== 25 || doorIds.join(",") !== defIds.join(",")) {
-    throw new Error("DATA_DOORS must match the 25 default door tiles");
+  if (doorIds.length !== 26 || doorIds.join(",") !== defIds.join(",")) {
+    throw new Error("DATA_DOORS must match the 26 default door tiles");
   }
   const resStart = inline.indexOf("    const DATA_DASH_RESEARCH = [");
   const resEnd = inline.indexOf("];", resStart);
   const resIds = [...inline.slice(resStart, resEnd).matchAll(/"([a-z0-9_]+)"/g)].map((m) => m[1]);
-  if (resIds.length !== 22 || resIds.some((id) => !uniq.has(id))) {
-    throw new Error("DATA_DASH_RESEARCH must be 22 catalog ids");
+  if (resIds.length !== 23 || resIds.some((id) => !uniq.has(id))) {
+    throw new Error("DATA_DASH_RESEARCH must be 23 catalog ids");
   }
   if (!resIds.includes("draft_board") || !resIds.includes("cornerstone_trades") || !resIds.includes("pipeline")
     || !resIds.includes("closest_games") || !resIds.includes("hardest_schedule")
     || !resIds.includes("ring_leaders") || !resIds.includes("trade_web")
     || !resIds.includes("median_monitor")
-    || !resIds.includes("most_shared") || !resIds.includes("day_traded") || !resIds.includes("ass_denominator")) {
-    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders, trade_web, median_monitor, most_shared, day_traded, ass_denominator");
+    || !resIds.includes("most_shared") || !resIds.includes("day_traded") || !resIds.includes("ass_denominator") || !resIds.includes("trade_firsts")) {
+    throw new Error("DATA_DASH_RESEARCH must keep draft_board, cornerstone_trades, pipeline, closest_games, hardest_schedule, ring_leaders, trade_web, median_monitor, most_shared, day_traded, ass_denominator, trade_firsts");
   }
   const banned = ["best10", "worst10", "bag_total", "realized", "win_now", "investor"];
   if (reportIds.some((id) => banned.includes(id))) {
@@ -44148,6 +44286,9 @@ if (!inline.includes("function dataDashHtml(")
   }
   if (!uniq.has("ass_denominator") || defIds[24] !== "ass_denominator" || doorIds[24] !== "ass_denominator") {
     throw new Error("Ass denominator must be default board tile 25 (League Data door)");
+  }
+  if (!uniq.has("trade_firsts") || defIds[25] !== "trade_firsts" || doorIds[25] !== "trade_firsts") {
+    throw new Error("Trade FIRSTS must be default board tile 26 (League Data door)");
   }
   if (!inline.includes('id: "closest_games"')
     || !inline.includes('lab: "Closest games"')
@@ -44213,6 +44354,17 @@ if (!inline.includes("function dataDashHtml(")
     || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "ass_denominator")')
     || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "ass_denominator"')) {
     throw new Error("Ass denominator door must ship book load, expand detail, and add-only dynasty migrate");
+  }
+  if (!inline.includes('id: "trade_firsts"')
+    || !inline.includes('lab: "Trade FIRSTS"')
+    || !inline.includes("function tradeFirstsPortalHtml(")
+    || !inline.includes('getLeagueJson("trade-firsts.json")')
+    || !inline.includes('data-trade-firsts-seat="')
+    || !inline.includes("receiptTradeFirstsSeat")
+    || !inline.includes('canon === "trade_firsts"')
+    || !fnSrc("dataDashMigrateMyPicks").includes('src.splice(after + 1, 0, "trade_firsts")')
+    || fnSrc("dataDashMigrateMyPicks").includes('src[at] = "trade_firsts"')) {
+    throw new Error("Trade FIRSTS door must ship book load, seat picker, and add-only dynasty migrate");
   }
   if (!inline.includes('id: "trade_web"')
     || !inline.includes('lab: "Trade web"')
@@ -45216,7 +45368,7 @@ if (!inline.includes('id: "waiver_winners"')
   || !inline.includes('"waiver_winners", "my_draft"')
   || !inline.includes('"waiver_winners", "cornerstone_trades"')
   || !fnSrc("receiptDoorCanon").includes('best_waiver_pickups')
-  || !inline.includes("const DATA_DASH_MAX = 25")) {
+  || !inline.includes("const DATA_DASH_MAX = 26")) {
   throw new Error("Waiver winners must stay on League Data with three top-10 bands");
 }
 if (!inline.includes('id: "cornerstone_trades"')

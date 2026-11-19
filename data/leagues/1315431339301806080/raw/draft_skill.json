@@ -4404,8 +4404,8 @@
       "drafted_by": "TipsUp",
       "startup": false,
       "pick_cost": 1905,
-      "player_today": 0,
-      "surplus": -1905,
+      "player_today": 620,
+      "surplus": -1285,
       "flag": null
     },
     {
@@ -10457,8 +10457,8 @@
       "name": "TipsUp",
       "used": 31,
       "graded": 31,
-      "surplus": -348,
-      "per_pick": -11.225806451612904,
+      "surplus": 272,
+      "per_pick": 8.774193548387096,
       "best": {
         "player": "Jalen Hurts",
         "season": "2020",

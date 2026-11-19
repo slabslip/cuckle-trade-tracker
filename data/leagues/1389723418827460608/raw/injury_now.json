@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-18",
-  "n": 27,
+  "as_of": "2026-11-19",
+  "n": 33,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -43,6 +43,20 @@
       "status": "Active",
       "team": "NE",
       "pos": "WR"
+    },
+    "5947": {
+      "name": "Jakobi Meyers",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "WR"
+    },
+    "6083": {
+      "name": "Matt Gay",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LV",
+      "pos": "K"
     },
     "7525": {
       "name": "DeVonta Smith",
@@ -103,9 +117,23 @@
     "9756": {
       "name": "Jordan Addison",
       "injury_status": "Out",
-      "status": "Inactive",
+      "status": "Active",
       "team": "MIN",
       "pos": "WR"
+    },
+    "10219": {
+      "name": "Chris Rodriguez Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "RB"
+    },
+    "10236": {
+      "name": "Dalton Kincaid",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "BUF",
+      "pos": "TE"
     },
     "11564": {
       "name": "Drake Maye",
@@ -130,7 +158,7 @@
     },
     "11628": {
       "name": "Marvin Harrison Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "HOU",
       "pos": "WR"
@@ -144,7 +172,7 @@
     },
     "12474": {
       "name": "Woody Marks",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
@@ -156,18 +184,18 @@
       "team": "DEN",
       "pos": "RB"
     },
+    "12490": {
+      "name": "Bhayshul Tuten",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "RB"
+    },
     "12533": {
       "name": "Jacory Croskey-Merritt",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "WAS",
-      "pos": "RB"
-    },
-    "12534": {
-      "name": "Kyle Monangai",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CHI",
       "pos": "RB"
     },
     "13276": {
@@ -184,12 +212,26 @@
       "team": "TEN",
       "pos": "WR"
     },
+    "13281": {
+      "name": "Jordyn Tyson",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NO",
+      "pos": "WR"
+    },
     "13287": {
       "name": "Jeremiyah Love",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "ARI",
       "pos": "RB"
+    },
+    "13296": {
+      "name": "Caleb Douglas",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "MIA",
+      "pos": "WR"
     }
   }
 }

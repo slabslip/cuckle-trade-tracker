@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-20",
-  "n": 91,
+  "n": 93,
   "players": {
     "1373": {
       "name": "Geno Smith",
@@ -289,6 +289,13 @@
       "team": "LAR",
       "pos": "WR"
     },
+    "9504": {
+      "name": "Kayshon Boutte",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "HOU",
+      "pos": "WR"
+    },
     "9508": {
       "name": "Tyjae Spears",
       "injury_status": "Questionable",
@@ -550,7 +557,7 @@
     },
     "13276": {
       "name": "Omar Cooper Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
@@ -631,6 +638,13 @@
       "status": "Inactive",
       "team": "SF",
       "pos": "WR"
+    },
+    "13424": {
+      "name": "Seth McGowan",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "IND",
+      "pos": "RB"
     },
     "13602": {
       "name": "Jack Strand",

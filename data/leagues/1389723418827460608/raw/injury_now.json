@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-20",
-  "n": 33,
+  "n": 34,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -193,7 +193,7 @@
     },
     "13276": {
       "name": "Omar Cooper Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
@@ -232,6 +232,13 @@
       "status": "Inactive",
       "team": "SF",
       "pos": "WR"
+    },
+    "13424": {
+      "name": "Seth McGowan",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "IND",
+      "pos": "RB"
     }
   }
 }

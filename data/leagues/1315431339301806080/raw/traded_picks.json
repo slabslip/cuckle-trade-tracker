@@ -521,8 +521,8 @@
     "round": 1,
     "season": "2027",
     "roster_id": 8,
-    "owner_id": 7,
-    "previous_owner_id": 8
+    "owner_id": 9,
+    "previous_owner_id": 7
   },
   {
     "round": 2,
@@ -535,8 +535,8 @@
     "round": 3,
     "season": "2027",
     "roster_id": 8,
-    "owner_id": 7,
-    "previous_owner_id": 2
+    "owner_id": 9,
+    "previous_owner_id": 7
   },
   {
     "round": 4,
@@ -619,8 +619,8 @@
     "round": 4,
     "season": "2027",
     "roster_id": 9,
-    "owner_id": 7,
-    "previous_owner_id": 9
+    "owner_id": 9,
+    "previous_owner_id": 7
   },
   {
     "round": 1,
@@ -635,6 +635,13 @@
     "roster_id": 9,
     "owner_id": 3,
     "previous_owner_id": 7
+  },
+  {
+    "round": 3,
+    "season": "2028",
+    "roster_id": 9,
+    "owner_id": 7,
+    "previous_owner_id": 9
   },
   {
     "round": 4,

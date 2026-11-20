@@ -8962,5 +8962,39 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-11-20",
+    "season": "2026",
+    "week": 11,
+    "transaction_id": "1429302548841398272",
+    "sides": {
+      "TrumanCooper": {
+        "in": [
+          "Bucky Irving",
+          "2028 R3 (orig roster 9)"
+        ],
+        "out": [
+          "Daniel Jones",
+          "Chris Bell",
+          "2027 R1 (orig roster 8)",
+          "2027 R3 (orig roster 8)",
+          "2027 R4 (orig roster 9)"
+        ]
+      },
+      "DarkWingDucks2023": {
+        "in": [
+          "Daniel Jones",
+          "Chris Bell",
+          "2027 R1 (orig roster 8)",
+          "2027 R3 (orig roster 8)",
+          "2027 R4 (orig roster 9)"
+        ],
+        "out": [
+          "Bucky Irving",
+          "2028 R3 (orig roster 9)"
+        ]
+      }
+    }
   }
 ]

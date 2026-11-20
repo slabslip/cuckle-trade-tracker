@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-19",
+  "as_of": "2026-11-20",
   "n": 33,
   "players": {
     "2133": {
@@ -58,13 +58,6 @@
       "team": "LV",
       "pos": "K"
     },
-    "7525": {
-      "name": "DeVonta Smith",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PHI",
-      "pos": "WR"
-    },
     "7526": {
       "name": "Jaylen Waddle",
       "injury_status": "Questionable",
@@ -110,7 +103,7 @@
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "IR",
-      "status": "Inactive",
+      "status": "Active",
       "team": "LAR",
       "pos": "WR"
     },
@@ -231,6 +224,13 @@
       "injury_status": "Questionable",
       "status": "Active",
       "team": "MIA",
+      "pos": "WR"
+    },
+    "13417": {
+      "name": "De'Zhaun Stribling",
+      "injury_status": "IR",
+      "status": "Inactive",
+      "team": "SF",
       "pos": "WR"
     }
   }

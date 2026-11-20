@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-19",
-  "n": 90,
+  "as_of": "2026-11-20",
+  "n": 91,
   "players": {
     "1373": {
       "name": "Geno Smith",
@@ -149,13 +149,6 @@
       "team": "BAL",
       "pos": "QB"
     },
-    "7525": {
-      "name": "DeVonta Smith",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PHI",
-      "pos": "WR"
-    },
     "7526": {
       "name": "Jaylen Waddle",
       "injury_status": "Questionable",
@@ -292,7 +285,7 @@
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "IR",
-      "status": "Inactive",
+      "status": "Active",
       "team": "LAR",
       "pos": "WR"
     },
@@ -450,6 +443,13 @@
       "team": "SEA",
       "pos": "RB"
     },
+    "12470": {
+      "name": "Riley Leonard",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "IND",
+      "pos": "QB"
+    },
     "12474": {
       "name": "Woody Marks",
       "injury_status": "Out",
@@ -533,6 +533,13 @@
       "status": "Active",
       "team": "JAX",
       "pos": "RB"
+    },
+    "13272": {
+      "name": "Carson Beck",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "ARI",
+      "pos": "QB"
     },
     "13275": {
       "name": "Ty Simpson",

@@ -40287,6 +40287,1515 @@
     "incomplete": false
   },
   {
+    "transaction_id": "1429302548841398272",
+    "date": "2026-11-20",
+    "season": "2026",
+    "week": 11,
+    "user_ids": [
+      "458342725222133760",
+      "458766127967760384"
+    ],
+    "names": [
+      "TrumanCooper",
+      "DarkWingDucks2023"
+    ],
+    "lenses": {
+      "realized": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 2417,
+            "sent_today": 3666,
+            "today_delta": -1249,
+            "t0": 2417,
+            "t0_delta": -1249,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 2378,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 39,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 498,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 2167,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 48,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 15,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 2378,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 39,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 3666,
+            "sent_today": 2417,
+            "today_delta": 1249,
+            "t0": 3666,
+            "t0_delta": 1249,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 498,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 2167,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 48,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 15,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 2378,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 39,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 498,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 2167,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 48,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 15,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "TrumanCooper": 2417,
+              "DarkWingDucks2023": 3666
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "pick": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 2417,
+            "sent_today": 3666,
+            "today_delta": -1249,
+            "t0": 2417,
+            "t0_delta": -1249,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 2378,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 39,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 498,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 2167,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 48,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 15,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 2378,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 39,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 3666,
+            "sent_today": 2417,
+            "today_delta": 1249,
+            "t0": 3666,
+            "t0_delta": 1249,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "t0_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 498,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 2167,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 48,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 15,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "sent": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 2378,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 39,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ],
+            "t0_legs": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 938,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 498,
+                "flag": null,
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 2167,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 48,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 15,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null
+              }
+            ]
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "TrumanCooper": 2417,
+              "DarkWingDucks2023": 3666
+            }
+          }
+        ],
+        "t0_priced": true,
+        "incomplete": false
+      },
+      "even": {
+        "sides": {
+          "458342725222133760": {
+            "name": "TrumanCooper",
+            "today": 8659.625,
+            "sent_today": 13406,
+            "today_delta": -4746.375,
+            "t0": 7903.625,
+            "t0_delta": -6623.375,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 5047,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4463
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 1720,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1767
+              }
+            ],
+            "sent": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 2717,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3682
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 2708,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3255
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 4726,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4363
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 1880,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1868
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 1375,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1359
+              }
+            ],
+            "value_adjust": 1892.625,
+            "value_adjust_sent": 0,
+            "t0_value_adjust": 1673.625
+          },
+          "458766127967760384": {
+            "name": "DarkWingDucks2023",
+            "today": 13406,
+            "sent_today": 8659.625,
+            "today_delta": 4746.375,
+            "t0": 14527,
+            "t0_delta": 6623.375,
+            "unpriced": 0,
+            "sent_unpriced": 0,
+            "incomplete": false,
+            "legs": [
+              {
+                "label": "Daniel Jones",
+                "kind": "player",
+                "asset_key": "player:5870",
+                "value": 2717,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3682
+              },
+              {
+                "label": "Chris Bell",
+                "kind": "player",
+                "asset_key": "player:13311",
+                "value": 2708,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 3255
+              },
+              {
+                "label": "2027 1st (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:1:8",
+                "value": 4726,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4363
+              },
+              {
+                "label": "2027 3rd (BubbaCuckShremp)",
+                "kind": "pick",
+                "asset_key": "pick:2027:3:8",
+                "value": 1880,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1868
+              },
+              {
+                "label": "2027 4th (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2027:4:9",
+                "value": 1375,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1359
+              }
+            ],
+            "sent": [
+              {
+                "label": "Bucky Irving",
+                "kind": "player",
+                "asset_key": "player:11584",
+                "value": 5047,
+                "flag": null,
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 4463
+              },
+              {
+                "label": "2028 3rd (DarkWingDucks2023)",
+                "kind": "pick",
+                "asset_key": "pick:2028:3:9",
+                "value": 1720,
+                "flag": "priced_as_mid",
+                "became": null,
+                "drafted_by": null,
+                "value_flat": 1767
+              }
+            ],
+            "value_adjust": 0,
+            "value_adjust_sent": 1892.625,
+            "t0_value_adjust": 0
+          }
+        },
+        "year_ends": [
+          {
+            "as_of": "2026-11-05",
+            "points": {
+              "TrumanCooper": 6230,
+              "DarkWingDucks2023": 14527
+            }
+          }
+        ],
+        "incomplete": false
+      },
+      "windows": {
+        "t0": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 7903.625,
+              "sent_today": 14527,
+              "today_delta": -6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 1673.625,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 14527,
+              "sent_today": 7903.625,
+              "today_delta": 6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 1673.625
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y1": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 7903.625,
+              "sent_today": 14527,
+              "today_delta": -6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 1673.625,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 14527,
+              "sent_today": 7903.625,
+              "today_delta": 6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 1673.625
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y2": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 7903.625,
+              "sent_today": 14527,
+              "today_delta": -6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 1673.625,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 14527,
+              "sent_today": 7903.625,
+              "today_delta": 6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 1673.625
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "y3": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 7903.625,
+              "sent_today": 14527,
+              "today_delta": -6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 1673.625,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 14527,
+              "sent_today": 7903.625,
+              "today_delta": 6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 1673.625
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        },
+        "all": {
+          "sides": {
+            "458342725222133760": {
+              "name": "TrumanCooper",
+              "today": 7903.625,
+              "sent_today": 14527,
+              "today_delta": -6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 1673.625,
+              "value_adjust_sent": 0
+            },
+            "458766127967760384": {
+              "name": "DarkWingDucks2023",
+              "today": 14527,
+              "sent_today": 7903.625,
+              "today_delta": 6623.375,
+              "unpriced": 0,
+              "sent_unpriced": 0,
+              "incomplete": false,
+              "snaps": 1,
+              "legs": [
+                {
+                  "label": "Daniel Jones",
+                  "kind": "player",
+                  "asset_key": "player:5870",
+                  "value": 3682,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "Chris Bell",
+                  "kind": "player",
+                  "asset_key": "player:13311",
+                  "value": 3255,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 1st (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:1:8",
+                  "value": 4363,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 3rd (BubbaCuckShremp)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:3:8",
+                  "value": 1868,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2027 4th (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2027:4:9",
+                  "value": 1359,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "sent": [
+                {
+                  "label": "Bucky Irving",
+                  "kind": "player",
+                  "asset_key": "player:11584",
+                  "value": 4463,
+                  "flag": null,
+                  "became": null,
+                  "drafted_by": null
+                },
+                {
+                  "label": "2028 3rd (DarkWingDucks2023)",
+                  "kind": "pick",
+                  "asset_key": "pick:2028:3:9",
+                  "value": 1767,
+                  "flag": "priced_as_mid",
+                  "became": null,
+                  "drafted_by": null
+                }
+              ],
+              "value_adjust": 0,
+              "value_adjust_sent": 1673.625
+            }
+          },
+          "snaps": 1,
+          "incomplete": false
+        }
+      }
+    },
+    "incomplete": false
+  },
+  {
     "transaction_id": "1270932897498419200",
     "date": "2025-09-09",
     "season": "2025",

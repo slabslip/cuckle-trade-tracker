@@ -3758,8 +3758,8 @@
       "drafted_by": "BubbaCuckShremp",
       "startup": false,
       "pick_cost": 1605,
-      "player_today": 1280,
-      "surplus": -325,
+      "player_today": 0,
+      "surplus": -1605,
       "flag": null
     },
     {
@@ -10565,8 +10565,8 @@
       "name": "BubbaCuckShremp",
       "used": 33,
       "graded": 33,
-      "surplus": -25204,
-      "per_pick": -763.7575757575758,
+      "surplus": -26484,
+      "per_pick": -802.5454545454545,
       "best": {
         "player": "Joe Burrow",
         "season": "2020",

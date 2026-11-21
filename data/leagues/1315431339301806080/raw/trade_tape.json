@@ -8996,5 +8996,25 @@
         ]
       }
     }
+  },
+  {
+    "date": "2026-11-21",
+    "season": "2026",
+    "week": 11,
+    "transaction_id": "1429663291151519744",
+    "sides": {
+      "SF69erss": {
+        "in": [],
+        "out": [
+          "Kendre Miller"
+        ]
+      },
+      "BubbaCuckShremp": {
+        "in": [
+          "Kendre Miller"
+        ],
+        "out": []
+      }
+    }
   }
 ]

@@ -4652,6 +4652,24 @@
     }
   },
   {
+    "transaction_id": "1429663291151519744",
+    "direction": "in",
+    "to_user_id": "458723431387492352",
+    "to_roster_id": 8,
+    "kind": "player",
+    "asset_key": "player:9757",
+    "label": "Kendre Miller"
+  },
+  {
+    "transaction_id": "1429663291151519744",
+    "direction": "out",
+    "from_user_id": "457779824002330624",
+    "from_roster_id": 1,
+    "kind": "player",
+    "asset_key": "player:9757",
+    "label": "Kendre Miller"
+  },
+  {
     "transaction_id": "1429302548841398272",
     "direction": "in",
     "to_user_id": "458766127967760384",

@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-21",
+  "as_of": "2026-11-22",
   "n": 85,
   "players": {
     "2133": {
@@ -184,13 +184,6 @@
       "team": "TEN",
       "pos": "WR"
     },
-    "8135": {
-      "name": "Treylon Burks",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "WAS",
-      "pos": "WR"
-    },
     "8136": {
       "name": "Rachaad White",
       "injury_status": "Questionable",
@@ -204,6 +197,13 @@
       "status": "Inactive",
       "team": "IND",
       "pos": "WR"
+    },
+    "8150": {
+      "name": "Kyren Williams",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "RB"
     },
     "8151": {
       "name": "Kenneth Walker III",
@@ -263,15 +263,15 @@
     },
     "9486": {
       "name": "Dontayvion Wicks",
-      "injury_status": "Out",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "PHI",
       "pos": "WR"
     },
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "IR",
-      "status": "Active",
+      "status": "Inactive",
       "team": "LAR",
       "pos": "WR"
     },
@@ -284,8 +284,8 @@
     },
     "9508": {
       "name": "Tyjae Spears",
-      "injury_status": "Questionable",
-      "status": "Active",
+      "injury_status": "IR",
+      "status": "Inactive",
       "team": "TEN",
       "pos": "RB"
     },
@@ -340,8 +340,8 @@
     },
     "11577": {
       "name": "Will Shipley",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "PHI",
       "pos": "RB"
     },
@@ -382,8 +382,8 @@
     },
     "11630": {
       "name": "Roman Wilson",
-      "injury_status": "IR",
-      "status": "Inactive",
+      "injury_status": "Questionable",
+      "status": "Active",
       "team": "PIT",
       "pos": "WR"
     },
@@ -501,7 +501,7 @@
     },
     "13272": {
       "name": "Carson Beck",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "ARI",
       "pos": "QB"

@@ -1,5 +1,22 @@
 [
   {
+    "user_id": "1132552110328983552",
+    "name": "collinmccaskill",
+    "two_way": 2,
+    "incomplete": 0,
+    "pick_total": 5901,
+    "pick_per_trade": 2950.5,
+    "even_total": 6630,
+    "even_per_trade": 3315,
+    "style": {
+      "label": "Balanced",
+      "now_share": 1,
+      "horizon": 1005.5,
+      "sold_picks_for_players": 0,
+      "sold_players_for_picks": 0
+    }
+  },
+  {
     "user_id": "1132151393051095040",
     "name": "Tbow00",
     "two_way": 1,
@@ -12,23 +29,6 @@
       "label": "Balanced",
       "now_share": 1,
       "horizon": 778,
-      "sold_picks_for_players": 0,
-      "sold_players_for_picks": 0
-    }
-  },
-  {
-    "user_id": "1132552110328983552",
-    "name": "collinmccaskill",
-    "two_way": 2,
-    "incomplete": 0,
-    "pick_total": 5901,
-    "pick_per_trade": 2950.5,
-    "even_total": 3777,
-    "even_per_trade": 1888.5,
-    "style": {
-      "label": "Balanced",
-      "now_share": 1,
-      "horizon": 1005.5,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }
@@ -102,23 +102,6 @@
     }
   },
   {
-    "user_id": "458342725222133760",
-    "name": "TrumanCooper",
-    "two_way": 9,
-    "incomplete": 0,
-    "pick_total": -349,
-    "pick_per_trade": -38.77777777777778,
-    "even_total": -3005,
-    "even_per_trade": -333.8888888888889,
-    "style": {
-      "label": "Win-now",
-      "now_share": 1,
-      "horizon": -30.88888888888889,
-      "sold_picks_for_players": 0,
-      "sold_players_for_picks": 0
-    }
-  },
-  {
     "user_id": "1132355027018035200",
     "name": "Biff34",
     "two_way": 1,
@@ -131,6 +114,23 @@
       "label": "Win-now",
       "now_share": 1,
       "horizon": 0,
+      "sold_picks_for_players": 0,
+      "sold_players_for_picks": 0
+    }
+  },
+  {
+    "user_id": "458342725222133760",
+    "name": "TrumanCooper",
+    "two_way": 9,
+    "incomplete": 0,
+    "pick_total": -349,
+    "pick_per_trade": -38.77777777777778,
+    "even_total": -5858,
+    "even_per_trade": -650.8888888888889,
+    "style": {
+      "label": "Win-now",
+      "now_share": 1,
+      "horizon": -30.88888888888889,
       "sold_picks_for_players": 0,
       "sold_players_for_picks": 0
     }

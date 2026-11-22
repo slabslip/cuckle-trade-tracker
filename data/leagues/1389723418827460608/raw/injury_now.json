@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-21",
-  "n": 28,
+  "as_of": "2026-11-22",
+  "n": 29,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -72,6 +72,13 @@
       "team": "WAS",
       "pos": "RB"
     },
+    "8150": {
+      "name": "Kyren Williams",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "LAR",
+      "pos": "RB"
+    },
     "8151": {
       "name": "Kenneth Walker III",
       "injury_status": "Out",
@@ -89,7 +96,7 @@
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "IR",
-      "status": "Active",
+      "status": "Inactive",
       "team": "LAR",
       "pos": "WR"
     },

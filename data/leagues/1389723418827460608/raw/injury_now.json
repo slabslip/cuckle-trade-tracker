@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-22",
+  "as_of": "2026-11-23",
   "n": 29,
   "players": {
     "2133": {
@@ -9,12 +9,19 @@
       "team": "LAR",
       "pos": "WR"
     },
-    "2216": {
-      "name": "Mike Evans",
+    "3198": {
+      "name": "Derrick Henry",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "SF",
-      "pos": "WR"
+      "team": "BAL",
+      "pos": "RB"
+    },
+    "4866": {
+      "name": "Saquon Barkley",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "RB"
     },
     "4881": {
       "name": "Lamar Jackson",
@@ -22,6 +29,13 @@
       "status": "Inactive",
       "team": "BAL",
       "pos": "QB"
+    },
+    "4983": {
+      "name": "DJ Moore",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "BUF",
+      "pos": "WR"
     },
     "5850": {
       "name": "Josh Jacobs",
@@ -36,13 +50,6 @@
       "status": "Active",
       "team": "NE",
       "pos": "WR"
-    },
-    "6083": {
-      "name": "Matt Gay",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "LV",
-      "pos": "K"
     },
     "8112": {
       "name": "Drake London",
@@ -109,7 +116,7 @@
     },
     "10236": {
       "name": "Dalton Kincaid",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "BUF",
       "pos": "TE"
@@ -121,6 +128,13 @@
       "team": "NE",
       "pos": "QB"
     },
+    "11579": {
+      "name": "Audric Estime",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "NO",
+      "pos": "RB"
+    },
     "11583": {
       "name": "Jonathon Brooks",
       "injury_status": "IR",
@@ -130,23 +144,16 @@
     },
     "11604": {
       "name": "Brock Bowers",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "LV",
       "pos": "TE"
     },
-    "11628": {
-      "name": "Marvin Harrison Jr.",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "HOU",
-      "pos": "WR"
-    },
-    "11635": {
-      "name": "Ladd McConkey",
+    "11646": {
+      "name": "Jalen Coker",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "LAC",
+      "team": "CAR",
       "pos": "WR"
     },
     "12474": {
@@ -175,13 +182,6 @@
       "injury_status": "Out",
       "status": "Active",
       "team": "NYJ",
-      "pos": "WR"
-    },
-    "13279": {
-      "name": "Carnell Tate",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "TEN",
       "pos": "WR"
     },
     "13287": {

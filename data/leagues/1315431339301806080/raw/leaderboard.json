@@ -91,8 +91,8 @@
     "incomplete": 0,
     "pick_total": 1410,
     "pick_per_trade": 27.115384615384617,
-    "even_total": -614.8557594320264,
-    "even_per_trade": -11.824149219846662,
+    "even_total": -1375.8557594320264,
+    "even_per_trade": -26.458764604462047,
     "style": {
       "label": "Balanced",
       "now_share": 0.7864743059814928,
@@ -142,8 +142,8 @@
     "incomplete": 1,
     "pick_total": -3421,
     "pick_per_trade": -50.30882352941177,
-    "even_total": -24026.284124238122,
-    "even_per_trade": -353.32770770938413,
+    "even_total": -23265.284124238122,
+    "even_per_trade": -342.1365312387959,
     "style": {
       "label": "Win-now",
       "now_share": 0.5790617836656945,

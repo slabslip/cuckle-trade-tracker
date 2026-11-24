@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-23",
-  "n": 29,
+  "as_of": "2026-11-24",
+  "n": 31,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -37,6 +37,13 @@
       "team": "BUF",
       "pos": "WR"
     },
+    "5022": {
+      "name": "Dallas Goedert",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "TE"
+    },
     "5850": {
       "name": "Josh Jacobs",
       "injury_status": "Out",
@@ -71,13 +78,6 @@
       "status": "Inactive",
       "team": "TEN",
       "pos": "WR"
-    },
-    "8136": {
-      "name": "Rachaad White",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "WAS",
-      "pos": "RB"
     },
     "8150": {
       "name": "Kyren Williams",
@@ -121,6 +121,13 @@
       "team": "BUF",
       "pos": "TE"
     },
+    "10859": {
+      "name": "Sam LaPorta",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "DET",
+      "pos": "TE"
+    },
     "11564": {
       "name": "Drake Maye",
       "injury_status": "Out",
@@ -156,6 +163,13 @@
       "team": "CAR",
       "pos": "WR"
     },
+    "11786": {
+      "name": "Cam Little",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "K"
+    },
     "12474": {
       "name": "Woody Marks",
       "injury_status": "Out",
@@ -170,11 +184,11 @@
       "team": "DEN",
       "pos": "RB"
     },
-    "12533": {
-      "name": "Jacory Croskey-Merritt",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "WAS",
+    "12490": {
+      "name": "Bhayshul Tuten",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
       "pos": "RB"
     },
     "13276": {

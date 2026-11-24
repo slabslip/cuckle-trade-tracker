@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-24",
-  "n": 31,
+  "n": 32,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -204,6 +204,13 @@
       "status": "Inactive",
       "team": "ARI",
       "pos": "RB"
+    },
+    "13346": {
+      "name": "Denzel Boston",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CLE",
+      "pos": "WR"
     },
     "13417": {
       "name": "De'Zhaun Stribling",

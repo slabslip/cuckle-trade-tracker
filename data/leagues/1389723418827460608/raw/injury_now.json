@@ -1,6 +1,6 @@
 {
   "as_of": "2026-11-25",
-  "n": 33,
+  "n": 21,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -9,20 +9,6 @@
       "team": "LAR",
       "pos": "WR"
     },
-    "3198": {
-      "name": "Derrick Henry",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BAL",
-      "pos": "RB"
-    },
-    "4866": {
-      "name": "Saquon Barkley",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PHI",
-      "pos": "RB"
-    },
     "4881": {
       "name": "Lamar Jackson",
       "injury_status": "IR",
@@ -30,30 +16,16 @@
       "team": "BAL",
       "pos": "QB"
     },
-    "4983": {
-      "name": "DJ Moore",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BUF",
-      "pos": "WR"
-    },
-    "5022": {
-      "name": "Dallas Goedert",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "PHI",
-      "pos": "TE"
-    },
     "5850": {
       "name": "Josh Jacobs",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "GB",
       "pos": "RB"
     },
     "5859": {
       "name": "A.J. Brown",
-      "injury_status": "Out",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "NE",
       "pos": "WR"
@@ -64,13 +36,6 @@
       "status": "Active",
       "team": "DEN",
       "pos": "RB"
-    },
-    "8112": {
-      "name": "Drake London",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "ATL",
-      "pos": "WR"
     },
     "8121": {
       "name": "Romeo Doubs",
@@ -85,13 +50,6 @@
       "status": "Inactive",
       "team": "TEN",
       "pos": "WR"
-    },
-    "8150": {
-      "name": "Kyren Williams",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "LAR",
-      "pos": "RB"
     },
     "8151": {
       "name": "Kenneth Walker III",
@@ -116,23 +74,16 @@
     },
     "9756": {
       "name": "Jordan Addison",
-      "injury_status": "Out",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "MIN",
       "pos": "WR"
     },
     "10236": {
       "name": "Dalton Kincaid",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "BUF",
-      "pos": "TE"
-    },
-    "10859": {
-      "name": "Sam LaPorta",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "DET",
+      "team": "BUF",
       "pos": "TE"
     },
     "11564": {
@@ -141,13 +92,6 @@
       "status": "Active",
       "team": "NE",
       "pos": "QB"
-    },
-    "11579": {
-      "name": "Audric Estime",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "NO",
-      "pos": "RB"
     },
     "11583": {
       "name": "Jonathon Brooks",
@@ -158,28 +102,14 @@
     },
     "11604": {
       "name": "Brock Bowers",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "LV",
       "pos": "TE"
     },
-    "11646": {
-      "name": "Jalen Coker",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "CAR",
-      "pos": "WR"
-    },
-    "11786": {
-      "name": "Cam Little",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "JAX",
-      "pos": "K"
-    },
     "12474": {
       "name": "Woody Marks",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "HOU",
       "pos": "RB"
@@ -200,7 +130,7 @@
     },
     "13276": {
       "name": "Omar Cooper Jr.",
-      "injury_status": "Out",
+      "injury_status": "Questionable",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"
@@ -218,20 +148,6 @@
       "status": "Active",
       "team": "CLE",
       "pos": "WR"
-    },
-    "13417": {
-      "name": "De'Zhaun Stribling",
-      "injury_status": "IR",
-      "status": "Inactive",
-      "team": "SF",
-      "pos": "WR"
-    },
-    "13424": {
-      "name": "Seth McGowan",
-      "injury_status": "Out",
-      "status": "Active",
-      "team": "IND",
-      "pos": "RB"
     }
   }
 }

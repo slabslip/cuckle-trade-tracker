@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-24",
-  "n": 101,
+  "as_of": "2026-11-25",
+  "n": 102,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -134,6 +134,13 @@
       "status": "Active",
       "team": null,
       "pos": "WR"
+    },
+    "6806": {
+      "name": "J.K. Dobbins",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "DEN",
+      "pos": "RB"
     },
     "6819": {
       "name": "Michael Pittman Jr.",

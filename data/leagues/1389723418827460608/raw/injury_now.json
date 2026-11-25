@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-24",
-  "n": 32,
+  "as_of": "2026-11-25",
+  "n": 33,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -57,6 +57,13 @@
       "status": "Active",
       "team": "NE",
       "pos": "WR"
+    },
+    "6806": {
+      "name": "J.K. Dobbins",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "DEN",
+      "pos": "RB"
     },
     "8112": {
       "name": "Drake London",

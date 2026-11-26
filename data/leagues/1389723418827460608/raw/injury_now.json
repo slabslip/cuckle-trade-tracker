@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-25",
-  "n": 21,
+  "as_of": "2026-11-26",
+  "n": 32,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -8,6 +8,27 @@
       "status": "Inactive",
       "team": "LAR",
       "pos": "WR"
+    },
+    "2216": {
+      "name": "Mike Evans",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "SF",
+      "pos": "WR"
+    },
+    "2449": {
+      "name": "Stefon Diggs",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "WAS",
+      "pos": "WR"
+    },
+    "3198": {
+      "name": "Derrick Henry",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "BAL",
+      "pos": "RB"
     },
     "4881": {
       "name": "Lamar Jackson",
@@ -18,7 +39,7 @@
     },
     "5850": {
       "name": "Josh Jacobs",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "GB",
       "pos": "RB"
@@ -30,9 +51,16 @@
       "team": "NE",
       "pos": "WR"
     },
+    "5947": {
+      "name": "Jakobi Meyers",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "WR"
+    },
     "6806": {
       "name": "J.K. Dobbins",
-      "injury_status": "Out",
+      "injury_status": "Sus",
       "status": "Active",
       "team": "DEN",
       "pos": "RB"
@@ -51,6 +79,13 @@
       "team": "TEN",
       "pos": "WR"
     },
+    "8131": {
+      "name": "Isaiah Likely",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "NYG",
+      "pos": "TE"
+    },
     "8151": {
       "name": "Kenneth Walker III",
       "injury_status": "Out",
@@ -65,6 +100,27 @@
       "team": "ATL",
       "pos": "RB"
     },
+    "8167": {
+      "name": "Christian Watson",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "GB",
+      "pos": "WR"
+    },
+    "8183": {
+      "name": "Brock Purdy",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "SF",
+      "pos": "QB"
+    },
+    "9488": {
+      "name": "Jaxon Smith-Njigba",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "SEA",
+      "pos": "WR"
+    },
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "IR",
@@ -77,6 +133,13 @@
       "injury_status": "Doubtful",
       "status": "Active",
       "team": "MIN",
+      "pos": "WR"
+    },
+    "9997": {
+      "name": "Zay Flowers",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "BAL",
       "pos": "WR"
     },
     "10236": {
@@ -127,6 +190,20 @@
       "status": "Active",
       "team": "JAX",
       "pos": "RB"
+    },
+    "12506": {
+      "name": "Harold Fannin Jr.",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CLE",
+      "pos": "TE"
+    },
+    "12526": {
+      "name": "Tetairoa McMillan",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CAR",
+      "pos": "WR"
     },
     "13276": {
       "name": "Omar Cooper Jr.",

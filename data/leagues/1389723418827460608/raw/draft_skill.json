@@ -6019,8 +6019,8 @@
       "drafted_by": "JnastyGBE300",
       "startup": false,
       "pick_cost": 997,
-      "player_today": 0,
-      "surplus": -997,
+      "player_today": 2670,
+      "surplus": 1673,
       "flag": "priced_as_2027r5"
     },
     {
@@ -6847,15 +6847,15 @@
       "name": "JnastyGBE300",
       "used": 15,
       "graded": 14,
-      "surplus": 48808,
-      "per_pick": 3486.285714285714,
+      "surplus": 51478,
+      "per_pick": 3677,
       "best": {
         "player": "Jaxon Smith-Njigba",
         "season": "2025",
         "surplus": 8133
       },
       "worst": {
-        "player": "Brandon Aiyuk",
+        "player": "Washington Commanders",
         "season": "2025",
         "surplus": -997
       }

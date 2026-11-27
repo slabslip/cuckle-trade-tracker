@@ -333,7 +333,7 @@
     },
     "9487": {
       "name": "Parker Washington",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "JAX",
       "pos": "WR"
@@ -516,7 +516,7 @@
     "12517": {
       "name": "Colston Loveland",
       "injury_status": "Out",
-      "status": "Active",
+      "status": "Inactive",
       "team": "CHI",
       "pos": "TE"
     },
@@ -557,7 +557,7 @@
     },
     "13272": {
       "name": "Carson Beck",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "ARI",
       "pos": "QB"
@@ -571,7 +571,7 @@
     },
     "13276": {
       "name": "Omar Cooper Jr.",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NYJ",
       "pos": "WR"

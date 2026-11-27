@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-26",
-  "n": 32,
+  "as_of": "2026-11-27",
+  "n": 35,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -16,12 +16,12 @@
       "team": "SF",
       "pos": "WR"
     },
-    "2449": {
-      "name": "Stefon Diggs",
+    "2505": {
+      "name": "Darren Waller",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "WAS",
-      "pos": "WR"
+      "team": "CAR",
+      "pos": "TE"
     },
     "3198": {
       "name": "Derrick Henry",
@@ -30,12 +30,26 @@
       "team": "BAL",
       "pos": "RB"
     },
+    "4866": {
+      "name": "Saquon Barkley",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "RB"
+    },
     "4881": {
       "name": "Lamar Jackson",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "BAL",
       "pos": "QB"
+    },
+    "5022": {
+      "name": "Dallas Goedert",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "TE"
     },
     "5850": {
       "name": "Josh Jacobs",
@@ -64,6 +78,13 @@
       "status": "Active",
       "team": "DEN",
       "pos": "RB"
+    },
+    "7525": {
+      "name": "DeVonta Smith",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "PHI",
+      "pos": "WR"
     },
     "8121": {
       "name": "Romeo Doubs",
@@ -114,6 +135,13 @@
       "team": "SF",
       "pos": "QB"
     },
+    "9487": {
+      "name": "Parker Washington",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "JAX",
+      "pos": "WR"
+    },
     "9488": {
       "name": "Jaxon Smith-Njigba",
       "injury_status": "Questionable",
@@ -135,19 +163,12 @@
       "team": "MIN",
       "pos": "WR"
     },
-    "9997": {
-      "name": "Zay Flowers",
+    "11560": {
+      "name": "Caleb Williams",
       "injury_status": "Questionable",
       "status": "Active",
-      "team": "BAL",
-      "pos": "WR"
-    },
-    "10236": {
-      "name": "Dalton Kincaid",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BUF",
-      "pos": "TE"
+      "team": "CHI",
+      "pos": "QB"
     },
     "11564": {
       "name": "Drake Maye",
@@ -191,11 +212,11 @@
       "team": "JAX",
       "pos": "RB"
     },
-    "12506": {
-      "name": "Harold Fannin Jr.",
-      "injury_status": "Questionable",
+    "12517": {
+      "name": "Colston Loveland",
+      "injury_status": "Out",
       "status": "Active",
-      "team": "CLE",
+      "team": "CHI",
       "pos": "TE"
     },
     "12526": {

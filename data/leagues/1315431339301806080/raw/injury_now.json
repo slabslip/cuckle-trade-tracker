@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-11-27",
-  "n": 92,
+  "as_of": "2026-11-28",
+  "n": 87,
   "players": {
     "2133": {
       "name": "Davante Adams",
@@ -22,13 +22,6 @@
       "status": "Active",
       "team": "CAR",
       "pos": "TE"
-    },
-    "3198": {
-      "name": "Derrick Henry",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "BAL",
-      "pos": "RB"
     },
     "3271": {
       "name": "Tyler Higbee",
@@ -86,26 +79,12 @@
       "team": "SF",
       "pos": "WR"
     },
-    "5001": {
-      "name": "Dalton Schultz",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "HOU",
-      "pos": "TE"
-    },
     "5022": {
       "name": "Dallas Goedert",
       "injury_status": "Out",
       "status": "Active",
       "team": "PHI",
       "pos": "TE"
-    },
-    "5849": {
-      "name": "Kyler Murray",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "MIN",
-      "pos": "QB"
     },
     "5850": {
       "name": "Josh Jacobs",
@@ -114,16 +93,9 @@
       "team": "GB",
       "pos": "RB"
     },
-    "5854": {
-      "name": "Drew Lock",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "SEA",
-      "pos": "QB"
-    },
     "5859": {
       "name": "A.J. Brown",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NE",
       "pos": "WR"
@@ -135,19 +107,19 @@
       "team": "WAS",
       "pos": "WR"
     },
-    "5947": {
-      "name": "Jakobi Meyers",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "JAX",
-      "pos": "WR"
-    },
     "6797": {
       "name": "Justin Herbert",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "LAC",
       "pos": "QB"
+    },
+    "6801": {
+      "name": "Tee Higgins",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "CIN",
+      "pos": "WR"
     },
     "6806": {
       "name": "J.K. Dobbins",
@@ -172,7 +144,7 @@
     },
     "7002": {
       "name": "Juwan Johnson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "NO",
       "pos": "TE"
@@ -207,7 +179,7 @@
     },
     "8119": {
       "name": "Jahan Dotson",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "ATL",
       "pos": "WR"
@@ -231,20 +203,6 @@
       "injury_status": "IR",
       "status": "Inactive",
       "team": "TEN",
-      "pos": "WR"
-    },
-    "8131": {
-      "name": "Isaiah Likely",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "NYG",
-      "pos": "TE"
-    },
-    "8135": {
-      "name": "Treylon Burks",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "WAS",
       "pos": "WR"
     },
     "8142": {
@@ -284,7 +242,7 @@
     },
     "8183": {
       "name": "Brock Purdy",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "SF",
       "pos": "QB"
@@ -338,13 +296,6 @@
       "team": "JAX",
       "pos": "WR"
     },
-    "9488": {
-      "name": "Jaxon Smith-Njigba",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "SEA",
-      "pos": "WR"
-    },
     "9493": {
       "name": "Puka Nacua",
       "injury_status": "IR",
@@ -354,7 +305,7 @@
     },
     "9504": {
       "name": "Kayshon Boutte",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "HOU",
       "pos": "WR"
@@ -368,14 +319,14 @@
     },
     "9511": {
       "name": "Keaton Mitchell",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "LAC",
       "pos": "RB"
     },
     "9756": {
       "name": "Jordan Addison",
-      "injury_status": "Doubtful",
+      "injury_status": "Out",
       "status": "Active",
       "team": "MIN",
       "pos": "WR"
@@ -464,18 +415,18 @@
       "team": "SEA",
       "pos": "RB"
     },
-    "12474": {
-      "name": "Woody Marks",
-      "injury_status": "Questionable",
-      "status": "Active",
-      "team": "HOU",
-      "pos": "RB"
-    },
     "12484": {
       "name": "Jayden Higgins",
       "injury_status": "IR",
       "status": "Inactive",
       "team": "HOU",
+      "pos": "WR"
+    },
+    "12485": {
+      "name": "Tez Johnson",
+      "injury_status": "Questionable",
+      "status": "Active",
+      "team": "TB",
       "pos": "WR"
     },
     "12487": {
@@ -494,7 +445,7 @@
     },
     "12490": {
       "name": "Bhayshul Tuten",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "JAX",
       "pos": "RB"
@@ -516,7 +467,7 @@
     "12517": {
       "name": "Colston Loveland",
       "injury_status": "Out",
-      "status": "Inactive",
+      "status": "Active",
       "team": "CHI",
       "pos": "TE"
     },
@@ -550,7 +501,7 @@
     },
     "12634": {
       "name": "Jordan Watkins",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "SF",
       "pos": "WR"
@@ -583,9 +534,16 @@
       "team": "ARI",
       "pos": "RB"
     },
+    "13289": {
+      "name": "Drew Allar",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "PIT",
+      "pos": "QB"
+    },
     "13320": {
       "name": "Zachariah Branch",
-      "injury_status": "Questionable",
+      "injury_status": "Out",
       "status": "Active",
       "team": "ATL",
       "pos": "WR"
@@ -613,7 +571,7 @@
     },
     "13380": {
       "name": "Brenen Thompson",
-      "injury_status": "Questionable",
+      "injury_status": "Doubtful",
       "status": "Active",
       "team": "LAC",
       "pos": "WR"
@@ -638,6 +596,13 @@
       "status": "Inactive",
       "team": "SF",
       "pos": "WR"
+    },
+    "13423": {
+      "name": "Eli Heidenreich",
+      "injury_status": "Out",
+      "status": "Active",
+      "team": "PIT",
+      "pos": "RB"
     },
     "13424": {
       "name": "Seth McGowan",
